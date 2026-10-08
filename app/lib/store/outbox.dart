@@ -113,7 +113,12 @@ class Outbox extends ChangeNotifier {
           _items.remove(item);
           sent++;
         } on ApiException catch (e) {
-          if (e.isOffline || e.status == 401 || e.status >= 500) {
+          // Keep the farm and try later: no internet, not signed in, timeout,
+          // too many requests (429) or a server error. Losing a walked farm
+          // because the server was busy would be far worse than waiting.
+          if (e.isOffline ||
+              const {401, 408, 429}.contains(e.status) ||
+              e.status >= 500) {
             offline = e.isOffline;
             break;
           }

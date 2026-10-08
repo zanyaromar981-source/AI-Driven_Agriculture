@@ -31,7 +31,7 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 - Errors: JSON `{"error": "<code>", ...}` with the HTTP status from section 4. Extra fields (`field`, `retry_after_s`, `source`) reach the app. A non-JSON error page still works; the app then takes the code from the status.
 - `401` on any call after sign-in signs the farmer out (back to the phone screen). `POST /auth/otp/verify` answering `401 bad_code` does not sign anyone out.
 - Waits: 10 s to connect, 20 s for an answer. No answer counts as offline: the app shows its saved copy and keeps unsent farms. So `status` and `plan` must answer from stored data (section 7C) and never fetch satellites or weather during the call.
-- Upload queue (unsent farms): on `401`, `5xx` or no answer it keeps the farm and tries again; on any other `4xx` (today including `429`) it drops the farm and tells the farmer. Send `422` only for a farm that can never be accepted, and `503` for "try later".
+- Upload queue (unsent farms): on `401`, `408`, `429`, `5xx` or no answer it keeps the farm and tries again; on any other `4xx` it drops the farm and tells the farmer. (Changed 2026-10-08: `429` used to drop the farm.) Send `422` only for a farm that can never be accepted, and `503` for "try later".
 - Android blocks plain `http://` addresses by default: use `https://`, or see open point 5.
 - Test without the phone: `app/test/http_api_test.dart` runs the app's real client against a small local server written from this file.
 
@@ -102,7 +102,7 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
 - The app caches the last `status`, `plan` and farms list; it shows the cached copy with its date when offline. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
 - Idempotency: the app sends `Idempotency-Key` headers on POSTs; repeat keys must not create duplicates. A repeated key returns the farm made the first time (the app retries uploads that lost their answer).
-- Outbox (built 2026-10-08): `POST /farms` is first written to a file on the phone, then sent; with no internet it stays there and is retried every 30 seconds and when the app comes back to the front. The border being marked is also saved on the phone after every dot, and the sign-in token is kept, so the app opens and works in the field with no signal. "No internet" = the request never reached the server; any 4xx answer removes the farm from the outbox (it will not succeed on retry).
+- Outbox (built 2026-10-08): `POST /farms` is first written to a file on the phone, then sent; with no internet it stays there and is retried every 30 seconds and when the app comes back to the front. The border being marked is also saved on the phone after every dot, and the sign-in token is kept, so the app opens and works in the field with no signal. "No internet" = the request never reached the server; any other 4xx answer (not 401, 408 or 429) removes the farm from the outbox (it will not succeed on retry).
 
 ## 4. Errors
 `400 bad_request`, `401 unauthorized`, `404 not_found`, `422 {error, field}` for validation, `429 rate_limited {retry_after_s}`, `503 upstream_down {source: "sentinel|weather|claude"}` when a feed is down (the app then shows the cached copy and the reason).
