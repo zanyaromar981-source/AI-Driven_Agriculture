@@ -210,7 +210,7 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
-- The app caches the last `status`, `plan` and farms list; it shows the cached copy with its date when offline. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
+- The app keeps the last farms list and, per farm, the last farm, `status` and `plan`. On opening it shows that copy at once, asks the server, and swaps in the fresh answer; if the server fails or there is no internet, the copy stays on screen with its date (since 2026-10-08 21:44). So every open still makes the normal calls. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
 - Idempotency: the app sends `Idempotency-Key` headers on POSTs; repeat keys must not create duplicates. A repeated key returns the farm made the first time (the app retries uploads that lost their answer).
 - Outbox (built 2026-10-08): `POST /farms` is first written to a file on the phone, then sent; with no internet it stays there and is retried every 30 seconds and when the app comes back to the front. The border being marked is also saved on the phone after every dot, and the sign-in token is kept, so the app opens and works in the field with no signal. "No internet" = the request never reached the server; any other 4xx answer (not 401, 408 or 429) removes the farm from the outbox (it will not succeed on retry). Since 2026-10-08 21:33 the same queue also holds edits (`PUT /v1/farms/{id}`) and deletes (`DELETE /v1/farms/{id}`); deletes go first, and a `404` on a delete counts as done.
 
@@ -222,8 +222,8 @@ Shape (FRONTEND.md section 5): `{"error": "<code>", "detail": "<English text>"}`
 | `400` | `bad_request` | shows an error with the code; a queued farm is dropped |
 | `401` | `unauthorized` | signs the farmer out (back to the phone screen); a queued farm is kept |
 | `401` | `bad_code` (sign-in only) | shows "Wrong code, try again"; nobody is signed out |
-| `404` | `not_found` | Home shows "Could not load this farm" |
-| `408`, `429`, `5xx` | `rate_limited` (with `retry_after_s`), `upstream_down` (with `source`), `server_error` | a queued farm is kept and sent again. Home shows "Could not load this farm" for the farm or status, and the last saved plan (or "Weather forecast not available right now") for the plan. The saved copy of everything is shown only when there is no answer at all. |
+| `404` | `not_found` | the farm screen keeps its saved copy (with its date) if it has one, else shows "Could not load this farm"; a delete counts as done |
+| `408`, `429`, `5xx` | `rate_limited` (with `retry_after_s`), `upstream_down` (with `source`), `server_error` | a queued farm is kept and sent again. The farm screen keeps its saved copy (with its date) if it has one, else shows "Could not load this farm". The plan falls back to the last saved plan, or "Weather forecast not available right now". |
 | `422` | `invalid`, `bad_polygon`, `farm_too_large`, `too_many_farms` | a queued farm is dropped and the farmer is told |
 
 The only code the app branches on today is `bad_code`; the others are shown as they are and will get Sorani messages later.
