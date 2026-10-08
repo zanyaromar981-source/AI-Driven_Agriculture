@@ -1,0 +1,887 @@
+<title>Kurdistan Wheat Alarm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;600&display=swap">
+<style>
+/* Layout: one calm map (hex cells = farmland zones) on the left, one answer panel on the right, the winter's timeline underneath. */
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --ink:#16201B; --muted:#5B6862; --faint:#8C9892; --line:#DDE3DE; --soft:#EBEFEB;
+  --accent:#1D5B74; --accent-ink:#FFFFFF; --wheat:#A87A22;
+  --veg:#4E8A2A; --brown:#A8642A; --wet:#2A6EA0; --dry:#A8642A; --ok:#2F8A57; --watch:#D29514; --alarm:#C23F2B; --none:#CDD5CF; --ok-t:#DCEFE3; --watch-t:#FBEFD2; --alarm-t:#F8DFDA;
+  --shadow:0 1px 2px rgba(22,32,27,.06),0 8px 24px rgba(22,32,27,.06);
+  --f-display:"Sora","Segoe UI",system-ui,sans-serif; --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-ku:"Noto Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1412; --surface:#171E1B; --ink:#E5ECE8; --muted:#9BA9A2; --faint:#6E7C75; --line:#28332E; --soft:#1E2723;
+  --accent:#6CB2CF; --accent-ink:#0F1412; --wheat:#D7A94B;
+  --veg:#8CC152; --brown:#D9965A; --wet:#6BAEDB; --dry:#D9965A; --ok:#4DB57D; --watch:#E9B53C; --alarm:#E5654F; --none:#34403A; --ok-t:#1C3328; --watch-t:#3A311A; --alarm-t:#3D211C;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1412; --surface:#171E1B; --ink:#E5ECE8; --muted:#9BA9A2; --faint:#6E7C75; --line:#28332E; --soft:#1E2723;
+  --accent:#6CB2CF; --accent-ink:#0F1412; --wheat:#D7A94B;
+  --veg:#8CC152; --brown:#D9965A; --wet:#6BAEDB; --dry:#D9965A; --ok:#4DB57D; --watch:#E9B53C; --alarm:#E5654F; --none:#34403A; --ok-t:#1C3328; --watch-t:#3A311A; --alarm-t:#3D211C;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:20px;padding-block:14px 28px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.main>*,.tl,.top>*{min-width:0}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.ku{font-family:var(--f-ku);direction:rtl;unicode-bidi:isolate}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;min-width:0}
+.mark{width:30px;height:30px;flex:none}
+.brand h1{font:600 18px/1.15 var(--f-display);letter-spacing:-.01em;margin:0}
+.brand small{display:block;color:var(--muted);font-size:12.5px}
+.tabs{display:flex;background:var(--soft);border-radius:999px;padding:3px}
+.tab{padding:7px 14px;border-radius:999px;font-weight:500;font-size:14px;color:var(--muted);transition:background .25s,color .25s}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.askbtn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:14px;transition:transform .2s}
+.askbtn:hover{transform:translateY(-1px)}
+
+/* main */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;align-items:start}
+@media (max-width:920px){.main{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow)}
+.mapcard{position:relative;overflow:hidden;min-width:0}
+.maphead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px 0}
+.crumbs{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:13.5px;min-width:0}
+.crumbs button{padding:4px 8px;border-radius:8px;color:var(--muted);font-weight:500}
+.crumbs button:hover{background:var(--soft);color:var(--ink)}
+.crumbs button[aria-current="true"]{color:var(--ink);font-weight:600}
+.crumbs .sep{color:var(--faint)}
+.layer{display:flex;background:var(--soft);border-radius:999px;padding:3px;font-size:12.5px}
+.layer button{padding:4px 10px;border-radius:999px;color:var(--muted)}
+.layer button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+#map{display:block;width:100%;height:auto;aspect-ratio:1.18/1;max-height:640px;touch-action:manipulation}
+.hex{transition:fill .55s ease,opacity .4s ease;cursor:pointer}
+.hex.dim{opacity:.22}
+.hex.mid{opacity:.62}
+.hex.sel{stroke:var(--ink);stroke-width:.9}
+.hexg.intro .hex{animation:pop .7s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--dl)}
+@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.hex{transform-box:fill-box;transform-origin:center}
+.hexg.flip .hex{animation:flip .7s ease both;animation-delay:var(--dl)}
+@keyframes flip{0%{transform:scaleX(1)}50%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+.edge-area{fill:none;stroke:var(--ink);stroke-opacity:.55;stroke-linecap:round;pointer-events:none}
+.edge-out{fill:none;stroke:var(--ink);stroke-opacity:.6;stroke-linecap:round;pointer-events:none}
+.edge-zone{fill:none;stroke:var(--surface);stroke-opacity:.9;pointer-events:none}
+.lbl{font-family:var(--f-display);font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-linejoin:round;pointer-events:none;transition:opacity .35s}
+.lbl.zone{font-family:var(--f-body);font-weight:500}
+.lbl.off{opacity:0}
+.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:0 16px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.tip{position:absolute;z-index:5;pointer-events:none;background:var(--ink);color:var(--surface);font-size:12.5px;padding:6px 9px;border-radius:8px;white-space:nowrap;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s}
+.tip.on{opacity:1;transform:none}
+.toast{position:absolute;left:50%;top:64px;z-index:4;transform:translate(-50%,-14px);opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-weight:600;font-size:14px;transition:opacity .3s,transform .3s;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+
+/* status chips & icons */
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 8px;border-radius:999px;font-weight:600;font-size:13.5px;white-space:nowrap}
+.chip.ok{background:var(--ok-t);color:var(--ok)} .chip.watch{background:var(--watch-t);color:var(--watch)} .chip.alarm{background:var(--alarm-t);color:var(--alarm)} .chip.none{background:var(--soft);color:var(--muted)}
+.ico{width:15px;height:15px;flex:none}
+
+/* panel */
+.panel{display:grid;gap:0;min-width:0;overflow:hidden}
+.pane{padding:18px 18px 16px;display:grid;gap:12px;border-top:1px solid var(--line)}
+.pane:first-child{border-top:0}
+.eyebrow{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.ptitle{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ptitle h2{font:600 22px/1.2 var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.ptitle .ku{color:var(--muted);font-size:15px}
+.date{color:var(--muted);font-size:13.5px}
+.status{display:flex;align-items:center;gap:12px}
+.status .big{font:600 19px/1.25 var(--f-display);letter-spacing:-.01em}
+.status .bigico{width:40px;height:40px;flex:none;transition:transform .4s}
+.status.pulse .bigico{animation:pulse 1.2s ease 2}
+@keyframes pulse{50%{transform:scale(1.18)}}
+.say{color:var(--ink);margin:0;font-size:14.5px}
+.say b{font-weight:600}
+.gauge{display:grid;gap:6px;padding-bottom:12px}
+.gauge .row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.gauge .row b{color:var(--ink);font-size:20px;font-family:var(--f-display);font-weight:600}
+.bar{position:relative;height:10px;border-radius:99px;background:var(--soft);overflow:visible}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:var(--accent);transition:width .5s ease}
+.bar .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.55;border-radius:2px}
+.bar .cut{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--alarm);border-radius:2px}
+.bar .lab{position:absolute;top:14px;transform:translateX(-50%);font-size:11.5px;color:var(--muted);white-space:nowrap}
+.spark{width:100%;height:auto;display:block}
+.list{display:grid;gap:2px}
+.li{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:10px;text-align:left;width:100%;transition:background .2s}
+.li:hover{background:var(--soft)}
+.li .n{font-weight:500}
+.li .k{color:var(--faint);font-size:13px;margin-left:auto}
+.dot{width:10px;height:10px;border-radius:3px;flex:none}
+.next{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.truth{background:var(--soft);border-radius:12px;padding:12px 14px;display:grid;gap:8px}
+.truth h3{margin:0;font:600 14px/1.3 var(--f-display)}
+.truth .big{font:600 24px/1.1 var(--f-display);letter-spacing:-.01em}
+.truth .row{display:flex;gap:12px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.wheat{color:var(--wheat)}
+.mbars{display:grid;gap:7px}
+.mbar{display:grid;grid-template-columns:62px 1fr 42px;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+.mbar .tr{position:relative;height:8px;border-radius:99px;background:var(--soft)}
+.mbar .tr i{position:absolute;inset:0 auto 0 0;width:0;border-radius:99px;background:var(--accent);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.mbar .tr b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.5;border-radius:2px}
+.mbar .v{text-align:right;color:var(--ink);font-weight:600}
+.hist{display:flex;gap:8px;flex-wrap:wrap}
+.hist span{background:var(--soft);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--muted)}
+.hist b{color:var(--ink);font-family:var(--f-display);font-weight:600}
+.sealed{border:1.5px dashed var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.sealed b{font-family:var(--f-display);font-weight:600}
+
+/* timeline */
+.tl{padding:14px 16px 16px;display:grid;gap:12px}
+.tlhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seasons{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sbtn{padding:6px 11px;border-radius:999px;border:1px solid var(--line);font-size:13.5px;font-weight:500;transition:background .2s,border-color .2s}
+.sbtn small{color:var(--muted);font-weight:400;margin-left:4px}
+.sbtn[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.sbtn[aria-pressed="true"] small{color:inherit;opacity:.75}
+select.more{padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px}
+.play{width:42px;height:42px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;flex:none;transition:transform .2s}
+.play:hover{transform:scale(1.06)}
+.track{position:relative;flex:1;min-width:0;padding-block:6px 22px}
+.track input{width:100%;accent-color:var(--accent);margin:0}
+.marks{position:absolute;left:8px;right:8px;top:28px;height:16px}
+.mk.end{transform:translateX(-78%)}
+.mk{position:absolute;transform:translateX(-50%);font-size:11.5px;color:var(--muted);white-space:nowrap;text-align:center}
+.mk::before{content:"";display:block;width:2px;height:6px;margin:0 auto 2px;background:var(--faint);border-radius:2px}
+.mk.passed{color:var(--ink);font-weight:600}
+.mk.future{opacity:.55}
+.reveal{padding:9px 16px;border-radius:999px;background:var(--wheat);color:var(--surface);font-weight:600;font-size:14px;opacity:.35;pointer-events:none;transition:opacity .3s,transform .2s}
+.reveal.ready{opacity:1;pointer-events:auto;animation:glow 1.6s ease 2}
+.reveal.ready:hover{transform:translateY(-1px)}
+@keyframes glow{50%{box-shadow:0 0 0 8px color-mix(in srgb,var(--wheat) 25%,transparent)}}
+.tlrow{display:flex;align-items:center;gap:14px}
+.meets{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.meets .lab{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-right:2px}
+.mt{padding:5px 10px;border-radius:999px;font-size:13px;font-weight:500;color:var(--muted);border:1px solid var(--line);transition:background .25s,color .25s,border-color .25s}
+.mt.done{color:var(--ink);border-color:var(--faint)}
+.mt[aria-current="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mt.r{width:10px;height:2px;padding:0;border:0;background:var(--line);border-radius:2px}
+.stepbtns{display:flex;gap:8px;margin-left:auto}
+.stepb{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;font-weight:600;font-size:14px;border:1px solid var(--line);transition:transform .2s,background .2s}
+.stepb.next{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.stepb:hover:not([disabled]){transform:translateY(-1px)}
+.stepb[disabled]{opacity:.35;cursor:default}
+.octcard{display:grid;gap:10px}
+.fc3{display:flex;gap:6px}
+.fc3 span{flex:1;display:grid;justify-items:center;gap:4px;padding:10px 6px;border-radius:12px;border:1.5px solid var(--line);font-weight:600;font-size:13.5px;color:var(--faint);transition:all .45s cubic-bezier(.2,.8,.2,1)}
+.fc3 span svg{width:26px;height:26px}
+.fc3 span.on{color:var(--surface);transform:translateY(-2px) scale(1.04)}
+.fc3 span.on.wet{background:var(--wet);border-color:var(--wet)} .fc3 span.on.normal{background:var(--muted);border-color:var(--muted)} .fc3 span.on.dry{background:var(--dry);border-color:var(--dry)}
+.fc3 span.real{outline:2.5px solid var(--ink);outline-offset:2px;color:var(--ink)}
+.fc3 span.on.real{color:var(--surface)}
+.fcbtns{display:flex;gap:8px;flex-wrap:wrap}
+.months{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.months .lab{font-size:12.5px;color:var(--muted);margin-right:4px}
+.mo{padding:4px 9px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);border:1px solid var(--line);transition:background .2s,color .2s}
+.mo[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.mo[disabled]{opacity:.35;cursor:default}
+.oniv{font-variant-numeric:tabular-nums;transition:color .3s}
+.track{}
+.octcard .call{font:600 16px/1.3 var(--f-display)}
+.check{justify-self:start;padding:7px 13px;border-radius:999px;border:1.5px solid var(--accent);color:var(--accent);font-weight:600;font-size:13.5px;transition:background .2s,color .2s}
+.check:hover{background:var(--accent);color:var(--accent-ink)}
+.verdict{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;animation:rise .45s ease both}
+.verdict small{font-weight:400;color:var(--muted)}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.livebar{font-size:14px;color:var(--muted);margin:0}
+
+/* ask drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,15,12,.35);opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);z-index:21;transform:translateX(100%);transition:transform .38s cubic-bezier(.2,.8,.2,1);display:grid;grid-template-rows:auto 1fr auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:var(--shadow)}
+.drawer.on{transform:none}
+.dhead{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.dhead h2{font:600 17px var(--f-display);margin:0;margin-right:auto}
+.lang{display:flex;background:var(--soft);border-radius:999px;padding:3px;font-size:13px}
+.lang button{padding:4px 10px;border-radius:999px;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
+.x{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.x:hover{background:var(--soft)}
+.dbody{overflow:auto;padding:16px 18px;display:grid;gap:12px;align-content:start;min-height:0}
+.ctx{font-size:13px;color:var(--muted)}
+.sugs{display:flex;flex-wrap:wrap;gap:6px}
+.sug{padding:7px 12px;border-radius:999px;border:1px solid var(--line);font-size:13.5px;text-align:left}
+.sug:hover{border-color:var(--accent);color:var(--accent)}
+.msg{padding:10px 13px;border-radius:12px;font-size:14.5px;white-space:pre-wrap;line-height:1.6}
+.msg.me{background:var(--soft);justify-self:end;max-width:85%}
+.msg.ai{background:transparent;border:1px solid var(--line)}
+.msg.ai.ku{font-size:16px;text-align:right}
+.msg .meta{display:block;font-size:12px;color:var(--faint);margin-top:6px;font-family:var(--f-body);direction:ltr;text-align:left}
+.dfoot{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+.dfoot textarea{flex:1;resize:none;height:44px;border-radius:12px;border:1px solid var(--line);padding:10px 12px;font:inherit;background:var(--bg);color:var(--ink)}
+.send{padding:0 16px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:600}
+.send[disabled]{opacity:.45;cursor:default}
+.off-note{font-size:14px;color:var(--muted);background:var(--soft);border-radius:12px;padding:12px 14px}
+.foot{font-size:12.5px;color:var(--faint);display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between}
+@media (max-width:560px){.mk.minor{font-size:0}.wrap{padding-inline:16px}.brand small{display:none}.tl .tlrow{flex-wrap:wrap}.track{flex-basis:100%}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3l11 6.5v13L16 29 5 22.5v-13z" fill="var(--wheat)" opacity=".18"/><path d="M16 26V11M16 15c-3-1-5-3.5-5-6.5 3 .5 5 3 5 6.5zm0 0c3-1 5-3.5 5-6.5-3 .5-5 3-5 6.5zm0 6c-3-1-5-3.5-5-6.5 3 .5 5 3 5 6.5zm0 0c3-1 5-3.5 5-6.5-3 .5-5 3-5 6.5z" fill="none" stroke="var(--wheat)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><h1>Kurdistan Wheat Alarm</h1><small>Drought warning for wheat, months before harvest · <span class="ku">ئاگادارکردنەوەی وشکەساڵی</span></small></div>
+    </div>
+    <div class="tabs" role="tablist" aria-label="View">
+      <button class="tab" role="tab" id="tab-replay" aria-selected="true">Time machine</button>
+      <button class="tab" role="tab" id="tab-live" aria-selected="false">This winter</button>
+    </div>
+    <button class="askbtn" id="askOpen"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5l1.6 4.2L14 7.3l-4.4 1.6L8 13.2 6.4 8.9 2 7.3l4.4-1.6z" fill="currentColor"/></svg>Ask Claude</button>
+  </header>
+
+  <div class="main">
+    <section class="card mapcard" aria-label="Map">
+      <div class="maphead">
+        <nav class="crumbs" id="crumbs" aria-label="Zoom level"></nav>
+        <div class="layer" id="layer" role="group" aria-label="Map layer">
+          <button id="ly-risk" aria-pressed="true">Crop risk</button>
+          <button id="ly-rain" aria-pressed="false">Rain so far</button>
+          <button id="ly-space" aria-pressed="false">From space</button>
+        </div>
+      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <div class="tip" id="tip"></div>
+      <svg id="map" role="img" aria-label="Map of the Kurdistan Region made of hexagon cells, coloured by drought light"></svg>
+      <div class="legend" id="legend"></div>
+    </section>
+    <aside class="card panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <section class="card tl" id="timeline" aria-label="Winter timeline"></section>
+
+  <footer class="foot">
+    <span>Every light here comes from a test where that winter was hidden from the model. Sources: ERA5 weather, NASA MODIS greenness, NOAA El Niño, 7 seasonal forecast models, KRSO official wheat 1970–2023.</span>
+    <span>SmartSuli AI Challenge 2026</span>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Ask Claude" aria-hidden="true">
+  <div class="dhead">
+    <h2>Ask Claude</h2>
+    <div class="lang" role="group" aria-label="Answer language">
+      <button id="lg-ku" aria-pressed="true" class="ku">کوردی</button>
+      <button id="lg-en" aria-pressed="false">English</button>
+    </div>
+    <button class="x" id="askClose" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+  <div class="dbody" id="dbody">
+    <div class="ctx" id="ctx"></div>
+    <div class="sugs" id="sugs"></div>
+    <div id="thread" style="display:grid;gap:10px"></div>
+  </div>
+  <form class="dfoot" id="askForm">
+    <textarea id="q" aria-label="Your question" placeholder="Ask about what the map shows…" rows="1"></textarea>
+    <button class="send" id="send" type="submit">Send</button>
+  </form>
+</aside>
+
+<script src="data.js"></script>
+<script src="green.js"></script>
+<script>
+(() => {
+const D = window.DATA;
+const $ = s => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CHECKS = [{d:70,key:'watch',lab:'10 Dec',long:'10 December'},{d:91,key:'Dec',lab:'31 Dec',long:'31 December'},{d:122,key:'jan',lab:'31 Jan',long:'31 January'},{d:150,key:'feb',lab:'28 Feb',long:'28 February'},{d:181,key:'mar',lab:'31 Mar',long:'31 March'}];
+const LAST = 181, LIVE = '2026';
+const MEETS = [{d:7,key:'oct',lab:'8 Oct',long:'8 October'}, ...CHECKS];
+const FEATURED = [['2007','big drought'],['2015','wet year'],['2020','drought'],['2024','late drought']];
+const S = {mode:'replay', season:'2007', day:122, level:0, area:null, zone:null, revealed:false, playing:false, layer:'risk', lang:'ku', pred:false, predShown:false, fcMonth:'Oct'};
+
+/* ---------- helpers ---------- */
+const el = (t, a={}, kids=[]) => { const e = document.createElement(t); for (const k in a) { if (k==='class') e.className=a[k]; else if (k==='html') e.innerHTML=a[k]; else if (k.startsWith('on')) e.addEventListener(k.slice(2), a[k]); else e.setAttribute(k,a[k]); } for (const c of [].concat(kids)) if (c!=null) e.append(c.nodeType?c:document.createTextNode(c)); return e; };
+const sv = (t, a={}) => { const e = document.createElementNS(NS,t); for (const k in a) e.setAttribute(k,a[k]); return e; };
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const seasonOf = k => D.seasons[k];
+const dateOf = (s, d) => { let t = Date.UTC(+s,9,1) + d*864e5; const f29 = Date.UTC(+s+1,1,29); if (new Date(f29).getUTCDate()===29 && t >= f29) t += 864e5; return new Date(t); };  // slot 150 = 28 Feb, 181 = 31 Mar every winter
+const dateStr = (s, d, long) => dateOf(s,d).toLocaleDateString('en-GB',{day:'numeric',month: long?'long':'short',year:'numeric',timeZone:'UTC'});
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const ICON = {
+  ok:'<svg class="ico" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="currentColor"/><path d="M4.8 8.2l2.1 2.1 4.3-4.6" fill="none" stroke="var(--surface)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  watch:'<svg class="ico" viewBox="0 0 16 16"><path d="M8 1.2L15.2 14H.8z" fill="currentColor"/><path d="M8 6v3.8" stroke="var(--surface)" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="11.9" r="1" fill="var(--surface)"/></svg>',
+  alarm:'<svg class="ico" viewBox="0 0 16 16"><path d="M5.1 1h5.8L15 5.1v5.8L10.9 15H5.1L1 10.9V5.1z" fill="currentColor"/><path d="M8 4.3v4.6" stroke="var(--surface)" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="11.4" r="1" fill="var(--surface)"/></svg>',
+  none:'<svg class="ico" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.4 2.2"/></svg>'
+};
+const WORD = {ok:'Normal', watch:'Watch', alarm:'Drought alarm', none:'Not checked yet'};
+const chip = (lvl, text) => { const c = el('span',{class:'chip '+lvl}); c.innerHTML = ICON[lvl]; c.append(text || WORD[lvl]); return c; };
+function countUp(node, to, ms=900, suffix=''){
+  const from = +(node.dataset.v || 0); node.dataset.v = to;
+  if (reduce || from === to) { node.textContent = fmt(to)+suffix; return; }
+  const t0 = performance.now(); node.textContent = fmt(from)+suffix;
+  const step = t => { const k = Math.max(0,Math.min(1,(t-t0)/ms)), e = 1-Math.pow(1-k,3); node.textContent = fmt(from+(to-from)*e)+suffix; if (k<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+/* ---------- status logic (all from hidden-winter tests) ---------- */
+function regionStatus(k, d){
+  const e = seasonOf(k);
+  let st = {lvl:'none', why:'early'};
+  if (e.watch && d >= 70) st = {lvl: e.watch.on ? 'watch' : 'ok', why:'watch', at:70};
+  if (e.alarms) for (const [c,day] of [['jan',122],['feb',150],['mar',181]]) {
+    if (d < day) break;
+    if (e.alarms[c].on) return {lvl:'alarm', why:c, at:day};
+    st = {lvl: (e.watch && e.watch.on && c!=='mar') ? 'watch' : 'ok', why:c, at:day};
+  }
+  return st;
+}
+const cutAt = d => d>=181?'Mar':d>=150?'Feb':d>=122?'Jan':d>=91?'Dec':null;
+function zoneLight(k, d, zi){
+  const e = seasonOf(k), c = cutAt(d);
+  if (!e.risk || !c) return {lvl:'none'};
+  const p = e.risk[c][zi], t = D.lights[c];
+  return {lvl: p>=t.red?'alarm':p>=t.yellow?'watch':'ok', risk:p, cut:c};
+}
+function areaLight(k, d, ai){
+  const zs = D.zones.map((z,i)=>i).filter(i=>D.zones[i].area===ai);
+  const n = {ok:0,watch:0,alarm:0,none:0}; zs.forEach(i=>n[zoneLight(k,d,i).lvl]++);
+  if (n.none===zs.length) return {lvl:'none', n, total:zs.length};
+  const order = ['alarm','watch','ok']; let best = 'ok', bc = -1;
+  for (const l of order) if (n[l] > bc) { best = l; bc = n[l]; }
+  return {lvl:best, n, total:zs.length};
+}
+const rainAt = (k, d) => { const r = seasonOf(k).rain; return r.length ? r[Math.min(d, r.length-1)] : null; };
+const zoneRainAt = (k, d, zi) => { const z = seasonOf(k).zoneRain; if (!z) return null; const r = z[zi]; return r.length ? r[Math.min(d, r.length-1)] : null; };
+const liveDay = () => { const n = new Date(); return Math.max(0, Math.min(LAST, Math.round((Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) - Date.UTC(2026,9,1)) / 864e5))); };
+const EARLY = 45;   // before mid-November a % of a tiny normal means nothing
+
+const meetingAt = d => MEETS.filter(m=>m.d<=d).pop() || null;
+
+/* ---------- map ---------- */
+const svg = $('#map'), R = D.hex.R, SQ3 = Math.sqrt(3);
+const cells = D.hex.cells.map(([q,r,a,z],i) => ({i,q,r,a,z,x:R*SQ3*(q+r/2), y:R*1.5*r}));
+const key = (q,r) => q+','+r, byKey = new Map(cells.map(c=>[key(c.q,c.r),c]));
+const corner = (c,i,rad=R) => { const a = Math.PI/180*(60*i-30); return [c.x+rad*Math.cos(a), c.y+rad*Math.sin(a)]; };
+const hexPath = (c,rad) => 'M'+[0,1,2,3,4,5].map(i=>corner(c,i,rad).map(v=>v.toFixed(2)).join(',')).join('L')+'Z';
+const NB = [[1,0,0,1],[0,1,1,2],[-1,1,2,3],[-1,0,3,4],[0,-1,4,5],[1,-1,5,0]];
+const bounds = list => { let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for (const c of list){x0=Math.min(x0,c.x);x1=Math.max(x1,c.x);y0=Math.min(y0,c.y);y1=Math.max(y1,c.y);} return [x0-R*1.6,y0-R*1.6,x1-x0+R*3.2,y1-y0+R*3.2]; };
+const FULL = bounds(cells);
+let vb = FULL.slice(); svg.setAttribute('viewBox', vb.join(' '));
+const gHex = sv('g',{class:'hexg'}), gEdge = sv('g'), gLbl = sv('g');
+svg.append(gHex, gEdge, gLbl);
+const cx0 = cells.reduce((s,c)=>s+c.x,0)/cells.length, cy0 = cells.reduce((s,c)=>s+c.y,0)/cells.length;
+for (const c of cells) {
+  const p = sv('path',{d:hexPath(c,R*.93), class:'hex'});
+  p.style.setProperty('--dl', ((Math.hypot(c.x-cx0,c.y-cy0))*3.2|0)+'ms');
+  p.addEventListener('click', () => onCellClick(c));
+  p.addEventListener('pointermove', ev => showTip(ev, c));
+  p.addEventListener('pointerleave', hideTip);
+  c.el = p; gHex.append(p);
+}
+let dz='', da='', dout='';
+for (const c of cells) for (const [dq,dr,i,j] of NB) {
+  const n = byKey.get(key(c.q+dq,c.r+dr)); const [a,b] = [corner(c,i),corner(c,j)];
+  const seg = `M${a[0].toFixed(2)},${a[1].toFixed(2)}L${b[0].toFixed(2)},${b[1].toFixed(2)}`;
+  if (!n) dout += seg; else if (n.a!==c.a) { if (c.a<n.a) da += seg; } else if (n.z!==c.z && c.z<n.z) dz += seg;
+}
+const eZone = sv('path',{d:dz,class:'edge-zone'}), eArea = sv('path',{d:da,class:'edge-area'}), eOut = sv('path',{d:dout,class:'edge-out'});
+gEdge.append(eZone, eArea, eOut);
+const areaLbl = D.areas.map((a,ai) => { const cs = cells.filter(c=>c.a===ai); const t = sv('text',{class:'lbl', 'text-anchor':'middle', x:(cs.reduce((s,c)=>s+c.x,0)/cs.length).toFixed(1), y:(cs.reduce((s,c)=>s+c.y,0)/cs.length).toFixed(1)}); t.textContent = a.name; gLbl.append(t); return t; });
+const zoneLbl = D.zones.map((z,zi) => { const cs = cells.filter(c=>c.z===zi); const t = sv('text',{class:'lbl zone off','text-anchor':'middle', x:(cs.reduce((s,c)=>s+c.x,0)/cs.length).toFixed(1), y:(cs.reduce((s,c)=>s+c.y,0)/cs.length).toFixed(1)}); t.textContent = z.name; gLbl.append(t); return t; });
+function sizeLabels(){
+  const w = svg.getBoundingClientRect().width || 800, u = vb[2]/w;
+  areaLbl.forEach(t=>{t.setAttribute('font-size',(15*u).toFixed(2)); t.setAttribute('stroke-width',(4*u).toFixed(2));});
+  zoneLbl.forEach(t=>{t.setAttribute('font-size',(12.5*u).toFixed(2)); t.setAttribute('stroke-width',(3.5*u).toFixed(2));});
+  eArea.setAttribute('stroke-width',(1.6*u).toFixed(2)); eOut.setAttribute('stroke-width',(1.8*u).toFixed(2)); eZone.setAttribute('stroke-width',(1.4*u).toFixed(2));
+}
+let zoomAnim = 0;
+function zoomTo(box, ms=750){
+  const from = vb.slice(), to = box.slice(), id = ++zoomAnim;
+  if (reduce) { vb = to; svg.setAttribute('viewBox', vb.join(' ')); sizeLabels(); return; }
+  const t0 = performance.now();
+  const step = t => { if (id!==zoomAnim) return; const k = Math.max(0,Math.min(1,(t-t0)/ms)), e = k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+    vb = from.map((v,i)=>v+(to[i]-v)*e); svg.setAttribute('viewBox', vb.map(v=>v.toFixed(2)).join(' ')); sizeLabels(); if (k<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function fitBox(list){
+  const b = bounds(list), w = svg.getBoundingClientRect().width || 800, h = svg.getBoundingClientRect().height || 680, ar = w/h;
+  let [x,y,bw,bh] = b; const pad = 1.12; bw*=pad; bh*=pad; x -= b[2]*(pad-1)/2; y -= b[3]*(pad-1)/2;
+  if (bw/bh < ar) { const nw = bh*ar; x -= (nw-bw)/2; bw = nw; } else { const nh = bw/ar; y -= (nh-bh)/2; bh = nh; }
+  return [x,y,bw,bh];
+}
+function rainColor(p){
+  if (p==null) return css('--none');
+  const t = Math.max(-1, Math.min(1, (p-100)/60));
+  const dry = [194,120,58], mid = css('--none'), wet = [42,110,160];
+  const m = mid.startsWith('#') ? [parseInt(mid.slice(1,3),16),parseInt(mid.slice(3,5),16),parseInt(mid.slice(5,7),16)] : [205,213,207];
+  const to = t<0?dry:wet, k = Math.abs(t);
+  return `rgb(${m.map((v,i)=>Math.round(v+(to[i]-v)*k)).join(',')})`;
+}
+const TRUTH_C = b => b==null ? css('--none') : b ? css('--alarm') : css('--ok');
+const LV = D.live, NINO_N = LV.nino_seasons.length;
+const G = window.GREEN || {seasons:{}, spring:{}, little:[]};
+const decodeI8 = b64 => { const bin = atob(b64), a = new Int8Array(bin.length); for (let i=0;i<bin.length;i++) a[i] = bin.charCodeAt(i) << 24 >> 24; return a; };
+const greenCache = {};
+function greenSeason(k){ if (!greenCache[k]) greenCache[k] = (G.seasons[k]||[]).map(([key,b]) => { const y = +key.slice(0,4), doy = +key.slice(4); const start = Date.UTC(y,0,1) + (doy-1)*864e5; return {key, start, end: start + 16*864e5, v: decodeI8(b)}; }); return greenCache[k]; }
+function greenAt(k, d){ const t = dateOf(k,d).getTime(); const list = greenSeason(k).filter(c => c.end <= t); return list.length ? list[list.length-1] : null; }
+const springCache = {}; const springOf = k => G.spring[k] ? (springCache[k] ||= decodeI8(G.spring[k])) : null;
+function vegColor(p, little){
+  if (p==null || little) return css('--none');
+  const t = Math.max(-1, Math.min(1, p/40)), m = css('--none'), base = m.startsWith('#') ? [1,3,5].map(i=>parseInt(m.slice(i,i+2),16)) : [205,213,207];
+  const hex = v => [1,3,5].map(i=>parseInt(v.slice(i,i+2),16)), to = t<0 ? hex(css('--brown')) : hex(css('--veg')), k = Math.abs(t);
+  return `rgb(${base.map((v,i)=>Math.round(v+(to[i]-v)*k)).join(',')})`;
+}
+const fmtComp = c => { const a = new Date(c.start), b = new Date(c.end - 864e5), o = {day:'numeric',month:'short',timeZone:'UTC'}; return `${a.toLocaleDateString('en-GB',o)}–${b.toLocaleDateString('en-GB',{...o,year:'numeric'})}`; };
+const ensoColor = n => n/NINO_N > .25 ? css('--watch') : css('--ok');   // worse than the usual 1-in-4 chance of a bad spring → amber
+function wetColor(mm){ const m = css('--none'), base = m.startsWith('#') ? [1,3,5].map(i=>parseInt(m.slice(i,i+2),16)) : [205,213,207], to = [42,110,160], k = Math.min(1, mm/50); return `rgb(${base.map((v,i)=>Math.round(v+(to[i]-v)*k)).join(',')})`; }
+function paint(){
+  const k = S.season, d = S.day, e = seasonOf(k);
+  const zl = D.zones.map((z,zi)=>zoneLight(k,d,zi));
+  for (const c of cells) {
+    let fill;
+    if (S.mode==='live') fill = S.layer==='next16' ? wetColor(LV.next16[c.z].mm) : ensoColor(LV.nino_bad[c.z]);
+    else if (S.revealed && S.mode==='replay' && springOf(k)) fill = vegColor(springOf(k)[c.i], G.little[c.i]);
+    else if (S.revealed && S.mode==='replay' && e.bad) fill = TRUTH_C(e.bad[c.z]);
+    else if (S.layer==='space') { const g = greenAt(k,d); fill = vegColor(g ? g.v[c.i] : null, G.little[c.i]); }
+    else if (S.layer==='rain') fill = d < EARLY ? css('--none') : rainColor(zoneRainAt(k,d,c.z) ?? rainAt(k,d));
+    else fill = css('--'+(zl[c.z].lvl==='none'?'none':zl[c.z].lvl));
+    c.el.style.fill = fill;
+    c.el.classList.toggle('dim', S.level>=1 && c.a!==S.area);
+    c.el.classList.toggle('mid', S.level===2 && c.a===S.area && c.z!==S.zone);
+    c.el.classList.toggle('sel', false);
+  }
+  areaLbl.forEach((t,ai)=>t.classList.toggle('off', S.level>=1));
+  zoneLbl.forEach((t,zi)=>t.classList.toggle('off', !(S.level>=1 && D.zones[zi].area===S.area)));
+  renderLegend();
+}
+function onCellClick(c){
+  if (S.level===0 || c.a!==S.area) selectArea(c.a);
+  else selectZone(c.z);
+}
+function selectArea(ai){ S.level=1; S.area=ai; S.zone=null; zoomTo(fitBox(cells.filter(c=>c.a===ai))); update(); }
+function selectZone(zi){ S.level=2; S.area=D.zones[zi].area; S.zone=zi; zoomTo(fitBox(cells.filter(c=>c.a===S.area))); update(); }
+function goTop(){ S.level=0; S.area=null; S.zone=null; zoomTo(fitBox(cells)); update(); }
+const tip = $('#tip');
+function showTip(ev, c){
+  const z = D.zones[c.z], a = D.areas[c.a], l = zoneLight(S.season,S.day,c.z);
+  const truth = S.revealed && S.mode==='replay' && seasonOf(S.season).bad;
+  if (S.mode==='live') { tip.textContent = `${z.name} · ${a.name} — ` + (S.layer==='next16' ? `${LV.next16[c.z].mm} mm of rain expected in the next 16 days` : `bad spring in ${LV.nino_bad[c.z]} of ${NINO_N} past El Niño winters`); }
+  else if (S.layer==='space' || (S.revealed && springOf(S.season))) { const v = S.revealed && springOf(S.season) ? springOf(S.season)[c.i] : greenAt(S.season,S.day)?.v[c.i];
+    tip.textContent = `${z.name} · ${a.name} — ` + (G.little[c.i] ? 'little farmland here' : v==null ? 'no satellite picture yet' : `farmland ${v>=0?v+'% greener':(-v)+'% browner'} than normal`); }
+  else tip.textContent = `${z.name} · ${a.name} — ` + (truth ? (seasonOf(S.season).bad[c.z] ? 'real spring: bad' : 'real spring: fine') : S.layer==='rain' ? `rain ${zoneRainAt(S.season,S.day,c.z) ?? '–'}% of normal` : WORD[l.lvl]);
+  const r = $('.mapcard').getBoundingClientRect();
+  tip.style.left = Math.min(ev.clientX - r.left + 12, r.width - tip.offsetWidth - 8) + 'px'; tip.style.top = (ev.clientY - r.top + 14) + 'px'; tip.classList.add('on');
+}
+function hideTip(){ tip.classList.remove('on'); }
+
+/* ---------- legend / crumbs ---------- */
+function renderLegend(){
+  const L = $('#legend'); L.textContent = '';
+  if (S.mode==='live') {
+    if (S.layer==='next16') L.append(el('span',{html:`<i class="dot" style="background:${wetColor(0)}"></i>Little rain`}), el('span',{html:`<i class="dot" style="background:${wetColor(25)}"></i>25 mm`}), el('span',{html:`<i class="dot" style="background:${wetColor(50)}"></i>50 mm or more`}), el('span',{},`Weather forecast for the next 16 days, made ${new Date(LV.next16_made).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`));
+    else L.append(el('span',{html:`<i class="dot" style="background:var(--ok)"></i>0–1 bad springs in ${NINO_N} El Niño winters (usual: 1 in 4)`}), el('span',{html:`<i class="dot" style="background:var(--watch)"></i>2 of ${NINO_N}`}), el('span',{},LV.nino_seasons.join(' · ')));
+  } else if (S.revealed && S.mode==='replay' && springOf(S.season)) {
+    L.append(el('span',{html:`<i class="dot" style="background:${vegColor(-40)}"></i>Browner than normal`}), el('span',{html:`<i class="dot" style="background:${vegColor(0)}"></i>Normal`}), el('span',{html:`<i class="dot" style="background:${vegColor(40)}"></i>Greener`}), el('span',{},`The real spring from space: NASA farmland greenness, late March to early May ${+S.season+1}`));
+  } else if (S.layer==='space' && S.mode==='replay') {
+    const g = greenAt(S.season, S.day);
+    L.append(el('span',{html:`<i class="dot" style="background:${vegColor(-40)}"></i>Browner than normal`}), el('span',{html:`<i class="dot" style="background:${vegColor(0)}"></i>Normal`}), el('span',{html:`<i class="dot" style="background:${vegColor(40)}"></i>Greener`}), el('span',{}, g ? `NASA MODIS farmland greenness, 250 m, ${fmtComp(g)}` : 'First satellite picture of this winter arrives mid-October'));
+  } else if (S.revealed && S.mode==='replay') {
+    L.append(el('span',{html:`<i class="dot" style="background:var(--alarm)"></i>Real spring: bad`}), el('span',{html:`<i class="dot" style="background:var(--ok)"></i>Real spring: fine`}), el('span',{},'Late-spring greenness from NASA satellites'));
+  } else if (S.layer==='rain') {
+    L.append(el('span',{html:`<i class="dot" style="background:${rainColor(50)}"></i>Much drier than normal`}), el('span',{html:`<i class="dot" style="background:${rainColor(100)}"></i>Normal`}), el('span',{html:`<i class="dot" style="background:${rainColor(150)}"></i>Wetter`}), el('span',{},'Rain since 1 October vs the 1991–2020 normal'));
+  } else {
+    for (const l of ['ok','watch','alarm','none']) { const s = el('span'); s.append(chip(l)); L.append(s); }
+  }
+}
+function renderCrumbs(){
+  const C = $('#crumbs'); C.textContent = '';
+  const b = (txt, on, cur) => el('button',{'aria-current':cur?'true':'false', onclick:on}, txt);
+  C.append(b('Kurdistan Region', goTop, S.level===0));
+  if (S.level>=1) { C.append(el('span',{class:'sep'},'›'), b(D.areas[S.area].name, ()=>selectArea(S.area), S.level===1)); }
+  if (S.level===2) { C.append(el('span',{class:'sep'},'›'), b(D.zones[S.zone].name, ()=>{}, true)); }
+}
+
+/* ---------- panel ---------- */
+const BIG = lvl => { const s = el('span'); s.innerHTML = ICON[lvl].replace('class="ico"','class="bigico"'); s.firstChild.style.color = `var(--${lvl==='none'?'faint':lvl})`; return s.firstChild; };
+function sentence(k, d, st){
+  const e = seasonOf(k), rain = rainAt(k,d);
+  if (S.mode==='live' && k===LIVE) return null;
+  if (st.why==='early') return `The first check is the December watch on 10 December. The winter forecast is above.`;
+  if (st.why==='watch') return st.lvl==='watch'
+    ? `Rain since October plus 7 world seasonal forecasts point to a dry winter. <b>9 of the last 10 droughts</b> started with this watch (so did 5 normal winters).`
+    : `Rain so far and the world seasonal forecasts look normal. The first alarm check is on 31 January.`;
+  const a = e.alarms[st.why], cutTxt = {jan:'31 January',feb:'28 February',mar:'31 March'}[st.why];
+  return st.lvl==='alarm'
+    ? `On ${cutTxt} rain since October was <b>${a.value}%</b> of normal, under the <b>${a.cutoff}%</b> line. Expect wheat per donum about <b>25–55% below normal</b>.`
+    : `On ${cutTxt} rain since October was <b>${a.value}%</b> of normal, above the <b>${a.cutoff}%</b> alarm line.` + (st.lvl==='watch' ? ' The December watch stays on.' : '');
+}
+function nextCheck(d){ const n = CHECKS.find(c=>c.d>d); return n ? n.long : null; }
+function rainChart(series, d, cutoffs){
+  const W = 320, H = 120, padL = 38, padR = 8, padB = 18, padT = 8, n = LAST, x = i => padL + (W-padL-padR)*i/n;
+  const vis = series.slice(0, Math.min(d, series.length-1)+1);
+  const maxV = Math.max(150, ...vis.slice(20)), y = v => padT + (H-padT-padB)*(1 - Math.min(v,maxV)/maxV);
+  const g = sv('svg',{viewBox:`0 0 ${W} ${H}`, class:'spark', role:'img', 'aria-label':'Rain since 1 October as percent of normal'});
+  for (const c of CHECKS) g.append(sv('line',{x1:x(c.d),x2:x(c.d),y1:padT,y2:H-padB,stroke:'var(--line)','stroke-dasharray':'2 3'}));
+  for (const v of [0,100]) { g.append(sv('line',{x1:padL,x2:W-padR,y1:y(v),y2:y(v),stroke:v===100?'var(--faint)':'var(--line)','stroke-width':1,'stroke-opacity':v===100?.6:1})); const t = sv('text',{x:padL-6,y:y(v)+3.5,'text-anchor':'end','font-size':10,fill:'var(--faint)'}); t.textContent = v===100?'normal':'0%'; g.append(t); }
+  for (const [lab,i] of [['Nov',31],['Dec',61],['Jan',92],['Feb',123],['Mar',151]]) { const t = sv('text',{x:x(i)+2,y:H-4,'font-size':10,fill:'var(--faint)'}); t.textContent = lab; g.append(t); }
+  for (const [c,day] of cutoffs) g.append(sv('line',{x1:x(day)-5,x2:x(day)+5,y1:y(c),y2:y(c),stroke:'var(--alarm)','stroke-width':2,'stroke-linecap':'round'}));
+  const start = 20; if (vis.length > start+1) {
+    let p = ''; for (let i=start;i<vis.length;i++) p += (i===start?'M':'L')+x(i).toFixed(1)+','+y(vis[i]).toFixed(1);
+    g.append(sv('path',{d:p+`L${x(vis.length-1).toFixed(1)},${y(0)}L${x(start)},${y(0)}Z`,fill:'var(--accent)','fill-opacity':.12}));
+    g.append(sv('path',{d:p,fill:'none',stroke:'var(--accent)','stroke-width':2,'stroke-linejoin':'round'}));
+    g.append(sv('circle',{cx:x(vis.length-1),cy:y(vis[vis.length-1]),r:3.5,fill:'var(--accent)'}));
+  }
+  return g;
+}
+let lastLvl = '';
+function renderPanel(){
+  const P = $('#panel'); P.textContent = '';
+  const k = S.season, d = S.day, e = seasonOf(k), live = S.mode==='live';
+  const top = el('div',{class:'pane'});
+  if (S.level===0) {
+    const st = regionStatus(k, d);
+    top.append(el('div',{class:'eyebrow'}, live ? 'This winter · live' : 'Time machine · '+e.label));
+    top.append(el('div',{class:'ptitle'},[el('h2',{},'Kurdistan Region'), el('span',{class:'ku'},'هەرێمی کوردستان')]));
+    const mtg = MEETS.find(m=>m.d===d);
+    top.append(el('div',{class:'date'}, (live ? 'Today, ' : mtg ? 'Meeting · ' : '') + dateStr(k, d, true)));
+    if (live) {
+      const s = el('div',{class:'status'}); s.append(BIG('ok')); s.append(el('div',{class:'big'},'Drought unlikely this winter')); top.append(s);
+      top.append(el('p',{class:'say',html:`The Pacific is in a <b>strong El Niño</b> (index +${e.oni.toFixed(2)}, the strongest at this time of year on record). In 35 winters, <b>no El Niño winter was a drought</b>.`}));
+      P.append(top);
+      P.append(octPane(k));
+      const fpane = el('div',{class:'pane'}); const wet = LV.models_octdec.filter(m=>m.pct>100).length;
+      fpane.append(el('div',{class:'eyebrow'},'World forecasts for Oct–Dec 2026'), el('p',{class:'say',html:`<b>${wet} of ${LV.models_octdec.length}</b> forecast models expect more rain than normal.`}));
+      const mb = el('div',{class:'mbars'}); const short = {'CanSIPS-IC4':'Canada','NCEP-CFSv2':'USA NCEP','GFDL-SPEAR':'USA GFDL','NASA-GEOSS2S':'NASA','COLA-RSMAS-CCSM4':'CCSM4','COLA-RSMAS-CESM1':'CESM1','ECMWF-SEAS5':'Europe'};
+      const bars = [];
+      for (const m of LV.models_octdec.slice().sort((a,b)=>b.pct-a.pct)) { const i = el('i'); bars.push([i,m.pct]); const tr = el('span',{class:'tr'},[i, el('b',{style:`left:${100/180*100}%`})]); mb.append(el('div',{class:'mbar'},[el('span',{},short[m.model]||m.model), tr, el('span',{class:'v num'},m.pct+'%')])); }
+      fpane.append(mb, el('div',{class:'date'},'Each model compared with its own normal. The line marks 100% (normal).'));
+      requestAnimationFrame(()=>requestAnimationFrame(()=>bars.forEach(([i,p])=>i.style.width = Math.min(100,p/180*100)+'%')));
+      P.append(fpane);
+      const hp = el('div',{class:'pane'}); hp.append(el('div',{class:'eyebrow'},'The strongest El Niño winters before'));
+      const h = el('div',{class:'hist'}); for (const y of LV.strong) { const se = seasonOf(String(y)); h.append(el('span',{html:`${se.label} · <b>${se.final}%</b> of normal rain`})); }
+      hp.append(h); P.append(hp);
+    } else {
+      const s = el('div',{class:'status'+(st.lvl!==lastLvl && st.lvl==='alarm'?' pulse':'')}); s.append(BIG(st.lvl));
+      const callTxt = st.why==='early' ? 'Rain season starting' : WORD[st.lvl];
+      s.append(el('div',{class:'big'}, callTxt)); top.append(s); lastLvl = st.lvl;
+      const say = sentence(k,d,st); if (say) top.append(el('p',{class:'say',html:say}));
+      P.append(octPane(k));
+      P.append(top);
+    }
+    const mid = el('div',{class:'pane'});
+    const rain = rainAt(k,d);
+    if (rain!=null && d < EARLY) mid.append(el('p',{class:'say',style:'color:var(--muted)'},'Rain is compared with normal from mid-November, once the rain season has started.'));
+    else if (rain!=null) {
+      const g = el('div',{class:'gauge'}); const val = el('b',{class:'num'});
+      g.append(el('div',{class:'row'},[el('span',{},'Rain since 1 October'), el('span',{},[val, ' % of normal'])]));
+      const bar = el('div',{class:'bar'}); const fill = el('i'); bar.append(fill, el('span',{class:'tick',style:'left:'+(100/200*100)+'%'}), el('span',{class:'lab',style:'left:50%'},'normal'));
+      const ac = e.alarms && cutAt(d) && d>=122 ? e.alarms[{Jan:'jan',Feb:'feb',Mar:'mar'}[cutAt(d)]]?.cutoff : null;
+      if (ac) bar.append(el('span',{class:'cut',style:`left:${ac/2}%`,title:'alarm line'}));
+      g.append(bar); mid.append(g);
+      requestAnimationFrame(()=>{ fill.style.width = Math.min(100, rain/2)+'%'; });
+      countUp(val, rain, 600);
+      if (!live) {
+        const cuts = e.alarms ? [['jan',122],['feb',150],['mar',181]].filter(([c,day])=>day<=d).map(([c,day])=>[e.alarms[c].cutoff,day]) : [];
+        mid.append(rainChart(e.rain, d, cuts));
+      }
+    }
+    const nx = nextCheck(d); if (nx) mid.append(el('div',{class:'next',html:`<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="5.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7 4v3.2l2 1.3" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>Next check: ${nx}`}));
+    P.append(mid);
+    const list = el('div',{class:'pane'}); list.append(el('div',{class:'eyebrow'},'Main areas'));
+    const L = el('div',{class:'list'});
+    D.areas.forEach((a,ai)=>{ const al = areaLight(k,d,ai); const row = el('button',{class:'li',onclick:()=>selectArea(ai)});
+      row.append(el('i',{class:'dot',style:`background:var(--${al.lvl==='none'?'none':al.lvl})`}), el('span',{class:'n'},a.name), el('span',{class:'ku',style:'color:var(--faint);font-size:13px'},a.ku),
+        el('span',{class:'k num'}, live ? `${Math.round(D.zones.reduce((s,z,zi)=>s+(z.area===ai?LV.next16[zi].mm:0),0)/al.total)} mm next 16 days` : al.lvl==='none' ? `${al.total} zones` : `${al.n.alarm} red · ${al.n.watch} yellow · ${al.total} zones`)); if (live) row.firstChild.style.background = wetColor(D.zones.reduce((s,z,zi)=>s+(z.area===ai?LV.next16[zi].mm:0),0)/al.total); L.append(row); });
+    list.append(L); P.append(list);
+    if (S.revealed && !live) P.append(truthPane());
+  } else if (S.level===1) {
+    const a = D.areas[S.area], al = areaLight(k,d,S.area);
+    top.append(el('div',{class:'eyebrow'}, 'Main area · '+(live?'live':e.label)));
+    top.append(el('div',{class:'ptitle'},[el('h2',{},a.name), el('span',{class:'ku'},a.ku)]));
+    top.append(el('div',{class:'date'}, dateStr(k,d,true)));
+    const s = el('div',{class:'status'}); s.append(BIG(live ? 'ok' : al.lvl)); s.append(el('div',{class:'big'}, live ? 'Drought unlikely this winter' : al.lvl==='none' ? 'Zone checks start 31 December' : `${WORD[al.lvl]} in most zones`)); top.append(s);
+    if (live) top.append(el('p',{class:'say',html:`Zone checks start on 31 December. Until then the map shows how these zones did in past El Niño winters, and the rain forecast for the next 16 days.`}));
+    P.append(top);
+    const list = el('div',{class:'pane'}); list.append(el('div',{class:'eyebrow'},'Zones'));
+    const L = el('div',{class:'list'});
+    D.zones.forEach((z,zi)=>{ if (z.area!==S.area) return; const zl = zoneLight(k,d,zi); const row = el('button',{class:'li',onclick:()=>selectZone(zi)});
+      row.append(el('i',{class:'dot',style:`background:var(--${zl.lvl==='none'?'none':zl.lvl})`}), el('span',{class:'n'},z.name), el('span',{class:'ku',style:'color:var(--faint);font-size:13px'},z.ku),
+        el('span',{class:'k num'}, live ? `${LV.next16[zi].mm} mm next 16 days` : zl.lvl==='none' ? '–' : `risk ${Math.round(zl.risk*100)}%`)); if (live) row.firstChild.style.background = wetColor(LV.next16[zi].mm); L.append(row); });
+    list.append(L); P.append(list);
+    const wk = e.wheat && e.wheat[a.id];
+    if (S.revealed && !live && wk) P.append(el('div',{class:'pane'},[el('div',{class:'truth',html:`<h3>Official wheat, ${a.name}, ${+k+1}</h3><div class="big wheat num">${fmt(wk.t)} t</div><div class="row"><span>${fmt(wk.y)} kg per donum</span><span>Source: KRSO</span></div>`})]));
+  } else {
+    const z = D.zones[S.zone], zl = zoneLight(k,d,S.zone), zr = zoneRainAt(k,d,S.zone);
+    top.append(el('div',{class:'eyebrow'}, D.areas[z.area].name+' · zone'));
+    top.append(el('div',{class:'ptitle'},[el('h2',{},z.name), el('span',{class:'ku'},z.ku)]));
+    top.append(el('div',{class:'date'}, dateStr(k,d,true)));
+    const s = el('div',{class:'status'}); s.append(BIG(zl.lvl)); s.append(el('div',{class:'big'}, zl.lvl==='none' ? 'First zone check: 31 December' : WORD[zl.lvl])); top.append(s);
+    if (live) { const h = el('div',{class:'hist'}); h.append(el('span',{html:`El Niño winters: bad spring <b>${LV.nino_bad[S.zone]} of ${NINO_N}</b>`}), el('span',{html:`La Niña winters: bad spring <b>${LV.nina_bad[S.zone]} of ${LV.nina_seasons.length}</b>`}), el('span',{html:`Next 16 days: <b>${LV.next16[S.zone].mm} mm</b> of rain`})); top.append(h); }
+    if (zl.lvl!=='none') { const t = D.lights[zl.cut]; top.append(el('p',{class:'say',html:`Chance of a bad wheat spring: <b>${Math.round(zl.risk*100)}%</b>. Yellow from ${Math.round(t.yellow*100)}%, red from ${Math.round(t.red*100)}%. Based on rain, soil moisture, temperature, satellite greenness and El Niño, checked against 26 winters.`})); }
+    P.append(top);
+    if (zr!=null && d >= EARLY) { const mid = el('div',{class:'pane'}); const g = el('div',{class:'gauge'}); const val = el('b',{class:'num'});
+      g.append(el('div',{class:'row'},[el('span',{},'Rain since 1 October here'), el('span',{},[val,' % of normal'])])); mid.append(g); countUp(val, zr, 600);
+      if (!live) mid.append(rainChart(e.zoneRain[S.zone], d, [])); P.append(mid); }
+    if (S.revealed && !live && e.bad) { const bad = e.bad[S.zone], g = e.green[S.zone];
+      P.append(el('div',{class:'pane'},[el('div',{class:'truth',html:`<h3>What really happened, spring ${+k+1}</h3><div class="big" style="color:var(--${bad?'alarm':'ok'})">${bad?'Bad spring':'Fine spring'}</div><div class="row"><span>Late-spring greenness: ${g}% of this zone's normal</span><span>Our light on 31 Mar: ${WORD[zoneLight(k,181,S.zone).lvl]}</span></div>`})])); }
+  }
+}
+const FC_ICON = {
+  wet:'<svg viewBox="0 0 26 26"><path d="M7 15a4.5 4.5 0 01.6-9 6 6 0 0111.3 1.7A3.7 3.7 0 0118.5 15z" fill="currentColor" opacity=".9"/><path d="M9 18l-1.3 3M13.5 18l-1.3 3M18 18l-1.3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  normal:'<svg viewBox="0 0 26 26"><circle cx="9" cy="9" r="3.6" fill="currentColor" opacity=".55"/><path d="M8 19a4.3 4.3 0 01.5-8.6 5.6 5.6 0 0110.6 1.6A3.5 3.5 0 0118.6 19z" fill="currentColor"/></svg>',
+  dry:'<svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="5" fill="currentColor"/><path d="M13 2.5v3M13 20.5v3M2.5 13h3M20.5 13h3M5.6 5.6l2.1 2.1M18.3 18.3l2.1 2.1M5.6 20.4l2.1-2.1M18.3 7.7l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'};
+const FC_WORD = {wet:'Wet', normal:'Normal', dry:'Dry'};
+const FINALS = Object.values(D.seasons).filter(e=>e.final!=null).map(e=>e.final).sort((a,b)=>a-b);
+const T_DRY = FINALS[Math.floor(FINALS.length/3)], T_WET = FINALS[Math.floor(2*FINALS.length/3)];   // thirds of 36 winters: dry < 90%, wet >= 115%
+// a forecast made early in month M uses NOAA's latest 3-month El Niño value, the one ending in M-1
+const FC_MONTHS = [{k:'Jun',name:'June',seas:'MAM',span:'Mar–May'},{k:'Jul',name:'July',seas:'AMJ',span:'Apr–Jun'},{k:'Aug',name:'August',seas:'MJJ',span:'May–Jul'},{k:'Sep',name:'September',seas:'JJA',span:'Jun–Aug'},
+  {k:'Oct',name:'October',seas:'JAS',span:'Jul–Sep'},{k:'Nov',name:'November',seas:'ASO',span:'Aug–Oct'},{k:'Dec',name:'December',seas:'SON',span:'Sep–Nov'},{k:'Jan',name:'January',seas:'OND',span:'Oct–Dec',next:true}];
+const fcMonth = () => FC_MONTHS.find(m=>m.k===S.fcMonth);
+const oniFor = (e, m=fcMonth()) => e.onim ? e.onim[m.seas] : null;
+const predictOf = (e, m=fcMonth()) => { const o = oniFor(e,m); return o==null ? null : o >= 0.5 ? 'wet' : o <= -0.5 ? 'dry' : 'normal'; };
+const actualOf = e => e.final==null ? null : e.final < T_DRY ? 'dry' : e.final >= T_WET ? 'wet' : 'normal';
+const RECORDS = Object.fromEntries(FC_MONTHS.map(m => { const r = {wet:[0,0],normal:[0,0],dry:[0,0]}; let opp = 0;
+  for (const e of Object.values(D.seasons)) { const p = predictOf(e,m), a = actualOf(e); if (p && a) { r[p][0]++; if (p===a) r[p][1]++; if ((p==='wet'&&a==='dry')||(p==='dry'&&a==='wet')) opp++; } }
+  r.right = r.wet[1]+r.normal[1]+r.dry[1]; r.n = r.wet[0]+r.normal[0]+r.dry[0]; r.opp = opp; return [m.k, r]; }));
+function octPane(k){
+  const e = seasonOf(k), live = S.mode==='live', m = fcMonth(), p = el('div',{class:'pane'}), c = el('div',{class:'octcard'});
+  const yr = m.next ? +k+1 : +k, o = oniFor(e,m), pr = predictOf(e,m), ac = actualOf(e), shown = live || S.pred;
+  c.append(el('div',{class:'eyebrow'}, `Winter forecast · made early ${m.name} ${yr}`));
+  const mo = el('div',{class:'months'}); mo.append(el('span',{class:'lab'},'Made in'));
+  for (const mm of FC_MONTHS) { const have = oniFor(e,mm)!=null;
+    mo.append(el('button',{class:'mo','aria-pressed':mm.k===S.fcMonth?'true':'false',...(have?{}:{disabled:'',title:'NOAA has not published this value yet'}),onclick:()=>{ S.fcMonth = mm.k; renderPanel(); }}, mm.k)); }
+  c.append(mo);
+  if (o==null) { c.append(el('div',{class:'say'},`NOAA publishes the El Niño value for ${m.span} in early ${m.name}. Pick an earlier month.`)); p.append(c); return p; }
+  const phase = o>=0.5?'El Niño':o<=-0.5?'La Niña':'neutral';
+  c.append(el('div',{class:'say',html: shown ? `El Niño index for ${m.span}: <b class="oniv">${o>0?'+':''}${o.toFixed(2)}</b> (${phase}), so we predict a <b>${FC_WORD[pr].toLowerCase()}</b> winter.` : `What will winter ${e.label} bring? The forecast uses only the El Niño / La Niña value NOAA had published by early ${m.name}.`}));
+  const row = el('div',{class:'fc3'});
+  for (const c3 of ['wet','normal','dry']) { const sp = el('span',{class:c3+(shown && pr===c3?' on':'')+(!live && S.predShown && ac===c3?' real':'')}); sp.innerHTML = FC_ICON[c3]; sp.append(FC_WORD[c3]); row.append(sp); }
+  c.append(row);
+  const R = RECORDS[m.k];
+  if (live) c.append(el('div',{class:'date'}, `We find out at the end of May ${+k+1}. Forecasts made in early ${m.name} were right in ${R.right} of ${R.n} past winters` + (R.opp===0 ? `, and never called the opposite extreme.` : `; ${R.opp} times they called the opposite extreme.`)));
+  else {
+    const b = el('div',{class:'fcbtns'});
+    if (!S.pred) b.append(el('button',{class:'stepb next',onclick:()=>{ S.pred = true; renderPanel(); }}, 'Predict this winter'));
+    else if (!S.predShown) b.append(el('button',{class:'check',onclick:()=>{ S.predShown = true; renderPanel(); }}, 'Reveal what happened'));
+    c.append(b);
+    if (S.predShown && ac) {
+      const right = pr===ac, vd = el('div',{class:'verdict',style:`color:var(--${right?'ok':'alarm'})`}); vd.innerHTML = ICON[right?'ok':'alarm'];
+      vd.append(right ? 'Right' : 'Wrong', el('small',{}, `· it was a ${FC_WORD[ac].toLowerCase()} winter: ${e.final}% of normal rain`)); c.append(vd);
+      c.append(el('div',{class:'date'}, `Forecasts made in early ${m.name}: right in ${R.right} of ${R.n} winters (Wet ${R.wet[1]}/${R.wet[0]} · Normal ${R.normal[1]}/${R.normal[0]} · Dry ${R.dry[1]}/${R.dry[0]})` + (R.opp===0 ? ', never the opposite extreme.' : `, ${R.opp} times the opposite extreme.`) + ` Dry means below ${T_DRY}% of normal rain, wet ${T_WET}% or more.`));
+    }
+  }
+  p.append(c); return p;
+}
+function truthPane(){
+  const k = S.season, e = seasonOf(k), st = regionStatus(k, LAST);
+  const p = el('div',{class:'pane'}); const t = el('div',{class:'truth'});
+  const caught = e.drought ? st.lvl==='alarm' : st.lvl!=='alarm';
+  const nb = e.bad ? e.bad.reduce((s,v)=>s+v,0) : null;
+  t.append(el('h3',{},'What really happened'));
+  t.append(el('div',{class:'row',html:`<span>Winter rain: <b class="num" style="color:var(--ink)">${e.final}%</b> of normal</span><span>${e.drought?'A drought winter':'Not a drought'}</span>${nb!=null?`<span>${nb} of 16 zones had a bad spring</span>`:''}`}));
+  if (e.wheat && e.wheat.kri) {
+    const big = el('div',{class:'big wheat num'}); t.append(el('div',{class:'row'},[el('span',{},`Official wheat, Kurdistan Region, ${+k+1}`)]), big);
+    countUp(big, e.wheat.kri.t, 1400, ' t');
+    if (e.wheatVs3) t.append(el('div',{class:'row'},[el('span',{}, `${e.wheatVs3}% of the 3 years before · KRSO`)]));
+  }
+  t.append(el('div',{class:'row',html:`<span style="color:var(--${caught?'ok':'alarm'});font-weight:600">${caught ? (e.drought ? '✓ Our alarm caught it' : '✓ No false alarm') : (e.drought ? '✗ We missed this drought' : '✗ False alarm')}</span>`}));
+  p.append(t); return p;
+}
+
+/* ---------- timeline ---------- */
+let playT = 0, lastFrame = 0;
+function renderTimeline(){
+  const T = $('#timeline'); T.textContent = '';
+  if (S.mode==='live') {
+    const e = seasonOf(LIVE);
+    T.append(el('div',{class:'tlhead'},[el('div',{class:'eyebrow'},'Winter 2026/27')]));
+    const row = el('div',{class:'tlrow'}); const tr = el('div',{class:'track'});
+    const inp = el('input',{type:'range',min:0,max:LAST,value:S.day,disabled:'',id:'scrub','aria-label':'Today in the winter'}); tr.append(inp);
+    const mk = el('div',{class:'marks'}); mk.append(el('span',{class:'mk passed',style:`left:${S.day/LAST*100}%`},'Today'));
+    for (const c of CHECKS) mk.append(el('span',{class:'mk future'+(c.d===LAST?' end':'')+(c.d===70?' minor':''),style:`left:${c.d/LAST*100}%`},c.lab));
+    tr.append(mk); row.append(tr); T.append(row);
+    T.append(el('div',{class:'livebar',html:`Next: the December watch on <b style="color:var(--ink)">10 December</b>, then zone checks from 31 December. Rain is compared with normal from mid-November.`}));
+    return;
+  }
+  const head = el('div',{class:'tlhead'});
+  const ss = el('div',{class:'seasons'});
+  for (const [s,lab] of FEATURED) ss.append(el('button',{class:'sbtn','aria-pressed':S.season===s?'true':'false',onclick:()=>setSeason(s)},[seasonOf(s).label, el('small',{},lab)]));
+  const sel = el('select',{class:'more',id:'more','aria-label':'Other winters'}); sel.append(el('option',{value:''},'Other winter…'));
+  for (let s=1999;s<=2024;s++) if (!FEATURED.find(f=>f[0]===String(s))) { const o = el('option',{value:s},seasonOf(String(s)).label); if (S.season===String(s)) o.selected = true; sel.append(o); }
+  sel.addEventListener('change',()=>sel.value && setSeason(sel.value)); ss.append(sel);
+  head.append(ss);
+  T.append(head);
+  const ms = el('div',{class:'meets',id:'meets'}); T.append(ms); renderMeets();
+  const row = el('div',{class:'tlrow'});
+  const pb = el('button',{class:'play',id:'play','aria-label':S.playing?'Pause':'Play the winter',onclick:togglePlay,html:S.playing?'<svg width="16" height="16" viewBox="0 0 16 16"><rect x="3" y="2" width="3.6" height="12" rx="1" fill="currentColor"/><rect x="9.4" y="2" width="3.6" height="12" rx="1" fill="currentColor"/></svg>':'<svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 2.2v11.6L13.6 8z" fill="currentColor"/></svg>'});
+  const tr = el('div',{class:'track'});
+  const inp = el('input',{type:'range',min:0,max:LAST,step:1,value:S.day,id:'scrub','aria-label':'Day of the winter'});
+  inp.addEventListener('input',()=>{ stopPlay(); S.day = +inp.value; update(true); });
+  tr.append(inp);
+  const mk = el('div',{class:'marks'});
+  for (const c of CHECKS) mk.append(el('span',{class:'mk'+(S.day>=c.d?' passed':'')+(c.d===LAST?' end':'')+(c.d===70?' minor':''),style:`left:${c.d/LAST*100}%`},c.lab));
+  tr.append(mk);
+  row.append(pb, tr, el('div',{class:'date num',style:'min-width:92px;text-align:right'}, dateStr(S.season,S.day)));
+  T.append(row);
+}
+function renderMeets(){
+  const ms = $('#meets'); if (!ms) return; ms.textContent = '';
+  const cur = meetingAt(S.day); ms.append(el('span',{class:'lab'},'Meetings'));
+  MEETS.forEach((m,i)=>{ if (i) ms.append(el('span',{class:'mt r','aria-hidden':'true'}));
+    ms.append(el('button',{class:'mt'+(S.day>=m.d?' done':''),'aria-current':cur && cur.d===m.d && S.day===m.d ? 'true':'false',onclick:()=>goTo(m.d)}, m.lab)); });
+  const prev = MEETS.filter(m=>m.d<S.day).pop(), next = MEETS.find(m=>m.d>S.day);
+  const sb = el('div',{class:'stepbtns'});
+  sb.append(el('button',{class:'stepb',id:'prevM',onclick:()=>prev&&goTo(prev.d),...(prev?{}:{disabled:''}),html:'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M7.5 2L3.5 6l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Previous'}));
+  sb.append(el('button',{class:'stepb next'+(!next && !S.revealed?' reveal ready':''),id:'nextM',onclick:()=>next ? goTo(next.d) : reveal(),html: next ? `Next meeting · ${next.lab}<svg width="12" height="12" viewBox="0 0 12 12"><path d="M4.5 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : (S.revealed ? 'Hide the answer' : 'Reveal what really happened')}));
+  ms.append(sb);
+}
+function setSeason(s){ stopPlay(); S.season = s; S.revealed = false; S.pred = false; S.predShown = false; S.day = 7; update(); toastMeeting(MEETS[0]); }
+let goAnim = 0;
+function goTo(target){
+  stopPlay(); const from = S.day, id = ++goAnim; if (target === from) return;
+  if (target < S.day) S.revealed = false;
+  if (reduce) { const prev = S.day; S.day = target; if (target>prev) crossChecks(prev, target); update(); return; }
+  const ms = Math.min(1400, 420 + Math.abs(target-from)*9), t0 = performance.now(); let last = from;
+  const step = t => { if (id!==goAnim) return; const k = Math.max(0,Math.min(1,(t-t0)/ms)), e = 1-Math.pow(1-k,3);
+    S.day = Math.round(from + (target-from)*e); if (target>from) crossChecks(last, S.day); last = S.day; update(true);
+    if (k<1) requestAnimationFrame(step); else update(); };
+  requestAnimationFrame(step);
+}
+function toastMeeting(m){ if (m.key==='oct') toast('none', '8 October · the rain season starts', 'Make the winter forecast with “Predict this winter”'); }
+function togglePlay(){ S.playing ? stopPlay() : startPlay(); }
+function startPlay(){
+  if (S.day>=LAST) S.day = 0; S.revealed = false; S.playing = true; renderTimeline();
+  lastFrame = performance.now(); let acc = 0;
+  const step = t => { if (!S.playing) return; acc += (t-lastFrame)/1000*13; lastFrame = t;
+    if (acc >= 1) { const prev = S.day; S.day = Math.min(LAST, S.day + Math.floor(acc)); acc -= Math.floor(acc); crossChecks(prev, S.day); update(true); }
+    if (S.day >= LAST) { stopPlay(); return; } playT = requestAnimationFrame(step); };
+  playT = requestAnimationFrame(step);
+}
+function stopPlay(){ if (!S.playing) return; S.playing = false; cancelAnimationFrame(playT); renderTimeline(); }
+function crossChecks(a, b){
+  if (a < 7 && b >= 7) toastMeeting(MEETS[0]);
+  for (const c of CHECKS) if (a < c.d && b >= c.d) {
+    const k = S.season, st = regionStatus(k, c.d), e = seasonOf(k);
+    let msg = null, lvl = st.lvl;
+    if (c.key==='watch' && e.watch) msg = e.watch.on ? ['Watch','Rain so far and world forecasts point dry'] : ['No watch','The winter looks normal so far'];
+    else if (c.key==='Dec') { const n = D.zones.filter((z,zi)=>zoneLight(k,c.d,zi).lvl==='alarm').length; msg = ['Zone check', `${n} of 16 zones red`]; lvl = n>=8?'alarm':n>=3?'watch':'ok'; }
+    else if (e.alarms && e.alarms[c.key]) { const a2 = e.alarms[c.key]; msg = a2.on ? ['Drought alarm', `Rain ${a2.value}% of normal, line ${a2.cutoff}%`] : ['No alarm', `Rain ${a2.value}% of normal`]; lvl = a2.on?'alarm':'ok'; }
+    if (msg) toast(lvl, c.long+' · '+msg[0], msg[1]);
+  }
+}
+let toastT = 0;
+function toast(lvl, title, sub){ const t = $('#toast'); t.innerHTML = ''; const c = el('span',{style:`color:var(--${lvl==='none'?'faint':lvl});display:flex`}); c.innerHTML = ICON[lvl]; t.append(c, el('div',{},[title, el('small',{},sub)])); t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('on'), 2600); }
+function reveal(){
+  if (S.revealed) { S.revealed = false; update(); return; }
+  stopPlay(); S.day = LAST; S.revealed = true; gHex.classList.remove('flip'); void gHex.getBBox(); gHex.classList.add('flip');
+  setTimeout(()=>{ update(); }, reduce?0:340);
+}
+
+/* ---------- top-level ---------- */
+function update(light){
+  paint(); renderCrumbs(); renderPanel();
+  if (!light) renderTimeline(); else { const sc = $('#scrub'); if (sc) sc.value = S.day; document.querySelectorAll('.mk').forEach((m,i)=>m.classList.toggle('passed', S.day>=CHECKS[i]?.d)); const dt = $('#timeline .tlrow .date'); if (dt) dt.textContent = dateStr(S.season,S.day); const rv = $('#reveal'); if (rv) rv.classList.toggle('ready', S.day>=LAST || S.revealed); renderMeets(); }
+  updateCtx();
+}
+function setLayer(l){
+  S.layer = l; const [a,b] = S.mode==='live' ? ['enso','next16'] : ['risk','rain'];
+  $('#ly-risk').setAttribute('aria-pressed', l===a); $('#ly-rain').setAttribute('aria-pressed', l===b); $('#ly-space').setAttribute('aria-pressed', l==='space');
+  $('#ly-space').hidden = S.mode==='live';
+}
+function setMode(m){
+  stopPlay(); S.mode = m; $('#tab-replay').setAttribute('aria-selected', m==='replay'); $('#tab-live').setAttribute('aria-selected', m==='live');
+  $('#ly-risk').textContent = m==='live' ? 'El Niño history' : 'Crop risk'; $('#ly-rain').textContent = m==='live' ? 'Next 16 days' : 'Rain so far';
+  setLayer(m==='live' ? 'next16' : 'risk');
+  if (m==='live') { S.season = LIVE; S.day = liveDay(); S.revealed = false; } else { S.season = '2007'; S.day = 122; }
+  update();
+}
+$('#tab-replay').onclick = () => setMode('replay');
+$('#tab-live').onclick = () => setMode('live');
+$('#ly-risk').onclick = () => { setLayer(S.mode==='live'?'enso':'risk'); update(true); };
+$('#ly-rain').onclick = () => { setLayer(S.mode==='live'?'next16':'rain'); update(true); };
+$('#ly-space').onclick = () => { setLayer('space'); update(true); };
+addEventListener('keydown', ev => { if (ev.key==='Escape') { if ($('#drawer').classList.contains('on')) closeAsk(); else if (S.level===2) selectArea(S.area); else if (S.level===1) goTop(); } });
+addEventListener('resize', () => { sizeLabels(); });
+
+/* ---------- Ask Claude ---------- */
+let sample = null, turns = [], busy = null;
+const SUGS = {
+  en:['Why does the map look like this?','Which past winters looked like this one?','What should the Ministry do now?'],
+  ku:['بۆچی نەخشەکە بەم شێوەیەیە؟','کام زستانی ڕابردوو لەم زستانە دەچێت؟','وەزارەت ئێستا چی بکات؟']
+};
+function viewState(){
+  const k = S.season, d = S.day, e = seasonOf(k), st = S.mode==='live' ? {lvl:'none',why:'early'} : regionStatus(k,d);
+  return { mode: S.mode==='live'?'live (this winter)':'time machine (past winter replay)', winter: e.label, date: dateStr(k,d,true),
+    real_outcome_revealed: S.mode==='live' ? false : S.revealed,
+    winter_forecast: {made_in: fcMonth().name, el_nino_value_used: (S.mode==='live'||S.pred) ? `${fcMonth().span}: ${oniFor(e)}` : 'hidden until Predict', rule:'El Niño (≥ +0.5) → wet, La Niña (≤ −0.5) → dry, neutral → normal (thirds of 36 winters: dry < '+T_DRY+'%, wet >= '+T_WET+'%)',
+      prediction: (S.mode==='live'||S.pred) ? predictOf(e) : 'not made yet', what_happened: S.mode==='live' ? 'not known until May 2027' : S.predShown ? `${actualOf(e)} (${e.final}% of normal)` : 'hidden', track_record_for_this_month: RECORDS[S.fcMonth]},
+    region: { light: WORD[st.lvl], rain_since_1_Oct_pct_of_normal: rainAt(k,d), october_el_nino_index: (S.mode==='live' || S.pred) ? e.oni : 'hidden until the user presses Predict',
+      december_watch: (e.watch && d>=70) ? (e.watch.on?'on':'off') : 'not yet (10 Dec)',
+      alarm_checks: e.alarms ? Object.fromEntries(Object.entries(e.alarms).filter(([c])=>d>={jan:122,feb:150,mar:181}[c]).map(([c,a])=>[c,{rain_pct:a.value, alarm_line_pct:a.cutoff, alarm:a.on}])) : {} },
+    areas: D.areas.map((a,ai)=>{ const al = areaLight(k,d,ai); return {name:a.name, light: WORD[al.lvl], red_zones: al.n.alarm, yellow_zones: al.n.watch, zones: al.total}; }),
+    selected: S.level===2 ? D.zones[S.zone].name : S.level===1 ? D.areas[S.area].name : 'Kurdistan Region',
+    live_call: S.mode==='live' ? 'Sealed 8 Oct 2026: strong El Niño (+2.16) → WET winter 2026/27 (rule: El Niño → wet, La Niña → dry, neutral → normal). In 35 winters no El Niño winter was a drought.' : undefined,
+    live_world_forecasts_oct_dec_pct_of_normal: S.mode==='live' ? Object.fromEntries(LV.models_octdec.map(m=>[m.model,m.pct])) : undefined,
+    live_zones: S.mode==='live' ? D.zones.map((z,zi)=>({zone:z.name, bad_springs_in_past_el_nino_winters:`${LV.nino_bad[zi]} of ${NINO_N}`, bad_springs_in_past_la_nina_winters:`${LV.nina_bad[zi]} of ${LV.nina_seasons.length}`, rain_next_16_days_mm:LV.next16[zi].mm})) : undefined };
+}
+const TOOLS = [
+  {name:'get_view', description:'Returns what the screen shows now: winter, date, region light, rain so far, alarm checks passed, and the light of each of the 5 main areas. Call this first.', execute:()=>viewState()},
+  {name:'get_zone', description:'Returns one farmland zone on the current date: its light, chance of a bad wheat spring, rain since 1 October. Real outcome only if revealed. Zone names: '+D.zones.map(z=>z.name).join(', ')+'.',
+    inputSchema:{type:'object',properties:{zone:{type:'string'}},required:['zone']},
+    execute:({zone})=>{ const zi = D.zones.findIndex(z=>z.name.toLowerCase()===String(zone).toLowerCase()); if (zi<0) throw new Error('Unknown zone'); const k=S.season,d=S.day,zl=zoneLight(k,d,zi),e=seasonOf(k);
+      return {zone:D.zones[zi].name, area:D.areas[D.zones[zi].area].name, light:WORD[zl.lvl], chance_bad_spring_pct: zl.risk!=null?Math.round(zl.risk*100):null, rain_since_1_Oct_pct: zoneRainAt(k,d,zi),
+        real_spring: (S.revealed && S.mode==='replay' && e.bad) ? (e.bad[zi]?'bad':'fine') : 'hidden'}; }},
+  {name:'find_lookalike_winters', description:'Finds the 3 past winters (1990/91–2025/26) whose rain since 1 October was closest to now on the same date, with how each winter ended and the official wheat harvest.', execute:()=>{
+      const k=S.season, d=Math.max(S.day,20), now=rainAt(k,d), out=[];
+      for (const s of Object.keys(D.seasons)) { if (s===k || s===LIVE) continue; const e = seasonOf(s); if (e.final==null) continue; out.push({winter:e.label, rain_then_pct: e.rain[Math.min(d,e.rain.length-1)], final_rain_pct:e.final, drought:e.drought, wheat_vs_3yrs_before_pct:e.wheatVs3??null, el_nino_index:e.oni}); }
+      out.sort((a,b)=>Math.abs(a.rain_then_pct-now)-Math.abs(b.rain_then_pct-now)); return {now_rain_pct:now, date:dateStr(k,d,true), lookalikes: out.slice(0,3)}; }},
+  {name:'get_rules', description:'Returns how the alarm works and how well it did in hidden-winter tests.', execute:()=>({
+      october:'El Niño/La Niña hint only. No El Niño winter was a drought in 35 years; La Niña winters were droughts 4 of 7 times.',
+      december_10:'Watch if rain Oct–Nov + 7 world seasonal forecasts predict a dry winter: flagged 9 of 10 droughts, 5 false watches in 35 winters.',
+      january_31:`Alarm if rain since 1 Oct < ${D.cutoffs.jan}% of normal: 4 of 10 droughts, 1 false alarm.`,
+      february_28:`Alarm if < ${D.cutoffs.feb}%: 6 of 10, 1 false alarm.`, march_31:`Alarm if < ${D.cutoffs.mar}%: 9 of 10, 2 false alarms.`,
+      zones:'Monthly crop risk per zone (regression + random forest on weather, soil, temperature, satellite greenness, El Niño), tested on 26 hidden winters.',
+      wheat_if_alarm:'In 4 of 6 past drought winters official wheat per donum fell 23–54% (KRSO).',
+      last_20_years:'6 of 7 droughts caught, 3 by 31 January.'})}
+];
+function rules(){
+  const langLine = S.lang==='ku' ? 'Answer in Central Kurdish (Sorani), Arabic script, plain everyday words.' : 'Answer in plain English.';
+  return `You explain the "Kurdistan Wheat Alarm" to planners at the KRG Ministry of Agriculture and Water Resources. Use the tools to read the screen; use only numbers the tools give you. ${langLine} At most 120 words, short sentences, no headings. Say what the light means for wheat and what to watch next. If real_outcome_revealed is false in the time machine, never reveal or guess how the winter ended. If winter_forecast.prediction is 'not made yet', do not say what the forecast will be. Do not give fertilizer or chemical advice.`;
+}
+function updateCtx(){ const v = viewState(); $('#ctx').textContent = `Claude reads what the map shows: ${v.winter}, ${v.date}, ${v.selected}.`; }
+function renderSugs(){ const g = $('#sugs'); g.textContent = ''; for (const s of SUGS[S.lang]) g.append(el('button',{class:'sug'+(S.lang==='ku'?' ku':''),onclick:()=>ask(s)},s)); }
+function openAsk(){ $('#drawer').classList.add('on'); $('#drawer').setAttribute('aria-hidden','false'); $('#scrim').classList.add('on'); renderSugs(); updateCtx(); setTimeout(()=>$('#q').focus(), 300); }
+function closeAsk(){ $('#drawer').classList.remove('on'); $('#drawer').setAttribute('aria-hidden','true'); $('#scrim').classList.remove('on'); }
+$('#askOpen').onclick = openAsk; $('#askClose').onclick = closeAsk; $('#scrim').onclick = closeAsk;
+const setLang = l => { S.lang = l; $('#lg-ku').setAttribute('aria-pressed', l==='ku'); $('#lg-en').setAttribute('aria-pressed', l==='en'); $('#q').placeholder = l==='ku' ? 'پرسیارێک بنووسە…' : 'Ask about what the map shows…'; $('#q').dir = l==='ku'?'rtl':'ltr'; renderSugs(); };
+$('#lg-ku').onclick = () => setLang('ku'); $('#lg-en').onclick = () => setLang('en');
+$('#askForm').addEventListener('submit', ev => { ev.preventDefault(); const q = $('#q').value.trim(); if (q) ask(q); });
+$('#q').addEventListener('keydown', ev => { if (ev.key==='Enter' && !ev.shiftKey) { ev.preventDefault(); $('#askForm').requestSubmit(); } });
+const COPY = {not_granted:'Claude is not allowed on this page for you.', sampling_disabled:'Claude is not available for this account.', rate_limited:'Too many questions at once. Try again in a minute.', session_expired:'Sign in to Claude again, then ask.', refused:'Claude could not answer that. Ask it another way.', tools_unavailable:'This view cannot let Claude read the map.'};
+async function ask(q){
+  if (!sample) return;
+  if (busy) busy.abort();
+  const th = $('#thread'); th.append(el('div',{class:'msg me'+(S.lang==='ku'?' ku':'')},q));
+  const out = el('div',{class:'msg ai'+(S.lang==='ku'?' ku':'')},'Reading the map…'); th.append(out); out.scrollIntoView({block:'end',behavior:'smooth'});
+  $('#q').value = ''; $('#send').disabled = true;
+  turns.push({role:'user', content:q}); const ctl = new AbortController(); busy = ctl;
+  try {
+    const {text} = await sample([{role:'user',content:rules()}, ...turns.slice(-6)], {tools:TOOLS, signal:ctl.signal, onText:({text})=>{ out.textContent = text; }});
+    out.textContent = text; turns.push({role:'assistant', content:text});
+  } catch (e) {
+    out.textContent = e.text || ''; if (e.code!=='cancelled') out.append(el('span',{class:'meta'}, COPY[e.code] || 'The answer stopped. Ask again.'));
+    if (['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(e.code)) disableAsk(COPY[e.code]);
+  } finally { busy = null; $('#send').disabled = false; }
+}
+function disableAsk(msg){ $('#sugs').textContent=''; $('#askForm').hidden = true; $('#thread').append(el('div',{class:'off-note'}, msg || 'Ask Claude works when this page is open in Claude.')); }
+(async () => {
+  try { sample = window.claude && await window.claude.use('sample'); } catch { sample = null; }
+  if (!sample) disableAsk('Ask Claude works when this page is open in Claude. Everything else on the page works without it.');
+})();
+
+/* ---------- start ---------- */
+renderSugs(); update();
+requestAnimationFrame(()=>{ sizeLabels(); if (!reduce) { gHex.classList.add('intro'); setTimeout(()=>gHex.classList.remove('intro'), 1900); } });
+})();
+</script>

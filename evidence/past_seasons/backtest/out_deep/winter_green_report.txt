@@ -1,0 +1,16 @@
+winter composites per zone: Slemani 206, Garmiyan 206, Chamchamal 206, Bazian 206, Ranya 206, Penjwen 206, Sharazur 206, Qaradagh 206, Erbil 206, Duhok 206, Zakho 206, Soran 206, Koya 206, Halabja 206, Akre 206, Makhmour 128
+Dec: reference LR+ElNiño AUC 0.77 catch@15%FA  42% Brier +0.18   (rows with winter pictures: 388)
+    + winter greenness vs same date      AUC 0.76 catch@15%FA  42% Brier +0.17  beats ref in 5%
+    + latest winter picture              AUC 0.76 catch@15%FA  46% Brier +0.17  beats ref in 14%
+    + crop emergence since early Nov     AUC 0.77 catch@15%FA  43% Brier +0.17  beats ref in 11%
+    + all three                          AUC 0.76 catch@15%FA  43% Brier +0.16  beats ref in 7%
+Jan: reference LR+ElNiño AUC 0.76 catch@15%FA  42% Brier +0.16   (rows with winter pictures: 400)
+    + winter greenness vs same date      AUC 0.76 catch@15%FA  32% Brier +0.15  beats ref in 58%
+    + latest winter picture              AUC 0.77 catch@15%FA  38% Brier +0.18  beats ref in 82%
+    + crop emergence since early Nov     AUC 0.77 catch@15%FA  47% Brier +0.18  beats ref in 88%
+    + all three                          AUC 0.77 catch@15%FA  40% Brier +0.17  beats ref in 74%
+Feb: reference LR+ElNiño AUC 0.78 catch@15%FA  49% Brier +0.19   (rows with winter pictures: 400)
+    + winter greenness vs same date      AUC 0.78 catch@15%FA  42% Brier +0.19  beats ref in 44%
+    + latest winter picture              AUC 0.78 catch@15%FA  44% Brier +0.19  beats ref in 55%
+    + crop emergence since early Nov     AUC 0.78 catch@15%FA  50% Brier +0.19  beats ref in 52%
+    + all three                          AUC 0.78 catch@15%FA  43% Brier +0.19  beats ref in 50%

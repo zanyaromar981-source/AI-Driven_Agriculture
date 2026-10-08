@@ -1,0 +1,63 @@
+extra weather available for 12/16 zones (extra-weather rows use only these zones; reference recomputed on the same zones)
+
+=== Dec ===   reference LR+ElNiño: AUC 0.77  catch@15%FA  42%  Brier +0.18
+  + zone dryness × rain                                      AUC 0.77  catch@15%FA  40%  Brier +0.18  beats LR+ElNiño in 48%
+  predict harvest size (regression), same inputs             AUC 0.75  catch@15%FA  43%  Brier +0.15  beats LR+ElNiño in 25%
+  -- new weather inputs (12 zones; reference on same zones: AUC 0.76  catch@15%FA  44%  Brier +0.16)
+     + frost days                                            AUC 0.76  catch@15%FA  48%  Brier +0.17  beats LR+ElNiño in 66%
+     + warm days (>20°C)                                     AUC 0.76  catch@15%FA  48%  Brier +0.16  beats LR+ElNiño in 31%
+     + snow share                                            AUC 0.75  catch@15%FA  40%  Brier +0.15  beats LR+ElNiño in 5%
+     + shallow soil 0–7 & 7–28 cm                            AUC 0.75  catch@15%FA  49%  Brier +0.17  beats LR+ElNiño in 38%
+     + air dryness (VPD)                                     AUC 0.75  catch@15%FA  45%  Brier +0.16  beats LR+ElNiño in 1%
+     + sunshine                                              AUC 0.75  catch@15%FA  42%  Brier +0.16  beats LR+ElNiño in 9%
+     + rain hours                                            AUC 0.76  catch@15%FA  49%  Brier +0.16  beats LR+ElNiño in 42%
+     + all new weather                                       AUC 0.75  catch@15%FA  44%  Brier +0.16  beats LR+ElNiño in 30%
+
+=== Jan ===   reference LR+ElNiño: AUC 0.76  catch@15%FA  42%  Brier +0.16
+  + zone dryness × rain                                      AUC 0.75  catch@15%FA  41%  Brier +0.15  beats LR+ElNiño in 35%
+  predict harvest size (regression), same inputs             AUC 0.74  catch@15%FA  49%  Brier +0.13  beats LR+ElNiño in 25%
+  -- new weather inputs (12 zones; reference on same zones: AUC 0.74  catch@15%FA  39%  Brier +0.13)
+     + frost days                                            AUC 0.73  catch@15%FA  44%  Brier +0.14  beats LR+ElNiño in 49%
+     + warm days (>20°C)                                     AUC 0.72  catch@15%FA  40%  Brier +0.12  beats LR+ElNiño in 2%
+     + snow share                                            AUC 0.74  catch@15%FA  43%  Brier +0.14  beats LR+ElNiño in 67%
+     + shallow soil 0–7 & 7–28 cm                            AUC 0.73  catch@15%FA  38%  Brier +0.13  beats LR+ElNiño in 5%
+     + air dryness (VPD)                                     AUC 0.73  catch@15%FA  43%  Brier +0.13  beats LR+ElNiño in 36%
+     + sunshine                                              AUC 0.73  catch@15%FA  39%  Brier +0.13  beats LR+ElNiño in 0%
+     + rain hours                                            AUC 0.73  catch@15%FA  39%  Brier +0.13  beats LR+ElNiño in 6%
+     + all new weather                                       AUC 0.72  catch@15%FA  39%  Brier +0.12  beats LR+ElNiño in 27%
+
+=== Feb ===   reference LR+ElNiño: AUC 0.78  catch@15%FA  49%  Brier +0.19
+  satellite vs same date (anomaly) instead of vs late median AUC 0.78  catch@15%FA  46%  Brier +0.20  beats LR+ElNiño in 71%
+  both satellite measures                                    AUC 0.79  catch@15%FA  47%  Brier +0.20  beats LR+ElNiño in 76%
+  latest image anomaly only                                  AUC 0.78  catch@15%FA  46%  Brier +0.20  beats LR+ElNiño in 71%
+  + zone dryness × rain                                      AUC 0.78  catch@15%FA  47%  Brier +0.19  beats LR+ElNiño in 38%
+  predict harvest size (regression), same inputs             AUC 0.76  catch@15%FA  36%  Brier +0.14  beats LR+ElNiño in 18%
+  predict harvest size + satellite anomaly                   AUC 0.77  catch@15%FA  40%  Brier +0.14  beats LR+ElNiño in 29%
+  -- new weather inputs (12 zones; reference on same zones: AUC 0.77  catch@15%FA  45%  Brier +0.17)
+     + frost days                                            AUC 0.76  catch@15%FA  44%  Brier +0.16  beats LR+ElNiño in 12%
+     + warm days (>20°C)                                     AUC 0.76  catch@15%FA  42%  Brier +0.16  beats LR+ElNiño in 0%
+     + snow share                                            AUC 0.76  catch@15%FA  42%  Brier +0.16  beats LR+ElNiño in 1%
+     + shallow soil 0–7 & 7–28 cm                            AUC 0.75  catch@15%FA  36%  Brier +0.15  beats LR+ElNiño in 0%
+     + air dryness (VPD)                                     AUC 0.76  catch@15%FA  43%  Brier +0.16  beats LR+ElNiño in 25%
+     + sunshine                                              AUC 0.77  catch@15%FA  49%  Brier +0.18  beats LR+ElNiño in 66%
+     + rain hours                                            AUC 0.77  catch@15%FA  44%  Brier +0.17  beats LR+ElNiño in 37%
+     + all new weather                                       AUC 0.74  catch@15%FA  39%  Brier +0.12  beats LR+ElNiño in 3%
+
+=== Mar ===   reference LR+ElNiño: AUC 0.84  catch@15%FA  59%  Brier +0.31
+  satellite vs same date (anomaly) instead of vs late median AUC 0.84  catch@15%FA  59%  Brier +0.30  beats LR+ElNiño in 25%
+  both satellite measures                                    AUC 0.85  catch@15%FA  62%  Brier +0.32  beats LR+ElNiño in 81%
+  latest image anomaly only                                  AUC 0.85  catch@15%FA  61%  Brier +0.33  beats LR+ElNiño in 88%
+  + greening speed Feb→Mar                                   AUC 0.85  catch@15%FA  63%  Brier +0.32  beats LR+ElNiño in 66%
+  + zone dryness × rain                                      AUC 0.84  catch@15%FA  59%  Brier +0.30  beats LR+ElNiño in 9%
+  predict harvest size (regression), same inputs             AUC 0.85  catch@15%FA  67%  Brier +0.30  beats LR+ElNiño in 62%
+  predict harvest size + satellite anomaly                   AUC 0.85  catch@15%FA  71%  Brier +0.31  beats LR+ElNiño in 69%
+  -- new weather inputs (12 zones; reference on same zones: AUC 0.84  catch@15%FA  63%  Brier +0.30)
+     + frost days                                            AUC 0.84  catch@15%FA  62%  Brier +0.30  beats LR+ElNiño in 24%
+     + warm days (>20°C)                                     AUC 0.83  catch@15%FA  62%  Brier +0.29  beats LR+ElNiño in 5%
+     + snow share                                            AUC 0.84  catch@15%FA  62%  Brier +0.29  beats LR+ElNiño in 41%
+     + shallow soil 0–7 & 7–28 cm                            AUC 0.84  catch@15%FA  63%  Brier +0.30  beats LR+ElNiño in 51%
+     + air dryness (VPD)                                     AUC 0.83  catch@15%FA  62%  Brier +0.29  beats LR+ElNiño in 1%
+     + sunshine                                              AUC 0.83  catch@15%FA  61%  Brier +0.29  beats LR+ElNiño in 5%
+     + rain hours                                            AUC 0.84  catch@15%FA  63%  Brier +0.30  beats LR+ElNiño in 36%
+     + all new weather                                       AUC 0.82  catch@15%FA  58%  Brier +0.27  beats LR+ElNiño in 6%
+python3 -I improve_test.py zones.json ../backtest_data/openmeteo  out_deep   15.82s user 0.09s system 99% cpu 16.038 total

@@ -1,0 +1,97 @@
+lake,year,window,date,source,water_km2,valid_percent,clear,error
+Dukan,1988,March,,,,,0,no scene <5% cloud
+Dukan,1989,March,,,,,0,no scene <5% cloud
+Dukan,1990,March,1990-03-21,landsat-5 path 168,192.79,83.8,0,
+Dukan,1991,March,,,,,0,no scene <5% cloud
+Dukan,1992,March,1992-03-17,landsat-5 path 169,326.99,100.0,1,
+Dukan,1992,March,1992-02-23,landsat-5 path 168,110.01,80.7,0,
+Dukan,1993,March,1993-03-13,landsat-5 path 168,182.82,76.2,0,
+Dukan,1994,March,,,,,0,no scene <5% cloud
+Dukan,1995,March,1995-03-10,landsat-5 path 169,192.89,100.0,1,
+Dukan,1996,March,1996-03-05,landsat-5 path 168,160.33,60.8,0,
+Dukan,1997,March,1997-03-08,landsat-5 path 168,262.59,58.7,0,
+Dukan,1998,March,1998-03-11,landsat-5 path 168,188.57,62.3,0,
+Dukan,1998,March,1998-03-02,landsat-5 path 169,253.75,100.0,1,
+Dukan,1998,March,1998-02-23,landsat-5 path 168,314.83,63.6,0,
+Dukan,1999,March,1999-03-05,landsat-5 path 169,163.47,100.0,1,
+Dukan,1999,March,1999-02-26,landsat-5 path 168,189.94,84.7,0,
+Dukan,1999,March,1999-03-14,landsat-5 path 168,156.35,79.0,0,
+Dukan,2000,March,2000-03-16,landsat-5 path 168,90.63,56.9,0,
+Dukan,2001,March,2001-03-19,landsat-5 path 168,118.37,74.7,0,
+Dukan,2002,March,2002-03-29,landsat-5 path 169,623.51,100.0,1,
+Dukan,2002,March,2002-03-06,landsat-5 path 168,172.22,77.9,0,
+Dukan,2002,March,2002-03-13,landsat-5 path 169,165.04,100.0,1,
+Dukan,2003,March,,,,,0,no scene <5% cloud
+Dukan,2004,March,,,,,0,no scene <5% cloud
+Dukan,2005,March,2005-02-26,landsat-5 path 168,219.21,76.6,0,
+Dukan,2006,March,,,,,0,no scene <5% cloud
+Dukan,2007,March,2007-03-11,landsat-5 path 169,143.73,99.8,1,
+Dukan,2007,March,2007-02-23,landsat-5 path 169,159.52,99.9,1,
+Dukan,2008,March,,,,,0,no scene <5% cloud
+Dukan,2009,March,,,,,0,no scene <5% cloud
+Dukan,2010,March,,,,,0,no scene <5% cloud
+Dukan,2011,March,2011-03-06,landsat-5 path 169,101.72,100.0,1,
+Dukan,2012,March,,,,,0,no usable Landsat (2012)
+Dukan,2013,March,,,,,0,no scene <5% cloud
+Dukan,2014,March,2014-03-23,landsat-8 path 168,150.51,77.2,0,
+Dukan,2015,March,,,,,0,no scene <5% cloud
+Dukan,2016,March,,,,,0,no scene <5% cloud
+Dukan,2017,March,2017-03-06,landsat-8 path 169,215.73,100.0,1,
+Dukan,2018,March,2018-03-18,landsat-8 path 168,188.03,71.1,0,
+Dukan,2019,March,2019-02-24,landsat-8 path 169,279.34,100.0,1,
+Dukan,2020,March,2020-02-27,landsat-8 path 169,214.45,100.0,1,
+Dukan,2021,March,2021-03-26,landsat-8 path 168,174.49,71.8,0,
+Dukan,2022,March,,,,,0,no scene <5% cloud
+Dukan,2023,March,,,,,0,no scene <5% cloud
+Dukan,2024,March,,,,,0,no scene <5% cloud
+Dukan,2025,March,2025-03-12,landsat-8 path 169,143.52,100.0,1,
+Dukan,2026,March,2026-02-20,landsat-8 path 168,170.63,76.5,0,
+Darbandikhan,1988,March,1988-03-15,landsat-5 path 168,109.52,82.1,0,
+Darbandikhan,1989,March,,,,,0,no scene <5% cloud
+Darbandikhan,1990,March,1990-03-21,landsat-5 path 168,56.97,100.0,1,
+Darbandikhan,1990,March,1990-02-26,,,,0,request failed after retries: https://planetarycomputer.microsoft.com/api/data/v1/item/statistics?collection=landsat-c2-
+Darbandikhan,1991,March,1991-03-08,landsat-5 path 168,39.43,81.1,0,
+Darbandikhan,1992,March,1992-02-23,landsat-5 path 168,90.28,100.0,1,
+Darbandikhan,1992,March,1992-03-10,landsat-5 path 168,237.21,82.6,0,
+Darbandikhan,1992,March,1992-03-03,,,,0,request failed after retries: https://planetarycomputer.microsoft.com/api/data/v1/item/statistics?collection=landsat-c2-
+Darbandikhan,1993,March,1993-03-13,landsat-5 path 168,66.60,100.0,1,
+Darbandikhan,1994,March,,,,,0,no scene <5% cloud
+Darbandikhan,1995,March,,,,,0,no scene <5% cloud
+Darbandikhan,1996,March,1996-03-05,landsat-5 path 168,50.50,100.0,1,
+Darbandikhan,1997,March,1997-03-08,landsat-5 path 168,59.44,66.0,0,
+Darbandikhan,1998,March,1998-03-11,landsat-5 path 168,98.55,100.0,1,
+Darbandikhan,1998,March,1998-02-23,landsat-5 path 168,134.64,100.0,1,
+Darbandikhan,1999,March,1999-02-26,landsat-5 path 168,52.12,100.0,1,
+Darbandikhan,1999,March,1999-03-07,,,,0,request failed after retries: https://planetarycomputer.microsoft.com/api/data/v1/item/statistics?collection=landsat-c2-
+Darbandikhan,1999,March,1999-03-14,landsat-5 path 168,40.20,100.0,1,
+Darbandikhan,2000,March,2000-02-22,,,,0,request failed after retries: https://planetarycomputer.microsoft.com/api/data/v1/item/statistics?collection=landsat-c2-
+Darbandikhan,2000,March,2000-03-16,landsat-5 path 168,34.16,100.0,1,
+Darbandikhan,2001,March,2001-03-19,landsat-5 path 168,31.48,100.0,1,
+Darbandikhan,2002,March,2002-03-06,landsat-5 path 168,44.72,100.0,1,
+Darbandikhan,2003,March,,,,,0,no scene <5% cloud
+Darbandikhan,2004,March,,,,,0,no scene <5% cloud
+Darbandikhan,2005,March,2005-02-26,landsat-5 path 168,61.71,100.0,1,
+Darbandikhan,2006,March,,,,,0,no scene <5% cloud
+Darbandikhan,2007,March,,,,,0,no scene <5% cloud
+Darbandikhan,2008,March,2008-03-22,landsat-5 path 168,37.73,78.6,0,
+Darbandikhan,2008,March,2008-03-06,landsat-5 path 168,36.07,77.7,0,
+Darbandikhan,2009,March,,,,,0,no scene <5% cloud
+Darbandikhan,2010,March,,,,,0,no scene <5% cloud
+Darbandikhan,2011,March,,,,,0,no scene <5% cloud
+Darbandikhan,2012,March,,,,,0,no usable Landsat (2012)
+Darbandikhan,2013,March,,,,,0,no scene <5% cloud
+Darbandikhan,2014,March,2014-03-07,landsat-8 path 168,23.33,94.8,0,
+Darbandikhan,2014,March,2014-03-23,landsat-8 path 168,47.01,100.0,1,
+Darbandikhan,2015,March,2015-03-10,landsat-8 path 168,43.93,95.0,0,
+Darbandikhan,2016,March,2016-03-12,landsat-8 path 168,75.24,94.9,0,
+Darbandikhan,2016,March,2016-02-25,landsat-8 path 168,16.08,95.3,0,
+Darbandikhan,2017,March,2017-02-27,landsat-8 path 168,56.59,95.1,0,
+Darbandikhan,2018,March,2018-03-18,landsat-8 path 168,47.84,100.0,1,
+Darbandikhan,2019,March,2019-03-21,landsat-8 path 168,75.19,95.5,0,
+Darbandikhan,2020,March,2020-03-23,landsat-8 path 168,52.51,95.2,0,
+Darbandikhan,2021,March,2021-03-26,landsat-8 path 168,43.52,100.0,1,
+Darbandikhan,2022,March,,,,,0,no scene <5% cloud
+Darbandikhan,2023,March,,,,,0,no scene <5% cloud
+Darbandikhan,2024,March,2024-03-02,landsat-8 path 168,71.40,94.1,0,
+Darbandikhan,2025,March,,,,,0,no scene <5% cloud
+Darbandikhan,2026,March,2026-02-20,landsat-8 path 168,75.99,100.0,1,

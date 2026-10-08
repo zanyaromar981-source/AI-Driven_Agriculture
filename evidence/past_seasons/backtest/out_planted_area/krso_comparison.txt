@@ -1,0 +1,16 @@
+erbil_plain [frac_winter_crop] vs KRSO Erbil wheat+barley area 2018-2023 (n=6): r=-0.31; vs Kurdistan_Region total r=-0.81; year-to-year direction agree 3/5; vs KRSO Erbil PRODUCTION r=+0.70
+erbil_plain [sown_share_of_arable] vs KRSO Erbil wheat+barley area 2018-2023 (n=6): r=-0.33; vs Kurdistan_Region total r=-0.55; year-to-year direction agree 3/5; vs KRSO Erbil PRODUCTION r=+0.79
+erbil_plain: mean winter-crop fraction wet years (2019, 2020, 2026) = 0.655; drought years (2021, 2022, 2025) = 0.457
+koya_plain [frac_winter_crop] vs KRSO Erbil wheat+barley area 2018-2023 (n=6): r=-0.45; vs Kurdistan_Region total r=-0.58; year-to-year direction agree 3/5; vs KRSO Erbil PRODUCTION r=+0.68
+koya_plain [sown_share_of_arable] vs KRSO Erbil wheat+barley area 2018-2023 (n=6): r=-0.46; vs Kurdistan_Region total r=-0.58; year-to-year direction agree 3/5; vs KRSO Erbil PRODUCTION r=+0.68
+koya_plain: mean winter-crop fraction wet years (2019, 2020, 2026) = 0.576; drought years (2021, 2022, 2025) = 0.177
+sumel_plain [frac_winter_crop] vs KRSO Duhok wheat+barley area 2018-2023 (n=6): r=-0.16; vs Kurdistan_Region total r=-0.56; year-to-year direction agree 2/5; vs KRSO Duhok PRODUCTION r=+0.48
+sumel_plain [sown_share_of_arable] vs KRSO Duhok wheat+barley area 2018-2023 (n=6): r=-0.15; vs Kurdistan_Region total r=-0.55; year-to-year direction agree 2/5; vs KRSO Duhok PRODUCTION r=+0.48
+sumel_plain: mean winter-crop fraction wet years (2019, 2020, 2026) = 0.717; drought years (2021, 2022, 2025) = 0.155
+KRSO wheat+barley area (donum) / production (t):
+  Erbil area: 2018=1,693,773, 2019=1,255,733, 2020=1,943,134, 2021=1,872,495, 2022=1,571,037, 2023=1,654,449
+  Erbil prod: 2018=409,337, 2019=916,962, 2020=1,429,916, 2021=366,842, 2022=435,073, 2023=952,601
+  Duhok area: 2018=803,317, 2019=878,900, 2020=1,014,079, 2021=1,009,637, 2022=1,096,003, 2023=1,043,300
+  Duhok prod: 2018=319,225, 2019=645,448, 2020=760,560, 2021=757,228, 2022=522,256, 2023=613,902
+  Kurdistan_Region area: 2018=4,349,868, 2019=3,962,857, 2020=4,640,149, 2021=5,031,689, 2022=5,011,936, 2023=4,918,781
+  Kurdistan_Region prod: 2018=1,438,931, 2019=2,704,337, 2020=3,178,553, 2021=2,084,152, 2022=2,109,981, 2023=2,554,703

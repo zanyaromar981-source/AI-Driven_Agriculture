@@ -1,0 +1,2247 @@
+{
+ "Dec": {
+  "n": 208,
+  "seasons": 26,
+  "zone": {
+   "tp": 23,
+   "fn": 33,
+   "fp": 12,
+   "tn": 140,
+   "recall": 0.4107142857142857,
+   "far": 0.07894736842105263,
+   "precision": 0.6571428571428571,
+   "acc": 0.7836538461538461
+  },
+  "zone_thr035": {
+   "tp": 35,
+   "fn": 21,
+   "fp": 30,
+   "tn": 122,
+   "recall": 0.625,
+   "far": 0.19736842105263158,
+   "precision": 0.5384615384615384,
+   "acc": 0.7548076923076923
+  },
+  "baseline_last_year": {
+   "tp": 20,
+   "fn": 30,
+   "fp": 34,
+   "tn": 116,
+   "recall": 0.4,
+   "far": 0.22666666666666666,
+   "precision": 0.37037037037037035,
+   "acc": 0.68
+  },
+  "baseline_rain_rule": {
+   "tp": 45,
+   "fn": 11,
+   "fp": 53,
+   "tn": 99,
+   "recall": 0.8035714285714286,
+   "far": 0.34868421052631576,
+   "precision": 0.45918367346938777,
+   "acc": 0.6923076923076923
+  },
+  "always_normal_acc": 0.7307692307692308,
+  "season_table": [
+   {
+    "season": "1999/00",
+    "zones": 8,
+    "frac_bad": 0.75,
+    "frac_warn": 1.0,
+    "mean_p": 0.62,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur",
+     "Soran"
+    ]
+   },
+   {
+    "season": "2000/01",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.0,
+    "mean_p": 0.3,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani",
+     "Erbil",
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2001/02",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.27,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2002/03",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.12,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2003/04",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2004/05",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.18,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2005/06",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.38,
+    "mean_p": 0.47,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Garmiyan",
+     "Sharazur"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Chamchamal",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2006/07",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.16,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Garmiyan"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2007/08",
+    "zones": 8,
+    "frac_bad": 1.0,
+    "frac_warn": 0.5,
+    "mean_p": 0.49,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2008/09",
+    "zones": 8,
+    "frac_bad": 0.5,
+    "frac_warn": 0.75,
+    "mean_p": 0.53,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur"
+    ]
+   },
+   {
+    "season": "2009/10",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2010/11",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.88,
+    "mean_p": 0.56,
+    "bad": false,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Soran"
+    ]
+   },
+   {
+    "season": "2011/12",
+    "zones": 8,
+    "frac_bad": 0.75,
+    "frac_warn": 0.25,
+    "mean_p": 0.41,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2012/13",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.1,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2013/14",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.24,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2014/15",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2015/16",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.03,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2016/17",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.24,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2017/18",
+    "zones": 8,
+    "frac_bad": 0.5,
+    "frac_warn": 0.38,
+    "mean_p": 0.42,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Chamchamal"
+    ]
+   },
+   {
+    "season": "2018/19",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.02,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2019/20",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.17,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2020/21",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.24,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Erbil",
+     "Duhok"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2021/22",
+    "zones": 8,
+    "frac_bad": 0.62,
+    "frac_warn": 0.12,
+    "mean_p": 0.38,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Duhok"
+    ]
+   },
+   {
+    "season": "2022/23",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.12,
+    "mean_p": 0.35,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": [
+     "Duhok"
+    ]
+   },
+   {
+    "season": "2023/24",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.14,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2024/25",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.29,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Duhok",
+     "Soran"
+    ],
+    "warned_zones": []
+   }
+  ],
+  "season_caught": 3,
+  "season_bad": 6,
+  "season_false": 1,
+  "season_normal": 20,
+  "season_caught_lo": 6,
+  "season_false_lo": 4,
+  "weights": {
+   "rain_pct": -0.53,
+   "soil_pct": -0.39,
+   "temp_anom": -0.36,
+   "et0_pct": 0.5,
+   "last_rain_pct": -0.33
+  },
+  "test_2025": [
+   {
+    "zone": "Slemani",
+    "p": 0.45,
+    "label": 0,
+    "rain_pct": 60
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.26,
+    "label": 0,
+    "rain_pct": 44
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.38,
+    "label": 0,
+    "rain_pct": 38
+   },
+   {
+    "zone": "Chamchamal",
+    "p": 0.17,
+    "label": 0,
+    "rain_pct": 47
+   },
+   {
+    "zone": "Duhok",
+    "p": 0.36,
+    "label": 1,
+    "rain_pct": 46
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.37,
+    "label": 0,
+    "rain_pct": 97
+   },
+   {
+    "zone": "Sharazur",
+    "p": 0.16,
+    "label": 0,
+    "rain_pct": 120
+   },
+   {
+    "zone": "Soran",
+    "p": 0.21,
+    "label": 1,
+    "rain_pct": 50
+   }
+  ],
+  "test_2026": [
+   {
+    "zone": "Slemani",
+    "p": 0.14,
+    "rain_pct": 141
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.22,
+    "rain_pct": 128
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.32,
+    "rain_pct": 104
+   },
+   {
+    "zone": "Chamchamal",
+    "p": 0.08,
+    "rain_pct": 143
+   },
+   {
+    "zone": "Duhok",
+    "p": 0.22,
+    "rain_pct": 146
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.15,
+    "rain_pct": 182
+   },
+   {
+    "zone": "Sharazur",
+    "p": 0.12,
+    "rain_pct": 122
+   },
+   {
+    "zone": "Soran",
+    "p": 0.31,
+    "rain_pct": 79
+   }
+  ]
+ },
+ "Jan": {
+  "n": 208,
+  "seasons": 26,
+  "zone": {
+   "tp": 10,
+   "fn": 46,
+   "fp": 8,
+   "tn": 144,
+   "recall": 0.17857142857142858,
+   "far": 0.05263157894736842,
+   "precision": 0.5555555555555556,
+   "acc": 0.7403846153846154
+  },
+  "zone_thr035": {
+   "tp": 37,
+   "fn": 19,
+   "fp": 32,
+   "tn": 120,
+   "recall": 0.6607142857142857,
+   "far": 0.21052631578947367,
+   "precision": 0.5362318840579711,
+   "acc": 0.7548076923076923
+  },
+  "baseline_last_year": {
+   "tp": 20,
+   "fn": 30,
+   "fp": 34,
+   "tn": 116,
+   "recall": 0.4,
+   "far": 0.22666666666666666,
+   "precision": 0.37037037037037035,
+   "acc": 0.68
+  },
+  "baseline_rain_rule": {
+   "tp": 40,
+   "fn": 16,
+   "fp": 48,
+   "tn": 104,
+   "recall": 0.7142857142857143,
+   "far": 0.3157894736842105,
+   "precision": 0.45454545454545453,
+   "acc": 0.6923076923076923
+  },
+  "always_normal_acc": 0.7307692307692308,
+  "season_table": [
+   {
+    "season": "1999/00",
+    "zones": 8,
+    "frac_bad": 0.75,
+    "frac_warn": 0.25,
+    "mean_p": 0.45,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Chamchamal"
+    ]
+   },
+   {
+    "season": "2000/01",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.0,
+    "mean_p": 0.38,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Erbil",
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2001/02",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.25,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2002/03",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.16,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2003/04",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.06,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2004/05",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.14,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2005/06",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.0,
+    "mean_p": 0.3,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour",
+     "Garmiyan",
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2006/07",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.27,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Garmiyan"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2007/08",
+    "zones": 8,
+    "frac_bad": 1.0,
+    "frac_warn": 0.5,
+    "mean_p": 0.53,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2008/09",
+    "zones": 8,
+    "frac_bad": 0.5,
+    "frac_warn": 0.88,
+    "mean_p": 0.65,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur"
+    ]
+   },
+   {
+    "season": "2009/10",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.14,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2010/11",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.0,
+    "mean_p": 0.4,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2011/12",
+    "zones": 8,
+    "frac_bad": 0.75,
+    "frac_warn": 0.0,
+    "mean_p": 0.32,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2012/13",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2013/14",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.26,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2014/15",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.1,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2015/16",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2016/17",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.25,
+    "mean_p": 0.38,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": [
+     "Slemani",
+     "Chamchamal"
+    ]
+   },
+   {
+    "season": "2017/18",
+    "zones": 8,
+    "frac_bad": 0.5,
+    "frac_warn": 0.12,
+    "mean_p": 0.37,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok"
+    ],
+    "warned_zones": [
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2018/19",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.03,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2019/20",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.12,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2020/21",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.33,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Erbil",
+     "Duhok"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2021/22",
+    "zones": 8,
+    "frac_bad": 0.62,
+    "frac_warn": 0.0,
+    "mean_p": 0.34,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2022/23",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.12,
+    "mean_p": 0.4,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": [
+     "Duhok"
+    ]
+   },
+   {
+    "season": "2023/24",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2024/25",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.12,
+    "mean_p": 0.36,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Duhok",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Slemani"
+    ]
+   }
+  ],
+  "season_caught": 2,
+  "season_bad": 6,
+  "season_false": 0,
+  "season_normal": 20,
+  "season_caught_lo": 5,
+  "season_false_lo": 5,
+  "weights": {
+   "rain_pct": -0.31,
+   "soil_pct": -0.26,
+   "temp_anom": -0.41,
+   "et0_pct": 0.61,
+   "last_rain_pct": -0.37
+  },
+  "test_2025": [
+   {
+    "zone": "Slemani",
+    "p": 0.55,
+    "label": 0,
+    "rain_pct": 44
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.3,
+    "label": 0,
+    "rain_pct": 34
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.36,
+    "label": 0,
+    "rain_pct": 28
+   },
+   {
+    "zone": "Chamchamal",
+    "p": 0.21,
+    "label": 0,
+    "rain_pct": 41
+   },
+   {
+    "zone": "Duhok",
+    "p": 0.37,
+    "label": 1,
+    "rain_pct": 33
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.43,
+    "label": 0,
+    "rain_pct": 71
+   },
+   {
+    "zone": "Sharazur",
+    "p": 0.24,
+    "label": 0,
+    "rain_pct": 82
+   },
+   {
+    "zone": "Soran",
+    "p": 0.39,
+    "label": 1,
+    "rain_pct": 36
+   }
+  ],
+  "test_2026": [
+   {
+    "zone": "Slemani",
+    "p": 0.2,
+    "rain_pct": 136
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.23,
+    "rain_pct": 113
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.27,
+    "rain_pct": 105
+   },
+   {
+    "zone": "Chamchamal",
+    "p": 0.08,
+    "rain_pct": 132
+   },
+   {
+    "zone": "Duhok",
+    "p": 0.27,
+    "rain_pct": 139
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.22,
+    "rain_pct": 162
+   },
+   {
+    "zone": "Sharazur",
+    "p": 0.11,
+    "rain_pct": 149
+   },
+   {
+    "zone": "Soran",
+    "p": 0.32,
+    "rain_pct": 88
+   }
+  ]
+ },
+ "Feb": {
+  "n": 208,
+  "seasons": 26,
+  "zone": {
+   "tp": 25,
+   "fn": 31,
+   "fp": 12,
+   "tn": 140,
+   "recall": 0.44642857142857145,
+   "far": 0.07894736842105263,
+   "precision": 0.6756756756756757,
+   "acc": 0.7932692307692307
+  },
+  "zone_thr035": {
+   "tp": 41,
+   "fn": 15,
+   "fp": 30,
+   "tn": 122,
+   "recall": 0.7321428571428571,
+   "far": 0.19736842105263158,
+   "precision": 0.5774647887323944,
+   "acc": 0.7836538461538461
+  },
+  "baseline_last_year": {
+   "tp": 20,
+   "fn": 30,
+   "fp": 34,
+   "tn": 116,
+   "recall": 0.4,
+   "far": 0.22666666666666666,
+   "precision": 0.37037037037037035,
+   "acc": 0.68
+  },
+  "baseline_rain_rule": {
+   "tp": 36,
+   "fn": 20,
+   "fp": 47,
+   "tn": 105,
+   "recall": 0.6428571428571429,
+   "far": 0.3092105263157895,
+   "precision": 0.43373493975903615,
+   "acc": 0.6778846153846154
+  },
+  "always_normal_acc": 0.7307692307692308,
+  "season_table": [
+   {
+    "season": "1999/00",
+    "zones": 8,
+    "frac_bad": 0.75,
+    "frac_warn": 0.88,
+    "mean_p": 0.62,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Soran"
+    ]
+   },
+   {
+    "season": "2000/01",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.25,
+    "mean_p": 0.45,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Erbil",
+     "Sharazur"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2001/02",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.25,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2002/03",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.15,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2003/04",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.08,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2004/05",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.18,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2005/06",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.12,
+    "mean_p": 0.36,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour",
+     "Garmiyan",
+     "Sharazur"
+    ],
+    "warned_zones": [
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2006/07",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.22,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Garmiyan"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2007/08",
+    "zones": 8,
+    "frac_bad": 1.0,
+    "frac_warn": 0.75,
+    "mean_p": 0.61,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur"
+    ]
+   },
+   {
+    "season": "2008/09",
+    "zones": 8,
+    "frac_bad": 0.5,
+    "frac_warn": 0.62,
+    "mean_p": 0.62,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2009/10",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.13,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2010/11",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.38,
+    "mean_p": 0.49,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal"
+    ]
+   },
+   {
+    "season": "2011/12",
+    "zones": 8,
+    "frac_bad": 0.75,
+    "frac_warn": 0.38,
+    "mean_p": 0.45,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal"
+    ]
+   },
+   {
+    "season": "2012/13",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.08,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2013/14",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.23,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2014/15",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2015/16",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2016/17",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.5,
+    "mean_p": 0.46,
+    "bad": false,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Chamchamal",
+     "Soran"
+    ]
+   },
+   {
+    "season": "2017/18",
+    "zones": 8,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.23,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2018/19",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.03,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2019/20",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.08,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2020/21",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.17,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Erbil",
+     "Duhok"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2021/22",
+    "zones": 8,
+    "frac_bad": 0.62,
+    "frac_warn": 0.38,
+    "mean_p": 0.43,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok"
+    ]
+   },
+   {
+    "season": "2022/23",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.25,
+    "mean_p": 0.3,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": [
+     "Duhok",
+     "Soran"
+    ]
+   },
+   {
+    "season": "2023/24",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.03,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2024/25",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.12,
+    "mean_p": 0.27,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Duhok",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Duhok"
+    ]
+   }
+  ],
+  "season_caught": 3,
+  "season_bad": 6,
+  "season_false": 1,
+  "season_normal": 20,
+  "season_caught_lo": 5,
+  "season_false_lo": 3,
+  "weights": {
+   "rain_pct": -0.17,
+   "soil_pct": -0.18,
+   "temp_anom": -0.1,
+   "et0_pct": 0.3,
+   "last_rain_pct": -0.26,
+   "green_now": -1.1
+  },
+  "test_2025": [
+   {
+    "zone": "Slemani",
+    "p": 0.16,
+    "label": 0,
+    "rain_pct": 45
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.34,
+    "label": 0,
+    "rain_pct": 41
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.38,
+    "label": 0,
+    "rain_pct": 31
+   },
+   {
+    "zone": "Chamchamal",
+    "p": 0.15,
+    "label": 0,
+    "rain_pct": 46
+   },
+   {
+    "zone": "Duhok",
+    "p": 0.59,
+    "label": 1,
+    "rain_pct": 42
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.09,
+    "label": 0,
+    "rain_pct": 73
+   },
+   {
+    "zone": "Sharazur",
+    "p": 0.08,
+    "label": 0,
+    "rain_pct": 80
+   },
+   {
+    "zone": "Soran",
+    "p": 0.33,
+    "label": 1,
+    "rain_pct": 38
+   }
+  ],
+  "test_2026": []
+ },
+ "Mar": {
+  "n": 208,
+  "seasons": 26,
+  "zone": {
+   "tp": 34,
+   "fn": 22,
+   "fp": 7,
+   "tn": 145,
+   "recall": 0.6071428571428571,
+   "far": 0.046052631578947366,
+   "precision": 0.8292682926829268,
+   "acc": 0.8605769230769231
+  },
+  "zone_thr035": {
+   "tp": 45,
+   "fn": 11,
+   "fp": 18,
+   "tn": 134,
+   "recall": 0.8035714285714286,
+   "far": 0.11842105263157894,
+   "precision": 0.7142857142857143,
+   "acc": 0.8605769230769231
+  },
+  "baseline_last_year": {
+   "tp": 20,
+   "fn": 30,
+   "fp": 34,
+   "tn": 116,
+   "recall": 0.4,
+   "far": 0.22666666666666666,
+   "precision": 0.37037037037037035,
+   "acc": 0.68
+  },
+  "baseline_rain_rule": {
+   "tp": 35,
+   "fn": 21,
+   "fp": 27,
+   "tn": 125,
+   "recall": 0.625,
+   "far": 0.17763157894736842,
+   "precision": 0.5645161290322581,
+   "acc": 0.7692307692307693
+  },
+  "always_normal_acc": 0.7307692307692308,
+  "season_table": [
+   {
+    "season": "1999/00",
+    "zones": 8,
+    "frac_bad": 0.75,
+    "frac_warn": 0.88,
+    "mean_p": 0.69,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Soran"
+    ]
+   },
+   {
+    "season": "2000/01",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.12,
+    "mean_p": 0.25,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani",
+     "Erbil",
+     "Sharazur"
+    ],
+    "warned_zones": [
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2001/02",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.2,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2002/03",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.11,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2003/04",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.15,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2004/05",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.14,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2005/06",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.5,
+    "mean_p": 0.51,
+    "bad": false,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Garmiyan",
+     "Sharazur"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Chamchamal",
+     "Sharazur"
+    ]
+   },
+   {
+    "season": "2006/07",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.18,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Garmiyan"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2007/08",
+    "zones": 8,
+    "frac_bad": 1.0,
+    "frac_warn": 1.0,
+    "mean_p": 0.83,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Sharazur",
+     "Soran"
+    ]
+   },
+   {
+    "season": "2008/09",
+    "zones": 8,
+    "frac_bad": 0.5,
+    "frac_warn": 0.62,
+    "mean_p": 0.63,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2009/10",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.12,
+    "mean_p": 0.14,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": [
+     "Makhmour"
+    ]
+   },
+   {
+    "season": "2010/11",
+    "zones": 8,
+    "frac_bad": 0.38,
+    "frac_warn": 0.38,
+    "mean_p": 0.47,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Chamchamal",
+     "Soran"
+    ]
+   },
+   {
+    "season": "2011/12",
+    "zones": 8,
+    "frac_bad": 0.75,
+    "frac_warn": 0.62,
+    "mean_p": 0.55,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2012/13",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.1,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2013/14",
+    "zones": 8,
+    "frac_bad": 0.12,
+    "frac_warn": 0.0,
+    "mean_p": 0.12,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Soran"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2014/15",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.04,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2015/16",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.04,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2016/17",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.24,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2017/18",
+    "zones": 8,
+    "frac_bad": 0.5,
+    "frac_warn": 0.25,
+    "mean_p": 0.32,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil",
+     "Chamchamal",
+     "Duhok"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Duhok"
+    ]
+   },
+   {
+    "season": "2018/19",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.02,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2019/20",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.03,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2020/21",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.0,
+    "mean_p": 0.25,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Erbil",
+     "Duhok"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2021/22",
+    "zones": 8,
+    "frac_bad": 0.62,
+    "frac_warn": 0.38,
+    "mean_p": 0.45,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Chamchamal",
+     "Duhok",
+     "Garmiyan",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Chamchamal",
+     "Duhok"
+    ]
+   },
+   {
+    "season": "2022/23",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.12,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2023/24",
+    "zones": 8,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.03,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2024/25",
+    "zones": 8,
+    "frac_bad": 0.25,
+    "frac_warn": 0.25,
+    "mean_p": 0.37,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Duhok",
+     "Soran"
+    ],
+    "warned_zones": [
+     "Duhok",
+     "Soran"
+    ]
+   }
+  ],
+  "season_caught": 4,
+  "season_bad": 6,
+  "season_false": 1,
+  "season_normal": 20,
+  "season_caught_lo": 5,
+  "season_false_lo": 3,
+  "weights": {
+   "rain_pct": -0.25,
+   "soil_pct": -0.2,
+   "temp_anom": -0.09,
+   "et0_pct": 0.32,
+   "last_rain_pct": -0.19,
+   "green_now": -1.38
+  },
+  "test_2025": [
+   {
+    "zone": "Slemani",
+    "p": 0.32,
+    "label": 0,
+    "rain_pct": 43
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.37,
+    "label": 0,
+    "rain_pct": 45
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.45,
+    "label": 0,
+    "rain_pct": 35
+   },
+   {
+    "zone": "Chamchamal",
+    "p": 0.25,
+    "label": 0,
+    "rain_pct": 50
+   },
+   {
+    "zone": "Duhok",
+    "p": 0.83,
+    "label": 1,
+    "rain_pct": 41
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.08,
+    "label": 0,
+    "rain_pct": 80
+   },
+   {
+    "zone": "Sharazur",
+    "p": 0.08,
+    "label": 0,
+    "rain_pct": 73
+   },
+   {
+    "zone": "Soran",
+    "p": 0.6,
+    "label": 1,
+    "rain_pct": 39
+   }
+  ],
+  "test_2026": []
+ }
+}

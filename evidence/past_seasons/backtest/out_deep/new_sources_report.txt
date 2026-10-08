@@ -1,0 +1,82 @@
+A+B. Satellite-greenness outcome (16 zones, 1999/00–2024/25). Reference = LR + El Niño
+  Dec: reference AUC 0.77 catch@15%FA  42%
+     + CHIRPS rain                    AUC 0.78 catch@15%FA  48%  beats ref in 64%
+     CHIRPS instead of ERA5 rain      AUC 0.77 catch@15%FA  50%  beats ref in 38%
+     average of both rains            AUC 0.78 catch@15%FA  45%  beats ref in 79%
+     + NOAA crop health (VCI, TCI)    AUC 0.76 catch@15%FA  39%  beats ref in 6%
+     + NOAA VHI only                  AUC 0.77 catch@15%FA  42%  beats ref in 18%
+     + CHIRPS + VCI/TCI               AUC 0.77 catch@15%FA  43%  beats ref in 31%
+  Jan: reference AUC 0.76 catch@15%FA  42%
+     + CHIRPS rain                    AUC 0.76 catch@15%FA  44%  beats ref in 52%
+     CHIRPS instead of ERA5 rain      AUC 0.76 catch@15%FA  44%  beats ref in 56%
+     average of both rains            AUC 0.76 catch@15%FA  45%  beats ref in 55%
+     + NOAA crop health (VCI, TCI)    AUC 0.75 catch@15%FA  38%  beats ref in 34%
+     + NOAA VHI only                  AUC 0.75 catch@15%FA  38%  beats ref in 27%
+     + CHIRPS + VCI/TCI               AUC 0.75 catch@15%FA  40%  beats ref in 35%
+  Feb: reference AUC 0.78 catch@15%FA  49%
+     + CHIRPS rain                    AUC 0.78 catch@15%FA  46%  beats ref in 35%
+     CHIRPS instead of ERA5 rain      AUC 0.78 catch@15%FA  46%  beats ref in 39%
+     average of both rains            AUC 0.78 catch@15%FA  47%  beats ref in 64%
+     + NOAA crop health (VCI, TCI)    AUC 0.79 catch@15%FA  51%  beats ref in 67%
+     + NOAA VHI only                  AUC 0.77 catch@15%FA  45%  beats ref in 26%
+     + CHIRPS + VCI/TCI               AUC 0.79 catch@15%FA  52%  beats ref in 65%
+  Mar: reference AUC 0.84 catch@15%FA  59%
+     + CHIRPS rain                    AUC 0.84 catch@15%FA  60%  beats ref in 51%
+     CHIRPS instead of ERA5 rain      AUC 0.84 catch@15%FA  61%  beats ref in 56%
+     average of both rains            AUC 0.84 catch@15%FA  60%  beats ref in 71%
+     + NOAA crop health (VCI, TCI)    AUC 0.85 catch@15%FA  61%  beats ref in 69%
+     + NOAA VHI only                  AUC 0.84 catch@15%FA  59%  beats ref in 48%
+     + CHIRPS + VCI/TCI               AUC 0.85 catch@15%FA  62%  beats ref in 70%
+
+C. REAL HARVEST (KRSO wheat & barley yield per governorate)
+
+  WHEAT: satellite late-spring greenness vs real yield (trend removed), 2000–2023: r = +0.63 (n=72); per governorate: Sulaymaniyah +0.27, Erbil +0.84, Duhok +0.62
+  WHEAT: NOAA VHI in March vs real yield, 1992–2023: r = +0.46 (n=96)
+  Predicting a bad wheat harvest (governorate yield in its bottom 25%, trend removed), seasons hidden one by one:
+     Pre  El Niño only, 1991–2023                      AUC 0.77 catch@15%FA  48%
+     Dec  weather + El Niño, 1991–2023 (33 seasons)    AUC 0.76 catch@15%FA  52%
+     Dec  + NOAA crop health, 1991–2023                AUC 0.73 catch@15%FA  44%  beats ref in 20%
+     Dec  + CHIRPS rain, 1991–2023                     AUC 0.75 catch@15%FA  52%  beats ref in 0%
+     Dec  weather + El Niño, 1999–2022 only            AUC 0.68 catch@15%FA  39%
+     Jan  weather + El Niño, 1991–2023 (33 seasons)    AUC 0.74 catch@15%FA  41%
+     Jan  + NOAA crop health, 1991–2023                AUC 0.70 catch@15%FA  37%  beats ref in 0%
+     Jan  + CHIRPS rain, 1991–2023                     AUC 0.73 catch@15%FA  41%  beats ref in 2%
+     Jan  weather + El Niño, 1999–2022 only            AUC 0.62 catch@15%FA  17%
+     Feb  weather + El Niño, 1991–2023 (33 seasons)    AUC 0.73 catch@15%FA  48%
+     Feb  + NOAA crop health, 1991–2023                AUC 0.73 catch@15%FA  52%  beats ref in 46%
+     Feb  + CHIRPS rain, 1991–2023                     AUC 0.72 catch@15%FA  41%  beats ref in 1%
+     Feb  weather + El Niño, 1999–2022 only            AUC 0.61 catch@15%FA  13%
+     Feb  + MODIS greenness (our system), 1999–2022    AUC 0.59 catch@15%FA  13%
+          (vs weather + El Niño on the same years: beats in 7%)
+     Mar  weather + El Niño, 1991–2023 (33 seasons)    AUC 0.75 catch@15%FA  59%
+     Mar  + NOAA crop health, 1991–2023                AUC 0.74 catch@15%FA  59%  beats ref in 8%
+     Mar  + CHIRPS rain, 1991–2023                     AUC 0.75 catch@15%FA  56%  beats ref in 20%
+     Mar  weather + El Niño, 1999–2022 only            AUC 0.65 catch@15%FA  26%
+     Mar  + MODIS greenness (our system), 1999–2022    AUC 0.65 catch@15%FA  30%
+          (vs weather + El Niño on the same years: beats in 42%)
+
+  BARLEY: satellite late-spring greenness vs real yield (trend removed), 2000–2023: r = +0.51 (n=71); per governorate: Sulaymaniyah -0.02, Erbil +0.74, Duhok +0.34
+  BARLEY: NOAA VHI in March vs real yield, 1992–2023: r = +0.24 (n=95)
+  Predicting a bad barley harvest (governorate yield in its bottom 25%, trend removed), seasons hidden one by one:
+     Pre  El Niño only, 1991–2023                      AUC 0.58 catch@15%FA  35%
+     Dec  weather + El Niño, 1991–2023 (33 seasons)    AUC 0.56 catch@15%FA  27%
+     Dec  + NOAA crop health, 1991–2023                AUC 0.55 catch@15%FA  19%  beats ref in 32%
+     Dec  + CHIRPS rain, 1991–2023                     AUC 0.55 catch@15%FA  23%  beats ref in 16%
+     Dec  weather + El Niño, 1999–2022 only            AUC 0.49 catch@15%FA  15%
+     Jan  weather + El Niño, 1991–2023 (33 seasons)    AUC 0.56 catch@15%FA  31%
+     Jan  + NOAA crop health, 1991–2023                AUC 0.53 catch@15%FA  31%  beats ref in 4%
+     Jan  + CHIRPS rain, 1991–2023                     AUC 0.55 catch@15%FA  31%  beats ref in 4%
+     Jan  weather + El Niño, 1999–2022 only            AUC 0.45 catch@15%FA   0%
+     Feb  weather + El Niño, 1991–2023 (33 seasons)    AUC 0.48 catch@15%FA   8%
+     Feb  + NOAA crop health, 1991–2023                AUC 0.49 catch@15%FA  15%  beats ref in 62%
+     Feb  + CHIRPS rain, 1991–2023                     AUC 0.45 catch@15%FA   8%  beats ref in 5%
+     Feb  weather + El Niño, 1999–2022 only            AUC 0.35 catch@15%FA   0%
+     Feb  + MODIS greenness (our system), 1999–2022    AUC 0.33 catch@15%FA   0%
+          (vs weather + El Niño on the same years: beats in 18%)
+     Mar  weather + El Niño, 1991–2023 (33 seasons)    AUC 0.53 catch@15%FA  23%
+     Mar  + NOAA crop health, 1991–2023                AUC 0.52 catch@15%FA  19%  beats ref in 23%
+     Mar  + CHIRPS rain, 1991–2023                     AUC 0.51 catch@15%FA  23%  beats ref in 1%
+     Mar  weather + El Niño, 1999–2022 only            AUC 0.36 catch@15%FA  10%
+     Mar  + MODIS greenness (our system), 1999–2022    AUC 0.38 catch@15%FA   0%
+          (vs weather + El Niño on the same years: beats in 78%)
+python3 -I new_sources_test.py zones.json ../backtest_data/openmeteo        11.99s user 0.06s system 99% cpu 12.069 total

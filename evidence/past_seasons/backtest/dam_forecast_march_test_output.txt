@@ -1,0 +1,16 @@
+=== Dukan: June lake area, forecast at end of March (full 270 km², low summer <= 165 km²) ===
+  22 years with a clear Feb-Mar picture: 1989-2025, 6 of them low summers
+  now: last Oct lake + El Nino + rain Oct-Mar  avg error   26 km² (10% of full), r +0.64, low summers caught 6/6, false alarms 5 | 2025: predicted 164, real 113
+  March lake only                              avg error   29 km² (11% of full), r +0.52, low summers caught 5/6, false alarms 4 | 2025: predicted 175, real 113
+  March lake + rain Oct-Mar                    avg error   24 km² (9% of full), r +0.65, low summers caught 5/6, false alarms 3 | 2025: predicted 144, real 113
+  now + March lake                             avg error   25 km² (9% of full), r +0.65, low summers caught 6/6, false alarms 5 | 2025: predicted 163, real 113
+  2025 inputs: last Oct lake 184 km², El Nino -0.04, rain Oct-Mar 72% of normal, March lake 144 km²
+
+=== Darbandikhan: June lake area, forecast at end of March (full 113 km², low summer <= 49 km²) ===
+  16 years with a clear Feb-Mar picture: 1990-2026, 4 of them low summers
+  now: last Oct lake + El Nino + rain Oct-Mar  avg error   24 km² (21% of full), r +0.38, low summers caught 1/4, false alarms 2
+  March lake only                              avg error   16 km² (14% of full), r +0.67, low summers caught 2/4, false alarms 0
+  March lake + rain Oct-Mar                    avg error   18 km² (16% of full), r +0.64, low summers caught 2/4, false alarms 0
+  now + March lake                             avg error   20 km² (18% of full), r +0.55, low summers caught 2/4, false alarms 3
+  2025 inputs: last Oct lake 77 km², El Nino -0.04, rain Oct-Mar 78% of normal, March lake n/a
+

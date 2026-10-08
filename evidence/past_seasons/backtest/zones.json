@@ -1,0 +1,6 @@
+{"_note":"Farmland points near each town, picked by hand for the backtest (town centres are urban and give no crop signal). Replace with the ESA WorldCover cropland mask in the build.",
+ "zones":[
+ {"name":"Slemani","lat":35.44,"lon":45.52},{"name":"Garmiyan","lat":34.58,"lon":45.26},{"name":"Chamchamal","lat":35.50,"lon":44.78},{"name":"Bazian","lat":35.60,"lon":45.05},
+ {"name":"Ranya","lat":36.20,"lon":44.95},{"name":"Penjwen","lat":35.62,"lon":45.85},{"name":"Sharazur","lat":35.32,"lon":45.80},{"name":"Qaradagh","lat":35.30,"lon":45.40},
+ {"name":"Erbil","lat":36.10,"lon":43.90},{"name":"Duhok","lat":36.84,"lon":42.80},{"name":"Zakho","lat":37.10,"lon":42.60},{"name":"Soran","lat":36.62,"lon":44.52},
+ {"name":"Koya","lat":36.03,"lon":44.60},{"name":"Halabja","lat":35.22,"lon":45.92},{"name":"Akre","lat":36.68,"lon":43.85},{"name":"Makhmour","lat":35.78,"lon":43.65}]}

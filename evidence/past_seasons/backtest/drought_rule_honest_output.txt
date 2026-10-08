@@ -1,0 +1,18 @@
+Drought = Oct-May rain <= 80% of normal: 10 of 36 winters. Each winter judged with a cut-off learned from the other 35.
+
+Dec | learned with <= 0 false alarm(s): cut-off 30-38% | hidden-winter result: caught 1/10 droughts, 1 false alarm(s) in 26 normal winters | caught: 1998/99 | false: 1995/96
+Dec | learned with <= 1 false alarm(s): cut-off 38-41% | hidden-winter result: caught 2/10 droughts, 2 false alarm(s) in 26 normal winters | caught: 1998/99, 2007/08 | false: 1995/96, 2010/11
+Dec | learned with <= 2 false alarm(s): cut-off 41-54% | hidden-winter result: caught 3/10 droughts, 3 false alarm(s) in 26 normal winters | caught: 1998/99, 1999/00, 2007/08 | false: 1990/91, 1995/96, 2010/11
+
+Jan | learned with <= 0 false alarm(s): cut-off 52-61% | hidden-winter result: caught 4/10 droughts, 1 false alarm(s) in 26 normal winters | caught: 1998/99, 2007/08, 2008/09, 2024/25 | false: 1990/91
+Jan | learned with <= 1 false alarm(s): cut-off 61-65% | hidden-winter result: caught 5/10 droughts, 2 false alarm(s) in 26 normal winters | caught: 1998/99, 2007/08, 2008/09, 2020/21, 2024/25 | false: 1990/91, 2017/18
+Jan | learned with <= 2 false alarm(s): cut-off 65-71% | hidden-winter result: caught 5/10 droughts, 3 false alarm(s) in 26 normal winters | caught: 1998/99, 2007/08, 2008/09, 2020/21, 2024/25 | false: 1990/91, 2010/11, 2017/18
+
+Feb | learned with <= 0 false alarm(s): cut-off 69-69% | hidden-winter result: caught 6/10 droughts, 1 false alarm(s) in 26 normal winters | caught: 1998/99, 1999/00, 2007/08, 2008/09, 2020/21, 2024/25 | false: 1990/91
+Feb | learned with <= 1 false alarm(s): cut-off 69-70% | hidden-winter result: caught 6/10 droughts, 2 false alarm(s) in 26 normal winters | caught: 1998/99, 1999/00, 2007/08, 2008/09, 2020/21, 2024/25 | false: 1990/91, 2010/11
+Feb | learned with <= 2 false alarm(s): cut-off 70-75% | hidden-winter result: caught 6/10 droughts, 3 false alarm(s) in 26 normal winters | caught: 1998/99, 1999/00, 2007/08, 2008/09, 2020/21, 2024/25 | false: 1990/91, 2010/11, 2016/17
+
+Mar | learned with <= 0 false alarm(s): cut-off 67-81% | hidden-winter result: caught 6/10 droughts, 1 false alarm(s) in 26 normal winters | caught: 1998/99, 1999/00, 2007/08, 2008/09, 2020/21, 2024/25 | false: 2010/11
+Mar | learned with <= 1 false alarm(s): cut-off 81-82% | hidden-winter result: caught 9/10 droughts, 2 false alarm(s) in 26 normal winters | caught: 1998/99, 1999/00, 2000/01, 2007/08, 2008/09, 2011/12, 2020/21, 2021/22, 2024/25 | false: 2010/11, 2016/17
+Mar | learned with <= 2 false alarm(s): cut-off 82-86% | hidden-winter result: caught 9/10 droughts, 3 false alarm(s) in 26 normal winters | caught: 1998/99, 1999/00, 2000/01, 2007/08, 2008/09, 2011/12, 2020/21, 2021/22, 2024/25 | false: 2010/11, 2016/17, 2017/18
+

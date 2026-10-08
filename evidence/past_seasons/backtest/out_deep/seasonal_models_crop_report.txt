@@ -1,0 +1,25 @@
+A. Satellite-greenness outcome, 16 zones, 1999/00–2024/25
+  Dec: weather + El Niño AUC 0.77 catch@15%FA  42% Brier +0.18
+     + all 7 models, Jan–Mar                  AUC 0.76 catch@15%FA  46% Brier +0.16  beats ref in 14%
+     + all 7 models, Dec–Feb                  AUC 0.76 catch@15%FA  45% Brier +0.17  beats ref in 17%
+     + best 3 (CanSIPS, ECMWF, NASA), Jan–Mar AUC 0.77 catch@15%FA  46% Brier +0.19  beats ref in 54%
+     + best 3 (CanSIPS, ECMWF, NASA), Dec–Feb AUC 0.76 catch@15%FA  43% Brier +0.17  beats ref in 8%
+  Jan: weather + El Niño AUC 0.76 catch@15%FA  42% Brier +0.16
+     + all 7 models, Jan–Mar                  AUC 0.74 catch@15%FA  37% Brier +0.14  beats ref in 5%
+     + all 7 models, Dec–Feb                  AUC 0.76 catch@15%FA  46% Brier +0.16  beats ref in 41%
+     + best 3 (CanSIPS, ECMWF, NASA), Jan–Mar AUC 0.76 catch@15%FA  46% Brier +0.16  beats ref in 49%
+     + best 3 (CanSIPS, ECMWF, NASA), Dec–Feb AUC 0.75 catch@15%FA  44% Brier +0.15  beats ref in 19%
+
+B. Official wheat harvest bad (governorate, 1991/92–2022/23)
+  Dec: weather + El Niño AUC 0.76 catch@15%FA  52% Brier +0.19
+     + all 7 models, Jan–Mar                  AUC 0.75 catch@15%FA  52% Brier +0.17  beats ref in 1%
+     + all 7 models, Dec–Feb                  AUC 0.76 catch@15%FA  52% Brier +0.19  beats ref in 49%
+     + best 3 (CanSIPS, ECMWF, NASA), Jan–Mar AUC 0.76 catch@15%FA  48% Brier +0.18  beats ref in 28%
+     + best 3 (CanSIPS, ECMWF, NASA), Dec–Feb AUC 0.77 catch@15%FA  56% Brier +0.19  beats ref in 61%
+  Jan: weather + El Niño AUC 0.74 catch@15%FA  41% Brier +0.13
+     + all 7 models, Jan–Mar                  AUC 0.72 catch@15%FA  41% Brier +0.11  beats ref in 3%
+     + all 7 models, Dec–Feb                  AUC 0.72 catch@15%FA  41% Brier +0.11  beats ref in 9%
+     + best 3 (CanSIPS, ECMWF, NASA), Jan–Mar AUC 0.72 catch@15%FA  41% Brier +0.11  beats ref in 3%
+     + best 3 (CanSIPS, ECMWF, NASA), Dec–Feb AUC 0.73 catch@15%FA  41% Brier +0.11  beats ref in 21%
+
+2026/27 is not testable yet (December 2026 forecasts come out ~Dec 8).

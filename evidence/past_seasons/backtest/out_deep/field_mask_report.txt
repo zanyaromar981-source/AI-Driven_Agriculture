@@ -1,0 +1,8 @@
+crop-like pixels kept per zone (of 1089): Slemani 952, Garmiyan 499, Chamchamal 1018, Bazian 1048, Ranya 671, Penjwen 636, Sharazur 458, Qaradagh 1025, Erbil 1069, Duhok 1030, Zakho 1054, Soran 913, Koya 1039, Halabja 229, Akre 720, Makhmour 547
+  Pre: current fields AUC 0.71 catch  35%  →  crop-like fields AUC 0.70 catch  35%
+  Dec: current fields AUC 0.77 catch  42%  →  crop-like fields AUC 0.76 catch  41%
+  Jan: current fields AUC 0.76 catch  42%  →  crop-like fields AUC 0.74 catch  38%
+  Feb: current fields AUC 0.78 catch  49%  →  crop-like fields AUC 0.77 catch  48%
+  Mar: current fields AUC 0.84 catch  59%  →  crop-like fields AUC 0.84 catch  62%
+  outcome agreement current vs crop-like: 99% of 416 zone-seasons; bad in both: 109, only current: 3, only crop-like: 3
+python3 -I field_mask_test.py zones.json ../backtest_data/openmeteo   out_dee  2.84s user 0.03s system 99% cpu 2.878 total

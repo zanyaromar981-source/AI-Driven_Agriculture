@@ -1,0 +1,131 @@
+<title>Kurdistan Now</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+Arabic:wght@400;600&display=swap">
+<style>
+/* Layout: map-first control room. Thin status bar on top, the map in the middle, a zone panel that slides in on the right, the Doctor's brief underneath. */
+:root{
+  --bg:#0E1512; --panel:#152019; --panel2:#1B2820; --line:#263529; --fg:#EAF1EC; --muted:#93A59A; --faint:#5F7067;
+  --accent:#7FD1B9; --ok:#4FB37A; --watch:#E3B341; --alarm:#E8654F; --none:#33443A; --water:#5FA8D3;
+  --f:"Manrope","Segoe UI",system-ui,sans-serif; --ku:"Noto Sans Arabic","Segoe UI",Tahoma,sans-serif; color-scheme:dark
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#EEF2EF; --panel:#FFFFFF; --panel2:#F3F6F4; --line:#D9E1DC; --fg:#15201A; --muted:#5C6D63; --faint:#8A9A91;
+  --accent:#1F7A62; --ok:#2F8A57; --watch:#C28E12; --alarm:#C23F2B; --none:#CDD6D0; --water:#2A6EA0; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#EEF2EF; --panel:#FFFFFF; --panel2:#F3F6F4; --line:#D9E1DC; --fg:#15201A; --muted:#5C6D63; --faint:#8A9A91;
+  --accent:#1F7A62; --ok:#2F8A57; --watch:#C28E12; --alarm:#C23F2B; --none:#CDD6D0; --water:#2A6EA0; color-scheme:light}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 var(--f)}
+.ku{font-family:var(--ku);direction:rtl;unicode-bidi:isolate}
+.app{display:grid;grid-template-rows:auto 1fr auto;height:100%;min-height:720px;gap:12px;padding:12px 16px;box-sizing:border-box}
+/* status bar */
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 20px/1 var(--f);letter-spacing:-.02em;margin:0}
+.brand .d{color:var(--muted);font-size:13px}
+.stat{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px}
+.stat b{font-weight:700}
+.stat i{width:9px;height:9px;border-radius:50%;background:var(--none);flex:none}
+.stat .lab{color:var(--muted)}
+/* main */
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;min-height:0}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}.panel{order:-1}}
+.mapbox{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;min-height:420px}
+.crumbs{position:absolute;top:12px;left:14px;z-index:2;display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+.crumbs b{color:var(--fg)}
+.layers{position:absolute;top:12px;right:12px;z-index:2;display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.layers button{font:inherit;font-size:12.5px;color:var(--muted);background:none;border:0;padding:5px 10px;border-radius:999px;cursor:pointer}
+.layers button[aria-pressed="true"]{background:var(--panel);color:var(--fg)}
+#map{display:block;width:100%;height:100%;min-height:420px}
+.hex{fill:var(--none);stroke:var(--panel);stroke-width:.6;transition:fill .5s}
+.edge{fill:none;stroke:var(--fg);stroke-opacity:.35;stroke-width:1.2}
+.lbl{font:700 14px var(--f);fill:var(--fg);paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round;text-anchor:middle}
+.legend{position:absolute;bottom:12px;left:14px;z-index:2;display:flex;gap:14px;font-size:12.5px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+/* zone panel */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;align-content:start;gap:12px;min-width:0}
+.panel h2{font:800 20px/1.2 var(--f);margin:0;letter-spacing:-.01em}
+.panel .sub{color:var(--muted);font-size:13px}
+.card{background:var(--panel2);border-radius:12px;padding:12px}
+.card .k{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:4px}
+.card .v{font:700 18px/1.2 var(--f)}
+.card .s{color:var(--muted);font-size:12.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.empty{color:var(--faint);font-size:13px;text-align:center;padding:28px 8px;border:1.5px dashed var(--line);border-radius:12px}
+/* brief */
+.brief{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;grid-template-columns:auto 1fr 1fr;gap:16px;align-items:start}
+@media (max-width:900px){.brief{grid-template-columns:1fr}}
+.brief .who{display:flex;flex-direction:column;gap:4px;min-width:150px}
+.brief .who b{font-weight:800}
+.brief .who span{color:var(--muted);font-size:12.5px}
+.brief p{margin:0;color:var(--muted);font-size:13.5px}
+.brief p.ku{font-size:15px}
+.foot{color:var(--faint);font-size:12px;text-align:center}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand"><h1>Kurdistan Now</h1><span class="d" id="date">—</span></div>
+    <div class="stat"><i id="s-season"></i><span class="lab">Season</span><b id="v-season">—</b></div>
+    <div class="stat"><i style="background:var(--water)"></i><span class="lab">Dukan</span><b id="v-dukan">—</b></div>
+    <div class="stat"><i style="background:var(--water)"></i><span class="lab">Darbandikhan</span><b id="v-darb">—</b></div>
+    <div class="stat"><i id="s-rain"></i><span class="lab">Rain, 10 days</span><b id="v-rain">—</b></div>
+    <div class="stat"><i id="s-dust"></i><span class="lab">Dust</span><b id="v-dust">—</b></div>
+    <div class="stat"><i id="s-alerts"></i><span class="lab">Alerts</span><b id="v-alerts">—</b></div>
+  </header>
+
+  <div class="main">
+    <section class="mapbox" aria-label="Map of the Kurdistan Region">
+      <div class="crumbs"><b>Kurdistan Region</b></div>
+      <div class="layers" role="group" aria-label="Map layer">
+        <button aria-pressed="true">Season</button><button aria-pressed="false">From space</button><button aria-pressed="false">Alerts</button><button aria-pressed="false">Reports</button>
+      </div>
+      <svg id="map" role="img" aria-label="Hex map of the 16 farm zones"></svg>
+      <div class="legend"><span><i style="background:var(--ok)"></i>normal</span><span><i style="background:var(--watch)"></i>watch</span><span><i style="background:var(--alarm)"></i>drought</span><span><i style="background:var(--none)"></i>no data yet</span></div>
+    </section>
+
+    <aside class="panel" aria-live="polite">
+      <div><h2 id="p-name">Pick a zone</h2><div class="sub" id="p-sub">Click an area on the map</div></div>
+      <div class="grid2">
+        <div class="card"><div class="k">Field eye</div><div class="v">—</div><div class="s">greenness vs normal</div></div>
+        <div class="card"><div class="k">Season</div><div class="v">—</div><div class="s">rain since 1 Oct</div></div>
+        <div class="card"><div class="k">Next 10 days</div><div class="v">—</div><div class="s">rain · frost · heat</div></div>
+        <div class="card"><div class="k">Reports</div><div class="v">—</div><div class="s">within 20 km, 14 days</div></div>
+      </div>
+      <div class="card"><div class="k">This week's actions</div><div class="empty">The Weather Planner's decisions for this zone appear here</div></div>
+    </aside>
+  </div>
+
+  <footer class="brief">
+    <div class="who"><b>The Doctor's weekly brief</b><span>Claude · Sorani and English</span><span id="b-when">—</span></div>
+    <p class="ku">— لێرە کورتەی هەفتانەی دکتۆر بە کوردی دەردەکەوێت —</p>
+    <p>— The Doctor's weekly briefing for the Ministry appears here in English —</p>
+  </footer>
+  <div class="foot">Template · Sprint 1 · data from Sentinel-2, Open-Meteo, ERA5, NOAA, WFP · no long-range forecasts</div>
+</div>
+
+<script src="data.js"></script>
+<script>
+(() => {
+  // Template only: draws the hex map shape from data.js (geometry), everything else is a placeholder.
+  const D = window.DATA, NS = 'http://www.w3.org/2000/svg', R = D.hex.R, S3 = Math.sqrt(3);
+  const cells = D.hex.cells.map(([q, r, a, z]) => ({ q, r, a, z, x: R * S3 * (q + r / 2), y: R * 1.5 * r }));
+  const svg = document.getElementById('map');
+  const xs = cells.map(c => c.x), ys = cells.map(c => c.y);
+  const x0 = Math.min(...xs) - R * 2, y0 = Math.min(...ys) - R * 2, w = Math.max(...xs) - x0 + R * 2, h = Math.max(...ys) - y0 + R * 2;
+  svg.setAttribute('viewBox', [x0, y0, w, h].join(' '));
+  const hexPath = c => 'M' + [0, 1, 2, 3, 4, 5].map(i => { const a = Math.PI / 180 * (60 * i - 30); return (c.x + R * .93 * Math.cos(a)).toFixed(2) + ',' + (c.y + R * .93 * Math.sin(a)).toFixed(2); }).join('L') + 'Z';
+  const g = document.createElementNS(NS, 'g');
+  for (const c of cells) { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', hexPath(c)); p.setAttribute('class', 'hex'); g.append(p); }
+  svg.append(g);
+  // area outlines + labels
+  const key = (q, r) => q + ',' + r, by = new Map(cells.map(c => [key(c.q, c.r), c]));
+  const NB = [[1, 0, 0, 1], [0, 1, 1, 2], [-1, 1, 2, 3], [-1, 0, 3, 4], [0, -1, 4, 5], [1, -1, 5, 0]]; let d = '';
+  const corner = (c, i) => { const a = Math.PI / 180 * (60 * i - 30); return [c.x + R * Math.cos(a), c.y + R * Math.sin(a)]; };
+  for (const c of cells) for (const [dq, dr, i, j] of NB) { const n = by.get(key(c.q + dq, c.r + dr)); if (!n || n.a !== c.a) { const [a, b] = [corner(c, i), corner(c, j)]; d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}L${b[0].toFixed(1)},${b[1].toFixed(1)}`; } }
+  const e = document.createElementNS(NS, 'path'); e.setAttribute('d', d); e.setAttribute('class', 'edge'); svg.append(e);
+  D.areas.forEach((a, ai) => { const cs = cells.filter(c => c.a === ai); const t = document.createElementNS(NS, 'text'); t.setAttribute('class', 'lbl');
+    t.setAttribute('x', (cs.reduce((s, c) => s + c.x, 0) / cs.length).toFixed(1)); t.setAttribute('y', (cs.reduce((s, c) => s + c.y, 0) / cs.length).toFixed(1)); t.textContent = a.name; svg.append(t); });
+  document.getElementById('date').textContent = 'template · no data loaded';
+})();
+</script>

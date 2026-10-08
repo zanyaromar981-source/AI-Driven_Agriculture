@@ -1,0 +1,222 @@
+{
+ "summary": {
+  "Erbil": {
+   "ring_km2": 1963.5136,
+   "radius_km": 25,
+   "built_2017_km2": 302.9408,
+   "built_2023_km2": 383.5555,
+   "built_net_2017_2023_km2": 80.6147,
+   "built_net_2017_2023_dunam": 32245.88,
+   "built_growth_pct": 26.610710739524027,
+   "direct_new_built_2017_2023_km2_by_2017_class": {
+    "water": 0.064,
+    "trees": 0.043,
+    "crops": 37.108,
+    "bare": 27.429,
+    "rangeland": 22.976
+   },
+   "direct_built_2017_to_nonbuilt_2023_km2": 7.005400000000001,
+   "robust_new_built_km2_by_2017_class": {
+    "water": 0.034,
+    "trees": 0.019,
+    "crops": 19.46,
+    "bare": 13.172,
+    "rangeland": 10.736
+   },
+   "robust_new_built_km2_by_2018_class": {
+    "water": 0.031,
+    "trees": 0.002,
+    "crops": 16.411,
+    "bare": 7.911,
+    "rangeland": 19.066
+   },
+   "robust_new_built_total_km2": 43.420500000000004,
+   "robust_new_built_from_crops_2017_km2": 19.4597,
+   "robust_new_built_from_crops_2017or2018_km2": 21.160700000000002,
+   "robust_new_built_from_crops_2017or2018_dunam": 8464.28,
+   "robust_new_built_from_rangeland_2017_km2": 10.7363,
+   "ever_built_km2": 410.7076,
+   "built_history_monotonic_share": 0.8615450505420401,
+   "first_built_year_km2_monotonic_pixels": {
+    "2018": 12.624,
+    "2019": 12.042,
+    "2020": 9.003,
+    "2021": 10.357,
+    "2022": 9.694,
+    "2023": 17.41
+   },
+   "ever_crops_km2": 1304.4619,
+   "always_crops_km2": 703.5411,
+   "crops_by_year_km2": {
+    "2017": 1041.1,
+    "2018": 861.08,
+    "2019": 1231.34,
+    "2020": 1177.62,
+    "2021": 944.37,
+    "2022": 958.84,
+    "2023": 1075.14
+   },
+   "stable_new_built_2018_2023_km2": 71.13040000000001,
+   "stable_new_built_2018_2022_km2_(>=2yr_evidence)": 53.720200000000006,
+   "stable_from_crops_prev_yr_km2": 32.4296,
+   "stable_from_rangeland_prev_yr_km2": 27.82,
+   "stable_from_bare_prev_yr_km2": 10.8093,
+   "stable_from_ever_cropped_km2": 41.9696,
+   "stable_from_ever_cropped_dunam": 16787.84
+  },
+  "Slemani": {
+   "ring_km2": 1256.64,
+   "radius_km": 20,
+   "built_2017_km2": 175.7622,
+   "built_2023_km2": 250.50400000000002,
+   "built_net_2017_2023_km2": 74.7418,
+   "built_net_2017_2023_dunam": 29896.719999999998,
+   "built_growth_pct": 42.52438806523815,
+   "direct_new_built_2017_2023_km2_by_2017_class": {
+    "water": 0.072,
+    "trees": 0.001,
+    "crops": 29.687,
+    "bare": 6.461,
+    "rangeland": 41.293
+   },
+   "direct_built_2017_to_nonbuilt_2023_km2": 2.7729,
+   "robust_new_built_km2_by_2017_class": {
+    "water": 0.027,
+    "trees": 0.001,
+    "crops": 16.986,
+    "bare": 3.004,
+    "rangeland": 19.035
+   },
+   "robust_new_built_km2_by_2018_class": {
+    "water": 0.032,
+    "trees": 0.003,
+    "crops": 16.244,
+    "bare": 1.812,
+    "rangeland": 20.963
+   },
+   "robust_new_built_total_km2": 39.052800000000005,
+   "robust_new_built_from_crops_2017_km2": 16.986,
+   "robust_new_built_from_crops_2017or2018_km2": 18.8202,
+   "robust_new_built_from_crops_2017or2018_dunam": 7528.08,
+   "robust_new_built_from_rangeland_2017_km2": 19.0348,
+   "ever_built_km2": 273.0149,
+   "built_history_monotonic_share": 0.8472032112533052,
+   "first_built_year_km2_monotonic_pixels": {
+    "2018": 16.143,
+    "2019": 11.461,
+    "2020": 11.093,
+    "2021": 9.128,
+    "2022": 5.747,
+    "2023": 10.288
+   },
+   "ever_crops_km2": 463.02090000000004,
+   "always_crops_km2": 219.2868,
+   "crops_by_year_km2": {
+    "2017": 360.58,
+    "2018": 318.7,
+    "2019": 384.63,
+    "2020": 389.0,
+    "2021": 298.82,
+    "2022": 271.82,
+    "2023": 325.39
+   },
+   "stable_new_built_2018_2023_km2": 63.859100000000005,
+   "stable_new_built_2018_2022_km2_(>=2yr_evidence)": 53.571000000000005,
+   "stable_from_crops_prev_yr_km2": 24.9631,
+   "stable_from_rangeland_prev_yr_km2": 35.302,
+   "stable_from_bare_prev_yr_km2": 3.4986,
+   "stable_from_ever_cropped_km2": 29.543000000000003,
+   "stable_from_ever_cropped_dunam": 11817.2
+  },
+  "Duhok": {
+   "ring_km2": 1256.64,
+   "radius_km": 20,
+   "built_2017_km2": 101.7317,
+   "built_2023_km2": 145.59040000000002,
+   "built_net_2017_2023_km2": 43.8587,
+   "built_net_2017_2023_dunam": 17543.48,
+   "built_growth_pct": 43.11212729168981,
+   "direct_new_built_2017_2023_km2_by_2017_class": {
+    "water": 0.173,
+    "trees": 0.099,
+    "crops": 11.564,
+    "bare": 4.103,
+    "rangeland": 30.022
+   },
+   "direct_built_2017_to_nonbuilt_2023_km2": 2.1009,
+   "robust_new_built_km2_by_2017_class": {
+    "water": 0.044,
+    "trees": 0.03,
+    "crops": 6.716,
+    "bare": 1.742,
+    "rangeland": 14.618
+   },
+   "robust_new_built_km2_by_2018_class": {
+    "water": 0.041,
+    "trees": 0.017,
+    "crops": 5.642,
+    "bare": 1.155,
+    "rangeland": 16.295
+   },
+   "robust_new_built_total_km2": 23.1503,
+   "robust_new_built_from_crops_2017_km2": 6.7161,
+   "robust_new_built_from_crops_2017or2018_km2": 7.728000000000001,
+   "robust_new_built_from_crops_2017or2018_dunam": 3091.2000000000003,
+   "robust_new_built_from_rangeland_2017_km2": 14.618300000000001,
+   "ever_built_km2": 155.85660000000001,
+   "built_history_monotonic_share": 0.8538027905138441,
+   "first_built_year_km2_monotonic_pixels": {
+    "2018": 4.32,
+    "2019": 5.682,
+    "2020": 5.296,
+    "2021": 6.667,
+    "2022": 4.536,
+    "2023": 11.745
+   },
+   "ever_crops_km2": 476.43210000000005,
+   "always_crops_km2": 151.1224,
+   "crops_by_year_km2": {
+    "2017": 341.82,
+    "2018": 325.64,
+    "2019": 424.02,
+    "2020": 423.03,
+    "2021": 313.81,
+    "2022": 191.59,
+    "2023": 374.0
+   },
+   "stable_new_built_2018_2023_km2": 38.2461,
+   "stable_new_built_2018_2022_km2_(>=2yr_evidence)": 26.5013,
+   "stable_from_crops_prev_yr_km2": 11.539200000000001,
+   "stable_from_rangeland_prev_yr_km2": 24.742900000000002,
+   "stable_from_bare_prev_yr_km2": 1.8602,
+   "stable_from_ever_cropped_km2": 17.213900000000002,
+   "stable_from_ever_cropped_dunam": 6885.560000000001
+  }
+ },
+ "failures": [],
+ "io_class_codes": {
+  "0": "No Data",
+  "1": "Water",
+  "2": "Trees",
+  "4": "Flooded vegetation",
+  "5": "Crops",
+  "7": "Built area",
+  "8": "Bare ground",
+  "9": "Snow/ice",
+  "10": "Clouds",
+  "11": "Rangeland"
+ },
+ "worldcover_class_codes": {
+  "10": "Tree cover",
+  "20": "Shrubland",
+  "30": "Grassland",
+  "40": "Cropland",
+  "50": "Built-up",
+  "60": "Bare / sparse vegetation",
+  "70": "Snow and ice",
+  "80": "Permanent water bodies",
+  "90": "Herbaceous wetland",
+  "95": "Mangroves",
+  "100": "Moss and lichen"
+ }
+}

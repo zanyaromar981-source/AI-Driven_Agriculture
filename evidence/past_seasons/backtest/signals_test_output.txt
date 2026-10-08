@@ -1,0 +1,37 @@
+35 seasons, bad = bottom 25% (≤76% of normal) → 9 bad seasons.  r needed: 0.33 (p<.05), 0.43 (p<.01), 0.46 (after correcting for testing 12 signals)
+
+signal (state known in September)   n  r full r Oct–Dec  P(bad) low-third / high-third   2026 state
+ENSO (ONI, Jul–Sep)                35   +0.59**   +0.68      64% /   0%                 +2.16
+Indian Ocean Dipole (DMI)          35   +0.09     +0.22      18% /   9%                 None
+Pacific Decadal Osc. (PDO)         35   +0.32     +0.34      36% /   9%                 -1.87
+Atlantic Multidecadal (AMO)        32   -0.47**   -0.51      20% /  30%                 None
+Tropical N. Atlantic SST (TNA)     35   -0.27     -0.46      18% /  27%                 None
+Stratosphere wind (QBO 30hPa)      35   -0.17     -0.09      18% /  27%                 None
+Southern Osc. Index (SOI)          35   -0.57**   -0.72       0% /  55%                 None
+NAO (Sep, atmosphere)              35   +0.02     +0.11      18% /  36%                 None
+Arctic Osc. (Sep, atmosphere)      35   +0.12     +0.24      18% /  27%                 +1.16
+EA/West Russia (Sep, atmos.)       35   -0.14     -0.01       9% /  27%                 -2.54
+Scandinavia pattern (Sep)          35   -0.13     -0.10      27% /  36%                 -1.88
+Eurasia snow (Oct, anomaly)        35   -0.14     +0.01      27% /  18%                 None
+
+Same-winter atmosphere (Dec–Feb mean) vs season rain — tells us WHY, cannot be known in September:
+   NAO              n=35  r=-0.06
+   Arctic Osc.      n=35  r=-0.09
+   EA/West Russia   n=35  r=+0.33
+   Scandinavia      n=35  r=+0.02
+   East Atlantic    n=35  r=+0.18
+
+Pre-season rain forecast (leave-one-season-out), warn if predicted <95% of normal:
+   signals used                                         n  r(pred,actual)  avg error   bad seasons caught   false alarms
+   ENSO                                                 35   +0.54          21 pts     8/9                9/26
+   ENSO + Indian Ocean Dipole                           35   +0.55          20 pts     7/9                9/26
+   ENSO + Pacific Decadal Osc.                          35   +0.49          21 pts     8/9                9/26
+   ENSO + Atlantic Multidecadal                         32   +0.65          18 pts     8/8                9/24
+   ENSO + Tropical N. Atlantic SST                      35   +0.56          20 pts     8/9                9/26
+   ENSO + Stratosphere wind                             35   +0.56          20 pts     9/9                5/26
+   ENSO + Southern Osc. Index                           35   +0.52          21 pts     8/9                8/26
+   ENSO + NAO                                           35   +0.49          22 pts     8/9                9/26
+   ENSO + Arctic Osc.                                   35   +0.51          21 pts     7/9                7/26
+   ENSO + EA/West Russia                                35   +0.49          21 pts     8/9                8/26
+   ENSO + Scandinavia pattern                           35   +0.51          22 pts     7/9                9/26
+   ENSO + Eurasia snow                                  35   +0.54          21 pts     7/9                10/26

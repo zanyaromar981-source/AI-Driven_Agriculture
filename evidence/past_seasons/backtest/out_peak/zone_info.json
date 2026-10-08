@@ -1,0 +1,50 @@
+{
+ "Slemani": {
+  "cropland_px": 1087,
+  "box_px": 1089,
+  "peak_q25": 0.461,
+  "peak_median": 0.513
+ },
+ "Makhmour": {
+  "cropland_px": 547,
+  "box_px": 1089,
+  "peak_q25": 0.286,
+  "peak_median": 0.42
+ },
+ "Erbil": {
+  "cropland_px": 1073,
+  "box_px": 1089,
+  "peak_q25": 0.546,
+  "peak_median": 0.619
+ },
+ "Chamchamal": {
+  "cropland_px": 1020,
+  "box_px": 1089,
+  "peak_q25": 0.352,
+  "peak_median": 0.44
+ },
+ "Duhok": {
+  "cropland_px": 1032,
+  "box_px": 1089,
+  "peak_q25": 0.433,
+  "peak_median": 0.536
+ },
+ "Garmiyan": {
+  "cropland_px": 651,
+  "box_px": 1089,
+  "peak_q25": 0.314,
+  "peak_median": 0.387
+ },
+ "Sharazur": {
+  "cropland_px": 900,
+  "box_px": 1089,
+  "peak_q25": 0.589,
+  "peak_median": 0.644
+ },
+ "Soran": {
+  "cropland_px": 1000,
+  "box_px": 1089,
+  "peak_q25": 0.471,
+  "peak_median": 0.505
+ }
+}

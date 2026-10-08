@@ -1,0 +1,67 @@
+Score guide: AUC = chance the model gives a bad zone-season a higher risk than a good one (0.50 = coin flip, 1.00 = perfect).
+catch@15%FA = share of bad zone-seasons caught when false alarms are held at 15%.  Brier skill > 0 = better than always saying 25%.
+"vs current" = in how many of 1000 reshuffles of the seasons this beats the current model (≥ 0.90 means probably real).
+
+=== Pre ===
+  last year only                     LR         AUC 0.44  catch@15%FA   9%  Brier skill -0.04  season AUC 0.34  (reference)
+  El Niño only                       LR         AUC 0.71  catch@15%FA  35%  Brier skill +0.09  season AUC 0.83  vs current 0.99
+  all                                LR         AUC 0.70  catch@15%FA  26%  Brier skill +0.07  season AUC 0.79  vs current 0.99
+  all                                LR-strong  AUC 0.62  catch@15%FA  13%  Brier skill +0.03  season AUC 0.63  vs current 0.99
+  all                                kNN        AUC 0.64  catch@15%FA  24%  Brier skill -0.09  season AUC 0.78  vs current 0.97
+  all                                kNN-zone   AUC 0.65  catch@15%FA  16%  Brier skill -0.01  season AUC 0.80  vs current 0.97
+  all                                RF         AUC 0.68  catch@15%FA  31%  Brier skill -0.02  season AUC 0.81  vs current 1.00
+  all                                Ensemble   AUC 0.70  catch@15%FA  29%  Brier skill +0.02  season AUC 0.82  vs current 0.99
+
+=== Dec ===
+  current model                      LR         AUC 0.76  catch@15%FA  42%  Brier skill +0.16  season AUC 0.82  (reference)
+  + El Niño                          LR         AUC 0.77  catch@15%FA  42%  Brier skill +0.18  season AUC 0.82  vs current 0.68
+  + rain timing                      LR         AUC 0.76  catch@15%FA  46%  Brier skill +0.15  season AUC 0.84  vs current 0.31
+  + region & last spring             LR         AUC 0.76  catch@15%FA  38%  Brier skill +0.15  season AUC 0.78  vs current 0.54
+  all                                LR         AUC 0.76  catch@15%FA  41%  Brier skill +0.15  season AUC 0.79  vs current 0.39
+  all                                LR-strong  AUC 0.76  catch@15%FA  37%  Brier skill +0.14  season AUC 0.83  vs current 0.38
+  all                                kNN        AUC 0.72  catch@15%FA  26%  Brier skill +0.04  season AUC 0.77  vs current 0.11
+  all                                kNN-zone   AUC 0.68  catch@15%FA  14%  Brier skill +0.05  season AUC 0.78  vs current 0.04
+  all                                RF         AUC 0.74  catch@15%FA  43%  Brier skill +0.11  season AUC 0.81  vs current 0.27
+  all                                Ensemble   AUC 0.75  catch@15%FA  38%  Brier skill +0.12  season AUC 0.81  vs current 0.34
+
+=== Jan ===
+  current model                      LR         AUC 0.72  catch@15%FA  39%  Brier skill +0.10  season AUC 0.75  (reference)
+  + El Niño                          LR         AUC 0.76  catch@15%FA  42%  Brier skill +0.16  season AUC 0.83  vs current 0.93
+  + rain timing                      LR         AUC 0.71  catch@15%FA  32%  Brier skill +0.09  season AUC 0.70  vs current 0.17
+  + region & last spring             LR         AUC 0.71  catch@15%FA  29%  Brier skill +0.07  season AUC 0.70  vs current 0.16
+  all                                LR         AUC 0.73  catch@15%FA  38%  Brier skill +0.12  season AUC 0.75  vs current 0.70
+  all                                LR-strong  AUC 0.71  catch@15%FA  24%  Brier skill +0.09  season AUC 0.70  vs current 0.21
+  all                                kNN        AUC 0.68  catch@15%FA  32%  Brier skill +0.04  season AUC 0.72  vs current 0.22
+  all                                kNN-zone   AUC 0.62  catch@15%FA   7%  Brier skill -0.03  season AUC 0.74  vs current 0.02
+  all                                RF         AUC 0.78  catch@15%FA  56%  Brier skill +0.20  season AUC 0.89  vs current 0.89
+  all                                Ensemble   AUC 0.76  catch@15%FA  44%  Brier skill +0.15  season AUC 0.86  vs current 0.95
+
+=== Feb ===
+  current model                      LR         AUC 0.76  catch@15%FA  45%  Brier skill +0.16  season AUC 0.77  (reference)
+  + El Niño                          LR         AUC 0.78  catch@15%FA  49%  Brier skill +0.19  season AUC 0.80  vs current 0.91
+  + rain timing                      LR         AUC 0.74  catch@15%FA  43%  Brier skill +0.13  season AUC 0.71  vs current 0.12
+  + region & last spring             LR         AUC 0.75  catch@15%FA  38%  Brier skill +0.13  season AUC 0.74  vs current 0.00
+  all                                LR         AUC 0.75  catch@15%FA  40%  Brier skill +0.14  season AUC 0.75  vs current 0.29
+  all                                LR-strong  AUC 0.74  catch@15%FA  37%  Brier skill +0.13  season AUC 0.74  vs current 0.11
+  all                                kNN        AUC 0.69  catch@15%FA  30%  Brier skill +0.06  season AUC 0.76  vs current 0.05
+  all                                kNN-zone   AUC 0.67  catch@15%FA  18%  Brier skill +0.05  season AUC 0.77  vs current 0.01
+  all                                RF         AUC 0.80  catch@15%FA  59%  Brier skill +0.25  season AUC 0.90  vs current 0.85
+  current model, old leaky green     LR         AUC 0.79  catch@15%FA  53%  Brier skill +0.21  season AUC 0.81  vs current 1.00
+  all                                Ensemble   AUC 0.79  catch@15%FA  49%  Brier skill +0.20  season AUC 0.83  vs current 0.86
+
+=== Mar ===
+  current model                      LR         AUC 0.84  catch@15%FA  61%  Brier skill +0.31  season AUC 0.82  (reference)
+  + El Niño                          LR         AUC 0.84  catch@15%FA  59%  Brier skill +0.31  season AUC 0.86  vs current 0.43
+  + rain timing                      LR         AUC 0.84  catch@15%FA  58%  Brier skill +0.30  season AUC 0.83  vs current 0.36
+  + region & last spring             LR         AUC 0.83  catch@15%FA  60%  Brier skill +0.28  season AUC 0.79  vs current 0.05
+  all                                LR         AUC 0.83  catch@15%FA  57%  Brier skill +0.29  season AUC 0.82  vs current 0.20
+  all                                LR-strong  AUC 0.81  catch@15%FA  58%  Brier skill +0.22  season AUC 0.84  vs current 0.05
+  all                                kNN        AUC 0.82  catch@15%FA  48%  Brier skill +0.27  season AUC 0.83  vs current 0.15
+  all                                kNN-zone   AUC 0.75  catch@15%FA  27%  Brier skill +0.17  season AUC 0.82  vs current 0.00
+  all                                RF         AUC 0.83  catch@15%FA  61%  Brier skill +0.30  season AUC 0.87  vs current 0.25
+  current model, old leaky green     LR         AUC 0.88  catch@15%FA  69%  Brier skill +0.37  season AUC 0.87  vs current 1.00
+  all                                Ensemble   AUC 0.84  catch@15%FA  61%  Brier skill +0.31  season AUC 0.86  vs current 0.34
+
+=== Ceiling ===
+  perfect weather to Apr 30          LR         AUC 0.79  catch@15%FA  54%  Brier skill +0.24  season AUC 0.91  (reference)
+  perfect weather + timing           LR         AUC 0.78  catch@15%FA  55%  Brier skill +0.23  season AUC 0.93  vs current 0.17

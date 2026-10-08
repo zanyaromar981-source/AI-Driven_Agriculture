@@ -1,0 +1,38 @@
+
+=== Dukan: predict June lake area (full = 270 km²) ===
+  32 years 1989–2026; low-water summer = bottom 25% (≤ 165 km², 61% of full)
+  baseline "average year": avg error 35 km² | baseline "same as last year": 40 km²
+  early Nov (last Oct lake + El Niño)    avg error   28 km² (10% of full), r +0.42, low summers caught 5/9, false alarms 7/23
+  end of January (+ rain Oct–Jan)        avg error   28 km² (10% of full), r +0.55, low summers caught 8/9, false alarms 5/23
+  end of March (+ rain Oct–Mar)          avg error   26 km² (10% of full), r +0.65, low summers caught 7/9, false alarms 6/23
+     years (true → predicted): 1999:129→182, 2000:136→155, 2001:129→167, 2008:133→134, 2009:125→177, 2010:164→217, 2011:165→137, 2015:153→166, 2018:219→251, 2020:231→219, 2021:183→183, 2022:176→176, 2023:175→156, 2024:208→217, 2025:113→168, 2026:273→219
+  → TODAY's forecast for June 2027: 264 km² (98% of full) [Oct 2026 lake 249 km², ONI +2.16; weights: last-Oct lake +0.06, ONI +31.0 km² per unit]
+
+=== Dukan: predict October lake area (full = 270 km²) ===
+  32 years 1989–2026; low-water summer = bottom 25% (≤ 116 km², 43% of full)
+  baseline "average year": avg error 35 km² | baseline "same as last year": 46 km²
+  early Nov (last Oct lake + El Niño)    avg error   31 km² (11% of full), r +0.20, low summers caught 1/9, false alarms 1/23
+  end of January (+ rain Oct–Jan)        avg error   30 km² (11% of full), r +0.42, low summers caught 0/9, false alarms 4/23
+  end of March (+ rain Oct–Mar)          avg error   28 km² (10% of full), r +0.55, low summers caught 3/9, false alarms 3/23
+     years (true → predicted): 1989:113→121, 1999:95→140, 2000:111→128, 2004:116→150, 2009:95→139, 2010:84→179, 2014:104→141, 2015:111→133, 2017:197→135, 2018:178→190, 2019:225→244, 2020:187→163, 2021:160→139, 2022:145→137, 2023:135→123, 2024:184→163, 2025:83→125, 2026:249→175
+  end of May (+ rain Oct–May)            avg error   27 km² (10% of full), r +0.53, low summers caught 1/9, false alarms 3/23
+  → TODAY's forecast for October 2027: 204 km² (75% of full) [Oct 2026 lake 249 km², ONI +2.16; weights: last-Oct lake +0.01, ONI +24.0 km² per unit]
+
+=== Darbandikhan: predict June lake area (full = 113 km²) ===
+  30 years 1989–2026; low-water summer = bottom 25% (≤ 44 km², 39% of full)
+  baseline "average year": avg error 25 km² | baseline "same as last year": 24 km²
+  early Nov (last Oct lake + El Niño)    avg error   23 km² (21% of full), r +0.33, low summers caught 0/8, false alarms 2/22
+  end of January (+ rain Oct–Jan)        avg error   22 km² (20% of full), r +0.38, low summers caught 0/8, false alarms 3/22
+  end of March (+ rain Oct–Mar)          avg error   22 km² (20% of full), r +0.40, low summers caught 0/8, false alarms 2/22
+     years (true → predicted): 1999:37→66, 2000:30→52, 2001:37→57, 2008:39→57, 2009:15→63, 2010:28→80, 2017:98→72, 2018:49→83, 2019:103→100, 2020:68→86, 2021:40→69, 2022:44→55, 2023:74→52, 2024:107→92, 2025:66→86, 2026:110→81
+  → TODAY's forecast for June 2027: 118 km² (104% of full) [Oct 2026 lake 71 km², ONI +2.16; weights: last-Oct lake +0.50, ONI +15.4 km² per unit]
+
+=== Darbandikhan: predict October lake area (full = 113 km²) ===
+  30 years 1989–2026; low-water summer = bottom 25% (≤ 36 km², 32% of full)
+  baseline "average year": avg error 12 km² | baseline "same as last year": 11 km²
+  early Nov (last Oct lake + El Niño)    avg error   10 km² (9% of full), r +0.44, low summers caught 3/8, false alarms 4/22
+  end of January (+ rain Oct–Jan)        avg error   10 km² (9% of full), r +0.46, low summers caught 4/8, false alarms 6/22
+  end of March (+ rain Oct–Mar)          avg error   10 km² (9% of full), r +0.49, low summers caught 4/8, false alarms 6/22
+     years (true → predicted): 1989:36→29, 1999:31→44, 2000:25→33, 2001:27→33, 2005:30→44, 2009:30→39, 2010:29→42, 2014:34→48, 2017:58→49, 2018:40→54, 2019:55→59, 2020:49→54, 2021:36→45, 2022:37→35, 2023:64→33, 2024:77→55, 2025:47→62, 2026:71→49
+  end of May (+ rain Oct–May)            avg error   10 km² (9% of full), r +0.54, low summers caught 4/8, false alarms 7/22
+  → TODAY's forecast for October 2027: 70 km² (62% of full) [Oct 2026 lake 71 km², ONI +2.16; weights: last-Oct lake +0.51, ONI +5.5 km² per unit]

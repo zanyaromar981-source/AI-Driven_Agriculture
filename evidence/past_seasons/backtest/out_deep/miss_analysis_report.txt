@@ -1,0 +1,6 @@
+Warning at risk ≥35% (sensitive), LR + El Niño, hidden seasons
+month | SEVERE bad (worst 10%) caught | MILD bad (10–25%) caught | false alarms: just above the line (25–50%) | clearly good (top half)
+Dec   | 36/48 =  75%               | 39/64 =  61%          |  33%                                     |  17%
+Jan   | 36/48 =  75%               | 32/64 =  50%          |  35%                                     |  22%
+Feb   | 39/48 =  81%               | 31/64 =  48%          |  39%                                     |  19%
+Mar   | 38/48 =  79%               | 34/64 =  53%          |  39%                                     |  11%

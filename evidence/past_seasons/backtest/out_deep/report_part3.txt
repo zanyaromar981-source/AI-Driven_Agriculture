@@ -1,0 +1,11 @@
+month | model | sensitive ≥35%: caught / false alarms | cautious ≥50%: caught / false alarms / right overall | always-normal right
+Pre   | LR+ElNiño |  32% /   9% |   6% /   3% /  73% |  73%   AUC 0.71
+Pre   | Team      |  44% /  15% |   8% /   9% /  69% |  73%   AUC 0.72
+Dec   | LR+ElNiño |  67% /  22% |  29% /   9% /  75% |  73%   AUC 0.77
+Dec   | Team      |  62% /  21% |  25% /  10% /  73% |  73%   AUC 0.76
+Jan   | LR+ElNiño |  61% /  26% |  24% /   6% /  75% |  73%   AUC 0.76
+Jan   | Team      |  62% /  17% |  27% /   7% /  75% |  73%   AUC 0.79
+Feb   | LR+ElNiño |  62% /  25% |  29% /   8% /  75% |  73%   AUC 0.78
+Feb   | Team      |  65% /  25% |  39% /   4% /  81% |  73%   AUC 0.81
+Mar   | LR+ElNiño |  64% /  19% |  46% /   7% /  80% |  73%   AUC 0.84
+Mar   | Team      |  66% /  18% |  52% /   8% /  81% |  73%   AUC 0.85

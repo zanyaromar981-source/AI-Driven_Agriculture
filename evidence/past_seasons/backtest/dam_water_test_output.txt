@@ -1,0 +1,177 @@
+JRC GSW Dukan: max extent 1984-2021 275.3 km2, water >=50% of time 174.8 km2
+JRC GSW Darbandikhan: max extent 1984-2021 98.7 km2, water >=50% of time 50.3 km2
+wrote /Users/ranjhamakarim/Documents/SmartSuli_AI_Challenge/evidence/past_seasons/backtest/dam_water_areas.csv (165 rows)
+
+Key table (clear dates only; first number = NDWI>0 km2):
+  Darbandikhan 2008-06-10 Landsat         40.6 km2 (MNDWI   40.0, SCL    nan, cloud 0.00%, valid 99.9%) landsat-5 path 168
+  Darbandikhan 2008-06-26 Landsat         37.7 km2 (MNDWI   37.0, SCL    nan, cloud 0.00%, valid 100.0%) landsat-5 path 168
+  Darbandikhan 2013-06-08 Landsat         49.2 km2 (MNDWI   54.7, SCL    nan, cloud 0.58%, valid 100.0%) landsat-8 path 168
+  Darbandikhan 2017-05-29 late-May/Jun    98.4 km2 (MNDWI   96.2, SCL   70.2, cloud 0.05%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2017-09-06 Sep/Oct         61.3 km2 (MNDWI   59.1, SCL   49.0, cloud 0.01%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2017-09-21 Sep/Oct         58.1 km2 (MNDWI   55.8, SCL   47.0, cloud 0.03%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2017-10-16 Sep/Oct         56.2 km2 (MNDWI   48.7, SCL   49.1, cloud 0.02%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2018-06-08 late-May/Jun    48.7 km2 (MNDWI   37.5, SCL   39.5, cloud 0.16%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2018-06-13 late-May/Jun    51.4 km2 (MNDWI   46.7, SCL   42.6, cloud 0.04%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2018-06-18 late-May/Jun    40.4 km2 (MNDWI   30.7, SCL   42.4, cloud 0.03%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2018-09-21 Sep/Oct         40.2 km2 (MNDWI   36.9, SCL   36.1, cloud 0.03%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2018-09-26 Sep/Oct         39.8 km2 (MNDWI   37.9, SCL   38.7, cloud 0.03%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2018-10-01 Sep/Oct         39.7 km2 (MNDWI   36.1, SCL   35.5, cloud 0.05%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2019-05-24 late-May/Jun    99.4 km2 (MNDWI   95.0, SCL   53.6, cloud 0.05%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2019-05-24 Landsat         91.9 km2 (MNDWI  101.1, SCL    nan, cloud 0.85%, valid 100.0%) landsat-8 path 168
+  Darbandikhan 2019-05-29 late-May/Jun   103.8 km2 (MNDWI  102.1, SCL   90.9, cloud 0.09%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2019-06-03 late-May/Jun   102.9 km2 (MNDWI  101.9, SCL   85.9, cloud 0.08%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2019-09-21 Sep/Oct         60.4 km2 (MNDWI   58.9, SCL   48.8, cloud 0.03%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2019-10-01 Sep/Oct         54.8 km2 (MNDWI   51.7, SCL   53.0, cloud 0.22%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2019-10-11 Sep/Oct         52.1 km2 (MNDWI   49.2, SCL   49.3, cloud 0.13%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2020-06-07 late-May/Jun    71.1 km2 (MNDWI   64.0, SCL   57.3, cloud 0.30%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2020-06-12 late-May/Jun    67.8 km2 (MNDWI   59.7, SCL   52.6, cloud 0.04%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2020-06-17 late-May/Jun    68.5 km2 (MNDWI   65.7, SCL   55.3, cloud 0.02%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2020-09-20 Sep/Oct         49.6 km2 (MNDWI   47.2, SCL   41.8, cloud 0.03%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2020-09-25 Sep/Oct         49.1 km2 (MNDWI   47.2, SCL   46.6, cloud 0.01%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2020-10-10 Sep/Oct         46.7 km2 (MNDWI   41.4, SCL   45.3, cloud 0.04%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2021-05-28 late-May/Jun    41.7 km2 (MNDWI   37.6, SCL   36.8, cloud 0.08%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2021-06-02 late-May/Jun    38.5 km2 (MNDWI   34.7, SCL   36.0, cloud 0.05%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2021-06-07 late-May/Jun    40.2 km2 (MNDWI   36.9, SCL   35.8, cloud 0.13%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2021-09-30 Sep/Oct         36.3 km2 (MNDWI   34.3, SCL   33.7, cloud 0.05%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2021-10-05 Sep/Oct         35.8 km2 (MNDWI   32.9, SCL   33.4, cloud 0.18%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2021-10-10 Sep/Oct         33.6 km2 (MNDWI   32.2, SCL   32.9, cloud 0.09%, valid 99.9%) Sentinel-2 2B R092
+  Darbandikhan 2022-05-28 late-May/Jun    44.5 km2 (MNDWI   32.0, SCL   38.3, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2022-06-02 late-May/Jun    43.2 km2 (MNDWI   40.1, SCL   37.9, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2022-06-12 late-May/Jun    44.7 km2 (MNDWI   35.9, SCL   38.1, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2022-09-25 Sep/Oct         37.2 km2 (MNDWI   34.2, SCL   34.9, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2022-09-30 Sep/Oct         36.7 km2 (MNDWI   34.9, SCL   34.1, cloud 0.01%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2022-10-05 Sep/Oct         35.8 km2 (MNDWI   25.2, SCL   33.6, cloud 0.01%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2023-06-12 late-May/Jun    73.4 km2 (MNDWI   56.3, SCL   53.6, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2023-06-17 late-May/Jun    73.5 km2 (MNDWI   68.2, SCL   53.3, cloud 0.01%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2023-06-22 late-May/Jun    73.6 km2 (MNDWI   69.8, SCL   62.3, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2023-09-10 Sep/Oct         64.3 km2 (MNDWI   36.2, SCL   51.2, cloud 0.01%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2023-09-15 Sep/Oct         65.1 km2 (MNDWI   47.8, SCL   51.2, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2023-09-20 Sep/Oct         64.0 km2 (MNDWI   60.0, SCL   58.0, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2024-05-27 late-May/Jun   108.5 km2 (MNDWI  104.6, SCL   97.5, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2024-06-01 late-May/Jun   107.4 km2 (MNDWI  101.0, SCL   94.9, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2024-06-06 late-May/Jun   106.5 km2 (MNDWI  103.4, SCL   69.6, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2024-09-29 Sep/Oct         78.7 km2 (MNDWI   75.5, SCL   71.5, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2024-10-04 Sep/Oct         77.0 km2 (MNDWI   74.7, SCL   70.0, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2024-10-09 Sep/Oct         74.9 km2 (MNDWI   71.9, SCL   63.4, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2025 late-May/Jun ERROR request failed after retries: https://planetarycomputer.microsoft.com/api/data/v1/item/statistics?co
+  Darbandikhan 2025-05-29 late-May/Jun    50.5 km2 (MNDWI   40.6, SCL   47.7, cloud 0.44%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2025-06-06 late-May/Jun    66.2 km2 (MNDWI   63.7, SCL   53.7, cloud 0.00%, valid 100.0%) Sentinel-2 2C R092
+  Darbandikhan 2025-06-08 late-May/Jun    66.1 km2 (MNDWI   62.9, SCL   52.5, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2025-09-29 Sep/Oct         48.0 km2 (MNDWI   45.4, SCL   45.3, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2025-10-04 Sep/Oct         47.3 km2 (MNDWI   45.1, SCL   43.2, cloud 0.00%, valid 100.0%) Sentinel-2 2C R092
+  Darbandikhan 2025-10-06 Sep/Oct         47.2 km2 (MNDWI   44.7, SCL   42.3, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2026-06-01 late-May/Jun   111.8 km2 (MNDWI  108.0, SCL   96.7, cloud 0.00%, valid 100.0%) Sentinel-2 2C R092
+  Darbandikhan 2026-06-11 late-May/Jun   109.8 km2 (MNDWI   99.1, SCL   86.9, cloud 0.00%, valid 100.0%) Sentinel-2 2C R092
+  Darbandikhan 2026-06-13 late-May/Jun   109.7 km2 (MNDWI   97.9, SCL   85.3, cloud 0.07%, valid 100.0%) Sentinel-2 2A R092
+  Darbandikhan 2026-09-09 Sep/Oct         72.3 km2 (MNDWI   38.2, SCL   65.1, cloud 0.00%, valid 100.0%) Sentinel-2 2C R092
+  Darbandikhan 2026-09-14 Sep/Oct         71.4 km2 (MNDWI   68.2, SCL   56.1, cloud 0.00%, valid 100.0%) Sentinel-2 2B R092
+  Darbandikhan 2026-09-21 Sep/Oct         70.0 km2 (MNDWI   64.9, SCL   63.4, cloud 0.00%, valid 100.0%) Sentinel-2 2A R092
+  Dukan        2008-06-01 Landsat        135.5 km2 (MNDWI  135.7, SCL    nan, cloud 0.00%, valid 100.0%) landsat-5 path 169
+  Dukan        2008-06-17 Landsat        129.6 km2 (MNDWI  130.5, SCL    nan, cloud 1.00%, valid 100.0%) landsat-5 path 169
+  Dukan        2013-06-15 Landsat        196.2 km2 (MNDWI  196.1, SCL    nan, cloud 0.01%, valid 100.0%) landsat-8 path 169
+  Dukan        2017-09-29 Sep/Oct        199.5 km2 (MNDWI  194.2, SCL  191.4, cloud 0.09%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2017-10-14 Sep/Oct        197.4 km2 (MNDWI  193.5, SCL  192.3, cloud 0.37%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2017-10-19 Sep/Oct        196.4 km2 (MNDWI  190.1, SCL  190.7, cloud 0.23%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2018-06-11 late-May/Jun   219.3 km2 (MNDWI  216.9, SCL  181.7, cloud 0.40%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2018-09-14 Sep/Oct        182.1 km2 (MNDWI  179.9, SCL  165.7, cloud 0.08%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2018-09-24 Sep/Oct        178.4 km2 (MNDWI  175.3, SCL  170.2, cloud 0.15%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2018-09-29 Sep/Oct        175.6 km2 (MNDWI  173.1, SCL  170.0, cloud 0.06%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2019-05-31 Landsat        271.9 km2 (MNDWI  276.0, SCL    nan, cloud 1.22%, valid 100.0%) landsat-8 path 169
+  Dukan        2019-06-16 Landsat        270.3 km2 (MNDWI  272.8, SCL    nan, cloud 1.37%, valid 100.0%) landsat-8 path 169
+  Dukan        2019-09-14 Sep/Oct        232.9 km2 (MNDWI  231.4, SCL  221.7, cloud 0.05%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2019-09-29 Sep/Oct        225.2 km2 (MNDWI  224.2, SCL  208.7, cloud 0.06%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2019-10-04 Sep/Oct        223.2 km2 (MNDWI  220.7, SCL  210.6, cloud 0.06%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2020-05-21 late-May/Jun   231.0 km2 (MNDWI  231.0, SCL  197.6, cloud 0.12%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2020-09-23 Sep/Oct        192.1 km2 (MNDWI  190.5, SCL  184.8, cloud 0.08%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2020-10-13 Sep/Oct        186.6 km2 (MNDWI  182.8, SCL  181.3, cloud 0.11%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2020-10-18 Sep/Oct        185.4 km2 (MNDWI  184.1, SCL  178.8, cloud 0.13%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2021-06-15 late-May/Jun   183.4 km2 (MNDWI  180.2, SCL  143.2, cloud 0.40%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2021-06-25 late-May/Jun   181.7 km2 (MNDWI  178.4, SCL  151.2, cloud 0.20%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2021-09-08 Sep/Oct        161.2 km2 (MNDWI  157.5, SCL  144.8, cloud 0.15%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2021-09-13 Sep/Oct        159.7 km2 (MNDWI  156.6, SCL  151.2, cloud 0.08%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2021-10-08 Sep/Oct        149.6 km2 (MNDWI  148.1, SCL  145.1, cloud 0.38%, valid 99.9%) Sentinel-2 2A R135
+  Dukan        2022-05-21 late-May/Jun   171.3 km2 (MNDWI  174.7, SCL  143.3, cloud 0.26%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2022-05-26 late-May/Jun   175.5 km2 (MNDWI  172.4, SCL  145.9, cloud 0.46%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2022-05-31 late-May/Jun   175.8 km2 (MNDWI  174.6, SCL  150.2, cloud 0.41%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2022-09-28 Sep/Oct        145.9 km2 (MNDWI  143.2, SCL  141.9, cloud 0.00%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2022-10-03 Sep/Oct        144.5 km2 (MNDWI  136.3, SCL  138.9, cloud 0.01%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2022-10-08 Sep/Oct        142.4 km2 (MNDWI  126.4, SCL  134.3, cloud 0.02%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2023-06-25 late-May/Jun   174.5 km2 (MNDWI  174.1, SCL  144.0, cloud 0.36%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2023-09-18 Sep/Oct        138.3 km2 (MNDWI  131.0, SCL  132.9, cloud 0.01%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2023-09-23 Sep/Oct        134.7 km2 (MNDWI  125.4, SCL  128.8, cloud 0.01%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2023-09-28 Sep/Oct        132.1 km2 (MNDWI  125.0, SCL  130.0, cloud 0.00%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2024-06-04 late-May/Jun   208.6 km2 (MNDWI  207.1, SCL  146.1, cloud 0.24%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2024-06-14 late-May/Jun   208.1 km2 (MNDWI  205.8, SCL  153.2, cloud 0.44%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2024-09-07 Sep/Oct        184.3 km2 (MNDWI  182.3, SCL  162.2, cloud 0.04%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2024-09-12 Sep/Oct        183.7 km2 (MNDWI  175.0, SCL  173.8, cloud 0.00%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2024-10-27 Sep/Oct        169.8 km2 (MNDWI  170.1, SCL  163.4, cloud 0.00%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2025-05-22 late-May/Jun   122.1 km2 (MNDWI  121.1, SCL  119.6, cloud 0.05%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2025-06-14 late-May/Jun   112.8 km2 (MNDWI  107.6, SCL  109.6, cloud 0.48%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2025-06-21 late-May/Jun   111.7 km2 (MNDWI  105.9, SCL  108.9, cloud 0.34%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2025-09-29 Sep/Oct         83.4 km2 (MNDWI   77.4, SCL  103.1, cloud 0.00%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2025-10-02 Sep/Oct         82.7 km2 (MNDWI   81.9, SCL  104.1, cloud 0.00%, valid 100.0%) Sentinel-2 2B R135
+  Dukan        2025-10-07 Sep/Oct         81.6 km2 (MNDWI   78.8, SCL  103.4, cloud 0.00%, valid 100.0%) Sentinel-2 2C R135
+  Dukan        2026-05-27 late-May/Jun   272.9 km2 (MNDWI  263.6, SCL  214.5, cloud 0.27%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2026-09-22 Sep/Oct        249.5 km2 (MNDWI  163.6, SCL  129.4, cloud 0.03%, valid 100.0%) Sentinel-2 2C R135
+  Dukan        2026-09-24 Sep/Oct        250.6 km2 (MNDWI  247.3, SCL  238.6, cloud 0.01%, valid 100.0%) Sentinel-2 2A R135
+  Dukan        2026-09-27 Sep/Oct        249.1 km2 (MNDWI  247.7, SCL  231.4, cloud 0.02%, valid 100.0%) Sentinel-2 2B R135
+
+Per-window median of clear dates (km2) [n dates, min-max]:
+  Darbandikhan 2008 Landsat         39.2  [n=2, 37.7-40.6]
+  Darbandikhan 2013 Landsat         49.2  [n=1, 49.2-49.2]
+  Darbandikhan 2017 Sep/Oct         58.1  [n=3, 56.2-61.3]
+  Darbandikhan 2017 late-May/Jun    98.4  [n=1, 98.4-98.4]
+  Darbandikhan 2018 Sep/Oct         39.8  [n=3, 39.7-40.2]
+  Darbandikhan 2018 late-May/Jun    48.7  [n=3, 40.4-51.4]
+  Darbandikhan 2019 Landsat         91.9  [n=1, 91.9-91.9]
+  Darbandikhan 2019 Sep/Oct         54.8  [n=3, 52.1-60.4]
+  Darbandikhan 2019 late-May/Jun   102.9  [n=3, 99.4-103.8]
+  Darbandikhan 2020 Sep/Oct         49.1  [n=3, 46.7-49.6]
+  Darbandikhan 2020 late-May/Jun    68.5  [n=3, 67.8-71.1]
+  Darbandikhan 2021 Sep/Oct         35.8  [n=3, 33.6-36.3]
+  Darbandikhan 2021 late-May/Jun    40.2  [n=3, 38.5-41.7]
+  Darbandikhan 2022 Sep/Oct         36.7  [n=3, 35.8-37.2]
+  Darbandikhan 2022 late-May/Jun    44.5  [n=3, 43.2-44.7]
+  Darbandikhan 2023 Sep/Oct         64.3  [n=3, 64.0-65.1]
+  Darbandikhan 2023 late-May/Jun    73.5  [n=3, 73.4-73.6]
+  Darbandikhan 2024 Sep/Oct         77.0  [n=3, 74.9-78.7]
+  Darbandikhan 2024 late-May/Jun   107.4  [n=3, 106.5-108.5]
+  Darbandikhan 2025 Sep/Oct         47.3  [n=3, 47.2-48.0]
+  Darbandikhan 2025 late-May/Jun    66.1  [n=3, 50.5-66.2]
+  Darbandikhan 2026 Sep/Oct         71.4  [n=3, 70.0-72.3]
+  Darbandikhan 2026 late-May/Jun   109.8  [n=3, 109.7-111.8]
+  Dukan        2008 Landsat        132.5  [n=2, 129.6-135.5]
+  Dukan        2013 Landsat        196.2  [n=1, 196.2-196.2]
+  Dukan        2017 Sep/Oct        197.4  [n=3, 196.4-199.5]
+  Dukan        2018 Sep/Oct        178.4  [n=3, 175.6-182.1]
+  Dukan        2018 late-May/Jun   219.3  [n=1, 219.3-219.3]
+  Dukan        2019 Landsat        271.1  [n=2, 270.3-271.9]
+  Dukan        2019 Sep/Oct        225.2  [n=3, 223.2-232.9]
+  Dukan        2020 Sep/Oct        186.6  [n=3, 185.4-192.1]
+  Dukan        2020 late-May/Jun   231.0  [n=1, 231.0-231.0]
+  Dukan        2021 Sep/Oct        159.7  [n=3, 149.6-161.2]
+  Dukan        2021 late-May/Jun   182.6  [n=2, 181.7-183.4]
+  Dukan        2022 Sep/Oct        144.5  [n=3, 142.4-145.9]
+  Dukan        2022 late-May/Jun   175.5  [n=3, 171.3-175.8]
+  Dukan        2023 Sep/Oct        134.7  [n=3, 132.1-138.3]
+  Dukan        2023 late-May/Jun   174.5  [n=1, 174.5-174.5]
+  Dukan        2024 Sep/Oct        183.7  [n=3, 169.8-184.3]
+  Dukan        2024 late-May/Jun   208.3  [n=2, 208.1-208.6]
+  Dukan        2025 Sep/Oct         82.7  [n=3, 81.6-83.4]
+  Dukan        2025 late-May/Jun   112.8  [n=3, 111.7-122.1]
+  Dukan        2026 Sep/Oct        249.5  [n=3, 249.1-250.6]
+  Dukan        2026 late-May/Jun   272.9  [n=1, 272.9-272.9]
+
+Usable Sentinel-2 dates per year (all lake tiles, tile cloud <1% / <5%):
+  Dukan        2018: 12 / 26
+  Dukan        2019: 9 / 22
+  Dukan        2021: 11 / 29
+  Dukan        2023: 21 / 26
+  Dukan        2024: 17 / 20
+  Dukan        2025: 31 / 41
+  Darbandikhan 2018: 25 / 29
+  Darbandikhan 2019: 23 / 31
+  Darbandikhan 2021: 23 / 37
+  Darbandikhan 2023: 28 / 32
+  Darbandikhan 2024: 29 / 33
+  Darbandikhan 2025: 43 / 51

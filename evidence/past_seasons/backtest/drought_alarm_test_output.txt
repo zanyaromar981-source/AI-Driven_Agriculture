@@ -1,0 +1,83 @@
+PART 1 - RAIN DROUGHT ALARM (whole region)
+Drought = Oct-May rain, mean of 16 zones, <= 80% of normal (bottom 25%): 1998/99 (44%), 1999/00 (57%), 2000/01 (76%), 2007/08 (46%), 2008/09 (60%), 2011/12 (72%), 2013/14 (80%), 2020/21 (51%), 2021/22 (76%), 2024/25 (59%)
+10 drought winters, 26 normal. Each winter hidden in turn. "caught" = droughts flagged at the stated number of false alarms (normal winters flagged).
+
+== Pre (data up to 09-30) ==
+  El Nino only (rule)                AUC 0.87 | caught with 0 / 2 / 4 false alarms: 0/10, 3/10, 8/10 | 2024/25 rank 19 of 36
+  model: El Nino + Sept soil         AUC 0.80 | caught with 0 / 2 / 4 false alarms: 0/10, 1/10, 5/10 | 2024/25 rank 20 of 36
+
+== Dec (data up to 12-31) ==
+  rain so far only (rule)            AUC 0.82 | caught with 0 / 2 / 4 false alarms: 1/10, 3/10, 4/10 | 2024/25 rank 12 of 36
+  soil moisture only (rule)          AUC 0.78 | caught with 0 / 2 / 4 false alarms: 2/10, 3/10, 5/10 | 2024/25 rank 11 of 36
+  model: rain+El Nino                AUC 0.81 | caught with 0 / 2 / 4 false alarms: 0/10, 5/10, 5/10 | 2024/25 rank 18 of 36
+  model: rain+soil+El Nino           AUC 0.80 | caught with 0 / 2 / 4 false alarms: 0/10, 4/10, 4/10 | 2024/25 rank 17 of 36
+  model: rain+soil+rainy days+El Nino AUC 0.82 | caught with 0 / 2 / 4 false alarms: 0/10, 4/10, 7/10 | 2024/25 rank 18 of 36
+
+== Jan (data up to 01-31) ==
+  rain so far only (rule)            AUC 0.89 | caught with 0 / 2 / 4 false alarms: 4/10, 5/10, 8/10 | 2024/25 rank  4 of 36
+  soil moisture only (rule)          AUC 0.86 | caught with 0 / 2 / 4 false alarms: 4/10, 4/10, 5/10 | 2024/25 rank  4 of 36
+  model: rain+El Nino                AUC 0.88 | caught with 0 / 2 / 4 false alarms: 2/10, 5/10, 8/10 | 2024/25 rank 11 of 36
+  model: rain+soil+El Nino           AUC 0.87 | caught with 0 / 2 / 4 false alarms: 2/10, 3/10, 7/10 | 2024/25 rank  8 of 36
+  model: rain+soil+rainy days+El Nino AUC 0.86 | caught with 0 / 2 / 4 false alarms: 1/10, 3/10, 7/10 | 2024/25 rank  9 of 36
+
+== Feb (data up to 02-28) ==
+  rain so far only (rule)            AUC 0.94 | caught with 0 / 2 / 4 false alarms: 6/10, 6/10, 9/10 | 2024/25 rank  4 of 36
+  soil moisture only (rule)          AUC 0.91 | caught with 0 / 2 / 4 false alarms: 3/10, 6/10, 9/10 | 2024/25 rank  1 of 36
+  model: rain+El Nino                AUC 0.92 | caught with 0 / 2 / 4 false alarms: 2/10, 7/10, 8/10 | 2024/25 rank  7 of 36
+  model: rain+soil+El Nino           AUC 0.94 | caught with 0 / 2 / 4 false alarms: 5/10, 6/10, 9/10 | 2024/25 rank  2 of 36
+  model: rain+soil+rainy days+El Nino AUC 0.93 | caught with 0 / 2 / 4 false alarms: 5/10, 6/10, 9/10 | 2024/25 rank  2 of 36
+
+== Mar (data up to 03-31) ==
+  rain so far only (rule)            AUC 0.97 | caught with 0 / 2 / 4 false alarms: 6/10, 9/10, 10/10 | 2024/25 rank  3 of 36
+  soil moisture only (rule)          AUC 0.87 | caught with 0 / 2 / 4 false alarms: 3/10, 7/10, 7/10 | 2024/25 rank  1 of 36
+  model: rain+El Nino                AUC 0.93 | caught with 0 / 2 / 4 false alarms: 2/10, 9/10, 9/10 | 2024/25 rank  7 of 36
+  model: rain+soil+El Nino           AUC 0.93 | caught with 0 / 2 / 4 false alarms: 4/10, 8/10, 8/10 | 2024/25 rank  3 of 36
+  model: rain+soil+rainy days+El Nino AUC 0.92 | caught with 0 / 2 / 4 false alarms: 3/10, 7/10, 7/10 | 2024/25 rank  3 of 36
+
+Per drought winter, chance of drought from model "rain+soil+El Nino" (El Nino+soil before the season):
+  winter    final rain | Oct   Dec   Jan   Feb   Mar
+  1998/99      44%     |  45%   69%   77%   79%   88%
+  1999/00      57%     |  65%   60%   47%   60%   71%
+  2000/01      76%     |  43%   30%   43%   29%   27%
+  2007/08      46%     |  45%   65%   79%   80%   85%
+  2008/09      60%     |  34%   36%   64%   86%   73%
+  2011/12      72%     |  34%   50%   52%   41%   35%
+  2013/14      80%     |  35%   17%   16%   35%   21%
+  2020/21      51%     |  28%   39%   50%   74%   77%
+  2021/22      76%     |  45%   36%   25%   47%   50%
+  2024/25      59%     |  25%   28%   52%   85%   84%
+  2025/26     174%     |  49%   25%   14%   19%    1%   (not a drought)
+Highest-scored NORMAL winters (would be false alarms): Dec: 2010/11 81% (final 95%), 1995/96 70% (final 101%), 2022/23 47% (final 101%); Jan: 2010/11 77% (final 95%), 2017/18 63% (final 90%), 2022/23 54% (final 101%); Feb: 2016/17 62% (final 82%), 2022/23 60% (final 101%), 2010/11 57% (final 95%); Mar: 2010/11 73% (final 95%), 2017/18 63% (final 90%), 2016/17 35% (final 82%)
+
+Simple rule tables: rain since 1 Oct (% of normal, mean of 16 zones) at the cutoff, driest first. D = drought winter.
+  Jan: 1998/99 35% D, 2007/08 46% D, 2008/09 47% D, 2024/25 50% D, 1990/91 52%, 2020/21 61% D, 2017/18 61%, 2010/11 65%, 2011/12 68% D, 2000/01 70% D, 2022/23 71%, 1999/00 74% D, 1996/97 75%, 2016/17 76%
+  Feb: 1998/99 49% D, 2007/08 52% D, 2008/09 53% D, 2024/25 53% D, 2020/21 59% D, 1999/00 66% D, 1990/91 69%, 2010/11 69%, 2016/17 70%, 2011/12 72% D, 2000/01 73% D, 2013/14 75% D, 1996/97 75%, 2022/23 77%
+
+PART 2 - CROP MODEL (16 zones x 26 seasons, bad = late-spring greenness in zone bottom 25%; Team = simple regression + random forest)
+"beats now" = share of 1000 season reshuffles where it beats the current Team (>= 0.90 = probably real).
+== Dec ==
+  Team now (reference)               AUC 0.762  caught@15%FA  45%  2024/25 region risk  23% (rank 14/26)  
+  Team without last-year inputs      AUC 0.754  caught@15%FA  51%  2024/25 region risk  29% (rank 11/26)  beats now 0.31
+  Team + region rain in LR           AUC 0.762  caught@15%FA  42%  2024/25 region risk  24% (rank 13/26)  beats now 0.59
+  Team no last-year + region rain    AUC 0.754  caught@15%FA  53%  2024/25 region risk  29% (rank 10/26)  beats now 0.33
+
+== Jan ==
+  Team now (reference)               AUC 0.788  caught@15%FA  54%  2024/25 region risk  27% (rank 13/26)  
+  Team without last-year inputs      AUC 0.769  caught@15%FA  57%  2024/25 region risk  28% (rank 11/26)  beats now 0.10
+  Team + region rain in LR           AUC 0.787  caught@15%FA  54%  2024/25 region risk  27% (rank 14/26)  beats now 0.06
+  Team no last-year + region rain    AUC 0.768  caught@15%FA  57%  2024/25 region risk  27% (rank 11/26)  beats now 0.10
+
+== Feb ==
+  Team now (reference)               AUC 0.815  caught@15%FA  58%  2024/25 region risk  29% (rank 12/26)  
+  Team without last-year inputs      AUC 0.798  caught@15%FA  55%  2024/25 region risk  35% (rank  9/26)  beats now 0.07
+  Team + region rain in LR           AUC 0.814  caught@15%FA  58%  2024/25 region risk  29% (rank 12/26)  beats now 0.05
+  Team no last-year + region rain    AUC 0.797  caught@15%FA  54%  2024/25 region risk  35% (rank  9/26)  beats now 0.06
+
+== Mar ==
+  Team now (reference)               AUC 0.845  caught@15%FA  62%  2024/25 region risk  46% (rank  6/26)  
+  Team without last-year inputs      AUC 0.843  caught@15%FA  63%  2024/25 region risk  48% (rank  5/26)  beats now 0.29
+  Team + region rain in LR           AUC 0.845  caught@15%FA  62%  2024/25 region risk  46% (rank  6/26)  beats now 0.01
+  Team no last-year + region rain    AUC 0.842  caught@15%FA  63%  2024/25 region risk  49% (rank  5/26)  beats now 0.21
+
+Jan regression weights (per 1 standard deviation; + = more risk): rain_pct -0.21, soil_pct -0.04, temp_anom -0.35, et0_pct +0.37, last_rain_pct -0.23, oni -0.63
+2024/25 Jan inputs (region mean): rain_pct 49.5, soil_pct 79.3, temp_anom 0.3, et0_pct 105.1, last_rain_pct 125.9, oni -0.3

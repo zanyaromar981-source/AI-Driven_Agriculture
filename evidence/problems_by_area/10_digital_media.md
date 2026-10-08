@@ -1,0 +1,24 @@
+# Problems: Digital life, media, information (agent sweep, 2026-09-11)
+
+| # | Problem | Who + scale | Where | Evidence | Owner | System/AI fit |
+|---|---|---|---|---|---|---|
+| 1 | **Internet cut off on exam days** | 51 exam shutdowns in Iraq (late May–mid-Sep 2025), 16 KRI-only; second-round KRI cuts 06:30–07:45 on Sat/Mon/Wed, 23 Aug–8 Sep 2025 | KRI | https://pulse.internetsociety.org/en/shutdowns/exams-shutdown-kurdistan-iraq-23-august-2025/ ; https://www.accessnow.org/no-exam-shutdown-new-academic-year/ ; https://en.964media.com/47757/ | MoE + Transport & Communications | Med: digital exams remove the need (see education list #6: leak tracing) |
+| 2 | Costly, weak internet that dies with the power | "some of the region's weakest networks and highest costs" | KRI | https://freedomhouse.org/country/iraq/freedom-net/2025 | Communications, ISPs | Med: crowdsourced speed/outage map |
+| 3 | Telecoms caught in Baghdad–Erbil fights | CMC cut Korek's internet in Feb 2025 | KRI | https://www.iraq-businessnews.com/2025/02/20/iraq-cuts-off-internet-service-to-korek-telecom/ | KRG vs. CMC | Low |
+| 4 | **ATMs run out of cash on salary day; queues** | 800k+ MyAccount cardholders (May 2026); ~572 ATMs of 1,200 planned (~1,400 cardholders per ATM); KRG publicly blamed TBI for not refilling **Slemani** ATMs (Sep 2025) | KRI, worst in Slemani | https://gov.krd/mofe-en/activities/news-and-press-releases/2025/september/statement-regarding-trade-bank-of-iraq-tbi/ ; https://gov.krd/mofe-en/activities/news-and-press-releases/2026/may/over-800-000-public-sector-beneficiaries-receive-bank-cards-under-myaccount/ ; https://myaccount.gov.krd/en/atm-locator/ | Finance (MyAccount), TBI + banks | High: forecast cash-outs; live stocked-ATM map |
+| 5 | KRDPass: sign-up in person only, few services | 2M+ enrolled at only 26 centres; fines still paid in person (Feb 2026) | KRI | https://www.biometricupdate.com/202508/kurdistan-reaches-digital-id-milestone-krd-pass-expanding-reach ; https://www.rudaw.net/english/kurdistan/18022026 | KRG IT dept | Med: Kurdish helpdesk bot |
+| 6 | Voters missed biometric card renewal | ~1 in 5 KRI voters missed it before the Nov 2025 election | KRI | https://idtechwire.com/iraq-completes-biometric-voter-registration-as-november-election-nears/ | IHEC, Interior | Med |
+| 7 | Public payments still mostly cash | e-Psûle added only ~280k subscribers in 5 districts | KRI | https://www.kurdistan24.net/en/story/920101 | Finance, Electricity, municipalities | Med |
+| 8 | Online sextortion/harassment | 13,000+ complaints (2024); WOLA 226 (107 in Duhok); reportedly up 6x in 3 yrs | KRI | https://shafaq.com/en/Kurdistan/16-Day-Action-for-Women-Kurdistan-pushes-back-against-online-threats | Community Police, Asayish | High: anonymous Kurdish reporting + triage |
+| 9 | **Forex/USDT/fake-exchange scams** | "millions of dollars" lost; Twana FX arrest (Apr 2025); KRG warned again in May 2026 | KRI | https://www.rudaw.net/english/kurdistan/080420251 ; https://www.rudaw.net/english/kurdistan/030520261 | Asayish, CBI | High: Kurdish "is this licensed?" checker |
+| 10 | Misinformation in party-run media | 257 fake-news items traced (Pasewan); 22% of trending hashtags linked to disinformation; 67% distrust news | KRI | https://chawykurd.com/en/2025/07/13/countering-disinformation-and-misinformation-in-the-kurdistan-regions-media-landscape/ | DMI, outlets | High (politically risky) |
+| 11 | Kurdish posts go unmoderated | Facebook has few Kurdish moderators | KRI | https://peregraf.com/en/investigation/5448 | Meta, NGOs | High |
+| 12 | Journalists prosecuted | 315 violations against 252 journalists in 2025, 52 arrests | KRI | https://en.964media.com/44283/ | Parliament, courts | Low |
+| 13 | Night-time social-media use → poor sleep | Duhok students: 66.3% poor sleep | Duhok | UNVERIFIED link | MoE, MoH | Low |
+| 14 | Online betting | Iraq blocked all betting platforms (Jul 2026) | Iraq | https://www.iraqnewsgazette.com/iraq-bans-all-online-betting-and-gambling-platforms/ | CMC | Med |
+| 15 | Kurdish has too little data for AI | first high-quality Sorani named-entity dataset only in 2025 | KRI | https://pmc.ncbi.nlm.nih.gov/articles/PMC12433466/ | Universities | High |
+| 16 | Undisclosed government data breaches | LockBit claimed a KRG breach (Mar 2026); a 2.8M-record leak claim (UNVERIFIED) | KRI | https://www.breachsense.com/breaches/kurdistan-regional-government-data-breach/ | IT dept | Med |
+| 17 | Right-to-information law not applied; little open data | | KRI | https://gov.krd/english/information-and-services/open-data/ | Planning, IT dept | High |
+| 18 | Schools not ready for online-only | Mar 2026 suspension | KRI | gov.krd DMI Mar 2026 | MoE | Med |
+
+**Agent's top 3:** (1) ATM cash-out forecast + live stocked-ATM map for Slemani; (2) Kurdish scam/licence checker; (3) anonymous Kurdish online-blackmail reporting bot.

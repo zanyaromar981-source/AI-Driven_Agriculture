@@ -1,0 +1,366 @@
+{
+ "Pre|last year only|LR": {
+  "auc": 0.44,
+  "catch15": 0.089,
+  "brier_skill": -0.045,
+  "season_auc": 0.343,
+  "vs_ref": null
+ },
+ "Pre|El Ni\u00f1o only|LR": {
+  "auc": 0.705,
+  "catch15": 0.348,
+  "brier_skill": 0.088,
+  "season_auc": 0.829,
+  "vs_ref": 0.99
+ },
+ "Pre|all|LR": {
+  "auc": 0.701,
+  "catch15": 0.259,
+  "brier_skill": 0.068,
+  "season_auc": 0.79,
+  "vs_ref": 0.995
+ },
+ "Pre|all|LR-strong": {
+  "auc": 0.623,
+  "catch15": 0.134,
+  "brier_skill": 0.026,
+  "season_auc": 0.629,
+  "vs_ref": 0.993
+ },
+ "Pre|all|kNN": {
+  "auc": 0.639,
+  "catch15": 0.241,
+  "brier_skill": -0.091,
+  "season_auc": 0.781,
+  "vs_ref": 0.972
+ },
+ "Pre|all|kNN-zone": {
+  "auc": 0.648,
+  "catch15": 0.161,
+  "brier_skill": -0.011,
+  "season_auc": 0.8,
+  "vs_ref": 0.975
+ },
+ "Pre|all|RF": {
+  "auc": 0.681,
+  "catch15": 0.312,
+  "brier_skill": -0.024,
+  "season_auc": 0.81,
+  "vs_ref": 0.997
+ },
+ "Pre|all|Ensemble": {
+  "auc": 0.697,
+  "catch15": 0.286,
+  "brier_skill": 0.019,
+  "season_auc": 0.819,
+  "vs_ref": 0.995
+ },
+ "Dec|current model|LR": {
+  "auc": 0.764,
+  "catch15": 0.42,
+  "brier_skill": 0.161,
+  "season_auc": 0.819,
+  "vs_ref": null
+ },
+ "Dec|+ El Ni\u00f1o|LR": {
+  "auc": 0.772,
+  "catch15": 0.42,
+  "brier_skill": 0.177,
+  "season_auc": 0.819,
+  "vs_ref": 0.682
+ },
+ "Dec|+ rain timing|LR": {
+  "auc": 0.758,
+  "catch15": 0.455,
+  "brier_skill": 0.155,
+  "season_auc": 0.838,
+  "vs_ref": 0.311
+ },
+ "Dec|+ region & last spring|LR": {
+  "auc": 0.763,
+  "catch15": 0.375,
+  "brier_skill": 0.152,
+  "season_auc": 0.781,
+  "vs_ref": 0.538
+ },
+ "Dec|all|LR": {
+  "auc": 0.759,
+  "catch15": 0.411,
+  "brier_skill": 0.147,
+  "season_auc": 0.79,
+  "vs_ref": 0.387
+ },
+ "Dec|all|LR-strong": {
+  "auc": 0.759,
+  "catch15": 0.366,
+  "brier_skill": 0.138,
+  "season_auc": 0.829,
+  "vs_ref": 0.375
+ },
+ "Dec|all|kNN": {
+  "auc": 0.718,
+  "catch15": 0.259,
+  "brier_skill": 0.043,
+  "season_auc": 0.771,
+  "vs_ref": 0.106
+ },
+ "Dec|all|kNN-zone": {
+  "auc": 0.679,
+  "catch15": 0.143,
+  "brier_skill": 0.052,
+  "season_auc": 0.781,
+  "vs_ref": 0.037
+ },
+ "Dec|all|RF": {
+  "auc": 0.742,
+  "catch15": 0.429,
+  "brier_skill": 0.109,
+  "season_auc": 0.81,
+  "vs_ref": 0.273
+ },
+ "Dec|all|Ensemble": {
+  "auc": 0.754,
+  "catch15": 0.384,
+  "brier_skill": 0.121,
+  "season_auc": 0.81,
+  "vs_ref": 0.335
+ },
+ "Jan|current model|LR": {
+  "auc": 0.723,
+  "catch15": 0.393,
+  "brier_skill": 0.098,
+  "season_auc": 0.752,
+  "vs_ref": null
+ },
+ "Jan|+ El Ni\u00f1o|LR": {
+  "auc": 0.757,
+  "catch15": 0.42,
+  "brier_skill": 0.158,
+  "season_auc": 0.829,
+  "vs_ref": 0.931
+ },
+ "Jan|+ rain timing|LR": {
+  "auc": 0.707,
+  "catch15": 0.321,
+  "brier_skill": 0.092,
+  "season_auc": 0.705,
+  "vs_ref": 0.173
+ },
+ "Jan|+ region & last spring|LR": {
+  "auc": 0.713,
+  "catch15": 0.295,
+  "brier_skill": 0.068,
+  "season_auc": 0.695,
+  "vs_ref": 0.157
+ },
+ "Jan|all|LR": {
+  "auc": 0.735,
+  "catch15": 0.384,
+  "brier_skill": 0.119,
+  "season_auc": 0.752,
+  "vs_ref": 0.699
+ },
+ "Jan|all|LR-strong": {
+  "auc": 0.707,
+  "catch15": 0.241,
+  "brier_skill": 0.091,
+  "season_auc": 0.705,
+  "vs_ref": 0.206
+ },
+ "Jan|all|kNN": {
+  "auc": 0.681,
+  "catch15": 0.321,
+  "brier_skill": 0.042,
+  "season_auc": 0.724,
+  "vs_ref": 0.221
+ },
+ "Jan|all|kNN-zone": {
+  "auc": 0.622,
+  "catch15": 0.071,
+  "brier_skill": -0.029,
+  "season_auc": 0.743,
+  "vs_ref": 0.016
+ },
+ "Jan|all|RF": {
+  "auc": 0.778,
+  "catch15": 0.562,
+  "brier_skill": 0.198,
+  "season_auc": 0.886,
+  "vs_ref": 0.894
+ },
+ "Jan|all|Ensemble": {
+  "auc": 0.762,
+  "catch15": 0.438,
+  "brier_skill": 0.152,
+  "season_auc": 0.857,
+  "vs_ref": 0.954
+ },
+ "Feb|current model|LR": {
+  "auc": 0.76,
+  "catch15": 0.446,
+  "brier_skill": 0.156,
+  "season_auc": 0.771,
+  "vs_ref": null
+ },
+ "Feb|+ El Ni\u00f1o|LR": {
+  "auc": 0.781,
+  "catch15": 0.491,
+  "brier_skill": 0.189,
+  "season_auc": 0.8,
+  "vs_ref": 0.905
+ },
+ "Feb|+ rain timing|LR": {
+  "auc": 0.742,
+  "catch15": 0.429,
+  "brier_skill": 0.132,
+  "season_auc": 0.714,
+  "vs_ref": 0.12
+ },
+ "Feb|+ region & last spring|LR": {
+  "auc": 0.748,
+  "catch15": 0.375,
+  "brier_skill": 0.131,
+  "season_auc": 0.743,
+  "vs_ref": 0.004
+ },
+ "Feb|all|LR": {
+  "auc": 0.75,
+  "catch15": 0.402,
+  "brier_skill": 0.138,
+  "season_auc": 0.752,
+  "vs_ref": 0.287
+ },
+ "Feb|all|LR-strong": {
+  "auc": 0.743,
+  "catch15": 0.366,
+  "brier_skill": 0.128,
+  "season_auc": 0.743,
+  "vs_ref": 0.113
+ },
+ "Feb|all|kNN": {
+  "auc": 0.688,
+  "catch15": 0.304,
+  "brier_skill": 0.058,
+  "season_auc": 0.757,
+  "vs_ref": 0.05
+ },
+ "Feb|all|kNN-zone": {
+  "auc": 0.671,
+  "catch15": 0.179,
+  "brier_skill": 0.049,
+  "season_auc": 0.771,
+  "vs_ref": 0.012
+ },
+ "Feb|all|RF": {
+  "auc": 0.803,
+  "catch15": 0.589,
+  "brier_skill": 0.248,
+  "season_auc": 0.895,
+  "vs_ref": 0.848
+ },
+ "Feb|current model, old leaky green|LR": {
+  "auc": 0.793,
+  "catch15": 0.527,
+  "brier_skill": 0.206,
+  "season_auc": 0.81,
+  "vs_ref": 1.0
+ },
+ "Feb|all|Ensemble": {
+  "auc": 0.786,
+  "catch15": 0.491,
+  "brier_skill": 0.196,
+  "season_auc": 0.829,
+  "vs_ref": 0.86
+ },
+ "Mar|current model|LR": {
+  "auc": 0.842,
+  "catch15": 0.607,
+  "brier_skill": 0.306,
+  "season_auc": 0.819,
+  "vs_ref": null
+ },
+ "Mar|+ El Ni\u00f1o|LR": {
+  "auc": 0.842,
+  "catch15": 0.589,
+  "brier_skill": 0.309,
+  "season_auc": 0.857,
+  "vs_ref": 0.428
+ },
+ "Mar|+ rain timing|LR": {
+  "auc": 0.838,
+  "catch15": 0.58,
+  "brier_skill": 0.301,
+  "season_auc": 0.829,
+  "vs_ref": 0.359
+ },
+ "Mar|+ region & last spring|LR": {
+  "auc": 0.833,
+  "catch15": 0.598,
+  "brier_skill": 0.282,
+  "season_auc": 0.79,
+  "vs_ref": 0.054
+ },
+ "Mar|all|LR": {
+  "auc": 0.833,
+  "catch15": 0.571,
+  "brier_skill": 0.287,
+  "season_auc": 0.819,
+  "vs_ref": 0.203
+ },
+ "Mar|all|LR-strong": {
+  "auc": 0.814,
+  "catch15": 0.58,
+  "brier_skill": 0.215,
+  "season_auc": 0.838,
+  "vs_ref": 0.054
+ },
+ "Mar|all|kNN": {
+  "auc": 0.821,
+  "catch15": 0.482,
+  "brier_skill": 0.268,
+  "season_auc": 0.829,
+  "vs_ref": 0.148
+ },
+ "Mar|all|kNN-zone": {
+  "auc": 0.748,
+  "catch15": 0.268,
+  "brier_skill": 0.168,
+  "season_auc": 0.824,
+  "vs_ref": 0.001
+ },
+ "Mar|all|RF": {
+  "auc": 0.833,
+  "catch15": 0.607,
+  "brier_skill": 0.304,
+  "season_auc": 0.867,
+  "vs_ref": 0.251
+ },
+ "Mar|current model, old leaky green|LR": {
+  "auc": 0.877,
+  "catch15": 0.688,
+  "brier_skill": 0.372,
+  "season_auc": 0.867,
+  "vs_ref": 1.0
+ },
+ "Mar|all|Ensemble": {
+  "auc": 0.838,
+  "catch15": 0.607,
+  "brier_skill": 0.307,
+  "season_auc": 0.857,
+  "vs_ref": 0.336
+ },
+ "Ceiling|perfect weather to Apr 30|LR": {
+  "auc": 0.787,
+  "catch15": 0.545,
+  "brier_skill": 0.242,
+  "season_auc": 0.914,
+  "vs_ref": null
+ },
+ "Ceiling|perfect weather + timing|LR": {
+  "auc": 0.776,
+  "catch15": 0.554,
+  "brier_skill": 0.231,
+  "season_auc": 0.933,
+  "vs_ref": 0.172
+ }
+}

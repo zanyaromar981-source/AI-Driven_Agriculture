@@ -1,0 +1,82 @@
+{
+ "Slemani": {
+  "label": "Oct-May rain",
+  "peak_q25": 466.9,
+  "peak_median": 585.5
+ },
+ "Garmiyan": {
+  "label": "Oct-May rain",
+  "peak_q25": 314.0,
+  "peak_median": 365.8
+ },
+ "Chamchamal": {
+  "label": "Oct-May rain",
+  "peak_q25": 400.7,
+  "peak_median": 547.7
+ },
+ "Bazian": {
+  "label": "Oct-May rain",
+  "peak_q25": 406.0,
+  "peak_median": 561.15
+ },
+ "Ranya": {
+  "label": "Oct-May rain",
+  "peak_q25": 648.6,
+  "peak_median": 798.9
+ },
+ "Penjwen": {
+  "label": "Oct-May rain",
+  "peak_q25": 638.5,
+  "peak_median": 808.6
+ },
+ "Sharazur": {
+  "label": "Oct-May rain",
+  "peak_q25": 570.7,
+  "peak_median": 713.15
+ },
+ "Qaradagh": {
+  "label": "Oct-May rain",
+  "peak_q25": 506.6,
+  "peak_median": 651.6
+ },
+ "Erbil": {
+  "label": "Oct-May rain",
+  "peak_q25": 269.0,
+  "peak_median": 412.25
+ },
+ "Duhok": {
+  "label": "Oct-May rain",
+  "peak_q25": 336.4,
+  "peak_median": 445.4
+ },
+ "Zakho": {
+  "label": "Oct-May rain",
+  "peak_q25": 453.3,
+  "peak_median": 592.2
+ },
+ "Soran": {
+  "label": "Oct-May rain",
+  "peak_q25": 708.5,
+  "peak_median": 888.6
+ },
+ "Koya": {
+  "label": "Oct-May rain",
+  "peak_q25": 389.3,
+  "peak_median": 586.4
+ },
+ "Halabja": {
+  "label": "Oct-May rain",
+  "peak_q25": 434.5,
+  "peak_median": 521.0
+ },
+ "Akre": {
+  "label": "Oct-May rain",
+  "peak_q25": 555.7,
+  "peak_median": 690.8
+ },
+ "Makhmour": {
+  "label": "Oct-May rain",
+  "peak_q25": 217.7,
+  "peak_median": 309.45
+ }
+}

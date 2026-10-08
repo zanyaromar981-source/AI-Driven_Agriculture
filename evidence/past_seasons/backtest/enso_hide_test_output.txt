@@ -1,0 +1,45 @@
+September call, winter hidden, 35 winters. Drought = season rain ≤ 76% of normal.
+
+Winter    ONI Sep State    | Call made in September             | Predicted rain | Actual rain | Result
+1991/92    +0.67 El Niño  | Wet or normal winter, no drought   |           115% |        134% | RIGHT (above normal ✓)
+1992/93    +0.08 neutral  | No call (neutral), wait for December |            99% |        149% | –
+1993/94    +0.22 neutral  | No call (neutral), wait for December |           104% |        118% | –
+1994/95    +0.30 neutral  | No call (neutral), wait for December |           105% |        138% | –
+1995/96    -0.55 La Niña  | Dry-leaning winter, below normal   |            83% |         96% | RIGHT (below normal, not drought)
+1996/97    -0.27 neutral  | No call (neutral), wait for December |            91% |         82% | –
+1997/98    +1.79 El Niño  | Wet or normal winter, no drought   |           151% |        129% | RIGHT (above normal ✓)
+1998/99    -0.83 La Niña  | Dry-leaning winter, below normal   |            78% |         47% | RIGHT (drought ✓)
+1999/00    -0.94 La Niña  | Dry-leaning winter, below normal   |            74% |         60% | RIGHT (drought ✓) [satellite: BAD season]
+2000/01    -0.40 neutral  | No call (neutral), wait for December |            88% |         74% | – [satellite: normal]
+2001/02    -0.13 neutral  | No call (neutral), wait for December |            94% |        111% | – [satellite: normal]
+2002/03    +0.63 El Niño  | Wet or normal winter, no drought   |           115% |        113% | RIGHT (above normal ✓) [satellite: normal]
+2003/04    +0.14 neutral  | No call (neutral), wait for December |           101% |        119% | – [satellite: normal]
+2004/05    +0.54 El Niño  | Wet or normal winter, no drought   |           113% |        101% | RIGHT (above normal ✓) [satellite: normal]
+2005/06    -0.14 neutral  | No call (neutral), wait for December |            94% |        115% | – [satellite: normal]
+2006/07    +0.33 neutral  | No call (neutral), wait for December |           107% |        102% | – [satellite: normal]
+2007/08    -0.77 La Niña  | Dry-leaning winter, below normal   |            80% |         45% | RIGHT (drought ✓) [satellite: BAD season]
+2008/09    -0.20 neutral  | No call (neutral), wait for December |            94% |         62% | – [satellite: BAD season]
+2009/10    +0.56 El Niño  | Wet or normal winter, no drought   |           113% |        123% | RIGHT (above normal ✓) [satellite: normal]
+2010/11    -1.24 La Niña  | Dry-leaning winter, below normal   |            61% |         93% | RIGHT (below normal, not drought) [satellite: BAD season]
+2011/12    -0.50 La Niña  | Dry-leaning winter, below normal   |            85% |         78% | RIGHT (below normal, not drought) [satellite: BAD season]
+2012/13    +0.39 neutral  | No call (neutral), wait for December |           109% |         94% | – [satellite: normal]
+2013/14    -0.34 neutral  | No call (neutral), wait for December |            89% |         79% | – [satellite: normal]
+2014/15    +0.07 neutral  | No call (neutral), wait for December |           100% |        100% | – [satellite: normal]
+2015/16    +1.73 El Niño  | Wet or normal winter, no drought   |           145% |        142% | RIGHT (above normal ✓) [satellite: normal]
+2016/17    -0.34 neutral  | No call (neutral), wait for December |            90% |         76% | – [satellite: normal]
+2017/18    -0.07 neutral  | No call (neutral), wait for December |            97% |         90% | – [satellite: normal]
+2018/19    +0.30 neutral  | No call (neutral), wait for December |           105% |        150% | – [satellite: normal]
+2019/20    +0.20 neutral  | No call (neutral), wait for December |           104% |         89% | – [satellite: normal]
+2020/21    -0.43 neutral  | No call (neutral), wait for December |            88% |         48% | – [satellite: normal]
+2021/22    -0.46 neutral  | No call (neutral), wait for December |            86% |         73% | – [satellite: BAD season]
+2022/23    -0.78 La Niña  | Dry-leaning winter, below normal   |            76% |         99% | RIGHT (below normal, not drought) [satellite: normal]
+2023/24    +1.25 El Niño  | Wet or normal winter, no drought   |           135% |        110% | RIGHT (above normal ✓) [satellite: normal]
+2024/25    -0.04 neutral  | No call (neutral), wait for December |            98% |         57% | – [satellite: normal]
+2025/26    -0.26 neutral  | No call (neutral), wait for December |            89% |        155% | –
+
+Calls made: 14 of 35 winters (the rest were neutral → no call).
+Right: 14 of 14 (100%). Strong version right (El Niño→above normal / La Niña→drought): 10 of 14.
+Predicted rain % (from ONI alone, winter hidden): average error 21 points vs 25 points if you always guess "normal".
+Neutral winters: 21, of which 6 were droughts → in a neutral year the September call cannot help; the December warning takes over.
+
+2026/27: ONI JAS 2026 = +2.16 (El Niño) → predicted season rain ≈ 156% of normal

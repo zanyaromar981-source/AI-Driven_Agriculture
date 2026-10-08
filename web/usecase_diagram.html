@@ -1,0 +1,151 @@
+<title>Farm Doctor Use Cases</title>
+<style>
+/* Layout: UML-style use case diagram drawn as SVG; actors outside, one system box inside, external systems on the right. */
+:root{--bg:#F4F6F3;--fg:#17201B;--muted:#5B6862;--line:#9AA69F;--box:#FFFFFF;--sys:#EEF3EC;--acc:#1D5B74;--acc2:#A87A22;--ext:#E6ECE9;--f:"IBM Plex Sans","Segoe UI",system-ui,sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0F1412;--fg:#E5ECE8;--muted:#9BA9A2;--line:#4C5A53;--box:#1B2420;--sys:#141C18;--acc:#6CB2CF;--acc2:#D7A94B;--ext:#232E29;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1412;--fg:#E5ECE8;--muted:#9BA9A2;--line:#4C5A53;--box:#1B2420;--sys:#141C18;--acc:#6CB2CF;--acc2:#D7A94B;--ext:#232E29;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f);margin:0}
+.wrap{max-width:1400px;margin:0 auto;padding-inline:16px;padding-block:18px 32px}
+h1{font-size:22px;margin:0 0 4px}
+p.sub{color:var(--muted);margin:0 0 14px;font-size:14px}
+.card{background:var(--box);border-radius:14px;padding:10px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:900px;font-family:var(--f)}
+.actor{fill:none;stroke:var(--fg);stroke-width:2}
+.alab{font-size:14px;font-weight:600;fill:var(--fg);text-anchor:middle}
+.sys{fill:var(--sys);stroke:var(--line);stroke-width:1.5;stroke-dasharray:6 4}
+.systitle{font-size:16px;font-weight:700;fill:var(--fg)}
+.grp{fill:none;stroke:var(--line);stroke-width:1;rx:10}
+.grplab{font-size:11.5px;font-weight:600;fill:var(--muted);letter-spacing:.06em}
+.uc{fill:var(--box);stroke:var(--acc);stroke-width:1.5}
+.uc.core{stroke-width:2.4}
+.uct{font-size:12.5px;fill:var(--fg);text-anchor:middle}
+.ucs{font-size:10.5px;fill:var(--muted);text-anchor:middle}
+.ext{fill:var(--ext);stroke:var(--line);stroke-width:1}
+.extt{font-size:11.5px;fill:var(--fg);text-anchor:middle;font-weight:600}
+.exts{font-size:10px;fill:var(--muted);text-anchor:middle}
+.ln{stroke:var(--fg);stroke-width:1.2;fill:none;opacity:.75}
+.inc{stroke:var(--acc2);stroke-width:1.2;fill:none;stroke-dasharray:5 4}
+.inct{font-size:10px;fill:var(--acc2);text-anchor:middle;font-style:italic}
+.extl{stroke:var(--line);stroke-width:1;fill:none;stroke-dasharray:2 3}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--acc)}
+.legend i.d{border-top:2px dashed var(--acc2)}
+.legend i.e{border-top:2px dotted var(--line)}
+.scope{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:16px}
+.scope div{background:var(--box);border-radius:12px;padding:12px 14px;font-size:13.5px}
+.scope h3{margin:0 0 6px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.scope ul{margin:0;padding-left:18px}
+.scope li{margin:3px 0}
+</style>
+<div class="wrap">
+<h1>Farm Doctor: use case diagram</h1>
+<p class="sub">Actors on the left, the system boundary in the middle, external AI and data on the right. Thick outlines = the 5 core AIs.</p>
+<div class="card">
+<svg viewBox="0 0 1380 820" role="img" aria-label="Use case diagram of the Farm Doctor system">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5 0 10z" fill="var(--acc2)"/></marker></defs>
+
+  <!-- system boundary -->
+  <rect class="sys" x="250" y="30" width="800" height="770" rx="16"/>
+  <text class="systitle" x="270" y="58">FARM DOCTOR  —  system boundary</text>
+
+  <!-- groups -->
+  <rect class="grp" x="270" y="80" width="760" height="300"/><text class="grplab" x="284" y="98">FARMER</text>
+  <rect class="grp" x="270" y="395" width="365" height="90"/><text class="grplab" x="284" y="413">HERDER</text>
+  <rect class="grp" x="655" y="395" width="375" height="190"/><text class="grplab" x="669" y="413">MINISTRY / OFFICER</text>
+  <rect class="grp" x="270" y="500" width="365" height="85"/><text class="grplab" x="284" y="518">PUBLIC</text>
+  <rect class="grp" x="270" y="600" width="760" height="180"/><text class="grplab" x="284" y="618">THE DOCTOR LAYER (Claude, Sorani)</text>
+
+  <!-- farmer use cases -->
+  <g>
+    <ellipse class="uc core" cx="365" cy="135" rx="88" ry="26"/><text class="uct" x="365" y="132">Select my field</text><text class="ucs" x="365" y="146">one tap · SAM draws it</text>
+    <ellipse class="uc core" cx="570" cy="135" rx="92" ry="26"/><text class="uct" x="570" y="132">See my field from space</text><text class="ucs" x="570" y="146">Field Eye · Sentinel-2</text>
+    <ellipse class="uc core" cx="785" cy="135" rx="92" ry="26"/><text class="uct" x="785" y="132">Get this week's plan</text><text class="ucs" x="785" y="146">Weather Planner · 10 days</text>
+    <ellipse class="uc" cx="955" cy="135" rx="68" ry="26"/><text class="uct" x="955" y="132">Receive alerts</text><text class="ucs" x="955" y="146">frost · heat · rain · rust</text>
+
+    <ellipse class="uc core" cx="365" cy="225" rx="88" ry="26"/><text class="uct" x="365" y="222">Ask the Doctor</text><text class="ucs" x="365" y="236">voice · text · photos</text>
+    <ellipse class="uc core" cx="570" cy="225" rx="92" ry="26"/><text class="uct" x="570" y="222">Report a problem</text><text class="ucs" x="570" y="236">Neighbour Watch · map pin</text>
+    <ellipse class="uc" cx="785" cy="225" rx="92" ry="26"/><text class="uct" x="785" y="222">Get damage proof</text><text class="ucs" x="785" y="236">before/after · claim letter</text>
+    <ellipse class="uc" cx="955" cy="225" rx="68" ry="26"/><text class="uct" x="955" y="222">Read a label</text><text class="ucs" x="955" y="236">pesticide bottle photo</text>
+
+    <ellipse class="uc core" cx="365" cy="315" rx="88" ry="26"/><text class="uct" x="365" y="312">Plant Doctor</text><text class="ucs" x="365" y="326">photo triage · top-3 · confidence</text>
+    <ellipse class="uc core" cx="570" cy="315" rx="92" ry="26"/><text class="uct" x="570" y="312">Season check</text><text class="ucs" x="570" y="326">normal · dry · drought</text>
+    <ellipse class="uc" cx="785" cy="315" rx="92" ry="26"/><text class="uct" x="785" y="312">Soil water</text><text class="ucs" x="785" y="326">Sentinel-1 radar · through clouds</text>
+  </g>
+
+  <!-- herder -->
+  <ellipse class="uc" cx="452" cy="445" rx="110" ry="26"/><text class="uct" x="452" y="442">Heat-stress and pasture alerts</text><text class="ucs" x="452" y="456">Animal Health</text>
+
+  <!-- ministry -->
+  <ellipse class="uc" cx="760" cy="445" rx="88" ry="24"/><text class="uct" x="760" y="442">See the region now</text><text class="ucs" x="760" y="456">season · condition · outbreaks</text>
+  <ellipse class="uc" cx="940" cy="445" rx="80" ry="24"/><text class="uct" x="940" y="442">Weekly briefing</text><text class="ucs" x="940" y="456">one page · Sorani</text>
+  <ellipse class="uc" cx="760" cy="530" rx="88" ry="24"/><text class="uct" x="760" y="527">Sown area · farmland loss</text><text class="ucs" x="760" y="541">WorldCereal · 25-year maps</text>
+  <ellipse class="uc" cx="940" cy="530" rx="80" ry="24"/><text class="uct" x="940" y="527">Review escalated cases</text><text class="ucs" x="940" y="541">Doctor said "unsure"</text>
+
+  <!-- public -->
+  <ellipse class="uc" cx="365" cy="545" rx="80" ry="24"/><text class="uct" x="365" y="542">Dam Watch</text><text class="ucs" x="365" y="556">Dukan · Darbandikhan</text>
+  <ellipse class="uc" cx="540" cy="545" rx="80" ry="24"/><text class="uct" x="540" y="542">Market Watch</text><text class="ucs" x="540" y="556">WFP prices · no forecast</text>
+
+  <!-- doctor layer -->
+  <rect class="uc core" x="290" y="635" width="720" height="130" rx="14"/>
+  <text class="uct" x="650" y="662" style="font-weight:600;font-size:14px">The Doctor combines the AIs' numbers and talks to people</text>
+  <text class="ucs" x="650" y="686" style="font-size:12px">In: Field Eye + Weather Planner + Plant Doctor + Season check + Neighbour Watch (as numbers and labels)</text>
+  <text class="ucs" x="650" y="706" style="font-size:12px">Out: most likely cause · how sure · what to do now · what it cannot tell · which input drove each conclusion</text>
+  <text class="ucs" x="650" y="726" style="font-size:12px">Rules: no pesticide or fertilizer doses · answers only from checked notes · says "unsure, see an officer" when inputs conflict</text>
+  <text class="ucs" x="650" y="746" style="font-size:12px">Every case is logged so the combined accuracy can be measured</text>
+
+  <!-- actors -->
+  <g transform="translate(90,120)"><circle class="actor" cx="0" cy="0" r="14"/><path class="actor" d="M0 14v40M-22 28h44M0 54l-18 32M0 54l18 32"/><text class="alab" x="0" y="108">Farmer</text></g>
+  <g transform="translate(90,400)"><circle class="actor" cx="0" cy="0" r="14"/><path class="actor" d="M0 14v40M-22 28h44M0 54l-18 32M0 54l18 32"/><text class="alab" x="0" y="108">Herder</text></g>
+  <g transform="translate(90,560)"><circle class="actor" cx="0" cy="0" r="14"/><path class="actor" d="M0 14v40M-22 28h44M0 54l-18 32M0 54l18 32"/><text class="alab" x="0" y="108">Public</text></g>
+  <g transform="translate(1210,430)"><circle class="actor" cx="0" cy="0" r="14"/><path class="actor" d="M0 14v40M-22 28h44M0 54l-18 32M0 54l18 32"/><text class="alab" x="0" y="108">Ministry planner</text></g>
+  <g transform="translate(1210,560)"><circle class="actor" cx="0" cy="0" r="14"/><path class="actor" d="M0 14v40M-22 28h44M0 54l-18 32M0 54l18 32"/><text class="alab" x="0" y="108">Extension officer</text></g>
+
+  <!-- actor links -->
+  <path class="ln" d="M112 150 L277 135"/><path class="ln" d="M112 160 L277 225"/><path class="ln" d="M112 170 L277 315"/>
+  <path class="ln" d="M112 430 L342 445"/>
+  <path class="ln" d="M112 600 L285 545"/>
+  <path class="ln" d="M1188 460 L848 445"/><path class="ln" d="M1188 468 L1020 445"/><path class="ln" d="M1188 476 L848 530"/>
+  <path class="ln" d="M1188 600 L1020 530"/>
+
+  <!-- includes -->
+  <path class="inc" d="M478 135 L453 135" marker-end="url(#ar)"/><text class="inct" x="466" y="128">includes</text>
+  <path class="inc" d="M365 251 L365 289" marker-end="url(#ar)"/><text class="inct" x="395" y="273">includes</text>
+  <path class="inc" d="M420 205 L500 150" marker-end="url(#ar)"/>
+  <path class="inc" d="M453 225 L478 225" marker-end="url(#ar)"/>
+  <path class="inc" d="M940 506 L420 250" marker-end="url(#ar)"/><text class="inct" x="690" y="372">extends: Doctor unsure</text>
+  <path class="inc" d="M365 341 L365 395 L650 395 L650 635" marker-end="url(#ar)" style="opacity:.6"/>
+
+  <!-- external systems -->
+  <g>
+    <rect class="ext" x="1090" y="60" width="130" height="40" rx="8"/><text class="extt" x="1155" y="78">Sentinel-2 · MODIS</text><text class="exts" x="1155" y="92">ESA · NASA satellites</text>
+    <rect class="ext" x="1090" y="112" width="130" height="40" rx="8"/><text class="extt" x="1155" y="130">Open-Meteo</text><text class="exts" x="1155" y="144">ECMWF AIFS · GraphCast</text>
+    <rect class="ext" x="1090" y="164" width="130" height="40" rx="8"/><text class="extt" x="1155" y="182">Claude</text><text class="exts" x="1155" y="196">vision · Sorani · reasoning</text>
+    <rect class="ext" x="1090" y="216" width="130" height="40" rx="8"/><text class="extt" x="1155" y="234">Google Chirp</text><text class="exts" x="1155" y="248">Sorani speech-to-text</text>
+    <rect class="ext" x="1090" y="268" width="130" height="40" rx="8"/><text class="extt" x="1155" y="286">SAM (Meta)</text><text class="exts" x="1155" y="300">field boundary</text>
+    <rect class="ext" x="1090" y="320" width="130" height="40" rx="8"/><text class="extt" x="1155" y="338">Prithvi (NASA·IBM)</text><text class="exts" x="1155" y="352">flood · burn · crop maps</text>
+    <rect class="ext" x="1090" y="372" width="130" height="40" rx="8"/><text class="extt" x="1155" y="390">WorldCereal (ESA)</text><text class="exts" x="1155" y="404">10 m wheat map</text>
+    <rect class="ext" x="1235" y="60" width="130" height="40" rx="8"/><text class="extt" x="1300" y="78">Sentinel-1 radar</text><text class="exts" x="1300" y="92">soil water · floods</text>
+    <rect class="ext" x="1235" y="112" width="130" height="40" rx="8"/><text class="extt" x="1300" y="130">KRSO · WFP</text><text class="exts" x="1300" y="144">harvest stats · prices</text>
+    <rect class="ext" x="1235" y="164" width="130" height="40" rx="8"/><text class="extt" x="1300" y="182">Disease notes</text><text class="exts" x="1300" y="196">ICARDA · FAO · KRI</text>
+  </g>
+  <path class="extl" d="M1090 80 L662 135"/><path class="extl" d="M1090 80 L877 225"/><path class="extl" d="M1090 80 L662 315"/>
+  <path class="extl" d="M1090 132 L877 135"/><path class="extl" d="M1090 132 L1023 135"/>
+  <path class="extl" d="M1090 184 L453 225"/><path class="extl" d="M1090 184 L1010 700"/>
+  <path class="extl" d="M1090 236 L453 225"/>
+  <path class="extl" d="M1090 288 L453 135"/>
+  <path class="extl" d="M1090 340 L877 225"/>
+  <path class="extl" d="M1090 392 L848 530"/>
+  <path class="extl" d="M1235 80 L877 315"/>
+  <path class="extl" d="M1235 132 L620 545"/>
+  <path class="extl" d="M1235 184 L453 315"/>
+</svg>
+</div>
+<div class="legend"><span><i></i> actor uses</span><span><i class="d"></i> includes / extends</span><span><i class="e"></i> external AI or data feeds it</span><span><b style="color:var(--acc)">thick ellipse</b> = one of the 5 core AIs</span></div>
+
+<div class="scope">
+  <div><h3>Inside the boundary</h3><ul><li>5 core AIs: Field Eye, Weather Planner, Plant Doctor, Season check, Neighbour Watch</li><li>Add-ons: Dam Watch, Damage Proof, Soil water, Farmland loss and sown area, Animal Health, Market Watch, Label reader</li><li>The Doctor layer (Claude, Sorani)</li><li>Farmer app, Ministry web map, public page, case log</li></ul></div>
+  <div><h3>Outside, used not built</h3><ul><li>Satellites and weather models (ESA, NASA, ECMWF, Google)</li><li>Claude, Chirp, SAM, Prithvi, WorldCereal</li><li>KRSO and WFP statistics</li><li>Extension officers and vets: the system hands cases to them</li></ul></div>
+  <div><h3>Out of scope</h3><ul><li>Long-range forecasts (season, El Niño, climate)</li><li>Pesticide or fertilizer doses</li><li>Yield in tonnes, soil fertility maps, price forecasts</li><li>Credit, insurance, fraud flags, food-safety photo checks</li><li>Any hardware</li></ul></div>
+</div>
+</div>

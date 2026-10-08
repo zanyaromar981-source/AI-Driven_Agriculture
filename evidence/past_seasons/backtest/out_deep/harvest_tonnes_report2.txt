@@ -1,0 +1,16 @@
+Wheat production, year hidden one by one, 2003–2023 (needs 3 earlier years). Error = |estimate − official| / official
+  area             | satellite model: median / mean error | "same as last 3 years": median / mean | "same as last year": median / mean
+ MID-APRIL
+  Sulaymaniyah     |  32% /  43%                         |  29% /  36%                    |  33% /  50%
+  Erbil            |  33% /  71%                         |  51% /  91%                    |  43% / 115%
+  Duhok            |  27% /  27%                         |  26% /  32%                    |  20% /  33%
+  Kurdistan_Region |  20% /  26%                         |  32% /  32%                    |  27% /  39%
+     year: official → satellite estimate: 2003: 448k→485k, 2004: 322k→569k, 2005: 374k→517k, 2006: 392k→302k, 2007: 655k→452k, 2008: 216k→365k, 2009: 559k→486k, 2010: 625k→906k, 2011: 399k→454k, 2012: 381k→408k, 2013: 1036k→719k, 2014: 883k→876k, 2015: 1097k→1239k, 2016: 1687k→1184k, 2017: 1019k→812k, 2018: 1310k→1195k, 2019: 2423k→2006k, 2020: 2907k→2036k, 2021: 1925k→2310k, 2022: 1935k→1574k, 2023: 2369k→2928k
+     years with a big drop (official < 75% of last-3-year level): 2004 official 71% of normal, satellite said 125%, 2008 official 47% of normal, satellite said 80%, 2012 official 74% of normal, satellite said 79%
+ MID-MAY
+  Sulaymaniyah     |  33% /  45%                         |  29% /  36%                    |  33% /  50%
+  Erbil            |  30% /  53%                         |  51% /  91%                    |  43% / 115%
+  Duhok            |  24% /  26%                         |  26% /  32%                    |  20% /  33%
+  Kurdistan_Region |  23% /  25%                         |  32% /  32%                    |  27% /  39%
+     year: official → satellite estimate: 2003: 448k→473k, 2004: 322k→499k, 2005: 374k→460k, 2006: 392k→428k, 2007: 655k→496k, 2008: 216k→288k, 2009: 559k→477k, 2010: 625k→706k, 2011: 399k→565k, 2012: 381k→468k, 2013: 1036k→541k, 2014: 883k→794k, 2015: 1097k→1093k, 2016: 1687k→1247k, 2017: 1019k→1320k, 2018: 1310k→1208k, 2019: 2423k→2043k, 2020: 2907k→2128k, 2021: 1925k→1417k, 2022: 1935k→1624k, 2023: 2369k→4356k
+     years with a big drop (official < 75% of last-3-year level): 2004 official 71% of normal, satellite said 110%, 2008 official 47% of normal, satellite said 63%, 2012 official 74% of normal, satellite said 90%

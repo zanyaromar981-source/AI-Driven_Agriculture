@@ -1,0 +1,24 @@
+31 December check, every winter judged with cut-offs learned without it. 10 droughts in 35 winters.
+
+rain so far only                           allow 0 false: caught 1/10 ['1998/99'] | false 1 ['1995/96']
+rain so far only                           allow 2 false: caught 3/10 ['1998/99', '1999/00', '2007/08'] | false 3 ['1995/96', '2005/06', '2010/11']
+rain so far only                           allow 4 false: caught 7/10 ['1998/99', '1999/00', '2007/08', '2008/09', '2011/12', '2020/21', '2024/25'] | false 5 ['1995/96', '2005/06', '2010/11', '2017/18', '2019/20']
+
+rain so far + world forecasts (Jan-Feb)    allow 0 false: caught 3/10 ['1998/99', '2007/08', '2011/12'] | false 1 ['1995/96']
+rain so far + world forecasts (Jan-Feb)    allow 2 false: caught 3/10 ['1998/99', '2007/08', '2011/12'] | false 3 ['1995/96', '2010/11', '2017/18']
+rain so far + world forecasts (Jan-Feb)    allow 4 false: caught 6/10 ['1998/99', '1999/00', '2007/08', '2008/09', '2011/12', '2020/21'] | false 5 ['1995/96', '2005/06', '2010/11', '2017/18', '2022/23']
+
+Per drought winter on 31 December:
+  winter   final | rain so far (rank of 35, 1 = driest) | 10 Dec watch | model prediction (rank) | red crop zones of 16
+  1998/99    44% |  11% (# 1)                     | ON           |   60% (# 1)             | –
+  1999/00    57% |  40% (# 5)                     | ON           |   75% (# 7)             | 16
+  2000/01    76% |  84% (#16)                     | ON           |   91% (#15)             | 0
+  2007/08    46% |  36% (# 3)                     | ON           |   63% (# 2)             | 7
+  2008/09    60% |  60% (# 8)                     | ON           |   81% (#10)             | 6
+  2011/12    72% |  56% (# 7)                     | ON           |   66% (# 3)             | 0
+  2013/14    80% | 101% (#20)                     | off          |  101% (#19)             | 0
+  2020/21    51% |  62% (#10)                     | ON           |   76% (# 8)             | 0
+  2021/22    76% |  72% (#12)                     | ON           |   87% (#13)             | 0
+  2024/25    59% |  70% (#11)                     | ON           |   87% (#12)             | 0
+
+Normal winters that look dry on 31 Dec (top 6 by model): 1995/96 pred 67% final 101%, 2010/11 pred 69% final 95%, 2017/18 pred 72% final 90%, 2005/06 pred 80% final 115%, 2022/23 pred 85% final 101%, 2019/20 pred 90% final 101%

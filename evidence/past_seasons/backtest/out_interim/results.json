@@ -1,0 +1,1817 @@
+{
+ "Dec": {
+  "n": 66,
+  "seasons": 26,
+  "zone": {
+   "tp": 7,
+   "fn": 12,
+   "fp": 4,
+   "tn": 43,
+   "recall": 0.3684210526315789,
+   "far": 0.0851063829787234,
+   "precision": 0.6363636363636364,
+   "acc": 0.7575757575757576
+  },
+  "zone_thr035": {
+   "tp": 11,
+   "fn": 8,
+   "fp": 11,
+   "tn": 36,
+   "recall": 0.5789473684210527,
+   "far": 0.23404255319148937,
+   "precision": 0.5,
+   "acc": 0.7121212121212122
+  },
+  "baseline_last_year": {
+   "tp": 8,
+   "fn": 7,
+   "fp": 9,
+   "tn": 38,
+   "recall": 0.5333333333333333,
+   "far": 0.19148936170212766,
+   "precision": 0.47058823529411764,
+   "acc": 0.7419354838709677
+  },
+  "baseline_rain_rule": {
+   "tp": 16,
+   "fn": 3,
+   "fp": 19,
+   "tn": 28,
+   "recall": 0.8421052631578947,
+   "far": 0.40425531914893614,
+   "precision": 0.45714285714285713,
+   "acc": 0.6666666666666666
+  },
+  "always_normal_acc": 0.7121212121212122,
+  "season_table": [
+   {
+    "season": "1999/00",
+    "zones": 4,
+    "frac_bad": 1.0,
+    "frac_warn": 1.0,
+    "mean_p": 0.7,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2000/01",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.42,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Erbil"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2001/02",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.33,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2002/03",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.1,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2003/04",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2004/05",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.1,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2005/06",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.33,
+    "mean_p": 0.44,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": [
+     "Makhmour"
+    ]
+   },
+   {
+    "season": "2006/07",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2007/08",
+    "zones": 3,
+    "frac_bad": 1.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.34,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2008/09",
+    "zones": 3,
+    "frac_bad": 0.67,
+    "frac_warn": 1.0,
+    "mean_p": 0.67,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2009/10",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.1,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2010/11",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.27,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2011/12",
+    "zones": 3,
+    "frac_bad": 0.67,
+    "frac_warn": 0.0,
+    "mean_p": 0.4,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2012/13",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.14,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2013/14",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.2,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2014/15",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.06,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2015/16",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.02,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2016/17",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.1,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2017/18",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 1.0,
+    "mean_p": 0.67,
+    "bad": false,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour"
+    ]
+   },
+   {
+    "season": "2018/19",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.04,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2019/20",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2020/21",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.23,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2021/22",
+    "zones": 2,
+    "frac_bad": 1.0,
+    "frac_warn": 0.5,
+    "mean_p": 0.48,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour"
+    ],
+    "warned_zones": [
+     "Slemani"
+    ]
+   },
+   {
+    "season": "2022/23",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.4,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2023/24",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.17,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2024/25",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.28,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   }
+  ],
+  "season_caught": 3,
+  "season_bad": 8,
+  "season_false": 1,
+  "season_normal": 18,
+  "season_caught_lo": 5,
+  "season_false_lo": 5,
+  "weights": {
+   "rain_pct": -0.51,
+   "soil_pct": -0.27,
+   "temp_anom": -0.32,
+   "et0_pct": 0.47,
+   "last_rain_pct": -0.85
+  },
+  "test_2025": [
+   {
+    "zone": "Slemani",
+    "p": 0.37,
+    "label": 1,
+    "rain_pct": 60
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.2,
+    "label": 0,
+    "rain_pct": 44
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.16,
+    "label": null,
+    "rain_pct": 38
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.07,
+    "label": null,
+    "rain_pct": 97
+   }
+  ],
+  "test_2026": [
+   {
+    "zone": "Slemani",
+    "p": 0.27,
+    "rain_pct": 141
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.31,
+    "rain_pct": 128
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.46,
+    "rain_pct": 104
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.15,
+    "rain_pct": 182
+   }
+  ]
+ },
+ "Jan": {
+  "n": 66,
+  "seasons": 26,
+  "zone": {
+   "tp": 8,
+   "fn": 11,
+   "fp": 4,
+   "tn": 43,
+   "recall": 0.42105263157894735,
+   "far": 0.0851063829787234,
+   "precision": 0.6666666666666666,
+   "acc": 0.7727272727272727
+  },
+  "zone_thr035": {
+   "tp": 13,
+   "fn": 6,
+   "fp": 10,
+   "tn": 37,
+   "recall": 0.6842105263157895,
+   "far": 0.2127659574468085,
+   "precision": 0.5652173913043478,
+   "acc": 0.7575757575757576
+  },
+  "baseline_last_year": {
+   "tp": 8,
+   "fn": 7,
+   "fp": 9,
+   "tn": 38,
+   "recall": 0.5333333333333333,
+   "far": 0.19148936170212766,
+   "precision": 0.47058823529411764,
+   "acc": 0.7419354838709677
+  },
+  "baseline_rain_rule": {
+   "tp": 14,
+   "fn": 5,
+   "fp": 17,
+   "tn": 30,
+   "recall": 0.7368421052631579,
+   "far": 0.3617021276595745,
+   "precision": 0.45161290322580644,
+   "acc": 0.6666666666666666
+  },
+  "always_normal_acc": 0.7121212121212122,
+  "season_table": [
+   {
+    "season": "1999/00",
+    "zones": 4,
+    "frac_bad": 1.0,
+    "frac_warn": 0.75,
+    "mean_p": 0.56,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2000/01",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.67,
+    "mean_p": 0.51,
+    "bad": false,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2001/02",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.29,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2002/03",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.12,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2003/04",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.06,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2004/05",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.08,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2005/06",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.32,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2006/07",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.19,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2007/08",
+    "zones": 3,
+    "frac_bad": 1.0,
+    "frac_warn": 0.33,
+    "mean_p": 0.41,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Makhmour"
+    ]
+   },
+   {
+    "season": "2008/09",
+    "zones": 3,
+    "frac_bad": 0.67,
+    "frac_warn": 1.0,
+    "mean_p": 0.79,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2009/10",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.14,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2010/11",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.17,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2011/12",
+    "zones": 3,
+    "frac_bad": 0.67,
+    "frac_warn": 0.0,
+    "mean_p": 0.35,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2012/13",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.08,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2013/14",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.23,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2014/15",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2015/16",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.03,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2016/17",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.18,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2017/18",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 1.0,
+    "mean_p": 0.6,
+    "bad": false,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour"
+    ]
+   },
+   {
+    "season": "2018/19",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.04,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2019/20",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2020/21",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.33,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2021/22",
+    "zones": 2,
+    "frac_bad": 1.0,
+    "frac_warn": 0.5,
+    "mean_p": 0.46,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour"
+    ],
+    "warned_zones": [
+     "Slemani"
+    ]
+   },
+   {
+    "season": "2022/23",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.43,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2023/24",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.1,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2024/25",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.36,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   }
+  ],
+  "season_caught": 3,
+  "season_bad": 8,
+  "season_false": 2,
+  "season_normal": 18,
+  "season_caught_lo": 7,
+  "season_false_lo": 4,
+  "weights": {
+   "rain_pct": -0.45,
+   "soil_pct": -0.1,
+   "temp_anom": -0.46,
+   "et0_pct": 0.58,
+   "last_rain_pct": -0.88
+  },
+  "test_2025": [
+   {
+    "zone": "Slemani",
+    "p": 0.47,
+    "label": 1,
+    "rain_pct": 44
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.24,
+    "label": 0,
+    "rain_pct": 34
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.17,
+    "label": null,
+    "rain_pct": 28
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.08,
+    "label": null,
+    "rain_pct": 71
+   }
+  ],
+  "test_2026": [
+   {
+    "zone": "Slemani",
+    "p": 0.3,
+    "rain_pct": 136
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.27,
+    "rain_pct": 113
+   },
+   {
+    "zone": "Erbil",
+    "p": 0.4,
+    "rain_pct": 105
+   },
+   {
+    "zone": "Garmiyan",
+    "p": 0.14,
+    "rain_pct": 162
+   }
+  ]
+ },
+ "Feb": {
+  "n": 66,
+  "seasons": 26,
+  "zone": {
+   "tp": 11,
+   "fn": 8,
+   "fp": 4,
+   "tn": 43,
+   "recall": 0.5789473684210527,
+   "far": 0.0851063829787234,
+   "precision": 0.7333333333333333,
+   "acc": 0.8181818181818182
+  },
+  "zone_thr035": {
+   "tp": 13,
+   "fn": 6,
+   "fp": 8,
+   "tn": 39,
+   "recall": 0.6842105263157895,
+   "far": 0.1702127659574468,
+   "precision": 0.6190476190476191,
+   "acc": 0.7878787878787878
+  },
+  "baseline_last_year": {
+   "tp": 8,
+   "fn": 7,
+   "fp": 9,
+   "tn": 38,
+   "recall": 0.5333333333333333,
+   "far": 0.19148936170212766,
+   "precision": 0.47058823529411764,
+   "acc": 0.7419354838709677
+  },
+  "baseline_rain_rule": {
+   "tp": 15,
+   "fn": 4,
+   "fp": 14,
+   "tn": 33,
+   "recall": 0.7894736842105263,
+   "far": 0.2978723404255319,
+   "precision": 0.5172413793103449,
+   "acc": 0.7272727272727273
+  },
+  "always_normal_acc": 0.7121212121212122,
+  "season_table": [
+   {
+    "season": "1999/00",
+    "zones": 4,
+    "frac_bad": 1.0,
+    "frac_warn": 1.0,
+    "mean_p": 0.69,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2000/01",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 1.0,
+    "mean_p": 0.59,
+    "bad": false,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2001/02",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.29,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2002/03",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.08,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2003/04",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.04,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2004/05",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.06,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2005/06",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.21,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2006/07",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.12,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2007/08",
+    "zones": 3,
+    "frac_bad": 1.0,
+    "frac_warn": 0.67,
+    "mean_p": 0.51,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2008/09",
+    "zones": 3,
+    "frac_bad": 0.67,
+    "frac_warn": 1.0,
+    "mean_p": 0.83,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2009/10",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.11,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2010/11",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.23,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2011/12",
+    "zones": 3,
+    "frac_bad": 0.67,
+    "frac_warn": 0.67,
+    "mean_p": 0.46,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2012/13",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2013/14",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.31,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2014/15",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2015/16",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.02,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2016/17",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.29,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2017/18",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.31,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2018/19",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.02,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2019/20",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.03,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2020/21",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.24,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2021/22",
+    "zones": 2,
+    "frac_bad": 1.0,
+    "frac_warn": 0.5,
+    "mean_p": 0.5,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour"
+    ],
+    "warned_zones": [
+     "Slemani"
+    ]
+   },
+   {
+    "season": "2022/23",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.42,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2023/24",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.04,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2024/25",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.34,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   }
+  ],
+  "season_caught": 5,
+  "season_bad": 8,
+  "season_false": 1,
+  "season_normal": 18,
+  "season_caught_lo": 6,
+  "season_false_lo": 4,
+  "weights": {
+   "rain_pct": -0.6,
+   "soil_pct": -0.18,
+   "temp_anom": -0.26,
+   "et0_pct": 0.39,
+   "last_rain_pct": -0.76,
+   "green_now": -0.6
+  },
+  "test_2025": [
+   {
+    "zone": "Slemani",
+    "p": 0.37,
+    "label": 1,
+    "rain_pct": 45
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.32,
+    "label": 0,
+    "rain_pct": 41
+   }
+  ],
+  "test_2026": []
+ },
+ "Mar": {
+  "n": 66,
+  "seasons": 26,
+  "zone": {
+   "tp": 13,
+   "fn": 6,
+   "fp": 3,
+   "tn": 44,
+   "recall": 0.6842105263157895,
+   "far": 0.06382978723404255,
+   "precision": 0.8125,
+   "acc": 0.8636363636363636
+  },
+  "zone_thr035": {
+   "tp": 15,
+   "fn": 4,
+   "fp": 4,
+   "tn": 43,
+   "recall": 0.7894736842105263,
+   "far": 0.0851063829787234,
+   "precision": 0.7894736842105263,
+   "acc": 0.8787878787878788
+  },
+  "baseline_last_year": {
+   "tp": 8,
+   "fn": 7,
+   "fp": 9,
+   "tn": 38,
+   "recall": 0.5333333333333333,
+   "far": 0.19148936170212766,
+   "precision": 0.47058823529411764,
+   "acc": 0.7419354838709677
+  },
+  "baseline_rain_rule": {
+   "tp": 15,
+   "fn": 4,
+   "fp": 7,
+   "tn": 40,
+   "recall": 0.7894736842105263,
+   "far": 0.14893617021276595,
+   "precision": 0.6818181818181818,
+   "acc": 0.8333333333333334
+  },
+  "always_normal_acc": 0.7121212121212122,
+  "season_table": [
+   {
+    "season": "1999/00",
+    "zones": 4,
+    "frac_bad": 1.0,
+    "frac_warn": 1.0,
+    "mean_p": 0.79,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Garmiyan"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil",
+     "Garmiyan"
+    ]
+   },
+   {
+    "season": "2000/01",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.33,
+    "mean_p": 0.4,
+    "bad": false,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2001/02",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.16,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2002/03",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2003/04",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.07,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2004/05",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.06,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2005/06",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.3,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2006/07",
+    "zones": 3,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.14,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2007/08",
+    "zones": 3,
+    "frac_bad": 1.0,
+    "frac_warn": 1.0,
+    "mean_p": 0.62,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2008/09",
+    "zones": 3,
+    "frac_bad": 0.67,
+    "frac_warn": 1.0,
+    "mean_p": 0.86,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Makhmour",
+     "Erbil"
+    ],
+    "warned_zones": [
+     "Slemani",
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2009/10",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2010/11",
+    "zones": 3,
+    "frac_bad": 0.33,
+    "frac_warn": 0.0,
+    "mean_p": 0.2,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Makhmour"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2011/12",
+    "zones": 3,
+    "frac_bad": 0.67,
+    "frac_warn": 0.67,
+    "mean_p": 0.59,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour"
+    ],
+    "warned_zones": [
+     "Makhmour",
+     "Erbil"
+    ]
+   },
+   {
+    "season": "2012/13",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.09,
+    "bad": true,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2013/14",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.16,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2014/15",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2015/16",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.02,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2016/17",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.15,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2017/18",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.5,
+    "mean_p": 0.47,
+    "bad": false,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [],
+    "warned_zones": [
+     "Makhmour"
+    ]
+   },
+   {
+    "season": "2018/19",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.02,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2019/20",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.02,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2020/21",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.0,
+    "mean_p": 0.31,
+    "bad": true,
+    "warned": false,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": []
+   },
+   {
+    "season": "2021/22",
+    "zones": 2,
+    "frac_bad": 1.0,
+    "frac_warn": 0.5,
+    "mean_p": 0.56,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani",
+     "Makhmour"
+    ],
+    "warned_zones": [
+     "Slemani"
+    ]
+   },
+   {
+    "season": "2022/23",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.17,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2023/24",
+    "zones": 2,
+    "frac_bad": 0.0,
+    "frac_warn": 0.0,
+    "mean_p": 0.05,
+    "bad": false,
+    "warned": false,
+    "warned_lo": false,
+    "bad_zones": [],
+    "warned_zones": []
+   },
+   {
+    "season": "2024/25",
+    "zones": 2,
+    "frac_bad": 0.5,
+    "frac_warn": 0.5,
+    "mean_p": 0.43,
+    "bad": true,
+    "warned": true,
+    "warned_lo": true,
+    "bad_zones": [
+     "Slemani"
+    ],
+    "warned_zones": [
+     "Slemani"
+    ]
+   }
+  ],
+  "season_caught": 6,
+  "season_bad": 8,
+  "season_false": 1,
+  "season_normal": 18,
+  "season_caught_lo": 7,
+  "season_false_lo": 2,
+  "weights": {
+   "rain_pct": -0.57,
+   "soil_pct": -0.28,
+   "temp_anom": -0.32,
+   "et0_pct": 0.33,
+   "last_rain_pct": -0.71,
+   "green_now": -0.99
+  },
+  "test_2025": [
+   {
+    "zone": "Slemani",
+    "p": 0.57,
+    "label": 1,
+    "rain_pct": 43
+   },
+   {
+    "zone": "Makhmour",
+    "p": 0.29,
+    "label": 0,
+    "rain_pct": 45
+   }
+  ],
+  "test_2026": []
+ }
+}

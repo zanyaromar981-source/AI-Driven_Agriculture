@@ -1,0 +1,37 @@
+# Secrets
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Big raw data: rebuild with the fetch scripts (see README "What is NOT in git")
+research_library/pdfs/
+research_library/metadata/
+research_library/library.sqlite
+evidence/past_seasons/backtest_data/*
+!evidence/past_seasons/backtest_data/enso/
+!evidence/past_seasons/backtest_data/boundaries/
+!evidence/past_seasons/backtest_data/forecast/
+!evidence/past_seasons/backtest_data/sea_temp/
+!evidence/past_seasons/backtest_data/climate_indices/
+!evidence/past_seasons/backtest_data/seasonal_models/
+!evidence/past_seasons/backtest_data/harvest_stats/
+evidence/past_seasons/backtest_data/harvest_stats/raw/
+
+# Model checkpoints
+*.pth
+
+# Doctor case logs (hold field locations)
+farm_doctor/cases/
+
+# Generated previews and logs
+web/_preview.html
+web/_dash_preview.html
+*.log

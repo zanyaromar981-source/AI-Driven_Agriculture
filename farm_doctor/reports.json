@@ -1,0 +1,6 @@
+[
+ {"date": "2025-03-28", "lon": 44.63, "lat": 36.05, "type": "yellow stripes on leaves", "crop": "wheat", "note": "TEST DATA, not a real report"},
+ {"date": "2025-03-30", "lon": 44.55, "lat": 36.01, "type": "yellow stripes on leaves", "crop": "wheat", "note": "TEST DATA"},
+ {"date": "2025-03-25", "lon": 44.70, "lat": 36.08, "type": "crop drying, no rain", "crop": "wheat", "note": "TEST DATA"},
+ {"date": "2026-10-05", "lon": 44.58, "lat": 36.02, "type": "stubble fire nearby", "crop": "wheat", "note": "TEST DATA"}
+]

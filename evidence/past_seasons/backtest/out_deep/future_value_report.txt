@@ -1,0 +1,13 @@
+Perfect knowledge of the coming weather (rain + temperature, month by month, up to Apr 30):
+  Dec: today AUC 0.77  catch@15%FA  42%  Brier +0.18
+       + perfect next month       AUC 0.76  catch@15%FA  46%  Brier +0.18  beats LR+ElNiño in 30%
+       + perfect rest until Apr 30 AUC 0.82  catch@15%FA  66%  Brier +0.31  beats LR+ElNiño in 95%
+  Jan: today AUC 0.76  catch@15%FA  42%  Brier +0.16
+       + perfect next month       AUC 0.74  catch@15%FA  40%  Brier +0.14  beats LR+ElNiño in 20%
+       + perfect rest until Apr 30 AUC 0.82  catch@15%FA  68%  Brier +0.28  beats LR+ElNiño in 96%
+  Feb: today AUC 0.78  catch@15%FA  49%  Brier +0.19
+       + perfect next month       AUC 0.80  catch@15%FA  53%  Brier +0.22  beats LR+ElNiño in 73%
+       + perfect rest until Apr 30 AUC 0.85  catch@15%FA  71%  Brier +0.34  beats LR+ElNiño in 100%
+  Mar: today AUC 0.84  catch@15%FA  59%  Brier +0.31
+       + perfect next month       AUC 0.86  catch@15%FA  68%  Brier +0.37  beats LR+ElNiño in 87%
+       + perfect rest until Apr 30 AUC 0.86  catch@15%FA  68%  Brier +0.37  beats LR+ElNiño in 87%

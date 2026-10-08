@@ -1,0 +1,1 @@
+Mid-April (Apr 15): AUC 0.89, catch@15%FA 71%; sensitive ≥35%: caught 71% / false alarms 15%; cautious ≥50%: caught 53% / false alarms 5% / right 83%

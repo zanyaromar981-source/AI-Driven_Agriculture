@@ -1,0 +1,26 @@
+{
+ "Slemani": {
+  "cropland_px": 1087,
+  "box_px": 1089,
+  "peak_q25": 0.389,
+  "peak_median": 0.432
+ },
+ "Makhmour": {
+  "cropland_px": 547,
+  "box_px": 1089,
+  "peak_q25": 0.229,
+  "peak_median": 0.285
+ },
+ "Erbil": {
+  "cropland_px": 1084,
+  "box_px": 1089,
+  "peak_q25": 0.309,
+  "peak_median": 0.454
+ },
+ "Garmiyan": {
+  "cropland_px": 206,
+  "box_px": 1089,
+  "peak_q25": 0.333,
+  "peak_median": 0.333
+ }
+}

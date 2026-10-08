@@ -1,0 +1,199 @@
+<title>Jutyar Sign In</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;700&display=swap">
+<style>
+/* Layout: one phone-sized screen in the middle of the page; three steps (phone → code → my farms). Sorani is the default language, English second. */
+:root{
+  --bg:#F2F4EF; --phone:#FFFFFF; --soft:#EEF2EC; --line:#D8DFD9; --fg:#162019; --muted:#5E6E64; --faint:#8E9C94;
+  --accent:#1E7A5A; --accent-ink:#FFFFFF; --wheat:#B98A2B; --ok:#2F8A57; --alarm:#C23F2B;
+  --f:"Manrope","Segoe UI",system-ui,sans-serif; --ku:"Noto Sans Arabic","Segoe UI",Tahoma,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1412; --phone:#171E1B; --soft:#1F2824; --line:#2B3630; --fg:#E7EEE9; --muted:#9DAAA2; --faint:#6B7A72;
+  --accent:#6BCBA6; --accent-ink:#0F1412; --wheat:#D7A94B; --ok:#4DB57D; --alarm:#E5654F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1412; --phone:#171E1B; --soft:#1F2824; --line:#2B3630; --fg:#E7EEE9; --muted:#9DAAA2; --faint:#6B7A72;
+  --accent:#6BCBA6; --accent-ink:#0F1412; --wheat:#D7A94B; --ok:#4DB57D; --alarm:#E5654F; color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--f);-webkit-font-smoothing:antialiased}
+.stage{min-height:100%;display:grid;place-items:center;padding:16px;box-sizing:border-box;gap:14px}
+.phone{width:100%;max-width:400px;min-height:720px;background:var(--phone);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.18);padding:20px 20px 24px;box-sizing:border-box;display:grid;grid-template-rows:auto 1fr auto;gap:18px;position:relative;overflow:hidden}
+@media (max-width:440px){.phone{border-radius:0;box-shadow:none;min-height:100vh}}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lang{display:flex;background:var(--soft);border-radius:999px;padding:3px;font-size:13px}
+.lang button{font:inherit;border:0;background:none;color:var(--muted);padding:5px 11px;border-radius:999px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--phone);color:var(--fg);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.back{font:inherit;border:0;background:none;color:var(--muted);cursor:pointer;padding:6px 2px;display:flex;align-items:center;gap:6px;visibility:hidden}
+.back.on{visibility:visible}
+.steps{display:flex;gap:6px}
+.steps i{height:4px;flex:1;border-radius:2px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.screen{display:none;grid-template-rows:auto 1fr;gap:16px;min-height:0}
+.screen.on{display:grid}
+.logo{display:flex;align-items:center;gap:10px}
+.logo svg{width:40px;height:40px}
+.logo b{font:800 20px/1 var(--f);letter-spacing:-.02em}
+h1{font:800 26px/1.2 var(--f);margin:14px 0 6px;letter-spacing:-.02em;text-wrap:balance}
+p.lead{margin:0 0 12px;color:var(--muted);font-size:15px}
+.field{display:grid;gap:8px}
+label{font-size:13px;color:var(--muted);font-weight:600}
+.tel{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:14px;padding:4px 6px 4px 14px;background:var(--phone)}
+.tel:focus-within{border-color:var(--accent)}
+.tel .cc{font-weight:700;color:var(--muted);padding-right:8px;border-right:1px solid var(--line)}
+.tel input{flex:1;min-width:0;font:700 22px/1 var(--f);letter-spacing:.06em;border:0;outline:0;background:none;color:var(--fg);padding:12px 6px}
+.hint{font-size:13px;color:var(--faint)}
+.btn{font:700 16px var(--f);border:0;border-radius:14px;padding:16px;background:var(--accent);color:var(--accent-ink);cursor:pointer;width:100%;transition:transform .15s,opacity .2s}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn.ghost{background:var(--soft);color:var(--fg)}
+.otp{display:flex;gap:8px;justify-content:space-between}
+.otp input{width:100%;min-width:0;aspect-ratio:3/4;max-height:64px;text-align:center;font:800 24px var(--f);border:1.5px solid var(--line);border-radius:12px;background:var(--phone);color:var(--fg);outline:0}
+.otp input:focus{border-color:var(--accent)}
+.otp input.ok{border-color:var(--ok)}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+.link{font:inherit;border:0;background:none;color:var(--accent);font-weight:700;cursor:pointer;padding:0}
+.link[disabled]{color:var(--faint);cursor:default;font-weight:500}
+.note{display:flex;gap:10px;align-items:flex-start;background:var(--soft);border-radius:12px;padding:12px;font-size:13.5px;color:var(--muted)}
+.note svg{width:18px;height:18px;flex:none;margin-top:2px}
+.farms{display:grid;gap:10px;align-content:start}
+.farm{display:flex;gap:12px;align-items:center;border:1.5px solid var(--line);border-radius:16px;padding:12px;background:var(--phone);cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+.farm:hover{border-color:var(--accent)}
+.farm .pic{width:56px;height:56px;border-radius:12px;flex:none;background:linear-gradient(135deg,#7CB342 0%,#9CCC65 45%,#C5A54A 70%,#8D6E3A 100%);position:relative;overflow:hidden}
+.farm .pic::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,transparent 0 7px,rgba(0,0,0,.12) 7px 8px)}
+.farm .pic.b{background:linear-gradient(135deg,#C8B27A 0%,#A98E55 50%,#8D6E3A 100%)}
+.farm .t{flex:1;min-width:0}
+.farm .n{font-weight:800;font-size:16px}
+.farm .m{color:var(--muted);font-size:13px}
+.farm .st{font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px;background:var(--soft);white-space:nowrap}
+.farm .st.ok{color:var(--ok)} .farm .st.bare{color:var(--wheat)}
+.add{display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--line);border-radius:16px;padding:16px;color:var(--accent);font-weight:700;background:none;font:inherit;cursor:pointer;width:100%}
+.add:hover{border-color:var(--accent)}
+.empty{display:grid;justify-items:center;gap:10px;text-align:center;padding:30px 10px;color:var(--muted)}
+.empty svg{width:72px;height:72px}
+.foot{font-size:12px;color:var(--faint);text-align:center}
+.toast{position:absolute;left:50%;bottom:92px;transform:translate(-50%,10px);background:var(--fg);color:var(--phone);padding:10px 14px;border-radius:12px;font-size:13.5px;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:88%}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+[dir="rtl"] .back svg{transform:scaleX(-1)}
+[dir="rtl"] .tel .cc{border-right:0;border-left:1px solid var(--line);padding-right:0;padding-left:8px}
+[dir="rtl"] .farm{text-align:right}
+.ku-f{font-family:var(--ku)}
+.caption{color:var(--muted);font-size:13px;text-align:center;max-width:400px}
+</style>
+
+<div class="stage">
+<div class="phone" id="phone" dir="rtl" lang="ckb">
+  <div class="top">
+    <button class="back" id="back" aria-label="Back"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M11 3L5 9l6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-t="back">گەڕانەوە</span></button>
+    <div class="lang" role="group" aria-label="Language"><button id="lg-ku" aria-pressed="true">کوردی</button><button id="lg-en" aria-pressed="false">English</button></div>
+  </div>
+
+  <!-- step 1: phone -->
+  <section class="screen on" id="s1">
+    <div>
+      <div class="logo"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l15 8.5v17L20 37 5 28.5v-17z" fill="var(--accent)" opacity=".15"/><path d="M20 31V13M20 18c-4-1-6-4-6-8 4 .6 6 3.5 6 8zm0 0c4-1 6-4 6-8-4 .6-6 3.5-6 8zm0 7c-4-1-6-4-6-8 4 .6 6 3.5 6 8zm0 0c4-1 6-4 6-8-4 .6-6 3.5-6 8z" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><b>Jutyar</b></div>
+      <div class="steps"><i class="on"></i><i></i><i></i></div>
+      <h1 data-t="h1">ژمارەی مۆبایلەکەت بنووسە</h1>
+      <p class="lead" data-t="lead1">هیچ وشەی نهێنی و ناو نییە. کێڵگەکانت بە ئەم ژمارەیە دەبەسترێنەوە.</p>
+    </div>
+    <form id="f1" class="field" autocomplete="off">
+      <label for="tel" data-t="tel">ژمارەی مۆبایل</label>
+      <div class="tel"><span class="cc">+964</span><input id="tel" type="tel" inputmode="numeric" placeholder="07XX XXX XXXX" maxlength="13" aria-label="Phone number"></div>
+      <div class="hint" data-t="hint1">کۆدێکی ٦ ژمارەیی بە SMS بۆت دێت</div>
+      <div style="flex:1"></div>
+      <button class="btn" id="b1" type="submit" disabled data-t="send">کۆد بنێرە</button>
+      <div class="note"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5" fill="none" stroke="var(--accent)" stroke-width="1.6"/><path d="M9 8v5M9 5.5v.5" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round"/></svg><span data-t="note1">یەک ژمارە، هەموو کێڵگەکانت. ئەگەر زیاتر لە یەک کێڵگەت هەیە، هەموویان لەسەر هەمان ژمارە دەبن.</span></div>
+    </form>
+  </section>
+
+  <!-- step 2: code -->
+  <section class="screen" id="s2">
+    <div>
+      <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+      <h1 data-t="h2">کۆدەکە بنووسە</h1>
+      <p class="lead"><span data-t="lead2">کۆدێکمان نارد بۆ</span> <b id="sentto" dir="ltr">+964 750 123 4567</b></p>
+    </div>
+    <form id="f2" class="field" autocomplete="off">
+      <div class="otp" id="otp" dir="ltr">
+        <input inputmode="numeric" maxlength="1" aria-label="digit 1"><input inputmode="numeric" maxlength="1" aria-label="digit 2"><input inputmode="numeric" maxlength="1" aria-label="digit 3"><input inputmode="numeric" maxlength="1" aria-label="digit 4"><input inputmode="numeric" maxlength="1" aria-label="digit 5"><input inputmode="numeric" maxlength="1" aria-label="digit 6">
+      </div>
+      <div class="row"><span data-t="noCode">کۆدەکەت پێ نەگەیشت؟</span><button type="button" class="link" id="resend" disabled><span data-t="resend">دووبارە بنێرە</span> <span id="cd">0:59</span></button></div>
+      <div style="flex:1"></div>
+      <button class="btn" id="b2" type="submit" disabled data-t="verify">پشتڕاستکردنەوە</button>
+      <div class="hint" style="text-align:center" data-t="demo">نموونە: هەر کۆدێکی ٦ ژمارەیی کار دەکات</div>
+    </form>
+  </section>
+
+  <!-- step 3: my farms -->
+  <section class="screen" id="s3">
+    <div>
+      <div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+      <h1 data-t="h3">کێڵگەکانت</h1>
+      <p class="lead"><span data-t="lead3">بەستراو بە</span> <b id="mine" dir="ltr">+964 750 123 4567</b></p>
+    </div>
+    <div class="farms" id="farms"></div>
+  </section>
+
+  <div class="foot" data-t="foot">Jutyar · یارمەتیدەری کشتوکاڵی · بە ماهوارە و زانیاری کەشوهەوا</div>
+  <div class="toast" id="toast"></div>
+</div>
+<div class="caption" id="cap">Screen 1 of 3 · phone number → code → my farms. Try: type any 10-digit number, any 6-digit code.</div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const T = {
+    ku: { back:'گەڕانەوە', h1:'ژمارەی مۆبایلەکەت بنووسە', lead1:'هیچ وشەی نهێنی و ناو نییە. کێڵگەکانت بە ئەم ژمارەیە دەبەسترێنەوە.', tel:'ژمارەی مۆبایل', hint1:'کۆدێکی ٦ ژمارەیی بە SMS بۆت دێت', send:'کۆد بنێرە',
+          note1:'یەک ژمارە، هەموو کێڵگەکانت. ئەگەر زیاتر لە یەک کێڵگەت هەیە، هەموویان لەسەر هەمان ژمارە دەبن.', h2:'کۆدەکە بنووسە', lead2:'کۆدێکمان نارد بۆ', noCode:'کۆدەکەت پێ نەگەیشت؟', resend:'دووبارە بنێرە', verify:'پشتڕاستکردنەوە',
+          demo:'نموونە: هەر کۆدێکی ٦ ژمارەیی کار دەکات', h3:'کێڵگەکانت', lead3:'بەستراو بە', foot:'Jutyar · یارمەتیدەری کشتوکاڵی · بە ماهوارە و زانیاری کەشوهەوا',
+          add:'کێڵگەیەکی نوێ زیاد بکە', empty1:'هێشتا کێڵگەت نییە', empty2:'لەسەر نەخشەکە کێڵگەکەت دیاری بکە. ماهوارە باقییەکەی دەکات.', sent:'کۆد نێردرا', welcome:'بەخێربێیت', dunam:'دۆنم', wheat:'گەنم', barley:'جۆ', tomato:'تەماتە', ok:'باش', bare:'هێشتا نەچێنراوە', last:'دوا وێنەی ماهوارە' },
+    en: { back:'Back', h1:'Enter your phone number', lead1:'No password, no name. Your farms are tied to this number.', tel:'Mobile number', hint1:'We send a 6-digit code by SMS', send:'Send code',
+          note1:'One number, all your farms. If you have more than one farm, they all sit under the same number.', h2:'Enter the code', lead2:'We sent a code to', noCode:"Didn't get the code?", resend:'Resend', verify:'Verify',
+          demo:'Demo: any 6-digit code works', h3:'My farms', lead3:'Linked to', foot:'Jutyar · farm advisor · from satellites and weather data',
+          add:'Add a new farm', empty1:'No farms yet', empty2:'Mark your field on the map. The satellite does the rest.', sent:'Code sent', welcome:'Welcome', dunam:'dunam', wheat:'wheat', barley:'barley', tomato:'tomato', ok:'looking good', bare:'not sown yet', last:'last satellite picture' }
+  };
+  let lang = 'ku', step = 1, phone = '';
+  // demo data: a number ending in 0 has no farms (empty state); any other number has 2 farms
+  const demoFarms = () => phone.endsWith('0') ? [] : [
+    { name: lang==='ku' ? 'کێڵگەی سەرەوە' : 'Upper field', area: 120, crop: 'wheat', st: 'bare', last: '2026-10-05' },
+    { name: lang==='ku' ? 'باخچەی تەماتە' : 'Tomato plot', area: 8, crop: 'tomato', st: 'ok', last: '2026-10-05' } ];
+  function applyLang() {
+    const p = $('#phone'); p.dir = lang==='ku' ? 'rtl' : 'ltr'; p.lang = lang==='ku' ? 'ckb' : 'en';
+    p.classList.toggle('ku-f', lang==='ku');
+    document.querySelectorAll('[data-t]').forEach(el => { const k = el.dataset.t; if (T[lang][k]) el.textContent = T[lang][k]; });
+    $('#lg-ku').setAttribute('aria-pressed', lang==='ku'); $('#lg-en').setAttribute('aria-pressed', lang==='en');
+    if (step === 3) renderFarms();
+  }
+  function show(n) { step = n; [1,2,3].forEach(i => $('#s'+i).classList.toggle('on', i===n)); $('#back').classList.toggle('on', n===2);
+    $('#cap').textContent = ['', 'Screen 1 of 3 · phone number → code → my farms. Try: type any 10-digit number, any 6-digit code.', 'Screen 2 of 3 · the code. Any 6 digits work in the demo.', 'Screen 3 of 3 · all farms under this number. A number ending in 0 shows the empty state.'][n]; }
+  const fmt = d => '+964 ' + d.replace(/^0/, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+  function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1800); }
+  // step 1
+  const tel = $('#tel');
+  tel.addEventListener('input', () => { const d = tel.value.replace(/\D/g, '').slice(0, 11); tel.value = d.replace(/(\d{4})(\d{3})?(\d{0,4})?/, (m, a, b, c) => [a, b, c].filter(Boolean).join(' ')); $('#b1').disabled = !(d.length === 10 && d.startsWith('07') || d.length === 11 && d.startsWith('07')); });
+  $('#f1').addEventListener('submit', ev => { ev.preventDefault(); phone = tel.value.replace(/\D/g, ''); $('#sentto').textContent = fmt(phone); $('#mine').textContent = fmt(phone); show(2); startCountdown(); toast(T[lang].sent); setTimeout(() => $('#otp input').focus(), 200); });
+  // step 2
+  const boxes = [...document.querySelectorAll('#otp input')];
+  boxes.forEach((b, i) => { b.addEventListener('input', () => { b.value = b.value.replace(/\D/g, '').slice(-1); if (b.value && i < 5) boxes[i+1].focus(); check(); });
+    b.addEventListener('keydown', e => { if (e.key === 'Backspace' && !b.value && i) boxes[i-1].focus(); });
+    b.addEventListener('paste', e => { const d = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6); if (d) { e.preventDefault(); [...d].forEach((c, j) => boxes[j].value = c); boxes[Math.min(d.length, 5)].focus(); check(); } }); });
+  function check() { const full = boxes.every(b => b.value); $('#b2').disabled = !full; boxes.forEach(b => b.classList.toggle('ok', full)); }
+  let cdT; function startCountdown() { let s = 59; $('#resend').disabled = true; clearInterval(cdT); $('#cd').textContent = '0:59'; cdT = setInterval(() => { s--; $('#cd').textContent = '0:' + String(s).padStart(2, '0'); if (s <= 0) { clearInterval(cdT); $('#resend').disabled = false; $('#cd').textContent = ''; } }, 1000); }
+  $('#resend').addEventListener('click', () => { startCountdown(); toast(T[lang].sent); });
+  $('#f2').addEventListener('submit', ev => { ev.preventDefault(); show(3); renderFarms(); toast(T[lang].welcome); });
+  $('#back').addEventListener('click', () => { show(1); boxes.forEach(b => { b.value = ''; b.classList.remove('ok'); }); $('#b2').disabled = true; });
+  // step 3
+  function renderFarms() {
+    const F = $('#farms'); F.textContent = ''; const t = T[lang]; const farms = demoFarms();
+    if (!farms.length) { const e = document.createElement('div'); e.className = 'empty';
+      e.innerHTML = `<svg viewBox="0 0 72 72" aria-hidden="true"><path d="M8 50l20-12 16 8 20-14v22H8z" fill="var(--soft)" stroke="var(--line)" stroke-width="2" stroke-linejoin="round"/><circle cx="36" cy="30" r="9" fill="var(--accent)" opacity=".9"/><path d="M36 39v10" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/></svg><b>${t.empty1}</b><span>${t.empty2}</span>`; F.append(e); }
+    for (const f of farms) { const b = document.createElement('button'); b.className = 'farm'; b.type = 'button';
+      b.innerHTML = `<div class="pic ${f.st==='bare'?'b':''}"></div><div class="t"><div class="n"></div><div class="m"></div></div><span class="st ${f.st}"></span>`;
+      b.querySelector('.n').textContent = f.name; b.querySelector('.m').textContent = `${f.area} ${t.dunam} · ${t[f.crop]} · ${t.last}: ${f.last}`; b.querySelector('.st').textContent = t[f.st];
+      b.addEventListener('click', () => toast((lang==='ku' ? 'دەچیتە ' : 'Opening ') + f.name)); F.append(b); }
+    const a = document.createElement('button'); a.className = 'add'; a.type = 'button';
+    a.innerHTML = `<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 3v12M3 9h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span></span>`; a.querySelector('span').textContent = t.add;
+    a.addEventListener('click', () => toast(lang==='ku' ? 'شاشەی داهاتوو: کێڵگەکەت لەسەر نەخشە دیاری بکە' : 'Next screen: mark your field on the map')); F.append(a);
+  }
+  $('#lg-ku').onclick = () => { lang = 'ku'; applyLang(); }; $('#lg-en').onclick = () => { lang = 'en'; applyLang(); };
+  applyLang(); show(1);
+})();
+</script>

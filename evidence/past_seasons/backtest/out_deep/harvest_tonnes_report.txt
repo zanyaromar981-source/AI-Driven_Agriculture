@@ -1,0 +1,16 @@
+
+=== mid-April (pictures to Apr 6, ~5 weeks before harvest) ===
+  area           | r     | avg error (LOO) | baseline "average of last 5 years" error | 2024 est | 2025 est | 2026 est
+  Sulaymaniyah   | +0.59 |   94%            |   38%                                    |    709k |    544k |    524k
+  Erbil          | +0.69 |  108%            |   77%                                    |    778k |    297k |    585k
+  Duhok          | +0.48 |   56%            |   31%                                    |    446k |    161k |    391k
+  Kurdistan_Region| +0.68 |   65%            |   30%                                    |   1990k |   1080k |   1510k
+  Kurdistan, year by year (official → satellite estimate, year hidden): 2000: 243k→251k, 2001: 367k→805k, 2002: 569k→800k, 2003: 448k→889k, 2004: 322k→977k, 2005: 374k→953k, 2006: 392k→312k, 2007: 655k→966k, 2008: 216k→-161k, 2009: 559k→635k, 2010: 625k→1600k, 2011: 399k→594k, 2012: 381k→193k, 2013: 1036k→1491k, 2014: 883k→1457k, 2015: 1097k→1937k, 2016: 1687k→1675k, 2017: 1019k→777k, 2018: 1310k→1136k, 2019: 2423k→1693k, 2020: 2907k→1500k, 2021: 1925k→1419k, 2022: 1935k→629k, 2023: 2369k→1457k
+
+=== mid-May (full spring) ===
+  area           | r     | avg error (LOO) | baseline "average of last 5 years" error | 2024 est | 2025 est | 2026 est
+  Sulaymaniyah   | +0.50 |  115%            |   38%                                    |    569k |    388k |    567k
+  Erbil          | +0.75 |  161%            |   77%                                    |    723k |    269k |    855k
+  Duhok          | +0.29 |   71%            |   31%                                    |    363k |    173k |    435k
+  Kurdistan_Region| +0.64 |   84%            |   30%                                    |   1710k |    754k |   1930k
+  Kurdistan, year by year (official → satellite estimate, year hidden): 2000: 243k→315k, 2001: 367k→974k, 2002: 569k→1144k, 2003: 448k→1012k, 2004: 322k→919k, 2005: 374k→847k, 2006: 392k→891k, 2007: 655k→1269k, 2008: 216k→-657k, 2009: 559k→774k, 2010: 625k→1238k, 2011: 399k→814k, 2012: 381k→437k, 2013: 1036k→928k, 2014: 883k→1223k, 2015: 1097k→1458k, 2016: 1687k→1353k, 2017: 1019k→1283k, 2018: 1310k→1051k, 2019: 2423k→1738k, 2020: 2907k→1659k, 2021: 1925k→615k, 2022: 1935k→423k, 2023: 2369k→1782k

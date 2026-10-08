@@ -1,0 +1,254 @@
+[
+ {
+  "season": "1990/1991",
+  "oct_dec_mm": 98,
+  "oct_may_mm": 610,
+  "full_pct_normal": 90,
+  "early_pct_normal": 45
+ },
+ {
+  "season": "1991/1992",
+  "oct_dec_mm": 326,
+  "oct_may_mm": 900,
+  "full_pct_normal": 134,
+  "early_pct_normal": 150
+ },
+ {
+  "season": "1992/1993",
+  "oct_dec_mm": 334,
+  "oct_may_mm": 1004,
+  "full_pct_normal": 149,
+  "early_pct_normal": 154
+ },
+ {
+  "season": "1993/1994",
+  "oct_dec_mm": 304,
+  "oct_may_mm": 796,
+  "full_pct_normal": 118,
+  "early_pct_normal": 140
+ },
+ {
+  "season": "1994/1995",
+  "oct_dec_mm": 462,
+  "oct_may_mm": 928,
+  "full_pct_normal": 138,
+  "early_pct_normal": 213
+ },
+ {
+  "season": "1995/1996",
+  "oct_dec_mm": 60,
+  "oct_may_mm": 644,
+  "full_pct_normal": 96,
+  "early_pct_normal": 28
+ },
+ {
+  "season": "1996/1997",
+  "oct_dec_mm": 125,
+  "oct_may_mm": 555,
+  "full_pct_normal": 82,
+  "early_pct_normal": 58
+ },
+ {
+  "season": "1997/1998",
+  "oct_dec_mm": 285,
+  "oct_may_mm": 869,
+  "full_pct_normal": 129,
+  "early_pct_normal": 132
+ },
+ {
+  "season": "1998/1999",
+  "oct_dec_mm": 25,
+  "oct_may_mm": 318,
+  "full_pct_normal": 47,
+  "early_pct_normal": 11
+ },
+ {
+  "season": "1999/2000",
+  "oct_dec_mm": 97,
+  "oct_may_mm": 402,
+  "full_pct_normal": 60,
+  "early_pct_normal": 45
+ },
+ {
+  "season": "2000/2001",
+  "oct_dec_mm": 177,
+  "oct_may_mm": 497,
+  "full_pct_normal": 74,
+  "early_pct_normal": 81
+ },
+ {
+  "season": "2001/2002",
+  "oct_dec_mm": 209,
+  "oct_may_mm": 750,
+  "full_pct_normal": 111,
+  "early_pct_normal": 96
+ },
+ {
+  "season": "2002/2003",
+  "oct_dec_mm": 291,
+  "oct_may_mm": 759,
+  "full_pct_normal": 113,
+  "early_pct_normal": 134
+ },
+ {
+  "season": "2003/2004",
+  "oct_dec_mm": 249,
+  "oct_may_mm": 804,
+  "full_pct_normal": 119,
+  "early_pct_normal": 115
+ },
+ {
+  "season": "2004/2005",
+  "oct_dec_mm": 210,
+  "oct_may_mm": 681,
+  "full_pct_normal": 101,
+  "early_pct_normal": 97
+ },
+ {
+  "season": "2005/2006",
+  "oct_dec_mm": 121,
+  "oct_may_mm": 775,
+  "full_pct_normal": 115,
+  "early_pct_normal": 56
+ },
+ {
+  "season": "2006/2007",
+  "oct_dec_mm": 258,
+  "oct_may_mm": 689,
+  "full_pct_normal": 102,
+  "early_pct_normal": 119
+ },
+ {
+  "season": "2007/2008",
+  "oct_dec_mm": 85,
+  "oct_may_mm": 304,
+  "full_pct_normal": 45,
+  "early_pct_normal": 39
+ },
+ {
+  "season": "2008/2009",
+  "oct_dec_mm": 121,
+  "oct_may_mm": 416,
+  "full_pct_normal": 62,
+  "early_pct_normal": 56
+ },
+ {
+  "season": "2009/2010",
+  "oct_dec_mm": 342,
+  "oct_may_mm": 830,
+  "full_pct_normal": 123,
+  "early_pct_normal": 158
+ },
+ {
+  "season": "2010/2011",
+  "oct_dec_mm": 83,
+  "oct_may_mm": 626,
+  "full_pct_normal": 93,
+  "early_pct_normal": 38
+ },
+ {
+  "season": "2011/2012",
+  "oct_dec_mm": 144,
+  "oct_may_mm": 527,
+  "full_pct_normal": 78,
+  "early_pct_normal": 66
+ },
+ {
+  "season": "2012/2013",
+  "oct_dec_mm": 234,
+  "oct_may_mm": 632,
+  "full_pct_normal": 94,
+  "early_pct_normal": 108
+ },
+ {
+  "season": "2013/2014",
+  "oct_dec_mm": 228,
+  "oct_may_mm": 534,
+  "full_pct_normal": 79,
+  "early_pct_normal": 105
+ },
+ {
+  "season": "2014/2015",
+  "oct_dec_mm": 336,
+  "oct_may_mm": 671,
+  "full_pct_normal": 100,
+  "early_pct_normal": 155
+ },
+ {
+  "season": "2015/2016",
+  "oct_dec_mm": 435,
+  "oct_may_mm": 959,
+  "full_pct_normal": 142,
+  "early_pct_normal": 201
+ },
+ {
+  "season": "2016/2017",
+  "oct_dec_mm": 195,
+  "oct_may_mm": 514,
+  "full_pct_normal": 76,
+  "early_pct_normal": 90
+ },
+ {
+  "season": "2017/2018",
+  "oct_dec_mm": 141,
+  "oct_may_mm": 607,
+  "full_pct_normal": 90,
+  "early_pct_normal": 65
+ },
+ {
+  "season": "2018/2019",
+  "oct_dec_mm": 388,
+  "oct_may_mm": 1014,
+  "full_pct_normal": 150,
+  "early_pct_normal": 179
+ },
+ {
+  "season": "2019/2020",
+  "oct_dec_mm": 143,
+  "oct_may_mm": 601,
+  "full_pct_normal": 89,
+  "early_pct_normal": 66
+ },
+ {
+  "season": "2020/2021",
+  "oct_dec_mm": 140,
+  "oct_may_mm": 321,
+  "full_pct_normal": 48,
+  "early_pct_normal": 65
+ },
+ {
+  "season": "2021/2022",
+  "oct_dec_mm": 163,
+  "oct_may_mm": 491,
+  "full_pct_normal": 73,
+  "early_pct_normal": 75
+ },
+ {
+  "season": "2022/2023",
+  "oct_dec_mm": 160,
+  "oct_may_mm": 665,
+  "full_pct_normal": 99,
+  "early_pct_normal": 74
+ },
+ {
+  "season": "2023/2024",
+  "oct_dec_mm": 196,
+  "oct_may_mm": 744,
+  "full_pct_normal": 110,
+  "early_pct_normal": 90
+ },
+ {
+  "season": "2024/2025",
+  "oct_dec_mm": 157,
+  "oct_may_mm": 381,
+  "full_pct_normal": 57,
+  "early_pct_normal": 72
+ },
+ {
+  "season": "2025/2026",
+  "oct_dec_mm": 280,
+  "oct_may_mm": 1043,
+  "full_pct_normal": 155,
+  "early_pct_normal": 129
+ }
+]

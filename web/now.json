@@ -1,0 +1,2278 @@
+{
+ "date": "2026-10-08",
+ "built_at": "2026-10-08T15:02:35",
+ "zones": [
+  {
+   "zone": "Slemani",
+   "ku": "سلێمانی",
+   "area": "Slemani",
+   "lon": 45.52,
+   "lat": 35.44,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 45.52,
+    "lat": 35.44,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-24",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.102,
+    "greenness_normal": 0.11,
+    "history": [
+     [
+      2025,
+      0.093
+     ],
+     [
+      2024,
+      0.124
+     ],
+     [
+      2023,
+      0.114
+     ]
+    ],
+    "pct_of_own_normal": 92,
+    "greenness_neighbours": 0.118,
+    "pct_of_neighbours": 86,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 11.9
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 45.52,
+    "lat": 35.44,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 10,
+    "rain_by_day_mm": [
+     0,
+     0,
+     0.1,
+     0.4,
+     2.1,
+     0.3,
+     0,
+     0,
+     0.2,
+     6.8
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.232,
+    "soil": "moist",
+    "et0_mm_per_day": 3.1,
+    "sunn_pest_degree_days": 2398,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 134,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 4.1
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Slemani",
+    "area": "Slemani",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Garmiyan",
+   "ku": "گەرمیان",
+   "area": "Garmiyan",
+   "lon": 45.26,
+   "lat": 34.58,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 45.26,
+    "lat": 34.58,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-21",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.14,
+    "greenness_normal": 0.127,
+    "history": [
+     [
+      2025,
+      0.13
+     ],
+     [
+      2024,
+      0.136
+     ],
+     [
+      2023,
+      0.114
+     ]
+    ],
+    "pct_of_own_normal": 110,
+    "greenness_neighbours": 0.163,
+    "pct_of_neighbours": 86,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 12.1
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 45.26,
+    "lat": 34.58,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 6,
+    "rain_by_day_mm": [
+     0,
+     0,
+     0.3,
+     0.1,
+     0,
+     0,
+     0,
+     0,
+     1.6,
+     3.8
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [
+     [
+      "2026-10-08",
+      36.7
+     ],
+     [
+      "2026-10-09",
+      35.6
+     ],
+     [
+      "2026-10-10",
+      35.2
+     ],
+     [
+      "2026-10-11",
+      35.4
+     ],
+     [
+      "2026-10-12",
+      33.1
+     ],
+     [
+      "2026-10-14",
+      34.8
+     ],
+     [
+      "2026-10-15",
+      36.4
+     ],
+     [
+      "2026-10-16",
+      38.4
+     ]
+    ],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.091,
+    "soil": "dry",
+    "et0_mm_per_day": 5.2,
+    "sunn_pest_degree_days": 3360,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 195,
+    "dust_alert": true,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow",
+     "DUST: PM10 up to 195; delay spraying and harvest, shelter animals"
+    ],
+    "_seconds": 4.4
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Garmiyan",
+    "area": "Garmiyan",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Chamchamal",
+   "ku": "چەمچەماڵ",
+   "area": "Slemani",
+   "lon": 44.78,
+   "lat": 35.5,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 44.78,
+    "lat": 35.5,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-22",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.183,
+    "greenness_normal": 0.193,
+    "history": [
+     [
+      2025,
+      0.174
+     ],
+     [
+      2024,
+      0.216
+     ],
+     [
+      2023,
+      0.189
+     ]
+    ],
+    "pct_of_own_normal": 95,
+    "greenness_neighbours": 0.133,
+    "pct_of_neighbours": 138,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 12.2
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 44.78,
+    "lat": 35.5,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 22,
+    "rain_by_day_mm": [
+     0,
+     0.2,
+     0.3,
+     0.2,
+     6.0,
+     0.3,
+     0.3,
+     0,
+     6.2,
+     8.8
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.088,
+    "soil": "dry",
+    "et0_mm_per_day": 3.7,
+    "sunn_pest_degree_days": 2510,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 130,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 4.7
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Chamchamal",
+    "area": "Slemani",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Bazian",
+   "ku": "بازیان",
+   "area": "Slemani",
+   "lon": 45.05,
+   "lat": 35.6,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 45.05,
+    "lat": 35.6,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-27",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.158,
+    "greenness_normal": 0.151,
+    "history": [
+     [
+      2025,
+      0.128
+     ],
+     [
+      2024,
+      0.166
+     ],
+     [
+      2023,
+      0.16
+     ]
+    ],
+    "pct_of_own_normal": 104,
+    "greenness_neighbours": 0.162,
+    "pct_of_neighbours": 97,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 13.3
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 45.05,
+    "lat": 35.6,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 20,
+    "rain_by_day_mm": [
+     0,
+     0,
+     0.7,
+     0.5,
+     6.0,
+     0.9,
+     0,
+     0.6,
+     1.6,
+     10.0
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.109,
+    "soil": "dry",
+    "et0_mm_per_day": 3.4,
+    "sunn_pest_degree_days": 2354,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 140,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 3.8
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Bazian",
+    "area": "Slemani",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Ranya",
+   "ku": "ڕانیە",
+   "area": "Slemani",
+   "lon": 44.95,
+   "lat": 36.2,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 44.95,
+    "lat": 36.2,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-24",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 0.99,
+    "greenness_now": -0.257,
+    "greenness_normal": -0.02,
+    "history": [
+     [
+      2025,
+      0.08
+     ],
+     [
+      2024,
+      -0.213
+     ],
+     [
+      2023,
+      0.073
+     ]
+    ],
+    "pct_of_own_normal": -513,
+    "greenness_neighbours": -0.112,
+    "pct_of_neighbours": -513,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 12.0
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 44.95,
+    "lat": 36.2,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 13,
+    "rain_by_day_mm": [
+     0.2,
+     2.5,
+     0.1,
+     0.1,
+     1.5,
+     0.6,
+     0,
+     0,
+     1.4,
+     6.4
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [
+     [
+      "2026-10-08",
+      31.3
+     ]
+    ],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.125,
+    "soil": "dry",
+    "et0_mm_per_day": 3.0,
+    "sunn_pest_degree_days": 2772,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 87,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 4.8
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Ranya",
+    "area": "Slemani",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Penjwen",
+   "ku": "پێنجوێن",
+   "area": "Slemani",
+   "lon": 45.85,
+   "lat": 35.62,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 45.85,
+    "lat": 35.62,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-24",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.285,
+    "greenness_normal": 0.28,
+    "history": [
+     [
+      2025,
+      0.244
+     ],
+     [
+      2024,
+      0.315
+     ],
+     [
+      2023,
+      0.282
+     ]
+    ],
+    "pct_of_own_normal": 102,
+    "greenness_neighbours": 0.26,
+    "pct_of_neighbours": 109,
+    "weak_share_pct": 18,
+    "weak_where": "middle-centre",
+    "surface": "sparse crop",
+    "_seconds": 10.7
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 45.85,
+    "lat": 35.62,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 20,
+    "rain_by_day_mm": [
+     0.3,
+     0.2,
+     1.2,
+     0.5,
+     7.8,
+     0,
+     0,
+     1.2,
+     0.2,
+     8.4
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 25,
+    "rust_weather": "high",
+    "spray_windows": [
+     "2026-10-08",
+     "2026-10-12",
+     "2026-10-13",
+     "2026-10-14",
+     "2026-10-16"
+    ],
+    "soil_moisture_now": 0.362,
+    "soil": "wet",
+    "et0_mm_per_day": 2.6,
+    "sunn_pest_degree_days": 1464,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 135,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow",
+     "SPRAY: safe days 2026-10-08, 2026-10-12, 2026-10-13, 2026-10-14, 2026-10-16",
+     "RUST: high rust weather (25 cool wet hours); check leaves"
+    ],
+    "_seconds": 3.9
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Penjwen",
+    "area": "Slemani",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Sharazur",
+   "ku": "شارەزوور",
+   "area": "Halabja",
+   "lon": 45.8,
+   "lat": 35.32,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 45.8,
+    "lat": 35.32,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-24",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.246,
+    "greenness_normal": 0.197,
+    "history": [
+     [
+      2025,
+      0.149
+     ],
+     [
+      2024,
+      0.239
+     ],
+     [
+      2023,
+      0.203
+     ]
+    ],
+    "pct_of_own_normal": 125,
+    "greenness_neighbours": 0.241,
+    "pct_of_neighbours": 102,
+    "weak_share_pct": 30,
+    "weak_where": "north-centre",
+    "surface": "sparse crop",
+    "_seconds": 10.8
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 45.8,
+    "lat": 35.32,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 5,
+    "rain_by_day_mm": [
+     0,
+     0,
+     0,
+     0.4,
+     0,
+     0.1,
+     0,
+     0,
+     0,
+     4.4
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [
+     [
+      "2026-10-08",
+      31.7
+     ],
+     [
+      "2026-10-09",
+      31.3
+     ],
+     [
+      "2026-10-15",
+      32.1
+     ],
+     [
+      "2026-10-16",
+      33.1
+     ]
+    ],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.228,
+    "soil": "moist",
+    "et0_mm_per_day": 3.0,
+    "sunn_pest_degree_days": 2731,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 145,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 4.0
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Sharazur",
+    "area": "Halabja",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Qaradagh",
+   "ku": "قەرەداغ",
+   "area": "Slemani",
+   "lon": 45.4,
+   "lat": 35.3,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 45.4,
+    "lat": 35.3,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-24",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.153,
+    "greenness_normal": 0.145,
+    "history": [
+     [
+      2025,
+      0.125
+     ],
+     [
+      2024,
+      0.158
+     ],
+     [
+      2023,
+      0.151
+     ]
+    ],
+    "pct_of_own_normal": 106,
+    "greenness_neighbours": 0.171,
+    "pct_of_neighbours": 89,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 10.9
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 45.4,
+    "lat": 35.3,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 12,
+    "rain_by_day_mm": [
+     0,
+     0,
+     0.1,
+     0.1,
+     0.9,
+     1.1,
+     0,
+     0,
+     1.0,
+     9.0
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [
+     "2026-10-12"
+    ],
+    "soil_moisture_now": 0.203,
+    "soil": "moist",
+    "et0_mm_per_day": 2.9,
+    "sunn_pest_degree_days": 2273,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 135,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow",
+     "SPRAY: safe days 2026-10-12"
+    ],
+    "_seconds": 4.4
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Qaradagh",
+    "area": "Slemani",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Erbil",
+   "ku": "هەولێر",
+   "area": "Erbil",
+   "lon": 43.9,
+   "lat": 36.1,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 43.9,
+    "lat": 36.1,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-24",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.331,
+    "greenness_normal": 0.289,
+    "history": [
+     [
+      2025,
+      0.32
+     ],
+     [
+      2024,
+      0.276
+     ],
+     [
+      2023,
+      0.271
+     ]
+    ],
+    "pct_of_own_normal": 115,
+    "greenness_neighbours": 0.237,
+    "pct_of_neighbours": 140,
+    "weak_share_pct": 28,
+    "weak_where": "middle-centre",
+    "surface": "sparse crop",
+    "_seconds": 12.1
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 43.9,
+    "lat": 36.1,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 8,
+    "rain_by_day_mm": [
+     0.3,
+     0.1,
+     0.1,
+     0.3,
+     1.3,
+     0.8,
+     0.3,
+     0.1,
+     4.8,
+     0
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [
+     [
+      "2026-10-08",
+      31.8
+     ],
+     [
+      "2026-10-11",
+      32.2
+     ],
+     [
+      "2026-10-14",
+      31.5
+     ]
+    ],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.16,
+    "soil": "moist",
+    "et0_mm_per_day": 3.9,
+    "sunn_pest_degree_days": 2896,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 109,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 2.9
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Erbil",
+    "area": "Erbil",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Duhok",
+   "ku": "دهۆک",
+   "area": "Duhok",
+   "lon": 42.8,
+   "lat": 36.84,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 42.8,
+    "lat": 36.84,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-27",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.12,
+    "greenness_normal": 0.119,
+    "history": [
+     [
+      2025,
+      0.096
+     ],
+     [
+      2024,
+      0.143
+     ],
+     [
+      2023,
+      0.119
+     ]
+    ],
+    "pct_of_own_normal": 100,
+    "greenness_neighbours": 0.15,
+    "pct_of_neighbours": 80,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 13.1
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 42.8,
+    "lat": 36.84,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 26,
+    "rain_by_day_mm": [
+     0,
+     0,
+     0,
+     0,
+     7.1,
+     0.8,
+     0.3,
+     0.6,
+     17.4,
+     0
+    ],
+    "first_day_with_12mm": [
+     "2026-10-16",
+     17
+    ],
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.298,
+    "soil": "moist",
+    "et0_mm_per_day": 3.1,
+    "sunn_pest_degree_days": 2675,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 112,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 3.1
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Duhok",
+    "area": "Duhok",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Zakho",
+   "ku": "زاخۆ",
+   "area": "Duhok",
+   "lon": 42.6,
+   "lat": 37.1,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 42.6,
+    "lat": 37.1,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-24",
+    "picture_cloud_pct": 0.01,
+    "clear_share": 0.87,
+    "greenness_now": 0.256,
+    "greenness_normal": 0.22,
+    "history": [
+     [
+      2025,
+      0.197
+     ],
+     [
+      2024,
+      0.249
+     ],
+     [
+      2023,
+      0.213
+     ]
+    ],
+    "pct_of_own_normal": 117,
+    "greenness_neighbours": 0.227,
+    "pct_of_neighbours": 113,
+    "weak_share_pct": 19,
+    "weak_where": "north-east",
+    "surface": "sparse crop",
+    "_seconds": 11.9
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 42.6,
+    "lat": 37.1,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 28,
+    "rain_by_day_mm": [
+     0,
+     0,
+     0,
+     0.1,
+     13.7,
+     1.3,
+     0,
+     1.2,
+     10.8,
+     0.6
+    ],
+    "first_day_with_12mm": [
+     "2026-10-12",
+     14
+    ],
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.266,
+    "soil": "moist",
+    "et0_mm_per_day": 3.1,
+    "sunn_pest_degree_days": 2207,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 93,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 3.2
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Zakho",
+    "area": "Duhok",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Soran",
+   "ku": "سۆران",
+   "area": "Erbil",
+   "lon": 44.52,
+   "lat": 36.62,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 44.52,
+    "lat": 36.62,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-24",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 0.9,
+    "greenness_now": 0.161,
+    "greenness_normal": 0.155,
+    "history": [
+     [
+      2025,
+      0.138
+     ],
+     [
+      2024,
+      0.171
+     ],
+     [
+      2023,
+      0.155
+     ]
+    ],
+    "pct_of_own_normal": 104,
+    "greenness_neighbours": 0.186,
+    "pct_of_neighbours": 86,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 10.9
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 44.52,
+    "lat": 36.62,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 20,
+    "rain_by_day_mm": [
+     0.1,
+     0,
+     0,
+     0,
+     1.5,
+     1.2,
+     0.2,
+     1.4,
+     12.0,
+     3.6
+    ],
+    "first_day_with_12mm": [
+     "2026-10-16",
+     12
+    ],
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 2,
+    "rust_weather": "low",
+    "spray_windows": [
+     "2026-10-12"
+    ],
+    "soil_moisture_now": 0.138,
+    "soil": "dry",
+    "et0_mm_per_day": 2.8,
+    "sunn_pest_degree_days": 2341,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 78,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow",
+     "SPRAY: safe days 2026-10-12"
+    ],
+    "_seconds": 3.2
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Soran",
+    "area": "Erbil",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Koya",
+   "ku": "کۆیە",
+   "area": "Erbil",
+   "lon": 44.6,
+   "lat": 36.03,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 44.6,
+    "lat": 36.03,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-22",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.109,
+    "greenness_normal": 0.106,
+    "history": [
+     [
+      2025,
+      0.087
+     ],
+     [
+      2024,
+      0.123
+     ],
+     [
+      2023,
+      0.108
+     ]
+    ],
+    "pct_of_own_normal": 102,
+    "greenness_neighbours": 0.112,
+    "pct_of_neighbours": 96,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 10.9
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 44.6,
+    "lat": 36.03,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 10,
+    "rain_by_day_mm": [
+     2.4,
+     0.2,
+     0.2,
+     0.2,
+     1.5,
+     0.8,
+     0.3,
+     0.9,
+     1.8,
+     1.8
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [
+     [
+      "2026-10-08",
+      32.1
+     ]
+    ],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.081,
+    "soil": "dry",
+    "et0_mm_per_day": 3.8,
+    "sunn_pest_degree_days": 2549,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 101,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 2.8
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Koya",
+    "area": "Erbil",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 1,
+    "by_type": {
+     "stubble fire nearby": 1
+    },
+    "closest": [
+     {
+      "type": "stubble fire nearby",
+      "crop": "wheat",
+      "km": 2.1,
+      "days_ago": 3
+     }
+    ],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Halabja",
+   "ku": "هەڵەبجە",
+   "area": "Halabja",
+   "lon": 45.92,
+   "lat": 35.22,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 45.92,
+    "lat": 35.22,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-21",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.156,
+    "greenness_normal": 0.153,
+    "history": [
+     [
+      2025,
+      0.157
+     ],
+     [
+      2024,
+      0.139
+     ],
+     [
+      2023,
+      0.164
+     ]
+    ],
+    "pct_of_own_normal": 102,
+    "greenness_neighbours": 0.17,
+    "pct_of_neighbours": 92,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 11.1
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 45.92,
+    "lat": 35.22,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 7,
+    "rain_by_day_mm": [
+     1.0,
+     0.1,
+     0,
+     0.3,
+     0.3,
+     0.1,
+     0,
+     0,
+     0.6,
+     4.4
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [
+     [
+      "2026-10-08",
+      31.8
+     ],
+     [
+      "2026-10-09",
+      31.0
+     ],
+     [
+      "2026-10-16",
+      32.4
+     ]
+    ],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.148,
+    "soil": "dry",
+    "et0_mm_per_day": 3.3,
+    "sunn_pest_degree_days": 2600,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 145,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 2.9
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Halabja",
+    "area": "Halabja",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Akre",
+   "ku": "ئاکرێ",
+   "area": "Duhok",
+   "lon": 43.85,
+   "lat": 36.68,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 43.85,
+    "lat": 36.68,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-22",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.134,
+    "greenness_normal": 0.144,
+    "history": [
+     [
+      2025,
+      0.118
+     ],
+     [
+      2024,
+      0.168
+     ],
+     [
+      2023,
+      0.146
+     ]
+    ],
+    "pct_of_own_normal": 93,
+    "greenness_neighbours": 0.146,
+    "pct_of_neighbours": 92,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 11.0
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 43.85,
+    "lat": 36.68,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 21,
+    "rain_by_day_mm": [
+     0.5,
+     0.1,
+     0,
+     0.4,
+     3.0,
+     1.9,
+     0.5,
+     0.7,
+     12.6,
+     1.2
+    ],
+    "first_day_with_12mm": [
+     "2026-10-16",
+     13
+    ],
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [],
+    "rust_weather_hours": 1,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.13,
+    "soil": "dry",
+    "et0_mm_per_day": 3.4,
+    "sunn_pest_degree_days": 2558,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 82,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 2.8
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Akre",
+    "area": "Duhok",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  },
+  {
+   "zone": "Makhmour",
+   "ku": "مەخموور",
+   "area": "Erbil",
+   "lon": 43.65,
+   "lat": 35.78,
+   "field_eye": {
+    "ai": "field_eye",
+    "lon": 43.65,
+    "lat": 35.78,
+    "date": "2026-10-08",
+    "field_km2": 4.0,
+    "picture_date": "2026-09-27",
+    "picture_cloud_pct": 0.0,
+    "clear_share": 1.0,
+    "greenness_now": 0.102,
+    "greenness_normal": 0.085,
+    "history": [
+     [
+      2025,
+      0.075
+     ],
+     [
+      2024,
+      0.095
+     ],
+     [
+      2023,
+      0.085
+     ]
+    ],
+    "pct_of_own_normal": 120,
+    "greenness_neighbours": 0.106,
+    "pct_of_neighbours": 96,
+    "weak_share_pct": 0,
+    "surface": "bare soil or stubble",
+    "_seconds": 10.3
+   },
+   "weather": {
+    "ai": "weather_planner",
+    "source": "Open-Meteo forecast (ECMWF/GraphCast family)",
+    "lon": 43.65,
+    "lat": 35.78,
+    "from_date": "2026-10-08",
+    "days": 10,
+    "rain_next_10_days_mm": 8,
+    "rain_by_day_mm": [
+     0,
+     0.4,
+     0.3,
+     0.2,
+     0.6,
+     1.0,
+     0.3,
+     0,
+     5.4,
+     0
+    ],
+    "first_day_with_12mm": null,
+    "sowing_rain_window": null,
+    "frost_nights": [],
+    "hard_frost_nights": [],
+    "heat_days_over_31": [
+     [
+      "2026-10-08",
+      31.4
+     ],
+     [
+      "2026-10-11",
+      32.3
+     ]
+    ],
+    "rust_weather_hours": 0,
+    "rust_weather": "low",
+    "spray_windows": [],
+    "soil_moisture_now": 0.094,
+    "soil": "dry",
+    "et0_mm_per_day": 4.1,
+    "sunn_pest_degree_days": 2994,
+    "sunn_pest_stage": "past the spray window",
+    "dust_pm10_max_5_days": 138,
+    "dust_alert": false,
+    "rivers": {
+     "Greater Zab": {
+      "now_m3s": 174,
+      "max_10_days_m3s": 179
+     },
+     "Little Zab below Dukan": {
+      "now_m3s": 26,
+      "max_10_days_m3s": 26
+     },
+     "Sirwan below Darbandikhan": {
+      "now_m3s": 41,
+      "max_10_days_m3s": 41
+     }
+    },
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "_seconds": 2.9
+   },
+   "season": {
+    "ai": "season_check",
+    "season": "2026/27",
+    "zone": "Makhmour",
+    "area": "Erbil",
+    "date": "2026-10-08",
+    "days_into_season": 7,
+    "too_early": true,
+    "label": "too early to judge the season",
+    "reliability": "none before December; drought caught 4/10 by 31 Jan, 6/10 by 28 Feb, 9/10 by 31 Mar (36 winters, 1-2 false alarms)",
+    "el_nino_index_jul_sep": 2.16,
+    "pre_season_note": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal",
+    "_seconds": 0.0
+   },
+   "neighbours": {
+    "ai": "neighbour_watch",
+    "reports_nearby": 0,
+    "by_type": {},
+    "closest": [],
+    "test_data": true,
+    "radius_km": 20,
+    "days": 14,
+    "_seconds": 0.0
+   }
+  }
+ ],
+ "dams": {
+  "ai": "dam_watch",
+  "Dukan": {
+   "date": "2026-09-27",
+   "km2": 249,
+   "pct_of_full": 92
+  },
+  "Darbandikhan": {
+   "date": "2026-09-21",
+   "km2": 70,
+   "pct_of_full": 62
+  },
+  "_seconds": 0.0
+ },
+ "summary": {
+  "date": "2026-10-08",
+  "zones": [
+   {
+    "zone": "Slemani",
+    "area": "Slemani",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 92,
+    "rain_10d_mm": 10,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Garmiyan",
+    "area": "Garmiyan",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 110,
+    "rain_10d_mm": 6,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow",
+     "DUST: PM10 up to 195; delay spraying and harvest, shelter animals"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Chamchamal",
+    "area": "Slemani",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 95,
+    "rain_10d_mm": 22,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Bazian",
+    "area": "Slemani",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 104,
+    "rain_10d_mm": 20,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Ranya",
+    "area": "Slemani",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": -513,
+    "rain_10d_mm": 13,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Penjwen",
+    "area": "Slemani",
+    "surface": "sparse crop",
+    "greenness_pct_of_normal": 102,
+    "rain_10d_mm": 20,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow",
+     "SPRAY: safe days 2026-10-08, 2026-10-12, 2026-10-13, 2026-10-14, 2026-10-16",
+     "RUST: high rust weather (25 cool wet hours); check leaves"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Sharazur",
+    "area": "Halabja",
+    "surface": "sparse crop",
+    "greenness_pct_of_normal": 125,
+    "rain_10d_mm": 5,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Qaradagh",
+    "area": "Slemani",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 106,
+    "rain_10d_mm": 12,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow",
+     "SPRAY: safe days 2026-10-12"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Erbil",
+    "area": "Erbil",
+    "surface": "sparse crop",
+    "greenness_pct_of_normal": 115,
+    "rain_10d_mm": 8,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Duhok",
+    "area": "Duhok",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 100,
+    "rain_10d_mm": 26,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Zakho",
+    "area": "Duhok",
+    "surface": "sparse crop",
+    "greenness_pct_of_normal": 117,
+    "rain_10d_mm": 28,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Soran",
+    "area": "Erbil",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 104,
+    "rain_10d_mm": 20,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow",
+     "SPRAY: safe days 2026-10-12"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Koya",
+    "area": "Erbil",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 102,
+    "rain_10d_mm": 10,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 1
+   },
+   {
+    "zone": "Halabja",
+    "area": "Halabja",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 102,
+    "rain_10d_mm": 7,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Akre",
+    "area": "Duhok",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 93,
+    "rain_10d_mm": 21,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   },
+   {
+    "zone": "Makhmour",
+    "area": "Erbil",
+    "surface": "bare soil or stubble",
+    "greenness_pct_of_normal": 120,
+    "rain_10d_mm": 8,
+    "decisions": [
+     "SOW: no sowing rain (20 mm) in the next 10 days; wait, do not dry-sow"
+    ],
+    "season_label": "too early to judge the season",
+    "rain_since_oct_pct": null,
+    "reports_nearby": 0
+   }
+  ],
+  "dams": {
+   "ai": "dam_watch",
+   "Dukan": {
+    "date": "2026-09-27",
+    "km2": 249,
+    "pct_of_full": 92
+   },
+   "Darbandikhan": {
+    "date": "2026-09-21",
+    "km2": 70,
+    "pct_of_full": 62
+   },
+   "_seconds": 0.0
+  },
+  "rivers": {
+   "Greater Zab": {
+    "now_m3s": 174,
+    "max_10_days_m3s": 179
+   },
+   "Little Zab below Dukan": {
+    "now_m3s": 26,
+    "max_10_days_m3s": 26
+   },
+   "Sirwan below Darbandikhan": {
+    "now_m3s": 41,
+    "max_10_days_m3s": 41
+   }
+  },
+  "dust_pm10_max": 195,
+  "el_nino": "El Nino: in 35 years no El Nino winter was a drought (7/7); worst case normal"
+ },
+ "brief": {
+  "error": "no API key: put ANTHROPIC_API_KEY=... in farm_doctor/.env"
+ }
+}

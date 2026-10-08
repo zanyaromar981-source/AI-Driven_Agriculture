@@ -1,0 +1,71 @@
+1. Is the Random Forest (tree AI) gain stable across random seeds?  AUC per seed
+   Pre: LR+ElNiño 0.71 | RF(+ElNiño) 0.51 0.51 0.51 | RF(all) 0.69 0.69 0.69
+   Dec: LR+ElNiño 0.77 | RF(+ElNiño) 0.73 0.72 0.73 | RF(all) 0.74 0.73 0.73
+   Jan: LR+ElNiño 0.76 | RF(+ElNiño) 0.75 0.76 0.76 | RF(all) 0.78 0.77 0.77
+   Feb: LR+ElNiño 0.78 | RF(+ElNiño) 0.80 0.80 0.80 | RF(all) 0.80 0.80 0.80
+   Mar: LR+ElNiño 0.84 | RF(+ElNiño) 0.83 0.83 0.83 | RF(all) 0.83 0.83 0.83
+
+2. Final candidates (LR = simple, explainable; Team = average of LR+ElNiño and RF(all) seed-averaged)
+   Pre  LR+ElNiño    AUC 0.71  catch@15%FA  35%  Brier +0.09
+   Pre  RF(all) avg  AUC 0.69  catch@15%FA  34%  Brier -0.00
+   Pre  Team         AUC 0.72  catch@15%FA  46%  Brier +0.07
+   Dec  LR+ElNiño    AUC 0.77  catch@15%FA  42%  Brier +0.18  beats current model in 68% of reshuffles
+   Dec  RF(all) avg  AUC 0.73  catch@15%FA  40%  Brier +0.10  beats current model in 21% of reshuffles
+   Dec  Team         AUC 0.76  catch@15%FA  41%  Brier +0.15  beats current model in 38% of reshuffles
+   Jan  LR+ElNiño    AUC 0.76  catch@15%FA  42%  Brier +0.16  beats current model in 93% of reshuffles
+   Jan  RF(all) avg  AUC 0.78  catch@15%FA  58%  Brier +0.19  beats current model in 90% of reshuffles
+   Jan  Team         AUC 0.79  catch@15%FA  54%  Brier +0.19  beats current model in 98% of reshuffles
+   Feb  LR+ElNiño    AUC 0.78  catch@15%FA  49%  Brier +0.19  beats current model in 90% of reshuffles
+   Feb  RF(all) avg  AUC 0.80  catch@15%FA  62%  Brier +0.25  beats current model in 85% of reshuffles
+   Feb  Team         AUC 0.81  catch@15%FA  60%  Brier +0.24  beats current model in 98% of reshuffles
+   Mar  LR+ElNiño    AUC 0.84  catch@15%FA  59%  Brier +0.31  beats current model in 43% of reshuffles
+   Mar  RF(all) avg  AUC 0.83  catch@15%FA  61%  Brier +0.31  beats current model in 24% of reshuffles
+   Mar  Team         AUC 0.85  catch@15%FA  61%  Brier +0.32  beats current model in 57% of reshuffles
+
+3. Plain numbers for LR+ElNiño with FIXED thresholds (what the product would really do; no hindsight)
+   month  | sensitive (≥35% risk): caught / false alarms | cautious (≥50%): caught / false alarms / right overall | "always normal" right
+   Pre    |  32% /   9%                              |   6% /   3% /  73%                    |  73%
+   Dec    |  67% /  22%                              |  29% /   9% /  75%                    |  73%
+   Jan    |  61% /  26%                              |  24% /   6% /  75%                    |  73%
+   Feb    |  62% /  25%                              |  29% /   8% /  75%                    |  73%
+   Mar    |  64% /  19%                              |  46% /   7% /  80%                    |  73%
+
+4. Irrigated fields in the Erbil + Makhmour boxes: does removing them help? (LR+ElNiño, AUC)
+   Pre: 16 zones 0.71 | 14 zones (trained without them) 0.69 | Erbil+Makhmour alone 0.81
+   Dec: 16 zones 0.77 | 14 zones (trained without them) 0.75 | Erbil+Makhmour alone 0.89
+   Jan: 16 zones 0.76 | 14 zones (trained without them) 0.73 | Erbil+Makhmour alone 0.90
+   Feb: 16 zones 0.78 | 14 zones (trained without them) 0.75 | Erbil+Makhmour alone 0.93
+   Mar: 16 zones 0.84 | 14 zones (trained without them) 0.82 | Erbil+Makhmour alone 0.93
+
+5. Per-zone AUC, March, LR+ElNiño (which places can we predict?)
+   Garmiyan 0.98  Chamchamal 0.96  Erbil 0.95  Koya 0.95  Bazian 0.89  Makhmour 0.89  Duhok 0.88  Zakho 0.82  Slemani 0.81  Akre 0.80  Qaradagh 0.80  Soran 0.79  Halabja 0.76  Penjwen 0.74  Sharazur 0.74  Ranya 0.58
+
+6. What the model learned (LR+ElNiño trained on all 26 seasons; standardized weights, + = more risk)
+   Pre: oni -0.76
+   Dec: rain_pct -0.47, oni -0.45, et0_pct +0.37, temp_anom -0.28, last_rain_pct -0.24, soil_pct -0.16
+   Jan: oni -0.63, et0_pct +0.37, temp_anom -0.35, last_rain_pct -0.23, rain_pct -0.21, soil_pct -0.04
+   Feb: oni -0.54, green_now -0.50, et0_pct +0.28, temp_anom -0.24, rain_pct -0.23, last_rain_pct -0.22, soil_pct -0.10
+   Mar: green_now -0.80, oni -0.35, temp_anom -0.30, rain_pct -0.28, soil_pct -0.27, et0_pct +0.27, last_rain_pct -0.18
+
+7. Season ranking by mean risk (LR+ElNiño, hidden season); bad seasons = ≥50% of zones bad
+   Pre: bad seasons 1999/00, 2007/08, 2011/12, 2020/21, 2021/22 rank 3, 4, 9, 7, 10 of 26   (top 5 risk: 2010/11, 2022/23, 1999/00, 2007/08, 2000/01)
+   Dec: bad seasons 1999/00, 2007/08, 2011/12, 2020/21, 2021/22 rank 2, 3, 8, 11, 10 of 26   (top 5 risk: 2010/11, 1999/00, 2007/08, 2008/09, 2017/18)
+   Jan: bad seasons 1999/00, 2007/08, 2011/12, 2020/21, 2021/22 rank 3, 2, 10, 7, 11 of 26   (top 5 risk: 2008/09, 2007/08, 1999/00, 2010/11, 2000/01)
+   Feb: bad seasons 1999/00, 2007/08, 2011/12, 2020/21, 2021/22 rank 5, 1, 8, 15, 7 of 26   (top 5 risk: 2007/08, 2008/09, 2010/11, 2000/01, 1999/00)
+   Mar: bad seasons 1999/00, 2007/08, 2011/12, 2020/21, 2021/22 rank 2, 1, 7, 12, 8 of 26   (top 5 risk: 2007/08, 1999/00, 2008/09, 2010/11, 2024/25)
+
+8. Look-alike years (AI explanation layer): end of February 2025, nearest past seasons in the same zone
+   Slemani   2024/25 (rain 45%, green 103%, risk 33%, real outcome: BAD 90%) looks like: 2022/23 (rain 64% → spring 126% ok); 2020/21 (rain 50% → spring 84% BAD); 2013/14 (rain 72% → spring 106% ok)
+   Garmiyan  2024/25 (rain 73%, green 123%, risk 21%, real outcome: ok 124%) looks like: 2016/17 (rain 65% → spring 127% ok); 2013/14 (rain 81% → spring 121% ok); 2007/08 (rain 40% → spring 66% BAD)
+   Duhok     2024/25 (rain 42%, green 37%, risk 45%, real outcome: BAD 56%) looks like: 2016/17 (rain 71% → spring 91% ok); 2010/11 (rain 67% → spring 90% BAD); 2017/18 (rain 76% → spring 70% BAD)
+   Halabja   2024/25 (rain 94%, green 101%, risk 21%, real outcome: ok 98%) looks like: 2022/23 (rain 99% → spring 125% ok); 2020/21 (rain 61% → spring 81% BAD); 2013/14 (rain 79% → spring 111% ok)
+
+9. 2026/27 pre-season outlook (El Niño only model trained on all 26 seasons; ONI Jul–Sep 2026 = +2.16)
+   ONI -1.50 → chance of a bad spring 65%
+   ONI -0.50 → chance of a bad spring 36%
+   ONI +0.00 → chance of a bad spring 24%
+   ONI +0.50 → chance of a bad spring 15%
+   ONI +1.00 → chance of a bad spring 9%
+   ONI +2.16 → chance of a bad spring 2%
+   Look-alike seasons (strongest El Niño Septembers): 2015/16 ONI +1.7 → 0/16 zones bad; 2023/24 ONI +1.2 → 0/16 zones bad; 2002/03 ONI +0.6 → 4/16 zones bad; 2009/10 ONI +0.6 → 1/16 zones bad
+python3 -I deep_investigation_part2.py out_deep  84.86s user 0.33s system 680% cpu 12.520 total
