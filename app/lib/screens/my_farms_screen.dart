@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/farm_card.dart';
 import 'add_farm/corners_screen.dart';
+import 'add_farm/farm_actions.dart';
 import 'home/home_screen.dart';
 
 /// What the list shows: from the server, or the last copy saved on the phone.
@@ -198,11 +199,20 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
                     FarmCard(farm: p.summary, waiting: true, onTap: () {}),
                 // Server farms; a waiting edit shows its new version, and a
                 // farm deleted on the phone is hidden at once.
+                // Slide a farm sideways to show Delete; letting go asks first.
                 for (final f in shown)
-                  FarmCard(
-                    farm: edits[f.id]?.summary ?? f,
-                    waiting: edits.containsKey(f.id),
-                    onTap: () => _openFarm(edits[f.id]?.summary ?? f),
+                  Dismissible(
+                    key: ValueKey('farm-${f.id}'),
+                    direction: DismissDirection.horizontal,
+                    background: const _DeleteBehind(alignStart: true),
+                    secondaryBackground: const _DeleteBehind(alignStart: false),
+                    confirmDismiss: (_) =>
+                        confirmDeleteFarm(context, edits[f.id]?.summary ?? f),
+                    child: FarmCard(
+                      farm: edits[f.id]?.summary ?? f,
+                      waiting: edits.containsKey(f.id),
+                      onTap: () => _openFarm(edits[f.id]?.summary ?? f),
+                    ),
                   ),
                 AddFarmCard(onTap: _addFarm),
               ],
@@ -245,6 +255,49 @@ class _OfflineBanner extends StatelessWidget {
                 weight: FontWeight.w600,
                 color: JColors.ink,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The red Delete shown behind a farm card while it is slid sideways.
+class _DeleteBehind extends StatelessWidget {
+  const _DeleteBehind({required this.alignStart});
+
+  /// True: Delete sits at the side the card is slid away from first.
+  final bool alignStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = AppScope.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      alignment: alignStart
+          ? AlignmentDirectional.centerStart
+          : AlignmentDirectional.centerEnd,
+      decoration: BoxDecoration(
+        color: JColors.levelAlarm,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 4,
+        children: [
+          const Icon(
+            Icons.delete_outline_rounded,
+            color: Colors.white,
+            size: 26,
+          ),
+          Text(
+            scope.s.delete,
+            style: jText(
+              scope.ku,
+              size: 13,
+              weight: FontWeight.w700,
+              color: Colors.white,
             ),
           ),
         ],
