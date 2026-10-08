@@ -19,6 +19,7 @@ Checked 2026-10-08 20:48 against `backend/` at commit a0ade90 and `FRONTEND.md` 
 | 5 | Farm from space: `GET /v1/farms/{id}/status` (2.3) | not built | **This blocks Home.** Home loads a farm and its status together; today the `404` makes every farm show "Could not load this farm (not_found)". Fastest fix: the stub answer in 2.3 until the satellite job exists. |
 | 6 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built | Home still opens without it ("Weather forecast not available right now"). Then serve the stored plan (2.4). |
 | 7 | Edit a farm: `PUT /v1/farms/{id}` (2.2, added 21:10) | not built (only `PUT /v1/farms/{id}/cells`) | Needed to change a farm's border, crops and name (the app's edit screen is being built). Changing the border needs the outline, which `PUT .../cells` cannot take. |
+| 8 | Delete a farm: `DELETE /v1/farms/{id}` (2.2) | built | Nothing. The app calls it from the farm's menu (since 21:33); `404` counts as already deleted. |
 
 Not needed yet, because their screens are not built: Ask the Doctor (2.5), reports (2.6), alerts and devices (2.7), `DELETE /v1/account`.
 
@@ -117,7 +118,9 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
   - Example check (pyproj): `{"lat": 36.0312, "lon": 44.6021}` is easting 464152.26, northing 3987482.22, so cell `{"e": 46415, "n": 398748}`.
   - Edge cells with a small `inside_pct` are mixed pixels: the backend may skip them for greenness.
 - `PUT /v1/farms/{id}` (added 2026-10-08 21:10, for editing a farm): body as `POST /v1/farms` (`name`, `points`, `cells`, `created_offline_at`); replaces the outline, cells and name; same validation (`bad_polygon`, `farm_too_large`); `Idempotency-Key` honoured; `404` for another phone's farm. → `200 {"farm": Farm, "dropped_cells": [{"e", "n"}]}`.
-- `PUT /v1/farms/{id}/cells` and `DELETE /v1/farms/{id}`: as in FRONTEND.md; the app does not call them yet.
+- `DELETE /v1/farms/{id}` (used since 2026-10-08 21:33): `204`, or `404` when the farm is gone or belongs to another phone. The app counts `404` as already deleted.
+- Edits and deletes made without internet wait in the phone's queue like new farms (section 3); deletes are sent first, then new farms and edits, oldest first.
+- `PUT /v1/farms/{id}/cells`: as in FRONTEND.md; the app does not call it (edits use `PUT /v1/farms/{id}`).
 
 ### 2.3 My field from space (Field Eye)
 - `GET /v1/farms/{id}/status` → `200 Status`, or `404` like 2.2. Answer from stored readings; never fetch a satellite during the call.
@@ -196,8 +199,9 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 
 ### 2.9 App decisions that affect the backend (2026-10-08)
 - Field edge: the farmer **always walks the corners**; no satellite edge suggestion in the app flow (SAM stays a backend tool for the Ministry map).
-- Home shows all farms stacked: `GET /farms` must return every farm with enough to draw the grid summary (`status`, `last_picture`, `crops`), and `GET /farms/{id}/status` is called per farm on open.
-- Opening a farm (built 2026-10-08): a tap in My farms opens Home at that farm. Home calls `GET /farms/{id}`, `/status` and `/plan` for every farm and keeps the last copy of each on the phone, shown with its date when offline. Home shows the `en` texts until the Sorani check.
+- One farm per screen (user, 2026-10-08; replaces "Home shows all farms stacked"): `GET /v1/farms` still needs `status`, `last_picture` and `crops` for the My farms cards.
+- Opening a farm: a tap in My farms opens that farm alone. The app calls `GET /v1/farms/{id}`, `/status` and `/plan` for that farm only, and keeps the last copy on the phone, shown with its date when offline. The farm screen shows the `en` texts until the Sorani check.
+- Each farm's screen has Edit (border, crops and name, through `PUT /v1/farms/{id}`) and Delete (`DELETE /v1/farms/{id}`). Both work without internet and are sent later from the phone's queue.
 - Cell tap views: cell, crop plot, whole farm. The backend adds per-crop summaries to 2.3: `"crops": [{"crop","dunam","greenness_pct_of_normal","level"}]` and the whole-farm `greenness_pct_of_normal` (already there).
 - Labels: new screens are English for now; Sorani comes later, but the backend keeps returning both `ku` and `en`.
 
@@ -208,7 +212,7 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
 - The app caches the last `status`, `plan` and farms list; it shows the cached copy with its date when offline. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
 - Idempotency: the app sends `Idempotency-Key` headers on POSTs; repeat keys must not create duplicates. A repeated key returns the farm made the first time (the app retries uploads that lost their answer).
-- Outbox (built 2026-10-08): `POST /farms` is first written to a file on the phone, then sent; with no internet it stays there and is retried every 30 seconds and when the app comes back to the front. The border being marked is also saved on the phone after every dot, and the sign-in token is kept, so the app opens and works in the field with no signal. "No internet" = the request never reached the server; any other 4xx answer (not 401, 408 or 429) removes the farm from the outbox (it will not succeed on retry).
+- Outbox (built 2026-10-08): `POST /farms` is first written to a file on the phone, then sent; with no internet it stays there and is retried every 30 seconds and when the app comes back to the front. The border being marked is also saved on the phone after every dot, and the sign-in token is kept, so the app opens and works in the field with no signal. "No internet" = the request never reached the server; any other 4xx answer (not 401, 408 or 429) removes the farm from the outbox (it will not succeed on retry). Since 2026-10-08 21:33 the same queue also holds edits (`PUT /v1/farms/{id}`) and deletes (`DELETE /v1/farms/{id}`); deletes go first, and a `404` on a delete counts as done.
 
 ## 4. Errors
 Shape (FRONTEND.md section 5): `{"error": "<code>", "detail": "<English text>"}`, plus `field` or `retry_after_s` when they apply. What the app does:
