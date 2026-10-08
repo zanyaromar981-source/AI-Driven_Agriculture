@@ -247,4 +247,6 @@ class S {
   // Area in square metres (user, 2026-10-08: "use meters, don't use donum").
   String get m2 => t('م²', 'm²');
   String get selectedArea => t('هەڵبژێردراو', 'Selected');
+  String get oneSquare => t('یەک خانە', 'One square');
+  String get insideFarm => t('لەناو کێڵگەکەدا', 'inside the farm');
 }

@@ -66,8 +66,11 @@ class _PaintScreenState extends State<PaintScreen> {
   void _tap(Offset o, MapCamera cam) {
     final cell = Utm.cellOf(cam.screenOffsetToLatLng(o));
     if (!_cellSet.contains(cell)) return;
+    // A tap picks exactly the square under the finger; dragging paints wider.
     setState(
-      () => _selected.contains(cell) ? _selected.remove(cell) : _brush(o, cam),
+      () => _selected.contains(cell)
+          ? _selected.remove(cell)
+          : _selected.add(cell),
     );
   }
 
@@ -124,9 +127,20 @@ class _PaintScreenState extends State<PaintScreen> {
     final m2 = _selected.isEmpty
         ? _totalM2
         : _selected.fold(0.0, (a, c) => a + (_inside[c] ?? 0));
-    final summary =
-        '${_selected.isEmpty ? s.wholeFarm : s.selectedArea}: '
-        '\u2066${fmtM2(m2)}\u2069 ${s.m2}';
+    // One square: show its size (10 x 10 m); an edge square also says how
+    // much of it is inside the farm. More squares: their area in m².
+    final String summary;
+    if (_selected.length == 1) {
+      final inside = _inside[_selected.first] ?? 100;
+      final side = '${s.oneSquare}: \u206610 × 10\u2069 ${s.metres}';
+      summary = inside >= 99.5
+          ? side
+          : '$side · \u2066${fmtM2(inside)}\u2069 ${s.m2} ${s.insideFarm}';
+    } else {
+      summary =
+          '${_selected.isEmpty ? s.wholeFarm : s.selectedArea}: '
+          '\u2066${fmtM2(m2)}\u2069 ${s.m2}';
+    }
 
     return MapPage(
       step: 2,
