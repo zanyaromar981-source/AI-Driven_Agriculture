@@ -15,6 +15,7 @@ Last update: 2026-10-08 20:10
 - Dashboard design in Pencil, `design/dashboard/jutyar_dashboard.pen`, 15 frames: Ministry dashboard by zone (30 zones, zoom into sub-districts), Water, The Doctor, Fire alerts, Compare years, Sorani version, farmer phone view, Alwa market (dashboard + phone). Sample numbers only
 - Flutter app `app/` (Jutyar): Sign in (phone, code, my farms) and Add farm (walk the corners with GPS, paint crops on the 10 m grid, farm ready, save; map styles Satellite with Kurdish place names, Map, Terrain; walk mode; exact area; works offline with upload later) working on a fake server with BACKEND.md shapes; 8 tests; runs on the user's phone
 - Flutter Home (open a farm): a tap in My farms opens Home with all farms stacked, scrolled to that farm. Per farm: Cells / Crops / Farm views drawn from the outline (works offline), cell card on tap, weak-cell line counted by area, This week from the live Open-Meteo forecast with the Weather Planner rules, last copy kept on the phone. Tab bar in place (only Home works). English labels for now
+- App icon: Grain Sun on the cream tile, Android (adaptive) and iOS, replaces the default Flutter logo
 - Pitch deck in Pencil, `design/pitch_deck.pen`, 8 slides (cover, problem, solution, farmer app, live demo, proof, honesty, closing), name Khor (خۆر), olive and ochre palette, photo-led; first draft, awaiting team review
 - Map demo `web/map_demo/` (Leaflet, real map tiles): 4 governorates, 33 KRG districts, 78 sub-districts from the CSO 2019 KML regrouped by the KRG maps of Duhok, Erbil and Halabja; 66 towns at exact OSM points; live lat/lon to 6 decimals, DMS, UTM 38S; click to pin with elevation and an Open in Google Maps link; search in English, Sorani, coordinates or OpenStreetMap; GPS locate
 - Repo on GitHub with CLAUDE.md rules
@@ -30,6 +31,7 @@ Last update: 2026-10-08 20:10
 - Tab bar; Home = all farms stacked; cell tap = small card + cells / crops / farm toggle; colours + numbers; Ask = text + photos; own reports only; field edge = always walk; logo 36 Grain Sun; English placeholders on new screens
 
 ## Decisions pending (user)
+- App name under the icon: Jutyar (now) or Khor / خۆر (pitch deck)?
 - Farm size still not accurate on the phone: which number, and the real size?
 - Map source: user dislikes the current map (asked for Google, then Leaflet). Leaflet map demo built in `web/map_demo/` for review
 - Dashboard map in `design/dashboard/jutyar_dashboard.pen`: keep the new borders and labels on screen 01, or roll back (the height colours were rejected)
