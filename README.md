@@ -1,4 +1,4 @@
-# Farm Doctor — SmartSuli AI Challenge 2026
+# Farm Doctor: SmartSuli AI Challenge 2026
 
 AI for Kurdistan Region farming, built for the **SmartSuli AI Challenge** (The Foundation, Slemani).
 Build days: 8–9 October 2026 at the Foundation Hub, Culture Factory. Demo and judging: 10 October 2026.
