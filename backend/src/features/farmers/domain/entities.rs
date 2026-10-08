@@ -126,24 +126,13 @@ impl SignInChallenge {
         Ok(())
     }
 
-    /// Checks a presented code against the stored hash. Every call counts as
-    /// an attempt, including a correct one, so the caller must persist the
-    /// challenge after a failure and remove it after a success.
-    pub fn verify(
-        &mut self,
-        presented_hash: &str,
-        now: DateTime<Utc>,
-        max_attempts: u32,
-    ) -> Result<(), FarmerError> {
+    /// Checks a presented code against the stored hash. It does not count
+    /// the attempt: the repository does that in one step with the limit, so
+    /// that guesses sent at the same moment cannot slip past it.
+    pub fn check(&self, presented_hash: &str, now: DateTime<Utc>) -> Result<(), FarmerError> {
         if now >= self.expires_at {
             return Err(FarmerError::CodeExpired);
         }
-
-        if self.attempts >= max_attempts {
-            return Err(FarmerError::TooManyAttempts);
-        }
-
-        self.attempts += 1;
 
         if presented_hash != self.code_hash {
             return Err(FarmerError::WrongCode);
@@ -156,8 +145,6 @@ impl SignInChallenge {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const MAX_ATTEMPTS: u32 = 5;
 
     fn phone() -> Phone {
         Phone::new("+9647501234567".to_string()).expect("phone")
@@ -177,52 +164,31 @@ mod tests {
     fn the_right_code_passes() {
         let now = Utc::now();
 
-        assert!(challenge(now).verify("right", now, MAX_ATTEMPTS).is_ok());
+        assert!(challenge(now).check("right", now).is_ok());
     }
 
     #[test]
-    fn a_wrong_code_fails_and_is_counted() {
+    fn a_wrong_code_fails() {
         let now = Utc::now();
-        let mut challenge = challenge(now);
 
         assert!(matches!(
-            challenge.verify("wrong", now, MAX_ATTEMPTS),
+            challenge(now).check("wrong", now),
             Err(FarmerError::WrongCode)
         ));
-        assert_eq!(*challenge.attempts(), 1);
-    }
-
-    #[test]
-    fn after_the_last_allowed_attempt_even_the_right_code_is_refused() {
-        let now = Utc::now();
-        let mut challenge = challenge(now);
-
-        for _ in 0..MAX_ATTEMPTS {
-            let _ = challenge.verify("wrong", now, MAX_ATTEMPTS);
-        }
-
-        assert!(
-            matches!(
-                challenge.verify("right", now, MAX_ATTEMPTS),
-                Err(FarmerError::TooManyAttempts)
-            ),
-            "otherwise a code could be guessed by trying all of them"
-        );
     }
 
     #[test]
     fn the_code_stops_working_the_moment_it_expires() {
         let now = Utc::now();
-        let mut challenge = challenge(now);
 
         assert!(matches!(
-            challenge.verify("right", now + Duration::minutes(10), MAX_ATTEMPTS),
+            challenge(now).check("right", now + Duration::minutes(10)),
             Err(FarmerError::CodeExpired)
         ));
-        assert_eq!(
-            *challenge.attempts(),
-            0,
-            "an expired code is not an attempt"
+        assert!(
+            challenge(now)
+                .check("right", now + Duration::minutes(10) - Duration::seconds(1))
+                .is_ok()
         );
     }
 

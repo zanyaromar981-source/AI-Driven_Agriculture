@@ -351,10 +351,10 @@ pub struct CellStatusResponse {
     pub since: Option<NaiveDate>,
 }
 
-/// The farm seen from space. No satellite job writes readings yet, so every
-/// measured field is `null` and `cells` is empty: the app shows "waiting for
-/// the first satellite picture". The crop plots are real, taken from the
-/// farm's painted cells.
+/// The farm seen from space. There is no store for satellite readings yet,
+/// so every measured field is `null` and `cells` is empty: the app shows
+/// "waiting for the first satellite picture". The crop plots are real,
+/// taken from the farm's painted cells.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct FarmStatusResponse {
     pub picture_date: Option<NaiveDate>,

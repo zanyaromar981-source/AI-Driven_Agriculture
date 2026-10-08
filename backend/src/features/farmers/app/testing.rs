@@ -19,11 +19,12 @@ pub const PHONE: &str = "+9647501234567";
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Call {
     FindFarmer { phone: String },
-    CreateFarmer { phone: String },
+    CreateFarmerIfAbsent { phone: String },
     UpdateFarmer,
     FindChallenge { phone: String },
     SaveChallenge { phone: String },
-    DeleteChallenge { phone: String },
+    RecordAttempt { phone: String },
+    ConsumeChallenge { phone: String },
     SendCode { phone: String, code: String },
     IssueToken,
     CountFarms { phone: String },
@@ -34,6 +35,7 @@ struct Script {
     farmer: Option<Farmer>,
     challenge: Option<SignInChallenge>,
     fail_to_send: bool,
+    lose_the_race_to_consume: bool,
 }
 
 /// One fake standing in for every port of the feature, so a test can read
@@ -69,6 +71,28 @@ impl Fakes {
         self
     }
 
+    /// Another request with the same code consumes the challenge first.
+    pub fn losing_the_race_to_consume(self) -> Self {
+        self.script
+            .lock()
+            .expect("script lock")
+            .lose_the_race_to_consume = true;
+        self
+    }
+
+    pub fn has_farmer(&self) -> bool {
+        self.script.lock().expect("script lock").farmer.is_some()
+    }
+
+    pub fn farmer_created_at(&self) -> Option<chrono::DateTime<chrono::Utc>> {
+        self.script
+            .lock()
+            .expect("script lock")
+            .farmer
+            .as_ref()
+            .map(|farmer| *farmer.created_at())
+    }
+
     pub fn failing_to_send() -> Self {
         let fake = Self::new();
         fake.script.lock().expect("script lock").fail_to_send = true;
@@ -98,22 +122,25 @@ impl FarmerRepository for Fakes {
         Ok(self.script.lock().expect("script lock").farmer.clone())
     }
 
-    async fn create(&self, entity: &Farmer) -> Result<Farmer, AppError> {
-        self.record(Call::CreateFarmer {
+    async fn create_if_absent(&self, entity: &Farmer) -> Result<(), AppError> {
+        self.record(Call::CreateFarmerIfAbsent {
             phone: String::from(entity.phone()),
         });
 
-        let created = Farmer::rehydrate(
-            1,
-            entity.phone().clone(),
-            entity.name().clone(),
-            *entity.language(),
-            *entity.created_at(),
-            *entity.updated_at(),
-        );
-        self.script.lock().expect("script lock").farmer = Some(created.clone());
+        let mut script = self.script.lock().expect("script lock");
 
-        Ok(created)
+        if script.farmer.is_none() {
+            script.farmer = Some(Farmer::rehydrate(
+                1,
+                entity.phone().clone(),
+                entity.name().clone(),
+                *entity.language(),
+                *entity.created_at(),
+                *entity.updated_at(),
+            ));
+        }
+
+        Ok(())
     }
 
     async fn update(&self, entity: &Farmer) -> Result<Farmer, AppError> {
@@ -142,13 +169,61 @@ impl SignInChallengeRepository for Fakes {
         Ok(())
     }
 
-    async fn delete(&self, phone: &Phone) -> Result<(), AppError> {
-        self.record(Call::DeleteChallenge {
+    async fn record_attempt(
+        &self,
+        phone: &Phone,
+        max_attempts: u32,
+    ) -> Result<Option<SignInChallenge>, AppError> {
+        self.record(Call::RecordAttempt {
             phone: String::from(phone),
         });
-        self.script.lock().expect("script lock").challenge = None;
 
-        Ok(())
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(open) = script.challenge.clone() else {
+            return Ok(None);
+        };
+
+        if *open.attempts() >= max_attempts {
+            return Ok(None);
+        }
+
+        let counted = SignInChallenge::rehydrate(
+            open.phone().clone(),
+            open.code_hash().clone(),
+            *open.language(),
+            *open.attempts() + 1,
+            *open.sent_at(),
+            *open.expires_at(),
+        );
+        script.challenge = Some(counted.clone());
+
+        Ok(Some(counted))
+    }
+
+    async fn consume(&self, phone: &Phone, code_hash: &str) -> Result<bool, AppError> {
+        self.record(Call::ConsumeChallenge {
+            phone: String::from(phone),
+        });
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script.lose_the_race_to_consume {
+            script.challenge = None;
+
+            return Ok(false);
+        }
+
+        let holds_the_code = script
+            .challenge
+            .as_ref()
+            .is_some_and(|open| open.code_hash() == code_hash);
+
+        if holds_the_code {
+            script.challenge = None;
+        }
+
+        Ok(holds_the_code)
     }
 }
 

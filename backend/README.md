@@ -57,7 +57,7 @@ cargo test
 
 ## What is here today
 
-39 routes; the full list with shapes is at `/api-docs`. By slice:
+43 routes under `/v1` plus `/status` and `/health`; the full list with shapes is at `/api-docs`. By slice:
 
 | Slice | Routes | For |
 |---|---|---|
@@ -75,7 +75,7 @@ Answers use the body shapes of `BACKEND.md`; errors are `{"error": "<code>", "de
 
 ## Pushing data in
 
-The backend stores and serves numbers; it does not compute them. The data jobs write through `PUT /v1/ingest/...` with the header `X-Service-Key: <INGEST__SERVICE_KEY>`. Every write is an upsert on a natural key (district and month, dam and day, fire id, farm and topic), so a job can run again safely. `GET /v1/ingest/farms` lists every farm's centre point and which topics it already has, without phone numbers. Example:
+The backend stores and serves numbers; it does not compute them. The data jobs write through `PUT /v1/ingest/...` with the header `X-Service-Key: <INGEST__SERVICE_KEY>`. Every `PUT` is an upsert on a natural key (district and month, dam and day, fire id, farm and topic), so a job can run again safely. The one `DELETE` removes a water plan entry. `GET /v1/ingest/farms` lists every farm's centre point and which topics it already has, without phone numbers. Example:
 
 ```sh
 curl -X PUT localhost:3000/v1/ingest/dams/dukan/readings/2026-09-21 \

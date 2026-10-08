@@ -3,6 +3,11 @@ use crate::features::farms::domain::{FarmError, GridCell, Point, utm::to_utm_38n
 const MIN_CORNERS: usize = 3;
 const MAX_CORNERS: usize = 50;
 
+/// How many cells the box around an outline may hold for each cell the farm
+/// is allowed. A long diagonal field fills a small share of its box, so the
+/// box is given room; eight times is far more than any real field needs.
+const BOX_CELLS_PER_CELL: i64 = 8;
+
 /// The edge of a farm: the corners the farmer walked, in walking order. The
 /// polygon closes itself, so the last corner joins back to the first.
 #[derive(Clone, Debug, PartialEq)]
@@ -84,9 +89,10 @@ impl Outline {
     }
 
     /// Every cell of the grid that belongs to the farm, row by row from the
-    /// south. Refuses before scanning when the outline is larger than
-    /// `max_cells`, so an oversized polygon cannot be made to enumerate a
-    /// whole province.
+    /// south. Refuses before scanning when the outline, or the box around
+    /// it, is too large: a thin sliver stretched across the region has a
+    /// small area but a box of billions of cells, and scanning that would
+    /// tie up the server.
     pub fn cells(&self, max_cells: usize) -> Result<Vec<GridCell>, FarmError> {
         let cell_area = GridCell::SIZE_M * GridCell::SIZE_M;
 
@@ -102,6 +108,13 @@ impl Outline {
         let east = index(eastings.fold(f64::NEG_INFINITY, f64::max));
         let south = index(northings.clone().fold(f64::INFINITY, f64::min));
         let north = index(northings.fold(f64::NEG_INFINITY, f64::max));
+
+        let columns = i64::from(east) - i64::from(west) + 1;
+        let rows = i64::from(north) - i64::from(south) + 1;
+
+        if columns.saturating_mul(rows) > (max_cells as i64).saturating_mul(BOX_CELLS_PER_CELL) {
+            return Err(FarmError::TooManyCells(max_cells));
+        }
 
         let mut cells = Vec::new();
 
@@ -315,6 +328,21 @@ mod tests {
         assert!(matches!(
             outline.cells(10),
             Err(FarmError::TooManyCells(10))
+        ));
+    }
+
+    #[test]
+    fn a_thin_sliver_across_the_region_is_refused_without_scanning_its_box() {
+        let sliver = vec![point(33.5, 41.5), point(38.5, 47.5), point(38.5, 47.499_99)];
+        let outline = Outline::new(sliver).expect("outline");
+
+        assert!(
+            outline.area_m2() / 100.0 < 50_000.0,
+            "the area alone would pass the limit, which is the point"
+        );
+        assert!(matches!(
+            outline.cells(50_000),
+            Err(FarmError::TooManyCells(50_000))
         ));
     }
 

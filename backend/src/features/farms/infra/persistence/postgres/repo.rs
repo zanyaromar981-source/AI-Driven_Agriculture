@@ -193,11 +193,12 @@ impl FarmRepository for FarmPostgresRepository {
             .map_err(database_error)?;
 
         // Cells are never added or removed after creation, so an update only
-        // has to move each cell to the crop it now carries. Rows that already
-        // hold that crop are left untouched.
+        // has to move the repainted cells to the crop they now carry. Cells
+        // this request did not change are not written, so a repaint running
+        // at the same moment on other cells is not undone.
         let mut ids_per_crop: HashMap<Crop, Vec<i32>> = HashMap::new();
 
-        for cell in entity.cells() {
+        for cell in entity.cells().iter().filter(|cell| cell.repainted()) {
             let id = cell_id(cell)?;
 
             ids_per_crop.entry(cell.crop()).or_default().push(id);

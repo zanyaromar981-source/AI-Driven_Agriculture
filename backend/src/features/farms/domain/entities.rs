@@ -18,6 +18,10 @@ pub struct Cell {
     id: Option<i32>,
     position: GridCell,
     crop: Crop,
+    /// True once a repaint has changed this cell's crop since it was loaded.
+    /// The repository writes only these, so two farmers' devices repainting
+    /// different cells at the same moment do not undo each other.
+    repainted: bool,
 }
 
 impl Cell {
@@ -26,6 +30,7 @@ impl Cell {
             id: Some(id),
             position,
             crop,
+            repainted: false,
         }
     }
 }
@@ -76,6 +81,7 @@ impl Farm {
                 id: None,
                 position,
                 crop: Crop::Empty,
+                repainted: false,
             })
             .collect();
 
@@ -163,8 +169,11 @@ impl Farm {
             .collect();
 
         for cell in &mut self.cells {
-            if let Some(crop) = wanted.remove(&cell.position) {
+            if let Some(crop) = wanted.remove(&cell.position)
+                && cell.crop != crop
+            {
                 cell.crop = crop;
+                cell.repainted = true;
             }
         }
 
@@ -382,6 +391,33 @@ mod tests {
             "an unnamed cell keeps its crop"
         );
         assert_eq!(dropped, vec![a_cell_outside()]);
+    }
+
+    #[test]
+    fn only_cells_whose_crop_really_changed_are_marked_repainted() {
+        let cells = outline().cells(MAX_CELLS).expect("cells");
+        let (mut farm, _) = farm(vec![PaintedCell::new(cells[0], Crop::Wheat)]);
+        for cell in &mut farm.cells {
+            cell.repainted = false;
+        }
+
+        farm.repaint(vec![
+            PaintedCell::new(cells[0], Crop::Wheat),
+            PaintedCell::new(cells[1], Crop::Barley),
+        ]);
+
+        let repainted: Vec<GridCell> = farm
+            .cells()
+            .iter()
+            .filter(|cell| cell.repainted())
+            .map(|cell| cell.position())
+            .collect();
+
+        assert_eq!(
+            repainted,
+            vec![cells[1]],
+            "painting a cell the crop it already has is not a change"
+        );
     }
 
     #[test]

@@ -18,7 +18,7 @@ Exact request and answer shapes for every route are in the live docs at `http://
 |---|---|---|
 | 2.1 | `POST /v1/auth/otp/send`, `POST /v1/auth/otp/verify` | built; see section 3 for how the code is delivered |
 | 2.2 | `GET /v1/farms`, `POST /v1/farms`, `GET /v1/farms/{id}`, `PUT /v1/farms/{id}/cells`, `DELETE /v1/farms/{id}` | built |
-| 2.3 | `GET /v1/farms/{id}/status` | built, but no satellite job writes readings yet: `picture_date`, `next_picture_expected`, `greenness_pct_of_normal`, `weak_where` are `null`, `cells` is empty, `crops` lists the farm's real crop plots with `level: "none"`. Home opens with "waiting for the first satellite picture" |
+| 2.3 | `GET /v1/farms/{id}/status` | built as a placeholder so Home opens. There is no table or write route for satellite readings yet, so it cannot show data even if a job runs: `picture_date`, `next_picture_expected`, `greenness_pct_of_normal`, `weak_where` are `null`, `cells` is empty, `crops` lists the farm's real crop plots with `level: "none"`. Home opens with "waiting for the first satellite picture" |
 | new | `GET /v1/farms/{id}/insights` | built: what is known about the farm, topic by topic (section 8) |
 | new | `GET /v1/me`, `PUT /v1/me` | built: the farmer's profile (`phone`, `name`, `lang`) |
 | new | Alwa market, 6 routes under `/v1/alwa` | built (section 9) |

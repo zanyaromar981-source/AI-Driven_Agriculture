@@ -128,8 +128,9 @@ pub async fn get_farm(
 
 /// Get a farm's status from space
 ///
-/// Answers from stored readings only. None exist yet, so the measured
-/// fields are `null`; the crop plots come from the farm itself.
+/// A placeholder so the app's Home opens: there is no store for satellite
+/// readings yet, so the measured fields are always `null`. The crop plots
+/// are real and come from the farm itself.
 #[utoipa::path(
     get,
     path = "/v1/farms/{id}/status",
