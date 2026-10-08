@@ -32,13 +32,22 @@ class MyFarmsScreen extends StatefulWidget {
 
 class _MyFarmsScreenState extends State<MyFarmsScreen> {
   static const _cacheName = 'farms_cache';
-  late Future<_FarmList> _farms = _load();
   int _waiting = Outbox.instance.items.length;
+
+  /// What is on screen: the copy saved on the phone first, then fresh data.
+  _FarmList? _list;
+
+  /// True while fresh data is loading (a thin bar shows at the top).
+  bool _busy = false;
+
+  /// Only shown when there is nothing at all to show.
+  Object? _error;
 
   @override
   void initState() {
     super.initState();
     Outbox.instance.addListener(_outboxChanged);
+    _refresh();
   }
 
   @override
@@ -58,9 +67,41 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
     _reload();
   }
 
-  void _reload() => setState(() {
-    _farms = _load();
-  });
+  void _reload() => _refresh();
+
+  /// Show the saved copy straight away (first time only), then load fresh
+  /// data and swap it in. The screen never goes blank while loading.
+  Future<void> _refresh() async {
+    if (_list == null) {
+      final j = await LocalStore.read(_cacheName);
+      if (j != null && mounted && _list == null) {
+        try {
+          setState(
+            () => _list = _FarmList([
+              for (final f in (j['farms'] as List? ?? const []))
+                FarmSummary.fromJson(f as Map<String, dynamic>),
+            ]),
+          );
+        } catch (_) {
+          // A damaged copy is simply skipped.
+        }
+      }
+    }
+    if (!mounted) return;
+    setState(() => _busy = true);
+    try {
+      final fresh = await _load();
+      if (!mounted) return;
+      setState(() {
+        _list = fresh;
+        _error = null;
+      });
+    } catch (e) {
+      if (mounted && _list == null) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   Future<_FarmList> _load() async {
     final api = AppScope.read(context).api;
@@ -149,10 +190,16 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
           ),
         ),
         const SizedBox(height: 28),
-        FutureBuilder<_FarmList>(
-          future: _farms,
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
+        Builder(
+          builder: (context) {
+            final current = _list;
+            if (current == null) {
+              if (_error != null) {
+                return Text(
+                  '${s.error}: $_error',
+                  style: jText(ku, size: 14, color: JColors.levelAlarm),
+                );
+              }
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
                 child: Center(
@@ -167,13 +214,7 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
                 ),
               );
             }
-            if (snap.hasError) {
-              return Text(
-                '${s.error}: ${snap.error}',
-                style: jText(ku, size: 14, color: JColors.levelAlarm),
-              );
-            }
-            final list = snap.data!;
+            final list = current;
             final gone = Outbox.instance.deletes.toSet();
             final shown = [
               for (final f in list.farms)
@@ -187,6 +228,20 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
             return Column(
               spacing: 12,
               children: [
+                // Fresh data on its way; what is shown is the saved copy.
+                SizedBox(
+                  height: 3,
+                  child: _busy
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: const LinearProgressIndicator(
+                            minHeight: 3,
+                            color: JColors.accent,
+                            backgroundColor: JColors.accentSoft,
+                          ),
+                        )
+                      : null,
+                ),
                 if (since != null)
                   _OfflineBanner(
                     text: s.offlineList('\u2066${_fmtWhen(since)}\u2069'),

@@ -33,6 +33,12 @@ class _FarmSectionState extends State<FarmSection> {
   FarmPlan? _plan;
   bool _planDown = false;
   bool _loading = true;
+
+  /// True while fresh data loads over the copy already on screen.
+  bool _refreshing = false;
+
+  /// When the copy on screen was saved (for the banner if fresh data fails).
+  DateTime? _shownSavedAt;
   String? _error;
   DateTime? _offlineSince;
   bool _told = false;
@@ -58,6 +64,35 @@ class _FarmSectionState extends State<FarmSection> {
     FarmPlan? plan;
     var planDown = false;
     DateTime? offlineSince;
+    // Show the copy saved on the phone at once; fresh data replaces it below.
+    if (_farm == null) {
+      final c = await LocalStore.read(_cacheName);
+      final cf = c?['farm'];
+      if (cf is Map<String, dynamic> && mounted) {
+        try {
+          final cfarm = Farm.fromJson(cf);
+          final cs = c!['status'];
+          final cst = cs is Map<String, dynamic>
+              ? FarmStatusReport.fromJson(cs)
+              : null;
+          final cp = c['plan'];
+          setState(() {
+            _farm = cfarm;
+            _status = cst;
+            _shape = cfarm.outline.length < 3 ? null : FarmShape(cfarm, cst);
+            _plan = cp is Map<String, dynamic> ? FarmPlan.fromJson(cp) : null;
+            _shownSavedAt = DateTime.tryParse(
+              c['saved_at'] as String? ?? '',
+            )?.toLocal();
+            _loading = false;
+          });
+        } catch (_) {
+          // A damaged copy is skipped; the spinner stays until fresh data.
+        }
+      }
+    }
+    if (!mounted) return;
+    if (_farm != null) setState(() => _refreshing = true);
     String? error;
     try {
       final got = await Future.wait<Object>([
@@ -101,8 +136,22 @@ class _FarmSectionState extends State<FarmSection> {
       error = '${s.loadFailed} ($e)';
     }
     if (!mounted) return;
+    if (farm == null && _farm != null) {
+      // Fresh data failed but a copy is on screen: keep it, say how old it is.
+      setState(() {
+        _loading = false;
+        _refreshing = false;
+        _offlineSince = offlineSince ?? _shownSavedAt;
+      });
+      if (!_told) {
+        _told = true;
+        widget.onLoaded?.call();
+      }
+      return;
+    }
     setState(() {
       _loading = false;
+      _refreshing = false;
       _error = error;
       _farm = farm;
       _status = status;
@@ -160,6 +209,20 @@ class _FarmSectionState extends State<FarmSection> {
                 hasPicture: sum.lastPicture != null,
               ),
             ],
+          ),
+          // Thin bar while fresh data loads over the saved copy.
+          SizedBox(
+            height: 3,
+            child: _refreshing
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: const LinearProgressIndicator(
+                      minHeight: 3,
+                      color: JColors.accent,
+                      backgroundColor: JColors.accentSoft,
+                    ),
+                  )
+                : null,
           ),
           if (_loading)
             const Padding(
