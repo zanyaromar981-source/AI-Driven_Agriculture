@@ -4,6 +4,26 @@ use chrono::Duration;
 
 use crate::{
     features::{
+        alwa::{
+            app::{
+                AlwaRepository,
+                use_cases::{
+                    AcceptOfferUseCase, BrowseListingsUseCase, CancelListingUseCase,
+                    ListDealsUseCase, ListMarketsUseCase, ListMyListingsUseCase,
+                    ListMyOffersUseCase, MakeOfferUseCase, PostListingUseCase, RecordPriceUseCase,
+                    ViewListingUseCase, ViewMarketPricesUseCase, ViewPriceHistoryUseCase,
+                },
+            },
+            domain::MAX_OPEN_LISTINGS_PER_SELLER,
+            infra::AlwaPostgresRepository,
+        },
+        dams::{
+            app::{
+                DamRepository,
+                use_cases::{ListDamsUseCase, RecordDamReadingUseCase, ViewDamHistoryUseCase},
+            },
+            infra::DamPostgresRepository,
+        },
         farmers::{
             app::{
                 FarmCounter, FarmerRepository, SignInChallengeRepository, SignInCodeGenerator,
@@ -30,9 +50,59 @@ use crate::{
             },
             infra::FarmPostgresRepository,
         },
+        fires::{
+            app::{
+                FireRepository,
+                use_cases::{ListFiresUseCase, RecordFireUseCase},
+            },
+            infra::FirePostgresRepository,
+        },
+        insights::{
+            app::{
+                FarmDirectory, FarmOwnership, InsightRepository,
+                use_cases::{
+                    ListFarmCoverageUseCase, RecordFarmInsightUseCase, ViewFarmInsightsUseCase,
+                },
+            },
+            infra::{
+                FarmsFeatureFarmDirectory, FarmsFeatureFarmOwnership, InsightPostgresRepository,
+            },
+        },
+        outlooks::{
+            app::{
+                OutlookRepository,
+                use_cases::{
+                    RecordOutlookRunUseCase, RecordZoneOutlookUseCase, ViewSeasonOutlookUseCase,
+                    ViewZoneOutlookUseCase,
+                },
+            },
+            infra::OutlookPostgresRepository,
+        },
+        water::{
+            app::{
+                WaterPlanRepository,
+                use_cases::{
+                    RemoveWaterPlanEntryUseCase, SetWaterPlanEntryUseCase, ViewWaterPlanUseCase,
+                },
+            },
+            infra::WaterPlanPostgresRepository,
+        },
+        zones::{
+            app::{
+                ZoneRepository,
+                use_cases::{
+                    CompareYearsUseCase, RecordSubZoneReadingUseCase, RecordZoneReadingUseCase,
+                    ViewRegionOverviewUseCase, ViewZoneUseCase,
+                },
+            },
+            infra::ZonePostgresRepository,
+        },
     },
     infra::{Config, DBConnector},
-    shared::{FarmFeature, FarmerFeature, Features},
+    shared::{
+        AlwaFeature, DamFeature, FarmFeature, FarmerFeature, Features, FireFeature, InsightFeature,
+        OutlookFeature, WaterFeature, ZoneFeature,
+    },
 };
 
 pub async fn di_init(
@@ -54,6 +124,35 @@ pub async fn di_init(
             farm_repository.clone(),
         )),
         remove_farm_use_case: Arc::new(RemoveFarmUseCase::new(farm_repository.clone())),
+    };
+
+    let fire_repository: Arc<dyn FireRepository> =
+        Arc::new(FirePostgresRepository::new(db_context.conn_clone()));
+
+    let fire = FireFeature {
+        list_fires_use_case: Arc::new(ListFiresUseCase::new(fire_repository.clone())),
+        record_fire_use_case: Arc::new(RecordFireUseCase::new(fire_repository)),
+    };
+
+    let insight_repository: Arc<dyn InsightRepository> =
+        Arc::new(InsightPostgresRepository::new(db_context.conn_clone()));
+    let farm_ownership: Arc<dyn FarmOwnership> =
+        Arc::new(FarmsFeatureFarmOwnership::new(farm_repository.clone()));
+    let farm_directory: Arc<dyn FarmDirectory> =
+        Arc::new(FarmsFeatureFarmDirectory::new(farm_repository.clone()));
+
+    let insight = InsightFeature {
+        view_farm_insights_use_case: Arc::new(ViewFarmInsightsUseCase::new(
+            insight_repository.clone(),
+            farm_ownership,
+        )),
+        record_farm_insight_use_case: Arc::new(RecordFarmInsightUseCase::new(
+            insight_repository.clone(),
+        )),
+        list_farm_coverage_use_case: Arc::new(ListFarmCoverageUseCase::new(
+            insight_repository,
+            farm_directory,
+        )),
     };
 
     let farmer_repository: Arc<dyn FarmerRepository> =
@@ -102,5 +201,98 @@ pub async fn di_init(
         edit_profile_use_case: Arc::new(EditProfileUseCase::new(farmer_repository)),
     };
 
-    Ok(Features { farm, farmer })
+    let zone_repository: Arc<dyn ZoneRepository> =
+        Arc::new(ZonePostgresRepository::new(db_context.conn_clone()));
+
+    let zone = ZoneFeature {
+        view_region_overview_use_case: Arc::new(ViewRegionOverviewUseCase::new(
+            zone_repository.clone(),
+        )),
+        view_zone_use_case: Arc::new(ViewZoneUseCase::new(zone_repository.clone())),
+        compare_years_use_case: Arc::new(CompareYearsUseCase::new(zone_repository.clone())),
+        record_zone_reading_use_case: Arc::new(RecordZoneReadingUseCase::new(
+            zone_repository.clone(),
+        )),
+        record_sub_zone_reading_use_case: Arc::new(RecordSubZoneReadingUseCase::new(
+            zone_repository,
+        )),
+    };
+
+    let dam_repository: Arc<dyn DamRepository> =
+        Arc::new(DamPostgresRepository::new(db_context.conn_clone()));
+
+    let dam = DamFeature {
+        list_dams_use_case: Arc::new(ListDamsUseCase::new(dam_repository.clone())),
+        view_dam_history_use_case: Arc::new(ViewDamHistoryUseCase::new(dam_repository.clone())),
+        record_dam_reading_use_case: Arc::new(RecordDamReadingUseCase::new(dam_repository)),
+    };
+
+    let outlook_repository: Arc<dyn OutlookRepository> =
+        Arc::new(OutlookPostgresRepository::new(db_context.conn_clone()));
+
+    let outlook = OutlookFeature {
+        view_season_outlook_use_case: Arc::new(ViewSeasonOutlookUseCase::new(
+            outlook_repository.clone(),
+        )),
+        view_zone_outlook_use_case: Arc::new(ViewZoneOutlookUseCase::new(
+            outlook_repository.clone(),
+        )),
+        record_zone_outlook_use_case: Arc::new(RecordZoneOutlookUseCase::new(
+            outlook_repository.clone(),
+        )),
+        record_outlook_run_use_case: Arc::new(RecordOutlookRunUseCase::new(outlook_repository)),
+    };
+
+    let water_plan_repository: Arc<dyn WaterPlanRepository> =
+        Arc::new(WaterPlanPostgresRepository::new(db_context.conn_clone()));
+
+    let water = WaterFeature {
+        view_water_plan_use_case: Arc::new(ViewWaterPlanUseCase::new(
+            water_plan_repository.clone(),
+        )),
+        set_water_plan_entry_use_case: Arc::new(SetWaterPlanEntryUseCase::new(
+            water_plan_repository.clone(),
+        )),
+        remove_water_plan_entry_use_case: Arc::new(RemoveWaterPlanEntryUseCase::new(
+            water_plan_repository,
+        )),
+    };
+
+    let alwa_repository: Arc<dyn AlwaRepository> =
+        Arc::new(AlwaPostgresRepository::new(db_context.conn_clone()));
+
+    let alwa = AlwaFeature {
+        list_markets_use_case: Arc::new(ListMarketsUseCase::new(alwa_repository.clone())),
+        view_market_prices_use_case: Arc::new(ViewMarketPricesUseCase::new(
+            alwa_repository.clone(),
+        )),
+        view_price_history_use_case: Arc::new(ViewPriceHistoryUseCase::new(
+            alwa_repository.clone(),
+        )),
+        record_price_use_case: Arc::new(RecordPriceUseCase::new(alwa_repository.clone())),
+        browse_listings_use_case: Arc::new(BrowseListingsUseCase::new(alwa_repository.clone())),
+        view_listing_use_case: Arc::new(ViewListingUseCase::new(alwa_repository.clone())),
+        list_deals_use_case: Arc::new(ListDealsUseCase::new(alwa_repository.clone())),
+        post_listing_use_case: Arc::new(PostListingUseCase::new(
+            alwa_repository.clone(),
+            MAX_OPEN_LISTINGS_PER_SELLER,
+        )),
+        list_my_listings_use_case: Arc::new(ListMyListingsUseCase::new(alwa_repository.clone())),
+        cancel_listing_use_case: Arc::new(CancelListingUseCase::new(alwa_repository.clone())),
+        make_offer_use_case: Arc::new(MakeOfferUseCase::new(alwa_repository.clone())),
+        accept_offer_use_case: Arc::new(AcceptOfferUseCase::new(alwa_repository.clone())),
+        list_my_offers_use_case: Arc::new(ListMyOffersUseCase::new(alwa_repository)),
+    };
+
+    Ok(Features {
+        farm,
+        farmer,
+        fire,
+        insight,
+        zone,
+        dam,
+        outlook,
+        water,
+        alwa,
+    })
 }

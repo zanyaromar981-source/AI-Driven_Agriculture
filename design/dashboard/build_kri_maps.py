@@ -1,6 +1,6 @@
 """Redraw every map in jutyar_dashboard.pen from the real boundaries in web/map_demo/kri_map_data.js.
 
-Usage: python build_kri_maps.py <in.pen> <out.pen>
+Usage: python build_kri_maps.py <in.pen> <out.pen>   (also writes kri_map_component.pen next to <out.pen>)
 Needs shapely. Each map keeps its meaning: the overview screens get the bright governorate colours of the
 map demo, the data screens keep their own colours, carried over by district name. Only the four
 governorates are drawn; nothing outside them.
@@ -265,52 +265,103 @@ DAM = {d['en']: d for d in K['dams']}
 OLD = ['Zone · ', 'Label · ', 'Zones · ', 'Border', 'Zone label · ', 'City label · ', 'District · ']
 log = []
 
-# ---------- 01 overview (English) and 07 overview (Sorani): bright colours ----------
+# ---------- the map as one master component, screens use instances ----------
+# The master holds the geography only (districts, borders, grid and rulers, names). Screens never redraw it:
+# each instance overrides colours or names, and screen extras (dams, badges, fires) sit on top of it.
 NUDGE = {'Sulaymaniyah': (8, 12), 'Duhok': (0, 10), 'Halabja': (10, -6), 'Sharazur': (-14, -8), 'Khurmal': (12, 2), 'Darbandikhan': (-22, -8)}
-for map_id, lang in (('TwjaJ', 'en'), ('QhxV8', 'ku')):
-    m = by_id(map_id)
-    dams = [c for c in m['children'] if c.get('name', '').startswith('Dam · ')]
-    strip(m, OLD + ['Dam · '])
-    new = districts(OV, lambda p: p['color']) + borders(OV)
-    new += graticule(OV, 30, 10, 60) + district_labels(OV, lang, 10, {p['en']: p['color'] for p, _ in DISTS}, NUDGE) + gov_labels(OV, lang)
-    for d in dams:
-        key = 'Dukan Dam' if 'Dukan' in d['name'] else 'Darbandikhan Dam'
-        x, y = OV.P(DAM[key]['lon'], DAM[key]['lat']); place(d, x - 13, y - 12)
-    m['children'] = new + m['children'] + dams
-    m['clip'] = True
-    log.append(f'{map_id}: {len(new)} new nodes, {len(dams)} dams moved')
+BRIGHT = {p['en']: p['color'] for p, _ in DISTS}
+KU = {p['en']: p['ku'] or p['en'] for p, _ in DISTS}
+GOV_KU = {p['en']: p['ku'] for p, _ in GOVS}
 
-# ---------- data screens 03, 04, 05: keep their colours ----------
+right = max((c.get('x', 0) + (c['width'] if isinstance(c.get('width'), (int, float)) else 1440)) for c in doc['children'])
+master_nodes = districts(OV, lambda p: BRIGHT[p['en']]) + borders(OV) + graticule(OV, 30, 10, 60) \
+    + district_labels(OV, 'en', 10, BRIGHT, NUDGE) + gov_labels(OV, 'en')
+MASTER = {'type': 'frame', 'id': nid(), 'name': 'Component · KRI Map', 'reusable': True, 'x': right + 300, 'y': 0,
+          'width': 760, 'height': 732, 'layout': 'none', 'clip': True, 'children': master_nodes,
+          'metadata': {'type': 'kri-map', 'source': 'web/map_demo/kri_map_data.js', 'builder': 'design/dashboard/build_kri_maps.py'}}
+V6 = View(REGION.bounds, 380, 366, 10)
+small_nodes = districts(V6, lambda p: BRIGHT[p['en']], 0.7) + borders(V6, 0.55)
+MASTER_S = {'type': 'frame', 'id': nid(), 'name': 'Component · KRI Map small', 'reusable': True, 'x': right + 300, 'y': 832,
+            'width': 380, 'height': 366, 'layout': 'none', 'clip': True, 'children': small_nodes,
+            'metadata': {'type': 'kri-map', 'source': 'web/map_demo/kri_map_data.js', 'builder': 'design/dashboard/build_kri_maps.py'}}
+doc['children'] += [MASTER, MASTER_S]
+ID = {n['name']: n['id'] for n in master_nodes}
+ID_S = {n['name']: n['id'] for n in small_nodes}
+
+def instance(master, x=0, y=0, over=None, name='KRI Map'):
+    r = {'type': 'ref', 'id': nid(), 'ref': master['id'], 'name': name, 'x': x, 'y': y}
+    if over:
+        r['descendants'] = over
+    return r
+
+def colour_overrides(colmap, ids, labels=True):
+    over = {}
+    for en, col in colmap.items():
+        over[ids['District · ' + en]] = {'fill': col}
+        if labels and ('Label · ' + en) in ids:
+            over[ids['Label · ' + en]] = {'fill': '#FFFFFF', 'effect': []} if dark(col) else {'fill': '#22302A', 'effect': GLOW}
+    return over
+
+def place_dams(nodes):
+    for d in nodes:
+        if d.get('name', '').startswith('Dam · '):
+            key = 'Dukan Dam' if 'Dukan' in d['name'] else 'Darbandikhan Dam'
+            x, y = OV.P(DAM[key]['lon'], DAM[key]['lat']); place(d, x - 13, y - 12)
+
+# 01 overview (English): the master as it is
+m = by_id('TwjaJ')
+extras = [c for c in m['children'] if c.get('name', '').startswith('Dam · ')]
+place_dams(extras)
+m['children'] = [instance(MASTER)] + extras
+m['clip'] = True
+log.append('TwjaJ: instance of the master + %d dams' % len(extras))
+
+# 07 overview (Sorani): same map, Sorani names
+m = by_id('QhxV8')
+extras = [c for c in m['children'] if c.get('name', '').startswith('Dam · ')]
+place_dams(extras)
+over = {ID['Label · ' + en]: {'content': KU[en], 'fontFamily': '$font-ku', 'fontSize': 11} for en in KU}
+over.update({ID['City label · ' + en]: {'content': GOV_KU[en], 'fontFamily': '$font-ku', 'fontSize': 18, 'fontWeight': '700', 'letterSpacing': 0}
+             for en in GOV_KU})
+m['children'] = [instance(MASTER, over=over)] + extras
+m['clip'] = True
+log.append('QhxV8: instance with Sorani names + %d dams' % len(extras))
+
+# 03, 04, 05 data screens: their own colours on the same map
+lp = {p['en']: label_pt(g, OV) for p, g in DISTS}
 for map_id in ('xuGjN', 'sOgR8', 'pI9am'):
     m = by_id(map_id)
     fills = old_fills(m)
-    overlays = [c for c in m['children'] if c.get('type') != 'path' and not c.get('name', '').startswith('Label · ')]
-    strip(m, OLD)
-    colmap = {p['en']: carry(fills, p['en']) for p, _ in DISTS}
-    new = districts(OV, lambda p: colmap[p['en']]) + borders(OV) + district_labels(OV, 'en', 10, colmap, NUDGE)
-    lp = {p['en']: label_pt(g, OV) for p, g in DISTS}
-    for o in overlays:
+    colmap = {en: carry(fills, en) for en in BRIGHT}
+    extras = [c for c in m['children'] if c.get('type') != 'path' and not c.get('name', '').startswith('Label · ')]
+    for o in extras:
         nm = o.get('name', '')
-        if nm.startswith('Dam · '):
-            key = 'Dukan Dam' if 'Dukan' in nm else 'Darbandikhan Dam'
-            x, y = OV.P(DAM[key]['lon'], DAM[key]['lat']); place(o, x - 13, y - 12)
-        elif nm.startswith('Rank Badge · '):
+        if nm.startswith('Rank Badge · '):
             x, y = lp[nm.split(' · ')[1]]; place(o, x - 9, y + 8)
         elif nm.startswith('Fire · '):
             x, y = lp[nm.split(' · ')[1]]; place(o, x - 12, y - 52)
-    m['children'] = new + overlays
+    place_dams(extras)
+    over = colour_overrides(colmap, ID)
+    over.update({ID['City label · ' + en]: {'enabled': False} for en in GOV_KU})
+    m['children'] = [instance(MASTER, over=over)] + extras
     m['clip'] = True
-    log.append(f'{map_id}: {len(new)} new nodes, {len(overlays)} overlays placed')
+    log.append(f'{map_id}: instance with its own colours + {len(extras)} extras')
 
-# ---------- 06 compare years: two half-size maps ----------
-V6 = View(REGION.bounds, 380, 366, 10)
+# 06 compare years: two instances of the small master
 for map_id in ('V6nyuc', 'I0vZi'):
     m = by_id(map_id)
     fills = old_fills(m)
-    strip(m, OLD)
-    m['children'] = districts(V6, lambda p: carry(fills, p['en']), 0.7) + borders(V6, 0.55) + m['children']
+    colmap = {en: carry(fills, en) for en in BRIGHT}
+    m['children'] = [instance(MASTER_S, over=colour_overrides(colmap, ID_S, labels=False), name='KRI Map small')]
     m['clip'] = True
-    log.append(f'{map_id}: compare map redrawn')
+    log.append(f'{map_id}: instance of the small master')
+
+# standalone copy of both masters, so the map lives on its own and can be reused in other designs
+standalone = {'version': doc['version'], 'variables': doc.get('variables', {}),
+              'children': [json.loads(json.dumps(dict(MASTER, x=0, y=0))), json.loads(json.dumps(dict(MASTER_S, x=0, y=832)))]}
+STANDALONE = DST.replace('\\', '/').rsplit('/', 1)[0] + '/kri_map_component.pen'
+json.dump(standalone, open(STANDALONE, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
+log.append('standalone master written: ' + STANDALONE)
 
 # ---------- 02 zoom into Chamchamal ----------
 ZV = View(CHAM.bounds, 760, 732, 95)

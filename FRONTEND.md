@@ -2,7 +2,7 @@
 
 This is the backend's side of the contract. `BACKEND.md` says what the app needs; this file says what the backend in `backend/` really does today. The app follows this file. Disagreements are settled here and in `BACKEND.md`, not in code.
 
-Status: v2, 2026-10-08. The backend now answers with the body shapes of `BACKEND.md` section 2, so the app's `HttpApi` works against it unchanged. (v1 of this file described `{data}` and `{errors}` wrappers; those are gone.)
+Status: v3, 2026-10-08. The backend now answers with the body shapes of `BACKEND.md` section 2, so the app's `HttpApi` works against it unchanged. (v1 of this file described `{data}` and `{errors}` wrappers; those are gone.)
 
 ## 1. How to point the app at it
 
@@ -10,12 +10,36 @@ Build with `--dart-define=API_URL=http://<host>:3000/v1`. Every route lives unde
 
 ## 2. What is built
 
+Exact request and answer shapes for every route are in the live docs at `http://<host>:3000/api-docs`.
+
+**Farmer app (token from sign-in)**
+
 | BACKEND.md | Route | State |
 |---|---|---|
 | 2.1 | `POST /v1/auth/otp/send`, `POST /v1/auth/otp/verify` | built; see section 3 for how the code is delivered |
 | 2.2 | `GET /v1/farms`, `POST /v1/farms`, `GET /v1/farms/{id}`, `PUT /v1/farms/{id}/cells`, `DELETE /v1/farms/{id}` | built |
+| 2.3 | `GET /v1/farms/{id}/status` | built as a placeholder so Home opens. There is no table or write route for satellite readings yet, so it cannot show data even if a job runs: `picture_date`, `next_picture_expected`, `greenness_pct_of_normal`, `weak_where` are `null`, `cells` is empty, `crops` lists the farm's real crop plots with `level: "none"`. Home opens with "waiting for the first satellite picture" |
+| new | `GET /v1/farms/{id}/insights` | built: what is known about the farm, topic by topic (section 8) |
 | new | `GET /v1/me`, `PUT /v1/me` | built: the farmer's profile (`phone`, `name`, `lang`) |
-| 2.3 to 2.8 | status, plan, ask, reports, alerts, devices, region | not built yet |
+| new | Alwa market, 6 routes under `/v1/alwa` | built (section 9) |
+| 2.4 to 2.7 | plan, ask, reports, alerts, devices, `DELETE /v1/account` | not built yet |
+
+**Ministry dashboard (no login)**
+
+| Route | What it answers |
+|---|---|
+| `GET /v1/region/overview?month=YYYY-MM` | all 33 districts with dryness, band, rank, change against last year; region summary |
+| `GET /v1/zones/{slug}?month=` | one district: its reading, sub-districts, same month in earlier years |
+| `GET /v1/region/compare?year=&with=&month=` | two years side by side per district, region average by year |
+| `GET /v1/dams`, `GET /v1/dams/{slug}/history` | Dukan and Darbandikhan: latest level, a year ago, history |
+| `GET /v1/outlooks`, `GET /v1/outlooks/zones/{zone_slug}` | next-season outlook per district with confidence and the method's track record |
+| `GET /v1/water/plan` | districts ranked by water need, amounts per dam |
+| `GET /v1/fires?hours=24` | satellite fire detections and a summary |
+| `GET /v1/alwa/markets`, `/prices`, `/prices/{crop}/history`, `/listings`, `/listings/{id}`, `/deals` | the wholesale market: prices, crops on sale, offers, deals |
+
+The districts are the 33 of `web/map_demo/kri_map_data.js` (4 governorates, 72 sub-districts). A district's slug is its English name in lower case with hyphens, for example `chamchamal`; a sub-district's is the same, for example `markaz-zakho`.
+
+**Every number above is empty until a data job pushes it.** The backend stores and serves; it does not compute satellite, weather or forecast values. The jobs write through `PUT /v1/ingest/...` with the `X-Service-Key` header (`backend/README.md`).
 
 ## 3. Sign in
 
@@ -37,6 +61,7 @@ Shapes are those of `BACKEND.md` 2.2. Notes on what the backend does with them:
 - `PUT /v1/farms/{id}/cells` changes only the cells listed. To clear a cell, send it with `"crop": "empty"`.
 - A farm of another phone answers `404`, the same as a farm that does not exist.
 - Not sent yet, because there are no satellite readings in the database: `status`, `last_picture`, `picture_date`, and on cells `greenness_pct`, `level`, `inside_pct`. The app already treats them as optional.
+- Cells are still "centre inside the outline", and `crops[].dunam` still counts whole cells. BACKEND.md 0.2 asks for every touched cell with `inside_pct`; that is not done yet.
 - The outline is returned as the farmer walked it. It is not snapped to the grid.
 - Extra fields the app can ignore: `created_at`, `updated_at`, `created_offline_at`.
 
@@ -59,6 +84,15 @@ The `POST /farms` example has `{"e": 462337, "n": 398812}`. With the definition 
 
 ## 7. Open questions for the frontend
 
-1. `PUT /farms/{id}/cells`: is "only the listed cells change" what the paint screen wants, or should the list replace the whole painting?
-2. Is 50,000 cells (2,000 dunam) a safe upper limit for one farm?
-3. `GET /v1/me` and `PUT /v1/me` are new. Does the settings screen want anything else on the profile?
+Answered in BACKEND.md 0.3 (thank you). Still open:
+
+1. Insights (section 8): which topics should the farm screen show first?
+2. Alwa (section 9): who may make offers, and does accepting part of the quantity close the whole listing? Today any signed-in phone may offer, and accepting any offer marks the listing sold.
+
+## 8. Farm insights
+
+`GET /v1/farms/{id}/insights` answers `{"farm_id", "topics": [...]}`. Each topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather` and carries `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means nothing is known yet. Show `source` and `as_of` next to the numbers. No job fills these yet, and no source for groundwater depth at farm scale is known, so expect that topic to stay missing.
+
+## 9. Alwa market
+
+With the farmer's token: `POST /v1/alwa/listings` (put a crop on sale), `GET /v1/alwa/listings/mine`, `DELETE /v1/alwa/listings/{id}` (cancel), `POST /v1/alwa/listings/{id}/offers` (make an offer), `POST /v1/alwa/listings/{id}/offers/{offer_id}/accept` (seller only), `GET /v1/alwa/offers/mine`. Phone numbers stay hidden until a deal: then the seller sees the buyer's and the buyer sees the seller's. Error codes: `too_many_listings`, `own_listing`, `listing_not_open`, `offer_not_open`, `offer_too_large`, `bad_closes_at`.

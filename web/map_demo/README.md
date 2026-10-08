@@ -12,6 +12,8 @@ python3 -m http.server 8791
 
 Opening `index.html` straight from the disk also works. It needs internet for the map tiles.
 
+On Windows, double-click `start_map_8080.cmd`: it serves the page at http://localhost:8080, the address Pen's built-in browser offers. That address shows a white screen when nothing is running on port 8080.
+
 ## What it does
 
 - Real map tiles in WGS84 / Web Mercator, the same coordinates Google Maps uses: OpenStreetMap streets (default), Esri satellite, Esri streets, Esri topographic.

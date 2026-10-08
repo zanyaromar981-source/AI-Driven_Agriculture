@@ -83,7 +83,29 @@ impl RegisterFarmUseCase {
             self.max_cells_per_farm,
         )?;
 
-        let registered = self.repository.create(&farm).await?;
+        let registered = match self.repository.create(&farm).await {
+            Ok(registered) => registered,
+            Err(error) => {
+                // Two uploads with the same key can both pass the lookup
+                // above; the database lets only one in. The other is the
+                // same farm arriving twice, so it gets the farm that won.
+                if let Some(key) = farm.idempotency_key()
+                    && let Some(existing) = self
+                        .repository
+                        .find_by_idempotency_key_and_owner(key, owner)
+                        .await?
+                {
+                    tracing::info!(
+                        farm_id = existing.id().unwrap_or_default(),
+                        "registration raced its own repeat: returning the farm already created"
+                    );
+
+                    return Ok((existing, Vec::new()));
+                }
+
+                return Err(error);
+            }
+        };
 
         tracing::info!(
             farm_id = registered.id().unwrap_or_default(),

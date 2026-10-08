@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 21:25
+Last update: 2026-10-08 21:20
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -12,7 +12,7 @@ Last update: 2026-10-08 21:25
 - Field boundaries from space: SAM tested, good on plains (`farm_doctor/field_boundaries/`)
 - Web: time-machine app `web/index.html`; Ministry dashboard template `web/dashboard.html` (map-first, no data wired); sign-in mock `web/app_signin.html`; 50 logos `web/logos.html`
 - Design in Pencil, one file `design/jutyar_app.pen`, 14 screens: Sign in (phone, code, my farms), Add farm (corners, paint the grid, farm ready), Farm (home with stacked farms, cell card, crop view, farm view, ask, reading, answer), More (report, alerts, settings); Grain Sun logo
-- Dashboard design in Pencil, `design/dashboard/jutyar_dashboard.pen`, 15 frames: Ministry dashboard by district (33 KRG districts on real borders, latitude / longitude rulers, zoom into Chamchamal's real sub-districts), Water, The Doctor, Fire alerts, Compare years, Sorani version, farmer phone view, Alwa market (dashboard + phone). Sample numbers only
+- Dashboard design in Pencil, `design/dashboard/jutyar_dashboard.pen`, 15 frames: Ministry dashboard by district (33 KRG districts on real borders, the map is one reusable component also saved as `kri_map_component.pen`, latitude / longitude rulers, zoom into Chamchamal's real sub-districts), Water, The Doctor, Fire alerts, Compare years, Sorani version, farmer phone view, Alwa market (dashboard + phone). Sample numbers only
 - Flutter app `app/` (Jutyar): Sign in (phone, code, my farms) and Add farm (walk the corners with GPS, paint crops on the 10 m grid, farm ready, save; map styles Satellite with Kurdish place names, Map, Terrain; walk mode; exact area; works offline with upload later) working on a fake server with BACKEND.md shapes; 8 tests; runs on the user's phone
 - Flutter Home (open a farm): a tap in My farms opens Home with all farms stacked, scrolled to that farm. Per farm: Cells / Crops / Farm views drawn from the outline (works offline), cell card on tap, weak-cell line counted by area, This week from the live Open-Meteo forecast with the Weather Planner rules, last copy kept on the phone. Tab bar in place (only Home works). English labels for now
 - App icon: Grain Sun on the cream tile, Android (adaptive) and iOS, replaces the default Flutter logo
@@ -23,10 +23,10 @@ Last update: 2026-10-08 21:25
 - Repo on GitHub with CLAUDE.md rules
 - Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
-- Backend in Rust + axum, `backend/` (clean architecture + vertical slices): slices `farmers` (sign in with phone and code, profile) and `farms` (list, create from walked corners and painted cells, get, repaint, delete, repeat-safe upload); answers in the BACKEND.md shapes so the app's `HttpApi` works unchanged; 138 tests, checked against a real Postgres; `FRONTEND.md` v2 says what is built
+- Backend in Rust + axum, `backend/` (clean architecture + vertical slices): slices `farmers` (sign in with phone and code, profile) and `farms` (list, create from walked corners and painted cells, get, repaint, delete, repeat-safe upload); answers in the BACKEND.md shapes so the app's `HttpApi` works unchanged; 138 tests, checked against a real Postgres; `FRONTEND.md` v3 says what is built. Also slices for the dashboard (`zones` with 33 districts, `dams`, `outlooks`, `water`, `fires`), the Alwa market, per-farm insights and farm status: 43 routes, 625 tests, critic pass done
 
 ## In progress
-- Backend: farmer profiles and the data behind the Ministry dashboard design (zones, dams, forecast, fires, water, Alwa market)
+- Backend: data jobs that push readings in (none exist yet), touched cells with `inside_pct`, weekly plan
 - Flutter app, one screen at a time: next is Ask the Doctor (the tab bar is in place)
 - Review of the full farmer app design in Pencil (all 4 jobs done)
 - Ministry dashboard: wire `web/now.json` into the template (paused until the template is settled)

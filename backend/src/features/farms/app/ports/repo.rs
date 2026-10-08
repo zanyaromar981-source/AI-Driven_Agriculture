@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use crate::{
     features::farms::{
         app::AppError,
-        domain::{Farm, FarmSummary, IdempotencyKey},
+        domain::{Farm, FarmLocation, FarmSummary, IdempotencyKey},
     },
     shared::Phone,
 };
@@ -25,6 +25,10 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
     ) -> Result<Option<Farm>, AppError>;
 
     async fn count_by_owner(&self, owner: &Phone) -> Result<u64, AppError>;
+
+    /// Returns where every farm of every owner is, oldest first, without the
+    /// owners.
+    async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError>;
 
     /// Creates a new entity with its cells. `entity.id()` must be `None`; the
     /// database assigns the ids.

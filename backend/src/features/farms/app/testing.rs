@@ -7,8 +7,8 @@ use crate::{
     features::farms::{
         app::{AppError, FarmRepository},
         domain::{
-            Cell, Crop, Farm, FarmName, FarmSummary, GridCell, IdempotencyKey, Outline,
-            PaintedCell, Point,
+            Cell, Crop, Farm, FarmLocation, FarmName, FarmSummary, GridCell, IdempotencyKey,
+            Outline, PaintedCell, Point,
         },
     },
     shared::Phone,
@@ -23,6 +23,7 @@ pub enum RepositoryCall {
     FindByIdempotencyKeyAndOwner { key: String, owner: String },
     FindByIdAndOwner { id: i32, owner: String },
     CountByOwner { owner: String },
+    FindAllLocations,
     Create,
     Update,
     Delete { id: i32, owner: String },
@@ -137,6 +138,24 @@ impl FarmRepository for FakeFarmRepository {
         self.guard()?;
 
         Ok(self.script.lock().expect("script lock").owned_count)
+    }
+
+    async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError> {
+        self.record(RepositoryCall::FindAllLocations);
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .existing
+            .as_ref()
+            .map(|one| {
+                vec![FarmLocation::rehydrate(
+                    one.id().unwrap_or_default(),
+                    one.outline(),
+                )]
+            })
+            .unwrap_or_default())
     }
 
     async fn create(&self, entity: &Farm) -> Result<Farm, AppError> {

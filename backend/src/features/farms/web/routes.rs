@@ -16,6 +16,7 @@ pub fn routes() -> Router<AppState> {
                 "/{id}",
                 get(handlers::get_farm).delete(handlers::delete_farm),
             )
+            .route("/{id}/status", get(handlers::get_farm_status))
             .route("/{id}/cells", put(handlers::repaint_farm_cells)),
     )
 }

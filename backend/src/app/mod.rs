@@ -21,7 +21,7 @@ impl Pagination {
     }
 
     pub fn skip(&self) -> u64 {
-        (self.page - 1) * self.rows_per_page
+        (self.page - 1).saturating_mul(self.rows_per_page)
     }
 
     pub fn is_first_page(&self) -> bool {
@@ -85,6 +85,11 @@ mod tests {
             200,
             "an over-large page size must not be able to skip past the clamp"
         );
+    }
+
+    #[test]
+    fn an_absurd_page_number_does_not_overflow() {
+        assert_eq!(Pagination::new(u64::MAX, 100).skip(), u64::MAX);
     }
 
     #[test]
