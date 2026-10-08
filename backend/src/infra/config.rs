@@ -5,6 +5,7 @@ pub struct Config {
     pub auth: Auth,
     pub server: Server,
     pub farm: Farm,
+    pub ingest: Ingest,
 }
 
 #[derive(Clone, Debug)]
@@ -36,6 +37,13 @@ pub struct SignInCode {
     /// When set, every sign-in code is this value. For demos and local work
     /// only: anyone who knows it can sign in as any phone.
     pub fixed: Option<String>,
+}
+
+/// The data jobs (satellite, weather, prices) write their results through
+/// routes guarded by this key. Without one those routes refuse everyone.
+#[derive(Clone, Debug)]
+pub struct Ingest {
+    pub service_key: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -132,6 +140,11 @@ impl Config {
                 max_cells_per_farm: fetch_env_with_default("FARMS__MAX_CELLS_PER_FARM", "50000")
                     .parse::<usize>()
                     .unwrap(),
+            },
+            ingest: Ingest {
+                service_key: dotenvy::var("INGEST__SERVICE_KEY")
+                    .ok()
+                    .filter(|key| !key.trim().is_empty()),
             },
         }
     }

@@ -13,7 +13,7 @@ use farm_doctor_api::{
     },
     infra::{
         BootstrappedApp, Config,
-        http::{auth, health_routes, swagger_ui},
+        http::{auth, health_routes, service_key, swagger_ui},
         postgres_init, telemetry,
     },
     shared::{AppState, Phone, issue_jwt},
@@ -61,7 +61,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(farm_routes())
                 .merge(farmer_routes())
                 .layer(middleware::from_fn_with_state(state.clone(), auth))
-                .merge(farmer_public_routes()),
+                .merge(farmer_public_routes())
+                .nest(
+                    "/ingest",
+                    Router::new().layer(middleware::from_fn_with_state(state.clone(), service_key)),
+                ),
         )
         .merge(health_routes())
         .merge(swagger_ui())
