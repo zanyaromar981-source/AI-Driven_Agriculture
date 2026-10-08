@@ -89,20 +89,19 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
     }
   }
 
-  /// Home shows every farm stacked; it opens at the one that was tapped.
-  Future<void> _openFarm(List<FarmSummary> farms, String id) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => HomeScreen(farms: farms, openId: id),
-      ),
-    );
+  /// Each farm opens on its own screen (user, 2026-10-08).
+  Future<void> _openFarm(FarmSummary farm) async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => HomeScreen(farm: farm)));
     if (!mounted) return;
     _reload();
   }
 
   Future<void> _addFarm() async {
-    await Navigator.of(context)
-        .push(MaterialPageRoute<void>(builder: (_) => const CornersScreen()));
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const CornersScreen()));
     if (!mounted) return;
     _reload();
   }
@@ -174,6 +173,15 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
               );
             }
             final list = snap.data!;
+            final gone = Outbox.instance.deletes.toSet();
+            final shown = [
+              for (final f in list.farms)
+                if (!gone.contains(f.id)) f,
+            ];
+            final edits = {
+              for (final p in pending)
+                if (p.farmId != null) p.farmId!: p,
+            };
             final since = list.offlineSince;
             return Column(
               spacing: 12,
@@ -182,11 +190,20 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
                   _OfflineBanner(
                     text: s.offlineList('\u2066${_fmtWhen(since)}\u2069'),
                   ),
-                if (list.farms.isEmpty && pending.isEmpty) const EmptyFarms(),
+                if (shown.isEmpty && !pending.any((p) => p.farmId == null))
+                  const EmptyFarms(),
+                // New farms not uploaded yet.
                 for (final p in pending)
-                  FarmCard(farm: p.summary, waiting: true, onTap: () {}),
-                for (final f in list.farms)
-                  FarmCard(farm: f, onTap: () => _openFarm(list.farms, f.id)),
+                  if (p.farmId == null)
+                    FarmCard(farm: p.summary, waiting: true, onTap: () {}),
+                // Server farms; a waiting edit shows its new version, and a
+                // farm deleted on the phone is hidden at once.
+                for (final f in shown)
+                  FarmCard(
+                    farm: edits[f.id]?.summary ?? f,
+                    waiting: edits.containsKey(f.id),
+                    onTap: () => _openFarm(edits[f.id]?.summary ?? f),
+                  ),
                 AddFarmCard(onTap: _addFarm),
               ],
             );

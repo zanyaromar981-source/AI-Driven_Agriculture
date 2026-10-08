@@ -3,51 +3,48 @@ import 'package:flutter/material.dart';
 import '../../api/api.dart';
 import '../../app_scope.dart';
 import '../../l10n/strings.dart';
+import '../../store/outbox.dart';
+import '../add_farm/farm_actions.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/header.dart';
 import 'farm_section.dart';
 
-/// Home: every farm of this number stacked (decision 2026-10-08), opened at
-/// the farm that was tapped in My farms. English for now; Sorani later.
+/// Home: one farm on its own screen (user, 2026-10-08: "every farm should be
+/// opened separately"). The back arrow, the Android back gesture and the Home
+/// tab all return to My farms. English for now; Sorani later.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.farms, this.openId});
-  final List<FarmSummary> farms;
-  final String? openId;
+  const HomeScreen({super.key, required this.farm});
+  final FarmSummary farm;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final _keys = {for (final f in widget.farms) f.id: GlobalKey()};
-  final _loaded = <String>{};
-  bool _scrolled = false;
+  late FarmSummary _farm = widget.farm;
 
-  /// Farms load at different speeds and change height; scroll to the opened
-  /// farm only once every farm above it (and itself) has its final size.
-  void _onLoaded(String id) {
-    _loaded.add(id);
-    final open = widget.openId;
-    if (_scrolled || open == null) return;
-    final above = widget.farms.takeWhile((f) => f.id != open).map((f) => f.id);
-    if (!_loaded.contains(open) || !above.every(_loaded.contains)) return;
-    _scrolled = true;
-    if (above.isEmpty) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final c = _keys[open]?.currentContext;
-      if (c != null && c.mounted) {
-        Scrollable.ensureVisible(
-          c,
-          duration: const Duration(milliseconds: 450),
-          curve: Curves.easeOutCubic,
-        );
-      }
-    });
+  /// Bumped after an edit, so the farm section loads the farm again.
+  int _version = 0;
+
+  /// After the editor closes: fresh name and size from the server, or the
+  /// waiting change on the phone when there is no internet.
+  Future<void> _afterEdit() async {
+    try {
+      final list = await AppScope.read(context).api.getFarms();
+      final f = list.where((x) => x.id == _farm.id);
+      if (f.isNotEmpty) _farm = f.first;
+    } on ApiException {
+      // Offline: fall through to the waiting change below.
+    }
+    final waiting = Outbox.instance.items.where((i) => i.farmId == _farm.id);
+    if (waiting.isNotEmpty) _farm = waiting.last.summary;
+    if (mounted) setState(() => _version++);
   }
 
   @override
   Widget build(BuildContext context) {
+    final farm = _farm;
     final outer = AppScope.of(context);
     final s = outer.s;
     // Home is English for now (decision 2026-10-08). Only the body and tab bar
@@ -68,19 +65,26 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               const JutyarHeader(),
+              english(
+                _BackBar(
+                  trailing: FarmMenuButton(
+                    farm: farm,
+                    onEdited: _afterEdit,
+                    onDeleted: () => Navigator.of(context).maybePop(),
+                  ),
+                ),
+              ),
               Expanded(
                 child: english(
                   SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                     child: Column(
                       spacing: 16,
                       children: [
-                        for (final f in widget.farms)
-                          FarmSection(
-                            key: _keys[f.id],
-                            summary: f,
-                            onLoaded: () => _onLoaded(f.id),
-                          ),
+                        FarmSection(
+                          key: ValueKey('${farm.id}#$_version'),
+                          summary: farm,
+                        ),
                         Text(
                           '${s.farmingAssistant} · Jutyar',
                           style: jText(false, size: 11.5, color: JColors.faint),
@@ -99,7 +103,70 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Home, Alerts, Ask the Doctor (raised), Settings. Only Home is built so far.
+/// Back arrow to My farms on the left; the farm's Edit and Delete menu on
+/// the right.
+class _BackBar extends StatelessWidget {
+  const _BackBar({required this.trailing});
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context).s;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 0, 16, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Semantics(
+              button: true,
+              label: s.backToFarms,
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: () => Navigator.of(context).maybePop(),
+                borderRadius: BorderRadius.circular(10),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      spacing: 6,
+                      children: [
+                        const Icon(
+                          Icons.arrow_back_rounded,
+                          size: 22,
+                          color: JColors.ink,
+                        ),
+                        Flexible(
+                          child: Text(
+                            s.backToFarms,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: jText(
+                              false,
+                              size: 15,
+                              weight: FontWeight.w600,
+                              color: JColors.ink,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          trailing,
+        ],
+      ),
+    );
+  }
+}
+
+/// Home, Alerts, Ask the Doctor (raised), Settings. Only Home is built so far;
+/// tapping it from a farm goes back to My farms.
 class _TabBar extends StatelessWidget {
   const _TabBar();
 
@@ -107,9 +174,14 @@ class _TabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context).s;
     void later(String name) => showToast(context, '$name: ${s.notBuilt}');
-    Widget tab(IconData icon, String label, {bool on = false}) => Expanded(
+    Widget tab(
+      IconData icon,
+      String label, {
+      bool on = false,
+      VoidCallback? onTap,
+    }) => Expanded(
       child: InkWell(
-        onTap: on ? null : () => later(label),
+        onTap: onTap ?? () => later(label),
         child: Padding(
           padding: const EdgeInsets.only(top: 8, bottom: 6),
           child: FittedBox(
@@ -151,7 +223,12 @@ class _TabBar extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              tab(Icons.home_rounded, s.tabHome, on: true),
+              tab(
+                Icons.home_rounded,
+                s.tabHome,
+                on: true,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
               tab(Icons.notifications_none_rounded, s.tabAlerts),
               Expanded(
                 child: InkWell(
