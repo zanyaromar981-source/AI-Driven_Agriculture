@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 21:45
+Last update: 2026-10-08 21:46
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -49,6 +49,7 @@ Last update: 2026-10-08 21:45
 - Gemini API key (`GEMINI_API_KEY`) in `farm_doctor/.env` so the Doctor can answer
 
 ## Waiting on the backend (BACKEND.md section 0)
+- Control Room (BACKEND.md 2.11): officer sign-in with roles and 2-step, `/v1/admin` routes for farms (protected mode), crop register, alerts with second-officer approval, inbox, rules, Alwa prices, jobs, officers, and an insert-only audit log
 - `GET /v1/farms/{id}/status`: blocks Home today (every farm shows "Could not load this farm"); the stub in BACKEND.md 2.3 is enough for now
 - `GET /v1/farms/{id}/plan` (Home opens without it)
 - Farm cells with `inside_pct` and crop areas from them, so sizes match the app (not blocking)

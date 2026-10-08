@@ -2,7 +2,7 @@
 
 This file is the contract between the farmer app / dashboards (frontend) and the backend. The frontend writes here what it sends and what it expects back. If the backend needs something from the frontend, it writes `FRONTEND.md`, and the frontend follows that file strictly. Both files live at the repo root and are committed with every change.
 
-Status: v2, 2026-10-08 20:48. Section 0 says exactly what the app still needs, checked against `backend/` at a0ade90 and `FRONTEND.md` v2. Backend: confirm or edit each section; mark changes with your date.
+Status: v2, 2026-10-08 20:48. Section 0 says exactly what the app still needs, checked against `backend/` at a0ade90 and `FRONTEND.md` v2. Backend: confirm or edit each section; mark changes with your date. Added 2026-10-08 21:46: section 2.11, the Control Room (officer sign-in and `/v1/admin` routes for dashboard screens 11 to 18).
 
 ## 0. What the app still needs (read this first)
 
@@ -201,6 +201,28 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 
 ### 2.10 The Doctor's model (decided 2026-10-08)
 - Provider: **Gemini** (Google AI Studio key `GEMINI_API_KEY`, default model `gemini-2.5-flash`), chosen for cost (about 5–10x cheaper per answer). The call is one swappable function (`farm_doctor/doctor.py`: `FARM_DOCTOR_PROVIDER=gemini|claude`, `FARM_DOCTOR_MODEL`), so a head-to-head test against Claude in Sorani (20 questions, scored by a native speaker) can be run before any real rollout. The rulebook, the JSON answer shape and the no-doses rule are identical for both.
+
+### 2.11 Control Room: the Ministry runs the app from the dashboard (added 2026-10-08)
+
+Design: `design/dashboard/jutyar_dashboard.pen`, screens 11 to 18 (builder `design/dashboard/build_control_room.py`). Not built on the backend yet. Every path is under `/v1/admin`, with an **officer** token (not a farmer token).
+
+**Privacy: Protected mode (user decision 2026-10-08).** Officers see a farmer's phone as `+964 750 ••• 4567` and a farm only at 1 km (its sub-district and a 1 km rounded centre), **unless** that farm has an open report or a Doctor case with `refer_to_officer: true`. Then the exact outline, cells and the shared point open for officers of that area, and close again when the report or case is closed. Seeing the full phone needs a typed reason. Every look and every change is written to the history, which nobody can edit or delete (kept 5 years).
+
+**Roles.** `viewer`: totals and maps only, no farms, no phones. `district_officer`: their own governorates or districts: farms (protected), inbox, draft alerts, show a phone with a reason. `admin`: everything, plus rules, prices and officers. Sending an alert and changing a rule always need a **second officer** to approve. An officer without 2-step sign-in cannot open farms.
+
+| Screen | Calls |
+|---|---|
+| Officer sign-in | `POST /v1/admin/auth/otp/send`, `/verify` (phone must be on the officer list) + second step (TOTP) → officer token with `role` and `areas` |
+| 11 Farmers and farms | `GET /admin/farms?gov=&district=&sub=&crop=&level=&synced_since=&q=&page=` → `{"total", "farms": [{"id", "name", "phone_masked", "district", "sub_district", "area_dunam", "main_crop", "level", "last_sync", "access": "1km|open|blocked", "open_reason": {"report_id"|"case_id"}}]}`. `GET /admin/farms/{id}`: the outline and cells only when `access` is `open`, otherwise `centre_1km`. `POST /admin/farmers/{phone_id}/reveal {"reason"}` → the full phone. `POST /admin/farmers/{id}/block`, `/unblock`, `DELETE /admin/farmers/{id}` (on the farmer's request, same effect as `DELETE /v1/account`). Officers never change a farm's outline or crops. |
+| 12 Crop register | `GET /admin/crops?by=district|sub_district&gov=` → per unit `{"unit", "farms", "dunam", "crops": [{"crop", "dunam"}], "week_change_dunam"}`, from painted cells (inside areas, 0.2). Registered farms only, not a census. |
+| 13 Send an alert | `POST /admin/alerts` (draft) `{"area": {"districts": [], "sub_districts": []} or {"polygon"}, "type", "day", "level", "confidence", "ku", "en", "action_ku", "action_en", "crops": []}`. `GET /admin/alerts/{id}/reach` → `{"farms", "farmers", "already_pushed_today", "no_push_token"}`. `POST /admin/alerts/{id}/approve` (a second officer) sends it within the push rules of 2.7: one push per farm per day, so farms already pushed get it at 06:00 the next day. `POST /admin/alerts/{id}/stop`. |
+| 14 Inbox | `GET /admin/inbox?kind=report|case&state=&area=` (reports of 2.6 and Doctor cases with `refer_to_officer`), `POST /admin/inbox/{id}/assign {"officer_id"}`, `/seen` (the farmer's report becomes `seen_by_officer`), `/reply {"ku", "en"}` (shown to the farmer in the app), `/close` (the farm goes back to protected). |
+| 15 Rules | `GET /admin/rules` (every threshold with its value, source, version), `POST /admin/rules/{code}/changes {"value", "reason"}`, `POST /admin/rule-changes/{id}/approve` or `/reject`. The jobs read the rule values from here; the old value is kept. Today's values: `farm_doctor/weather_planner.py` and the dryness bands in `backend/src/features/zones/domain/enums.rs`. |
+| 16 Alwa control | `PUT /admin/alwa/markets/{slug}/prices/{crop}/{day} {"price_iqd_per_kg", "fixed"}` then `POST /admin/alwa/prices/publish`; `POST /admin/alwa/listings/{id}/pause`, `DELETE /admin/alwa/listings/{id}`; `GET /admin/alwa/flags` (price far from the market price, repeats, disputes). |
+| 17 Data health | `GET /admin/jobs` → per job `{"name", "every", "last_run", "ok", "summary", "last_14_days": ["ok"|"late"|"failed"|null]}`, `POST /admin/jobs/{name}/run`; `GET /admin/server` (requests, 5xx, p95, database); `GET`/`POST`/`DELETE /admin/service-keys`; `GET /admin/config` shows a warning while `AUTH__FIXED_SIGN_IN_CODE` is set. App versions need the app to send `X-App-Version` on every call (frontend will add it). |
+| 18 Officers and history | `GET`/`POST /admin/officers`, `PUT /admin/officers/{id} {"role", "areas"}`, `DELETE /admin/officers/{id}`; `GET /admin/audit?kind=&officer=&from=&to=` (read only, exportable as CSV). |
+
+New tables: `officers (id, phone, name, role, areas, totp_secret, created_at, disabled_at)`, `audit_log (id, at, officer_id or job, action, target_kind, target_id, reason, before_json, after_json)` (insert only), `alerts (id, draft_by, approved_by, area_json, type, day, level, confidence, texts_json, state, sent_at)`, `rule_values (code, value_json, version, source, changed_by, approved_by, at)`, `inbox_actions (item_id, officer_id, action, note, at)`, `farmer_blocks (farmer_id, by, reason, at)`.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
