@@ -1,11 +1,15 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
 
 import '../../api/api.dart';
+import '../../app_scope.dart';
 import '../../crops.dart';
 import '../../geo.dart';
 import '../../theme.dart';
+import '../../widgets/farm_map.dart';
 
 /// The three ways to look at a farm (design: View Toggle).
 enum FarmView { cells, crops, farm }
@@ -108,35 +112,20 @@ class FarmShape {
   }
 }
 
-/// Fits a [FarmShape] into a box, north up.
-class _Fit {
-  _Fit(this.s, Size size, {double pad = 10}) {
-    final w = math.max(1.0, s.maxX - s.minX);
-    final h = math.max(1.0, s.maxY - s.minY);
-    k = math.min((size.width - 2 * pad) / w, (size.height - 2 * pad) / h);
-    ox = (size.width - w * k) / 2;
-    oy = (size.height - h * k) / 2;
-  }
-  final FarmShape s;
-  late final double k, ox, oy;
-
-  Offset to(double x, double y) =>
-      Offset(ox + (x - s.minX) * k, oy + (s.maxY - y) * k);
-
-  CellKey cellAt(Offset o) {
-    final x = s.minX + (o.dx - ox) / k;
-    final y = s.maxY - (o.dy - oy) / k;
-    return (e: (x / 10).floor(), n: (y / 10).floor());
-  }
-
-  Rect cellRect(CellKey c) => Rect.fromPoints(
-    to(c.e * 10.0, c.n * 10.0 + 10),
-    to(c.e * 10.0 + 10, c.n * 10.0),
-  );
+/// The farm in map coordinates: outline and cell corners, worked out once.
+class _FarmGeo {
+  _FarmGeo(FarmShape s)
+    : outline = [for (final (x, y) in s.outline) Utm.toLatLng(x, y)],
+      corners = {for (final k in s.crop.keys) k: cellCorners(k)};
+  final List<LatLng> outline;
+  final Map<CellKey, List<LatLng>> corners;
 }
 
-/// The farm drawing with tap handling. [overlay] sits on top (cell card or
-/// the whole-farm number); it moves to the top when the picked cell is low.
+/// The farm on its real map (satellite, or the style picked with the layers
+/// button), with the outline and the 10 m cells on top, and tap handling.
+/// The map around each farm is kept on the phone, so it also shows offline.
+/// [overlay] sits on top (cell card or the whole-farm number); it moves to
+/// the top when the picked cell is low.
 class FarmDrawing extends StatelessWidget {
   const FarmDrawing({
     super.key,
@@ -159,55 +148,148 @@ class FarmDrawing extends StatelessWidget {
   final ValueChanged<String?> onCrop;
   final Widget? overlay;
 
+  static final Expando<_FarmGeo> _geos = Expando();
+  _FarmGeo get _geo => _geos[shape] ??= _FarmGeo(shape);
+
+  void _tap(CellKey key) {
+    final crop = shape.crop[key];
+    switch (view) {
+      case FarmView.cells:
+        onCell(crop == null || key == selectedCell ? null : key);
+      case FarmView.crops:
+        onCrop(
+          crop == null || crop == 'empty' || crop == selectedCrop ? null : crop,
+        );
+      case FarmView.farm:
+        break;
+    }
+  }
+
+  /// Colours sit over the satellite picture, so they are partly see-through.
+  Color? _cellColour(CellKey k) {
+    if (view == FarmView.cells) {
+      return levelColor(shape.levelAt(k)).withValues(alpha: 0.6);
+    }
+    final crop = shape.crop[k];
+    if (crop == null) return null;
+    final c = crop == 'empty' ? JColors.levelNone : cropOf(crop).color;
+    final dim = selectedCrop != null && crop != selectedCrop;
+    return c.withValues(alpha: dim ? 0.2 : 0.65);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final ku = AppScope.of(context).ku;
+    final geo = _geo;
+    prefetchFarmMap(geo.outline);
     return LayoutBuilder(
       builder: (context, box) {
         final w = box.maxWidth;
         final aspect =
             (shape.maxY - shape.minY) / math.max(1.0, shape.maxX - shape.minX);
         final h = ((w - 20) * aspect + 20).clamp(200.0, 330.0);
-        final size = Size(w, h);
-        final fit = _Fit(shape, size);
         final sel = selectedCell;
-        final cardAtTop = sel != null && fit.cellRect(sel).center.dy > h / 2;
+        final cardAtTop =
+            sel != null &&
+            sel.n * 10.0 + 5 - shape.minY < (shape.maxY - shape.minY) / 2;
+        final overlayAtTop =
+            overlay != null && view != FarmView.farm && cardAtTop;
         return SizedBox(
           width: w,
           height: h,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapUp: (d) {
-              final key = fit.cellAt(d.localPosition);
-              final crop = shape.crop[key];
-              switch (view) {
-                case FarmView.cells:
-                  onCell(crop == null || key == selectedCell ? null : key);
-                case FarmView.crops:
-                  onCrop(
-                    crop == null || crop == 'empty' || crop == selectedCrop
-                        ? null
-                        : crop,
-                  );
-                case FarmView.farm:
-                  break;
-              }
-            },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                CustomPaint(
-                  size: size,
-                  painter: _FarmPainter(
-                    fit: fit,
-                    view: view,
-                    farmLevel: farmLevel,
-                    selectedCell: selectedCell,
-                    selectedCrop: selectedCrop,
+                StyledMap(
+                  builder: (context, style) => FlutterMap(
+                    key: ValueKey(
+                      Object.hash(geo.outline.first, geo.outline.length),
+                    ),
+                    options: MapOptions(
+                      initialCameraFit: CameraFit.bounds(
+                        bounds: LatLngBounds.fromPoints(geo.outline),
+                        padding: const EdgeInsets.all(14),
+                      ),
+                      maxZoom: 21,
+                      backgroundColor: const Color(0xFF717A50),
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.none,
+                      ),
+                    ),
+                    children: [
+                      ...baseLayers(style, ku),
+                      if (view == FarmView.farm)
+                        PolygonLayer(
+                          polygons: [
+                            Polygon(
+                              points: geo.outline,
+                              color: levelSoft(
+                                farmLevel,
+                              ).withValues(alpha: 0.55),
+                            ),
+                          ],
+                        )
+                      else
+                        CellLayer(
+                          corners: geo.corners,
+                          clipTo: geo.outline,
+                          style: _cellColour,
+                        ),
+                      PolygonLayer(
+                        polygons: [
+                          Polygon(
+                            points: geo.outline,
+                            color: Colors.transparent,
+                            borderColor: Colors.white.withValues(alpha: 0.95),
+                            borderStrokeWidth: 2,
+                          ),
+                        ],
+                      ),
+                      if (sel != null && view == FarmView.cells)
+                        PolygonLayer(
+                          polygons: [
+                            Polygon(
+                              points: cellCorners(sel),
+                              color: Colors.transparent,
+                              borderColor: JColors.ink,
+                              borderStrokeWidth: 2.4,
+                            ),
+                          ],
+                        ),
+                      if (view == FarmView.crops)
+                        MarkerLayer(
+                          markers: [
+                            for (final e in shape.cropCentres().entries)
+                              Marker(
+                                point: Utm.toLatLng(e.value.$1, e.value.$2),
+                                width: 30,
+                                height: 30,
+                                child: _badge(e.key),
+                              ),
+                          ],
+                        ),
+                      Builder(
+                        builder: (context) {
+                          final cam = MapCamera.of(context);
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTapUp: (d) => _tap(
+                              Utm.cellOf(
+                                cam.screenOffsetToLatLng(d.localPosition),
+                              ),
+                            ),
+                            child: const SizedBox.expand(),
+                          );
+                        },
+                      ),
+                      mapAttribution(style),
+                    ],
                   ),
                 ),
-                if (view == FarmView.crops)
-                  for (final e in shape.cropCentres().entries)
-                    _badge(fit.to(e.value.$1, e.value.$2), e.key),
+                if (!overlayAtTop)
+                  const Positioned(top: 8, right: 8, child: MapStyleButton()),
                 if (overlay != null)
                   view == FarmView.farm
                       ? Positioned.fill(child: Center(child: overlay))
@@ -226,118 +308,25 @@ class FarmDrawing extends StatelessWidget {
     );
   }
 
-  Widget _badge(Offset at, String crop) => Positioned(
-    left: at.dx - 15,
-    top: at.dy - 15,
-    child: IgnorePointer(
-      child: Container(
-        width: 30,
-        height: 30,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: crop == selectedCrop ? JColors.ink : Colors.white,
-            width: 2,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 4,
-              offset: Offset(0, 1),
-            ),
-          ],
+  Widget _badge(String crop) => IgnorePointer(
+    child: Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: crop == selectedCrop ? JColors.ink : Colors.white,
+          width: 2,
         ),
-        child: Text(cropOf(crop).emoji, style: const TextStyle(fontSize: 15)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
+      child: Text(cropOf(crop).emoji, style: const TextStyle(fontSize: 15)),
     ),
   );
-}
-
-class _FarmPainter extends CustomPainter {
-  _FarmPainter({
-    required this.fit,
-    required this.view,
-    required this.farmLevel,
-    this.selectedCell,
-    this.selectedCrop,
-  });
-
-  final _Fit fit;
-  final FarmView view;
-  final FarmStatus farmLevel;
-  final CellKey? selectedCell;
-  final String? selectedCrop;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final s = fit.s;
-    final edge = Path()
-      ..addPolygon([for (final (x, y) in s.outline) fit.to(x, y)], true);
-    final edgePaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..strokeJoin = StrokeJoin.round
-      ..color = JColors.ink.withValues(alpha: 0.75);
-
-    if (view == FarmView.farm) {
-      canvas.drawPath(edge, Paint()..color = levelSoft(farmLevel));
-      canvas.drawPath(edge, edgePaint);
-      return;
-    }
-
-    canvas.save();
-    canvas.clipPath(edge);
-    final groups = <Color, Path>{};
-    final grid = Path();
-    s.crop.forEach((key, crop) {
-      final r = fit.cellRect(key);
-      var c = view == FarmView.cells
-          ? levelColor(s.levelAt(key))
-          : crop == 'empty'
-          ? JColors.levelNone
-          : cropOf(crop).color;
-      if (view == FarmView.crops &&
-          selectedCrop != null &&
-          crop != selectedCrop) {
-        c = c.withValues(alpha: 0.3);
-      }
-      groups.putIfAbsent(c, Path.new).addRect(r);
-      if (view == FarmView.cells) grid.addRect(r);
-    });
-    groups.forEach((c, p) => canvas.drawPath(p, Paint()..color = c));
-    if (view == FarmView.cells && fit.k * 10 >= 3.5) {
-      canvas.drawPath(
-        grid,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.5
-          ..color = Colors.white.withValues(alpha: 0.55),
-      );
-    }
-    canvas.restore();
-    canvas.drawPath(edge, edgePaint);
-
-    final sel = selectedCell;
-    if (sel != null && view == FarmView.cells) {
-      final r = fit.cellRect(sel).inflate(math.max(2, fit.k * 2));
-      canvas.drawRect(
-        r,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.4
-          ..color = JColors.ink,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _FarmPainter old) =>
-      old.fit.s != fit.s ||
-      old.fit.k != fit.k ||
-      old.view != view ||
-      old.farmLevel != farmLevel ||
-      old.selectedCell != selectedCell ||
-      old.selectedCrop != selectedCrop;
 }

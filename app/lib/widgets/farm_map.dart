@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart' show LatLng;
 
 import '../app_scope.dart';
 import '../geo.dart';
+import '../store/tile_cache.dart';
 import '../theme.dart';
 import 'common.dart';
 import 'header.dart';
@@ -14,32 +15,51 @@ enum MapStyle { satellite, map, terrain }
 
 final mapStyle = ValueNotifier<MapStyle>(MapStyle.satellite);
 
-TileLayer _tiles(String url, int maxNative) => TileLayer(
-  key: ValueKey(url),
-  urlTemplate: url,
-  userAgentPackageName: 'krd.jutyar',
-  maxNativeZoom: maxNative,
+/// Where each style's map pictures come from.
+const kSatelliteTiles = (
+  url:
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  maxNativeZoom: 18,
 );
+const kStreetTiles = (
+  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  maxNativeZoom: 19,
+);
+const kTerrainTiles = (
+  url:
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+  maxNativeZoom: 16,
+);
+
+({String url, int maxNativeZoom}) tilesFor(MapStyle style) => switch (style) {
+  MapStyle.satellite => kSatelliteTiles,
+  MapStyle.map => kStreetTiles,
+  MapStyle.terrain => kTerrainTiles,
+};
+
+/// Every tile shown is kept on the phone (see TileCache), so maps work offline.
+TileLayer _tiles(({String url, int maxNativeZoom}) t) => TileLayer(
+  key: ValueKey(t.url),
+  urlTemplate: t.url,
+  userAgentPackageName: 'krd.jutyar',
+  maxNativeZoom: t.maxNativeZoom,
+  tileProvider: CachedTileProvider(),
+);
+
+/// Download the map around a farm for the satellite view and the chosen
+/// style, so the farm shows on its map without internet.
+Future<void> prefetchFarmMap(List<LatLng> outline) =>
+    TileCache.prefetchArea(outline, [
+      kSatelliteTiles,
+      if (mapStyle.value != MapStyle.satellite) tilesFor(mapStyle.value),
+    ]);
 
 /// Background tiles for [style] plus Kurdish place names on the satellite view.
 /// Put these first in every FlutterMap's children.
 List<Widget> baseLayers(MapStyle style, bool ku) => switch (style) {
-  MapStyle.satellite => [
-    _tiles(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      18,
-    ),
-    PlaceLabelLayer(ku: ku),
-  ],
-  MapStyle.map => [
-    _tiles('https://tile.openstreetmap.org/{z}/{x}/{y}.png', 19),
-  ],
-  MapStyle.terrain => [
-    _tiles(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-      16,
-    ),
-  ],
+  MapStyle.satellite => [_tiles(kSatelliteTiles), PlaceLabelLayer(ku: ku)],
+  MapStyle.map => [_tiles(kStreetTiles)],
+  MapStyle.terrain => [_tiles(kTerrainTiles)],
 };
 
 /// Required credit line for the tiles and names in use.

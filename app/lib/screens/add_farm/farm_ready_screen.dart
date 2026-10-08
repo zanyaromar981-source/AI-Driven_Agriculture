@@ -149,6 +149,8 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
       lon: centre.longitude,
     );
     await Outbox.instance.add(request, summary);
+    // Keep the map around this farm on the phone, for viewing it offline later.
+    prefetchFarmMap(widget.outline);
     await Draft.clear();
     final result = await Outbox.instance.flush(scope.api);
     if (!mounted) return;
