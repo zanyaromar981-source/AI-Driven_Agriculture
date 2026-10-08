@@ -44,7 +44,7 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 - `DELETE /farms/{id}` → `204`.
 
 ### 2.3 My field from space (Field Eye)
-- `GET /farms/{id}/status` → `200 {"picture_date": "2026-10-05", "cloud_pct": 0, "greenness_pct_of_normal": 101, "pct_of_neighbours": 85, "surface": "bare|sparse|growing|dense", "weak_share_pct": 0, "weak_where": "north-east"|null, "cells": [{"e","n","greenness_pct","level"}...], "history": [{"year": 2025, "greenness": 0.079}, ...], "next_picture_expected": "2026-10-10"}`
+- `GET /farms/{id}/status` → `200 {"picture_date": "2026-10-05", "cloud_pct": 0, "greenness_pct_of_normal": 101, "pct_of_neighbours": 85, "surface": "bare|sparse|growing|dense", "weak_share_pct": 0, "weak_where": "north-east"|null, "cells": [{"e","n","greenness_pct","level","since": "2026-09-25"|null}...], "history": [{"year": 2025, "greenness": 0.079}, ...], "next_picture_expected": "2026-10-10"}`
   Rule: `greenness_pct` is the cell vs its own normal for this week (100 = normal). `null` when cloudy. The backend fetches Sentinel-2; the app never calls satellites.
 
 ### 2.4 This week's plan (Weather Planner)
@@ -52,20 +52,30 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
   Rule: no forecasts beyond 10 days, ever. Thresholds come from `reports/Farm_Advice_Research.md`.
 
 ### 2.5 Ask the Doctor
-- `POST /farms/{id}/ask` multipart: `question` (text, optional), `voice` (audio/m4a or ogg, optional, ≤ 60 s), `photos[]` (jpeg, 1–6, ≤ 4 MB each, optional), `cell` (optional `{"e","n"}` the farmer tapped), `lang` (`ku|en`).
-  → `200 {"likely": "...", "confidence": "sure|likely|unsure", "why": ["field_eye -> ...", "weather -> ..."], "actions_this_week": ["..."], "cannot_tell": ["..."], "refer_to_officer": true|false, "ku": "...", "en": "...", "transcript": "..." (if voice), "case_id": "c_..."}`
+- `POST /farms/{id}/ask` multipart: `question` (text, optional), `voice` (DEFERRED: not in v1, decided 2026-10-08; field reserved), `photos[]` (jpeg, 1–6, ≤ 4 MB each, optional), `cell` (optional `{"e","n"}` the farmer tapped), `lang` (`ku|en`).
+  → `200 {"likely": "...", "confidence": "sure|likely|unsure", "why": ["field_eye -> ...", "weather -> ..."], "actions_this_week": ["..."] (max 3), "cannot_tell": ["..."], "refer_to_officer": true|false, "ku": "...", "en": "...", "transcript": "..." (if voice), "case_id": "c_..."}`
   Rules (hard): no pesticide or fertilizer doses, no product names; only numbers from the AIs; `unsure` + `refer_to_officer: true` when inputs conflict. Response time target ≤ 25 s; the app shows "reading the field" meanwhile.
 
 ### 2.6 Reports (Neighbour Watch)
 - `POST /reports` body `{"farm_id": "f_...", "cell": {"e","n"}|null, "type": "yellow_stripes|insects|wilting|flood|hail|fire|animal_disease|other", "note": "...", "photo_id": "..."|null, "lat", "lon", "t"}` → `201 {"report_id": "r_..."}`
-- `GET /reports/nearby?lat=&lon=&km=20&days=14` → `200 {"count": 3, "by_type": {"yellow_stripes": 2}, "closest": [{"type","km","days_ago"}]}`. Never return another farmer's phone or exact location; round to 1 km.
+- `GET /reports/nearby?lat=&lon=&km=20&days=14` → `200 {"count": 3, "by_type": {"yellow_stripes": 2}, "closest": [{"type","km","days_ago"}]}`. Used by the Doctor and the Ministry only: **farmers do not see other farmers' reports** (decided 2026-10-08). Never return another farmer's phone or exact location; round to 1 km.
+- `GET /reports/mine` → `200 {"reports": [{"report_id","farm_id","cell","type","note","t","status": "sent|seen_by_officer"}]}`: the farmer's own reports list.
 
 ### 2.7 Alerts (push)
 - `POST /devices` body `{"push_token": "...", "platform": "android|ios", "lang": "ku"}` → `204`.
-- The backend pushes `{"farm_id", "type", "day", "ku", "en"}` for alerts of level `alarm` and the weekly plan (Sunday 06:00 local).
+- Push rules (decided 2026-10-08): at most **one push per farm per day**; only level `alarm` (red) is pushed, `watch` is shown in the app only; every push says what to do and how sure: `{"farm_id","alert_id","type","day","level":"alarm","confidence":"sure|likely|unsure","ku","en","action_ku","action_en"}`. The weekly plan goes out Sunday 06:00 local as one message.
+- `GET /farms/{id}/alerts?days=30` → `200 {"alerts": [{"alert_id","type","day","level","confidence","ku","en","action_ku","action_en","pushed": true|false,"done": true|false}]}`; `POST /alerts/{id}/done` → `204`.
+- `POST /devices` also takes `"notify": {"red_alerts": true, "weekly_plan": true}`.
+- `DELETE /account` → `204` (removes the phone, farms, reports and cases).
 
 ### 2.8 Dashboard (Ministry, no login)
 - `GET /region/now` → the structure of `web/now.json` (zones with field_eye, weather, season, neighbours; dams; summary; brief). Keep that shape; the dashboard already reads it.
+
+### 2.9 App decisions that affect the backend (2026-10-08)
+- Field edge: the farmer **always walks the corners**; no satellite edge suggestion in the app flow (SAM stays a backend tool for the Ministry map).
+- Home shows all farms stacked: `GET /farms` must return every farm with enough to draw the grid summary (`status`, `last_picture`, `crops`), and `GET /farms/{id}/status` is called per farm on open.
+- Cell tap views: cell, crop plot, whole farm. The backend adds per-crop summaries to 2.3: `"crops": [{"crop","dunam","greenness_pct_of_normal","level"}]` and the whole-farm `greenness_pct_of_normal` (already there).
+- Labels: new screens are English for now; Sorani comes later, but the backend keeps returning both `ku` and `en`.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
