@@ -1,5 +1,5 @@
 'use strict';
-/* SmartSuli Control Room demo. Sample data only: nothing is saved or sent.
+/* Jutyar Control Room demo. Sample data only: nothing is saved or sent.
    Every section the Ministry needs to run the app, the data and the process.
    Real district borders come from ../map_demo/kri_map_data.js. */
 
@@ -193,21 +193,27 @@ function renderSide(cur) {
     `<div class="protect"><b>${I('lock')}Protected mode on</b>Phones and exact fields stay hidden until a farmer asks an officer for help. Every look is written to the history.</div>`;
   const n = S.approvals.length; $('#approvalsCount').textContent = n; $('#approvalsCount').classList.toggle('zero', !n);
 }
-function route() {
+const SKEL = { overview: 'overview', farms: 'table', officers: 'table', db: 'table', audit: 'table', jobs: 'table', texts: 'table', approvals: 'table', crops: 'map', alerts: 'map', region: 'map' };
+let routeT = null;
+function route(fast) {
   const k = (location.hash || '#overview').slice(1).split('/')[0];
   const r = FLAT[k] || FLAT.overview;
   Object.keys(MAPS).forEach(x => { if (x !== 'drawer') { MAPS[x].remove(); delete MAPS[x]; } });
   renderSide(r[0]);
   const main = $('#main');
-  if (rank() < r[3]) {
-    main.innerHTML = `<div class="lock-page"><div class="ico warn">${I('lock')}</div><h2>${r[2]} is closed for your role</h2><p class="sub">You are signed in as <b>${ME.name}</b>, ${ROLE[ME.role][1]}. This section needs ${['a viewer', 'a district officer', 'an admin'][r[3]]}. Switch officer in the top right corner to see it.</p></div>`;
-  } else {
-    main.innerHTML = PAGES[r[0]]();
-    (AFTER[r[0]] || (() => {}))();
-  }
-  refreshIcons(); window.scrollTo(0, 0);
+  clearTimeout(routeT);
+  const draw = () => {
+    if (rank() < r[3]) main.innerHTML = `<div class="lock-page"><div class="ico warn">${I('lock')}</div><h2>${r[2]} is closed for your role</h2><p class="sub">You are signed in as <b>${ME.name}</b>, ${ROLE[ME.role][1]}. This section needs ${['a viewer', 'a district officer', 'an admin'][r[3]]}. Switch officer in the top right corner to see it.</p></div>`;
+    else { main.innerHTML = PAGES[r[0]](); (AFTER[r[0]] || (() => {}))(); }
+    refreshIcons();
+  };
+  if (fast || !Motion.ready || (Motion.reduce && !Motion.freezeSkeleton)) { draw(); Motion.refreshMagnets(); if (!fast) window.scrollTo(0, 0); return; }
+  window.scrollTo(0, 0);
+  main.innerHTML = Motion.skeleton(SKEL[r[0]] || 'cards'); refreshIcons(); Motion.loading(true);
+  if (Motion.freezeSkeleton) return;
+  routeT = setTimeout(() => { draw(); Motion.loading(false); Motion.enter(main); }, 460);
 }
-function rerender() { const y = window.scrollY; route(); window.scrollTo(0, y); }
+function rerender() { const y = window.scrollY; route(true); window.scrollTo(0, y); }
 
 // ---------- pages ----------
 const PAGES = {}, AFTER = {};
@@ -223,9 +229,11 @@ PAGES.overview = () => {
     ['smartphone', 'warn', '5% of phones run app 1.0.0 (test mode build)', 'force an update below 1.0.2', '#app'],
     ['shield-alert', 'warn', 'Rebaz Salih has no 2-step sign-in', 'blocked from farms until it is on', '#officers'],
   ];
-  return head(NOW.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · 10:46', `Good morning, ${ME.name.split(' ')[0]}`,
-    `What needs you today across ${ME.areas.join(', ')}. Every number comes from the app, the data jobs and the officers' work.`,
-    `<a class="btn" href="#audit">${I('history')}History</a><a class="btn primary" href="#alerts">${I('bell-ring')}New alert</a>`) +
+  return `<div class="hero" id="hero"><div class="sat soft" id="heroSoft"></div><div class="sat sharp" id="heroSharp"></div><div class="shade"></div>
+    <div class="txt"><div class="eyebrow">${NOW.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} · 10:46</div><h1 data-type="Good morning, ${ME.name.split(' ')[0]}">Good morning, ${ME.name.split(' ')[0]}</h1>
+    <div class="sub">What needs you today across ${ME.areas.join(', ')}. Every number comes from the app, the data jobs and the officers' work.</div></div>
+    <div class="actions"><a class="btn" href="#audit">${I('history')}History</a><a class="btn primary" href="#alerts">${I('bell-ring')}New alert</a></div>
+    <div class="hint">${I('mouse-pointer-2')}Move over the picture: Dukan lake from space, Esri imagery</div></div>` +
   `<div class="grid g4" style="margin-bottom:14px">
     ${kpi('Farmers', fmt(FARMERS.length), '+37 this week · 61% use Sorani', '', 'users')}
     ${kpi('Farms', fmt(visible.length), fmt(dun) + ' dunam registered', '', 'map')}
@@ -253,6 +261,8 @@ PAGES.overview = () => {
   </div>`;
 };
 AFTER.overview = () => {
+  Motion.satTiles('#heroSoft', 35.93, 44.96, 12, 6, 3, 4);
+  Motion.satTiles('#heroSharp', 35.93, 44.96, 12, 6, 3, 4, { noLow: true, delay: 0 });
   const cnt = {}; FARMS.forEach(f => cnt[f.dist] = (cnt[f.dist] || 0) + 1);
   districtMap('ovMap', p => ({ fillColor: ramp(cnt[p.en] || 0, [20, 50, 100, 200], ['#EAF2EC', '#BFDCC8', '#7FBC93', '#3E9461', '#0F5B4B']) }),
     p => { S.farmFilter = Object.assign(S.farmFilter, { gov: p.gov, dist: p.en, page: 0 }); location.hash = '#farms'; });
@@ -454,6 +464,11 @@ AFTER.alerts = () => {
 };
 
 // inbox
+AFTER.inbox = () => {
+  const cur = S.inbox.find(i => i.id === S.sel.inbox) || S.inbox[0], f = FARMS.find(x => x.id === cur.farm);
+  const at = f ? [f.lat, f.lon] : (SUBS.find(s => cur.where.startsWith(s.en)) || DISTS.find(d => cur.where.includes(d.en)) || { c: [35.55, 44.84] }).c || [35.55, 44.84];
+  Motion.satTiles('#inboxSat', at[0], at[1], 16, 4, 2, 5, { tag: `${cur.photos} farmer photo${cur.photos > 1 ? 's' : ''} · the farm from space` });
+};
 PAGES.inbox = () => {
   const tab = S.tab.inbox || 'all';
   const list = S.inbox.filter(i => (tab === 'all' ? i.state !== 'closed' : tab === 'reports' ? i.kind === 'report' : tab === 'doctor' ? i.kind === 'case' : tab === 'unassigned' ? !i.assigned : i.state === 'closed') && (ME.areas.includes('All Kurdistan') || ME.areas.includes(i.gov)));
@@ -464,7 +479,7 @@ PAGES.inbox = () => {
         <select onchange="A.assign('${cur.id}', this.value)"><option>${cur.assigned ? 'Assigned: ' + cur.assigned : 'Assign to…'}</option>${OFFICERS.filter(o => o.role !== 'viewer').map(o => `<option>${o.name}</option>`).join('')}<option>Vets, Sulaymaniyah</option><option>Plant protection, Erbil</option></select></div>
       <h2 style="margin:10px 0 4px">${cur.title}</h2><div class="muted">Farm #${cur.farm} · ${cur.where} · ${cur.at} · ${cur.photos} photo${cur.photos > 1 ? 's' : ''}</div>
       <div class="grid g2" style="margin-top:14px">
-        <div class="stack"><div style="height:170px;border-radius:10px;background:linear-gradient(160deg,#6E8B3D,#8FA654);display:flex;align-items:flex-end;padding:10px;color:#fff;font-weight:600">${I('image')}&nbsp;1 of ${cur.photos} photos</div>
+        <div class="stack"><div id="inboxSat" style="height:190px;border-radius:12px"></div>
           <div><div class="eyebrow">Farmer wrote</div><div class="ku" style="font-size:14px;margin:4px 0">${cur.note}</div><div class="muted small">“${cur.en}” (machine translation)</div></div>
           <div class="note brand">${I('unlock')}<span>Farm #${cur.farm} is open to officers of ${cur.gov} while this is open.</span></div></div>
         <div class="stack">${cur.doctor ? `<div class="note info" style="flex-direction:column"><b>${I('stethoscope')} What the Doctor thinks · ${cur.doctor.conf}</b><span style="color:var(--ink)">${cur.doctor.likely}</span>${cur.doctor.why.map(([a, b]) => `<span class="small"><b>${a}:</b> ${b}</span>`).join('')}</div>` : `<div class="note">${I('info')}<span class="muted">The farmer did not ask the Doctor.</span></div>`}
@@ -845,4 +860,13 @@ function openSearch() {
 $('#searchBtn').onclick = openSearch;
 document.addEventListener('keydown', e => { if (e.key === '/' && !/input|textarea|select/i.test(document.activeElement.tagName)) { e.preventDefault(); openSearch(); } if (e.key === 'Escape') { closeModal(); closeDrawer(); } });
 window.addEventListener('hashchange', () => { closeDrawer(); route(); });
+$('#brandSun').innerHTML = Motion.sun(26, 'solid');
+Motion.ticker([
+  ['☀', `<b>${S.approvals.length} changes</b> wait for a second officer`], ['●', '<b>Frost alarm</b> drafted for Penjwen, Sharbazher, Pshdar'],
+  ['●', '<b>Dams job late</b>: no reading today'], ['●', '<b>23 farms</b> saved today, 4 made offline'], ['●', 'Tomato <b>700 IQD/kg</b> in Sulaymaniyah, not published'],
+  ['●', '<b>4 fires</b> seen by NASA FIRMS, 1 near farms'], ['●', '<b>2 Doctor cases</b> ask for an officer'], ['●', 'Dukan <b>88%</b> full · Darbandikhan <b>54%</b>'],
+  ['●', '<b>812 farmers</b> opened the app today'], ['●', 'Sorani texts: <b>48</b> wait for a native speaker'],
+]);
 setWho(); route();
+Motion.appReady = true;
+Motion.preload().then(() => { if (Motion.freezeSkeleton) route(); else Motion.enter($('#main')); });
