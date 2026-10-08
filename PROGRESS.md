@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 20:28
+Last update: 2026-10-08 20:31
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -22,8 +22,10 @@ Last update: 2026-10-08 20:28
 - Repo on GitHub with CLAUDE.md rules
 - Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
+- Backend in Rust + axum, `backend/` (clean architecture + vertical slices): first slice `farms` (list, create from walked corners and painted cells, repaint, delete), 92 tests, checked against a real Postgres; `FRONTEND.md` says where it differs from `BACKEND.md`
 
 ## In progress
+- Backend: farmer profiles and the data behind the Ministry dashboard design (zones, dams, forecast, fires, water, Alwa market)
 - Flutter app, one screen at a time: next is Ask the Doctor (the tab bar is in place)
 - Review of the full farmer app design in Pencil (all 4 jobs done)
 - Ministry dashboard: wire `web/now.json` into the template (paused until the template is settled)

@@ -1,0 +1,9 @@
+[database]
+url = "postgres://postgres:postgres@localhost:5432/farm_doctor"
+
+[entity]
+path = "src/models/_entities"
+with_serde = "both"
+with_copy_enums = true
+date_time_crate = "chrono"
+with_json = true
