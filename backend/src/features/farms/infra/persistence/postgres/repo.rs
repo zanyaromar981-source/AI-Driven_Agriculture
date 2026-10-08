@@ -11,7 +11,7 @@ use crate::{
     app::AppError as GlobalAppError,
     features::farms::{
         app::{AppError, FarmRepository},
-        domain::{Cell, Crop, Farm, FarmSummary, IdempotencyKey},
+        domain::{Cell, Crop, Farm, FarmLocation, FarmSummary, IdempotencyKey},
         infra::persistence::postgres::{
             entities::{farm_cells, farms},
             mappings::cell_active_model,
@@ -141,6 +141,16 @@ impl FarmRepository for FarmPostgresRepository {
             .count(&self.conn)
             .await
             .map_err(database_error)
+    }
+
+    async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError> {
+        let models = farms::Entity::find()
+            .order_by_asc(farms::Column::Id)
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        models.into_iter().map(FarmLocation::try_from).collect()
     }
 
     async fn create(&self, entity: &Farm) -> Result<Farm, AppError> {

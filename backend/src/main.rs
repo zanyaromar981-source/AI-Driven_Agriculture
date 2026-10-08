@@ -10,6 +10,8 @@ use farm_doctor_api::{
     features::{
         farmers::web::{public_routes as farmer_public_routes, routes as farmer_routes},
         farms::web::routes as farm_routes,
+        fires::web::{ingest_routes as fire_ingest_routes, public_routes as fire_public_routes},
+        insights::web::{ingest_routes as insight_ingest_routes, routes as insight_routes},
     },
     infra::{
         BootstrappedApp, Config,
@@ -60,11 +62,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             Router::new()
                 .merge(farm_routes())
                 .merge(farmer_routes())
+                .merge(insight_routes())
                 .layer(middleware::from_fn_with_state(state.clone(), auth))
                 .merge(farmer_public_routes())
+                .merge(fire_public_routes())
                 .nest(
                     "/ingest",
-                    Router::new().layer(middleware::from_fn_with_state(state.clone(), service_key)),
+                    Router::new()
+                        .merge(fire_ingest_routes())
+                        .merge(insight_ingest_routes())
+                        .layer(middleware::from_fn_with_state(state.clone(), service_key)),
                 ),
         )
         .merge(health_routes())

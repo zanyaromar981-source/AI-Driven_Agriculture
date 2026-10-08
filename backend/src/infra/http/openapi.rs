@@ -15,6 +15,15 @@ use crate::{
         OutlinePointResponse, PointParams, RepaintFarmCellsParams, SavedFarmResponse,
         handlers as farm_handlers,
     },
+    features::fires::web::{
+        FireResponse, FireStatus, FireSummaryResponse, FiresResponse, RecordFireParams,
+        WindDirection, handlers as fire_handlers,
+    },
+    features::insights::web::{
+        Confidence, FarmCoverageResponse, FarmInsightsResponse, FarmsCoverageResponse,
+        MeasureParams, MeasureResponse, RecordFarmInsightParams, Topic, TopicInsightResponse,
+        TopicStampResponse, handlers as insight_handlers,
+    },
     infra::http::{ErrorBody, health},
 };
 
@@ -48,6 +57,11 @@ impl Modify for BearerAuth {
         farmer_handlers::verify_sign_in_code,
         farmer_handlers::get_profile,
         farmer_handlers::update_profile,
+        fire_handlers::get_fires,
+        fire_handlers::put_fire,
+        insight_handlers::get_farm_insights,
+        insight_handlers::get_farm_coverage,
+        insight_handlers::put_farm_insight,
         health::liveness,
         health::readiness,
     ),
@@ -74,13 +88,31 @@ impl Modify for BearerAuth {
         EditProfileParams,
         ProfileResponse,
         Language,
+        RecordFireParams,
+        FireResponse,
+        FireSummaryResponse,
+        FiresResponse,
+        FireStatus,
+        WindDirection,
+        RecordFarmInsightParams,
+        MeasureParams,
+        MeasureResponse,
+        TopicInsightResponse,
+        FarmInsightsResponse,
+        TopicStampResponse,
+        FarmCoverageResponse,
+        FarmsCoverageResponse,
+        Topic,
+        Confidence,
         ErrorBody
     )),
     modifiers(&BearerAuth),
     tags(
         (name = "farm-doctor-api", description = "Farm Doctor API"),
         (name = "farmers", description = "Sign in with a phone and a code, and the farmer's profile"),
-        (name = "farms", description = "A farmer's farms: outline, cell grid and crops")
+        (name = "farms", description = "A farmer's farms: outline, cell grid and crops"),
+        (name = "fires", description = "Satellite fire detections for the Ministry dashboard"),
+        (name = "insights", description = "What the data jobs know about a farm, topic by topic")
     ),
     info(
         title = "farm-doctor-api",

@@ -12,6 +12,10 @@ use crate::{
             ListFarmsUseCase, RegisterFarmUseCase, RemoveFarmUseCase, RepaintFarmCellsUseCase,
             ViewFarmUseCase,
         },
+        fires::app::use_cases::{ListFiresUseCase, RecordFireUseCase},
+        insights::app::use_cases::{
+            ListFarmCoverageUseCase, RecordFarmInsightUseCase, ViewFarmInsightsUseCase,
+        },
     },
     infra::Config,
 };
@@ -34,9 +38,24 @@ pub struct FarmerFeature {
 }
 
 #[derive(Clone)]
+pub struct FireFeature {
+    pub list_fires_use_case: Arc<ListFiresUseCase>,
+    pub record_fire_use_case: Arc<RecordFireUseCase>,
+}
+
+#[derive(Clone)]
+pub struct InsightFeature {
+    pub view_farm_insights_use_case: Arc<ViewFarmInsightsUseCase>,
+    pub record_farm_insight_use_case: Arc<RecordFarmInsightUseCase>,
+    pub list_farm_coverage_use_case: Arc<ListFarmCoverageUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
+    pub fire: FireFeature,
+    pub insight: InsightFeature,
 }
 
 #[derive(Clone)]

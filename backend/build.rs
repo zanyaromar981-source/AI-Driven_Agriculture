@@ -60,6 +60,14 @@ fn main() {
                     "farmers,sign_in_challenges",
                     "src/features/farmers/infra/persistence/postgres/entities",
                 ),
+                (
+                    "fires",
+                    "src/features/fires/infra/persistence/postgres/entities",
+                ),
+                (
+                    "farm_insights",
+                    "src/features/insights/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

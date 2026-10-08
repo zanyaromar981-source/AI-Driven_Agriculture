@@ -7,7 +7,8 @@ use crate::{
     features::farms::{
         app::AppError,
         domain::{
-            Cell, Crop, Farm, FarmName, FarmSummary, GridCell, IdempotencyKey, Outline, Point,
+            Cell, Crop, Farm, FarmLocation, FarmName, FarmSummary, GridCell, IdempotencyKey,
+            Outline, Point,
         },
         infra::persistence::postgres::entities::{farm_cells, farms},
     },
@@ -105,6 +106,17 @@ impl TryFrom<(farms::Model, Vec<(String, usize)>)> for FarmSummary {
             &outline_from(model.outline)?,
             cells_per_crop,
             model.created_at.and_utc(),
+        ))
+    }
+}
+
+impl TryFrom<farms::Model> for FarmLocation {
+    type Error = AppError;
+
+    fn try_from(model: farms::Model) -> Result<Self, Self::Error> {
+        Ok(FarmLocation::rehydrate(
+            model.id,
+            &outline_from(model.outline)?,
         ))
     }
 }

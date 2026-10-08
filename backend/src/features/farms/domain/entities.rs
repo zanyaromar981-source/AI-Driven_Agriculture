@@ -210,6 +210,28 @@ impl FarmSummary {
     }
 }
 
+/// Where one farm is and how large, for the data jobs that compute readings
+/// per farm. It carries no owner: a job never needs to know whose farm it is.
+#[derive(Clone, Debug, Getters)]
+#[getset(get = "pub")]
+pub struct FarmLocation {
+    id: i32,
+    /// `(lat, lon)`
+    centroid: (f64, f64),
+    area_dunam: f64,
+}
+
+impl FarmLocation {
+    /// Reconstruct from persisted state.
+    pub fn rehydrate(id: i32, outline: &Outline) -> Self {
+        Self {
+            id,
+            centroid: outline.centroid(),
+            area_dunam: outline.area_dunam(),
+        }
+    }
+}
+
 /// Largest area first, so the main crop leads; ties keep the order the crop
 /// codes are declared in.
 fn crop_areas(cells_per_crop: Vec<(Crop, usize)>) -> Vec<CropArea> {
