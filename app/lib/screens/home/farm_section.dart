@@ -325,6 +325,7 @@ class _FarmSectionState extends State<FarmSection> {
               '${s.cellName(shape.label(k))} · ${cropOf(crop).emoji} ${s.crop(crop)}',
           level: r?.level ?? FarmStatus.none,
           pct: r?.greennessPct,
+          emptyText: st?.pictureDate == null ? s.noReading : s.cloudOrNotSown,
           lines: [
             if (days != null) s.sinceLine(fmtDay(r!.since!), days),
             if (r?.greennessPct != null)
@@ -345,6 +346,7 @@ class _FarmSectionState extends State<FarmSection> {
               '${cropOf(c).emoji} ${s.crop(c)} · ${fmtM2((r?.dunam ?? 0) * 2500)} ${s.m2}',
           level: r?.level ?? FarmStatus.none,
           pct: r?.greennessPctOfNormal,
+          emptyText: st?.pictureDate == null ? s.noReading : s.notSownCap,
           lines: [
             if (r?.greennessPctOfNormal != null) s.compareLine(null, whole),
           ],
@@ -487,9 +489,11 @@ class _CropList extends StatelessWidget {
                 child: Text(
                   [
                     '${s.crop(c.crop)} ${fmtM2(c.dunam * 2500)} ${s.m2}',
-                    c.greennessPctOfNormal == null
-                        ? s.notSownYet
-                        : s.pctOfNormal(c.greennessPctOfNormal!),
+                    c.greennessPctOfNormal != null
+                        ? s.pctOfNormal(c.greennessPctOfNormal!)
+                        : status?.pictureDate == null
+                        ? s.noReadingYet
+                        : s.notSownYet,
                     if (c.greennessPctOfNormal != null) s.levelName(c.level),
                   ].join(' · '),
                   style: jText(false, size: 13, color: JColors.ink),

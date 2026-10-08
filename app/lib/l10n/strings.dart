@@ -231,7 +231,12 @@ class S {
   ].join(' · ');
   String get askSpot => 'Ask about this spot';
   String get reportHere => 'Report here';
-  String get noReading => 'No satellite reading for this cell yet';
+  String get noReading => 'No satellite reading yet';
+
+  /// Picture taken, but this cell had no greenness (cloud, or nothing growing).
+  String get cloudOrNotSown => 'Cloud or not sown on the last picture';
+  String get noReadingYet => 'no reading yet';
+  String get notSownCap => 'Not sown yet';
   String measuredOn(String part, String all) => 'measured on $part of $all m²';
   String offlineCopy(String when) => 'No internet. Showing the copy from $when';
   String get weatherDown => 'Weather forecast not available right now';
@@ -266,12 +271,16 @@ class S {
   // Delete a farm
   String get deleteFarm => t('سڕینەوەی کێڵگە', 'Delete farm');
   String deleteTitle(String name) => t('"$name" بسڕیتەوە؟', 'Delete "$name"?');
-  String get deleteBody => t('کێڵگەکە و سنوور و ڕووەکەکانی دەسڕێنەوە. ناگەڕێتەوە.',
-      'The farm, its border and its crops are removed. This cannot be undone.');
+  String get deleteBody => t(
+    'کێڵگەکە و سنوور و ڕووەکەکانی دەسڕێنەوە. ناگەڕێتەوە.',
+    'The farm, its border and its crops are removed. This cannot be undone.',
+  );
   String get delete => t('بیسڕەوە', 'Delete');
   String get deleted => t('کێڵگەکە سڕایەوە', 'Farm deleted');
-  String get deletedOffline => t('لەسەر مۆبایلەکە سڕایەوە. کە ئینتەرنێت هەبوو سێرڤەر ئاگادار دەکرێتەوە',
-      'Deleted on the phone. The server is told when there is internet.');
+  String get deletedOffline => t(
+    'لەسەر مۆبایلەکە سڕایەوە. کە ئینتەرنێت هەبوو سێرڤەر ئاگادار دەکرێتەوە',
+    'Deleted on the phone. The server is told when there is internet.',
+  );
   String get farmMenu => t('کێڵگە', 'Farm');
 
   String squares(int n) => t('$n خانە', n == 1 ? '1 square' : '$n squares');

@@ -40,6 +40,7 @@ class CellCard extends StatelessWidget {
     required this.level,
     this.pct,
     this.lines = const [],
+    this.emptyText,
     required this.onClose,
     this.onAsk,
     this.onReport,
@@ -49,6 +50,9 @@ class CellCard extends StatelessWidget {
   final FarmStatus level;
   final int? pct;
   final List<String> lines;
+
+  /// Shown instead of the % when there is no reading (default: no reading yet).
+  final String? emptyText;
   final VoidCallback onClose;
   final VoidCallback? onAsk;
   final VoidCallback? onReport;
@@ -103,7 +107,7 @@ class CellCard extends StatelessWidget {
                 children: [
                   Flexible(
                     child: Text(
-                      p == null ? s.noReading : s.pctOfNormal(p),
+                      p == null ? (emptyText ?? s.noReading) : s.pctOfNormal(p),
                       style: jText(
                         false,
                         size: p == null ? 14 : 21,
