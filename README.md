@@ -47,6 +47,10 @@ Gets the five outputs as one JSON plus a short rulebook. Answers in Sorani and E
 4. Pixxel (hyperspectral 5 m) and Hydrosat (thermal 70 m) prices or trial access for "which part of the farm is sick". Neither contacted yet.
 5. Confirm with the organizers that pre-built work is allowed (user says yes, preparing in advance is allowed; judges want live AI).
 
+## Working rules
+
+**Do not assume anything. If you are unsure of anything, ask a question first.** Full rules for teammates and for Claude sessions are in `CLAUDE.md`; every decision goes into `STATUS.md`.
+
 ## How to run
 
 Everything is Python 3 standard library plus `urllib`, unless noted. Data feeds are free and keyless.
