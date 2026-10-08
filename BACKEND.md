@@ -87,7 +87,34 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 | 2.8 region | `build_now.py` → `web/now.json` | works, 61 s for 16 zones |
 | 2.1 OTP, 2.2 farms, 2.7 push | nothing yet | to build |
 
-## 6. Open points (answer here)
+## 7. How the data flows (app, server, database)
+
+**A. The farmer creates a farm** (app → server → database)
+1. The app collects GPS corners and painted cells; this works offline.
+2. The app sends one `POST /farms` with points and cells (section 2.2).
+3. The server validates the polygon, snaps cells to the 10 m grid, and saves `farms` + `cells` (one row per cell with its crop).
+4. The server answers with the farm; if a satellite picture is already cached for that area, cell values come back at once.
+
+**B. The server keeps every farm fresh** (background jobs, no app involved)
+- Daily `satellite_job`: for each farm, look for a new Sentinel-2 picture; compute greenness per cell vs that cell's normal; store rows in `cell_readings (cell_id, date, greenness_pct, level, cloud_pct)`.
+- Every 6 hours `weather_job`: run the Weather Planner per farm centroid; store `plans (farm_id, issued, days[], alerts[], decisions[])`; push alerts of level `alarm`.
+- Weekly `brief_job`: the Doctor writes the Ministry brief and the per-village farmer message.
+Heavy work happens once here, never when the farmer opens the app.
+
+**C. The farmer opens the app** (app → server → database → app)
+1. `GET /farms/{id}/status` reads the latest `cell_readings`; no satellite call; answers in milliseconds.
+2. The app paints each cell from `level` and shows `picture_date`.
+3. `GET /farms/{id}/plan` reads the stored plan.
+
+**D. Ask the Doctor** (the only slow call, 10–25 s)
+`POST /farms/{id}/ask`: the server gathers the stored numbers for that farm (status, plan, season, nearby reports, dams), calls Claude with the rulebook, saves the case in `cases`, returns the answer. The app shows "reading the field" meanwhile.
+
+**E. Offline**
+The app keeps a local copy of its farms, the last status and plan, and shows them with their date when there is no signal; it syncs when back online (Idempotency-Key on POSTs).
+
+**Tables (minimum):** `users (phone, created_at)`, `devices (user, push_token, platform, lang)`, `farms (id, user, name, outline, area_dunam, created_at)`, `cells (id, farm, e, n, crop)`, `cell_readings (cell, date, greenness_pct, level, cloud_pct)`, `plans (farm, issued, json)`, `reports (id, farm, cell, type, note, photo, lat, lon, t)`, `cases (id, farm, question, inputs_json, answer_json, t)`, `otp_codes (phone, code_hash, expires, tries)`.
+
+## 8. Open points (answer here)
 1. Field edge shortcut: offer the satellite-detected edge (SAM) as a suggestion, always walk, or walk then tidy. (User decision pending.)
 2. OTP provider for Iraqi numbers (Twilio, local SMS gateway) and cost.
 3. Where the backend runs for the demo (laptop, DigitalOcean droplet) and the base URL.
