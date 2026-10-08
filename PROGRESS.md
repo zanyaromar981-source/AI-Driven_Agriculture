@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 16:57
+Last update: 2026-10-08 17:09
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -16,13 +16,14 @@ Last update: 2026-10-08 16:57
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
 
 ## In progress
-- Farmer app design in Pencil (next screens after Add farm)
+- Farmer app design in Pencil, 4 jobs: (1) Farm page: Home + cell card, (2) Ask / Reading / Answer, (3) More page: Report + Alerts, (4) Settings + Grain Sun logo
 - Ministry dashboard: wire `web/now.json` into the template (paused until the template is settled)
 
+## Decisions taken (2026-10-08 planning)
+- Tab bar; Home = all farms stacked; cell tap = small card + cells / crops / farm toggle; colours + numbers; Ask = text + photos; own reports only; field edge = always walk; logo 36 Grain Sun; English placeholders on new screens
+
 ## Decisions pending (user)
-- Field edge: 1 suggest the satellite edge, 2 always walk the corners, 3 walk then tidy
-- App-to-backend split: app collects GPS points and painted cells, backend builds the farm and attaches satellite values (proposed)
-- Logo pick (top 10 on the logos page)
+- none
 
 ## Next
 - Design the farm home screen (my field from space, this week's plan, ask the Doctor)
