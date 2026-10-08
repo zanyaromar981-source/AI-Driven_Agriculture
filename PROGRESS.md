@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 17:09
+Last update: 2026-10-08 17:15
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -17,7 +17,7 @@ Last update: 2026-10-08 17:09
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
 
 ## In progress
-- Farmer app design in Pencil, 4 jobs: (1) Farm page: Home + cell card, (2) Ask / Reading / Answer, (3) More page: Report + Alerts, (4) Settings + Grain Sun logo
+- Farmer app design in Pencil, 4 jobs: (1) Farm page: Home + cell card DONE, awaiting review, (2) Ask / Reading / Answer, (3) More page: Report + Alerts, (4) Settings + Grain Sun logo
 - Ministry dashboard: wire `web/now.json` into the template (paused until the template is settled)
 
 ## Decisions taken (2026-10-08 planning)
