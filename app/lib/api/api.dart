@@ -299,6 +299,9 @@ abstract class Api {
 
   /// GET /farms/{id}/plan: the next 10 days of weather turned into farm work.
   Future<FarmPlan> getPlan(String id);
+
+  /// GET /farms/{id}/insights: the 20+ year history of this field, as topics.
+  Future<FarmInsights> getInsights(String id);
 }
 
 // ---- Farm Home: BACKEND.md 2.2 (GET /farms/{id}), 2.3 (status), 2.4 (plan) ----
@@ -527,5 +530,108 @@ class FarmPlan {
     ],
     source: j['source'] as String? ?? '',
     issued: DateTime.parse(j['issued'] as String),
+  );
+}
+
+// ---- Field history: GET /farms/{id}/insights (topics from the Mac analysis) ----
+
+/// One number in a topic, e.g. clay_pct_topsoil = 38.9 %.
+class InsightMeasure {
+  const InsightMeasure({
+    required this.code,
+    required this.value,
+    required this.unit,
+    required this.labelEn,
+    this.labelKu,
+  });
+  final String code;
+  final double? value;
+  final String unit;
+  final String labelEn;
+  final String? labelKu;
+
+  factory InsightMeasure.fromJson(Map<String, dynamic> j) => InsightMeasure(
+    code: j['code'] as String,
+    value: (j['value'] as num?)?.toDouble(),
+    unit: j['unit'] as String? ?? '',
+    labelEn: j['label_en'] as String? ?? '',
+    labelKu: j['label_ku'] as String?,
+  );
+}
+
+/// One topic: greenness, rain, weather, soil or dryness.
+class InsightTopic {
+  const InsightTopic({
+    required this.topic,
+    required this.asOf,
+    required this.source,
+    required this.confidence,
+    required this.summaryEn,
+    this.summaryKu,
+    required this.measures,
+  });
+  final String topic;
+  final String asOf;
+  final String source;
+  final String confidence;
+  final String summaryEn;
+  final String? summaryKu;
+  final List<InsightMeasure> measures;
+
+  /// The value of one measure, or null when it is missing.
+  double? m(String code) {
+    for (final x in measures) {
+      if (x.code == code) return x.value;
+    }
+    return null;
+  }
+
+  /// The label of one measure (labels carry seasons, e.g. "Rain in 2025/26").
+  String? label(String code) {
+    for (final x in measures) {
+      if (x.code == code) return x.labelEn;
+    }
+    return null;
+  }
+
+  factory InsightTopic.fromJson(Map<String, dynamic> j) => InsightTopic(
+    topic: j['topic'] as String,
+    asOf: j['as_of'] as String? ?? '',
+    source: j['source'] as String? ?? '',
+    confidence: j['confidence'] as String? ?? 'unsure',
+    summaryEn: j['summary_en'] as String? ?? '',
+    summaryKu: j['summary_ku'] as String?,
+    measures: [
+      for (final m in (j['measures'] as List? ?? const []))
+        InsightMeasure.fromJson(m as Map<String, dynamic>),
+    ],
+  );
+}
+
+/// The whole field history. Topics arrive one by one while the analysis runs.
+class FarmInsights {
+  const FarmInsights({required this.topics, required this.json});
+  final List<InsightTopic> topics;
+
+  /// The answer as received, kept on the phone for offline use.
+  final Map<String, dynamic> json;
+
+  static const all = ['rain', 'weather', 'greenness', 'soil', 'dryness'];
+
+  InsightTopic? topic(String name) {
+    for (final t in topics) {
+      if (t.topic == name) return t;
+    }
+    return null;
+  }
+
+  int get ready => all.where((t) => topic(t) != null).length;
+
+  factory FarmInsights.fromJson(Map<String, dynamic> j) => FarmInsights(
+    topics: [
+      for (final t in (j['topics'] as List? ?? const []))
+        InsightTopic.fromJson(t as Map<String, dynamic>),
+    ],
+    json: j,
   );
 }

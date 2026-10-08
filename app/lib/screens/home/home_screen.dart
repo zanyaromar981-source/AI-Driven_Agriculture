@@ -5,6 +5,7 @@ import '../../app_scope.dart';
 import '../../l10n/strings.dart';
 import '../../store/outbox.dart';
 import '../add_farm/farm_actions.dart';
+import '../history/field_history_screen.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/header.dart';
@@ -84,6 +85,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         FarmSection(
                           key: ValueKey('${farm.id}#$_version'),
                           summary: farm,
+                        ),
+                        // The field's 20+ year history (Field history screen).
+                        FieldHistoryEntry(
+                          key: ValueKey('history-${farm.id}#$_version'),
+                          farm: farm,
                         ),
                         Text(
                           '${s.farmingAssistant} · Jutyar',

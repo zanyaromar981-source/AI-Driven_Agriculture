@@ -204,6 +204,10 @@ class HttpApi implements Api {
       FarmStatusReport.fromJson(await _call('GET', '${_farm(id)}/status'));
 
   @override
+  Future<FarmInsights> getInsights(String id) async =>
+      FarmInsights.fromJson(await _call('GET', '${_farm(id)}/insights'));
+
+  @override
   Future<FarmPlan> getPlan(String id) async =>
       FarmPlan.fromJson(await _call('GET', '${_farm(id)}/plan'));
 }
