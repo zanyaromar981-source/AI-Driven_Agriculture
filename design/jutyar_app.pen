@@ -14376,6 +14376,3281 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "Cmd5S",
+      "x": 2600,
+      "y": 240,
+      "name": "Report Chip",
+      "reusable": true,
+      "width": 80,
+      "height": 64,
+      "fill": "$card",
+      "cornerRadius": 12,
+      "stroke": "$line",
+      "strokeWidth": 1,
+      "strokeAlignment": "inner",
+      "layout": "vertical",
+      "gap": 5,
+      "padding": [
+        0,
+        4
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon",
+          "id": "R8mAA",
+          "name": "Icon",
+          "width": 20,
+          "height": 20,
+          "icon": "leaf",
+          "library": "lucide",
+          "fill": "$ink"
+        },
+        {
+          "type": "text",
+          "id": "Hk303",
+          "name": "Label",
+          "fill": "$ink",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Label",
+          "lineHeight": 1.15,
+          "textAlign": "center",
+          "fontFamily": "$font-lat",
+          "fontSize": 12,
+          "fontWeight": "600"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "yk7Uk",
+      "x": 2720,
+      "y": 240,
+      "name": "Alert Row",
+      "reusable": true,
+      "clip": true,
+      "width": 350,
+      "fill": "$card",
+      "cornerRadius": "$radius",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "M3dPyZ",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Level Bar",
+          "fill": "$level-alarm",
+          "width": 4,
+          "height": 300
+        },
+        {
+          "type": "frame",
+          "id": "uUnfD",
+          "name": "Content",
+          "width": "fill_container",
+          "gap": 12,
+          "padding": [
+            12,
+            12,
+            12,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "x4WTj",
+              "name": "Icon Tile",
+              "width": 28,
+              "height": 28,
+              "fill": "$level-alarm-soft",
+              "cornerRadius": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "HqFRn",
+                  "name": "Icon",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "snowflake",
+                  "library": "lucide",
+                  "fill": "$level-alarm"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Z4733L",
+              "name": "Text",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "cJJdD",
+                  "name": "Title",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Alert title",
+                  "lineHeight": 1.3,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "HfXUs",
+                  "name": "What To Do",
+                  "fill": "$ink",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "What to do",
+                  "lineHeight": 1.35,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 13,
+                  "fontWeight": "500"
+                },
+                {
+                  "type": "frame",
+                  "id": "PND0x",
+                  "name": "Meta",
+                  "gap": 8,
+                  "padding": [
+                    2,
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "w03uUE",
+                      "name": "How Sure Pill",
+                      "fill": "$accent-soft",
+                      "cornerRadius": 999,
+                      "padding": [
+                        2,
+                        8
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "kVypr",
+                          "name": "How Sure",
+                          "fill": "$accent",
+                          "content": "sure",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 11,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "bNniw",
+                      "name": "Date",
+                      "fill": "$muted",
+                      "content": "13 Oct, 06:10",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Awpty",
+              "name": "Done Button",
+              "width": 24,
+              "height": 24,
+              "cornerRadius": 12,
+              "stroke": "$line",
+              "strokeWidth": 1.5,
+              "strokeAlignment": "inner",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "bUBMs",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Check",
+                  "enabled": false,
+                  "width": 14,
+                  "height": 14,
+                  "icon": "check",
+                  "library": "lucide",
+                  "fill": "#FFFFFF"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "j4ckE",
+      "x": 0,
+      "y": 3733,
+      "name": "More",
+      "gap": 60,
+      "children": [
+        {
+          "type": "frame",
+          "id": "PQy8K",
+          "name": "Screen/Report",
+          "clip": true,
+          "width": 390,
+          "fill": "$bg",
+          "layout": "vertical",
+          "children": [
+            {
+              "id": "j1t8b",
+              "type": "ref",
+              "ref": "dK8kE",
+              "name": "Status Bar",
+              "width": "fill_container"
+            },
+            {
+              "id": "wyOWk",
+              "type": "ref",
+              "ref": "OZ8sH",
+              "name": "Header",
+              "width": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "pNHAq",
+              "name": "Body",
+              "clip": true,
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": [
+                12,
+                20,
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "RYUd5",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "VKupY",
+                      "name": "Heading",
+                      "fill": "$ink",
+                      "content": "Report a problem",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 24,
+                      "fontWeight": "700",
+                      "letterSpacing": -0.4
+                    },
+                    {
+                      "type": "text",
+                      "id": "v20Jc0",
+                      "name": "Subtext",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Only you and the Ministry see this. Your phone and exact spot are never shown to others.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font-lat",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LDqtE",
+                  "name": "What Is It",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HLcWN",
+                      "name": "What is it? Label",
+                      "fill": "$ink",
+                      "content": "What is it?",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "R67w8",
+                      "name": "Chip Grid",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "zLxPt",
+                          "name": "Chip Row 1",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "id": "J0xlyy",
+                              "type": "ref",
+                              "ref": "Cmd5S",
+                              "name": "Report Chip/Yellow stripes (selected)",
+                              "fill": "$accent-soft",
+                              "stroke": "$accent",
+                              "strokeWidth": 2,
+                              "descendants": {
+                                "R8mAA": {
+                                  "icon": "leaf",
+                                  "fill": "$accent"
+                                },
+                                "Hk303": {
+                                  "content": "Yellow stripes",
+                                  "fill": "$accent",
+                                  "fontWeight": "700"
+                                }
+                              }
+                            },
+                            {
+                              "id": "bn1DD",
+                              "type": "ref",
+                              "ref": "Cmd5S",
+                              "name": "Report Chip/Insects",
+                              "descendants": {
+                                "R8mAA": {
+                                  "icon": "bug"
+                                },
+                                "Hk303": {
+                                  "content": "Insects"
+                                }
+                              }
+                            },
+                            {
+                              "id": "zCl2E",
+                              "type": "ref",
+                              "ref": "Cmd5S",
+                              "name": "Report Chip/Wilting",
+                              "descendants": {
+                                "R8mAA": {
+                                  "icon": "wheat-off"
+                                },
+                                "Hk303": {
+                                  "content": "Wilting"
+                                }
+                              }
+                            },
+                            {
+                              "id": "A9zsqQ",
+                              "type": "ref",
+                              "ref": "Cmd5S",
+                              "name": "Report Chip/Flood",
+                              "descendants": {
+                                "R8mAA": {
+                                  "icon": "waves"
+                                },
+                                "Hk303": {
+                                  "content": "Flood"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JkF2b",
+                          "name": "Chip Row 2",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "id": "k6sk4",
+                              "type": "ref",
+                              "ref": "Cmd5S",
+                              "name": "Report Chip/Hail",
+                              "descendants": {
+                                "R8mAA": {
+                                  "icon": "cloud-hail"
+                                },
+                                "Hk303": {
+                                  "content": "Hail"
+                                }
+                              }
+                            },
+                            {
+                              "id": "TCleP",
+                              "type": "ref",
+                              "ref": "Cmd5S",
+                              "name": "Report Chip/Fire",
+                              "descendants": {
+                                "R8mAA": {
+                                  "icon": "flame"
+                                },
+                                "Hk303": {
+                                  "content": "Fire"
+                                }
+                              }
+                            },
+                            {
+                              "id": "O5KUh",
+                              "type": "ref",
+                              "ref": "Cmd5S",
+                              "name": "Report Chip/Animal disease",
+                              "descendants": {
+                                "R8mAA": {
+                                  "icon": "paw-print"
+                                },
+                                "Hk303": {
+                                  "content": "Animal disease"
+                                }
+                              }
+                            },
+                            {
+                              "id": "Et4JH",
+                              "type": "ref",
+                              "ref": "Cmd5S",
+                              "name": "Report Chip/Other",
+                              "descendants": {
+                                "R8mAA": {
+                                  "icon": "ellipsis"
+                                },
+                                "Hk303": {
+                                  "content": "Other"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xipwe",
+                  "name": "Where",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "WHmNX",
+                      "name": "Where? Label",
+                      "fill": "$ink",
+                      "content": "Where?",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D5I2v0",
+                      "name": "Where Card",
+                      "width": "fill_container",
+                      "fill": "$card",
+                      "cornerRadius": "$radius",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": [
+                        16,
+                        12,
+                        12,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "t53W1q",
+                          "name": "Mini Map",
+                          "width": 202,
+                          "height": 150,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Z7EPLT",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Mini Grid",
+                              "width": 201.6,
+                              "height": 149.76,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "N8cdrv",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Cells",
+                                  "width": 201.6,
+                                  "height": 149.76,
+                                  "layout": "none",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "i9lQM9",
+                                      "x": 26.88,
+                                      "y": 0,
+                                      "name": "Row A",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "NIW2e",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A3",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Um6th",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "LUYea",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "jSpdc",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Pgr5F",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Q9FXT",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "sXEYG",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Ox1WT",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "PkTsf",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "czjYQ",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell A12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "RIYw7",
+                                      "x": 13.44,
+                                      "y": 13.44,
+                                      "name": "Row B",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "FSWeP",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B2",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "YMnI5",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B3",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "jLkXH",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "ktiYX",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "ZzFM9",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "rTKCu",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "pUFXN",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "mz8CV",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "KqFJE",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "D8Jd7M",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "vcHGU",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "bohLT",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell B13",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "v9DSp",
+                                      "x": 13.44,
+                                      "y": 26.88,
+                                      "name": "Row C",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "XLwRI",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C2",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "RkOAR",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C3",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "ATRFc",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "WVqwC",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "SZ2Lg",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "a76Mf",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Uaeam",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "fh0NG",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "c2Ehzp",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "UPMqH",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "g09eNR",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Y0kWXl",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell C13",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "MMJ1H",
+                                      "x": 13.44,
+                                      "y": 40.32,
+                                      "name": "Row D",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "LIfb8",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D2",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "xdXs3",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D3",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Y99Gt",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "gqeny",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "g63ul",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "vo42e",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "k4u7Uj",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "lxgzn",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "BAZyn",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "EFTB5",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "V3sBVL",
+                                          "type": "ref",
+                                          "ref": "BAHTD",
+                                          "name": "Cell D12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "ftqDf",
+                                          "type": "ref",
+                                          "ref": "BAHTD",
+                                          "name": "Cell D13",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "SASXu",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell D14",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "RKG1H",
+                                      "x": 13.44,
+                                      "y": 53.76,
+                                      "name": "Row E",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "wEnKZ",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E2",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "qlA8t",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E3",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "CZCjf",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "n3mZX",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "W9q0Rn",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "z8EiyE",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "P6LX1V",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "ZWHjz",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "j66vKA",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "B2Ljk",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "VBjDI",
+                                          "type": "ref",
+                                          "ref": "u09CFV",
+                                          "name": "Cell E12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "z75AG",
+                                          "type": "ref",
+                                          "ref": "BAHTD",
+                                          "name": "Cell E13",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "XQnCM",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell E14",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "YTFgk",
+                                      "x": 0,
+                                      "y": 67.2,
+                                      "name": "Row F",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "Vr7dM",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F1",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "RYiJh",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F2",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "I06qW",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F3",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "xkG1L",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "XPbdV",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "i4DmV",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "zG2wH",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "fsw9f",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "e4a0o5",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "kQphL",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "L8q9w3",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Lik3h",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Z3SkQ9",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F13",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "aPmpC",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell F14",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "gU5dO",
+                                      "x": 0,
+                                      "y": 80.64,
+                                      "name": "Row G",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "ZC7TY",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G1",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "tQAbu",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G2",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "G2AmX",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G3",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "bMYlf",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "pZyOA",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "OoPPv",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Yyzsp",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "FQtJB",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "DsuKA",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "ciGE2",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "x0SyA4",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "zOJEA",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "N3cV9Z",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G13",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "eFgp9",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G14",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "arAQ6",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell G15",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "h0wdVc",
+                                      "x": 0,
+                                      "y": 94.08,
+                                      "name": "Row H",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "Moysa",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H1",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "UlpK5",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H2",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "i3efJ",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H3",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "mYmVT",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Q7wwQ",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "R49phF",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "PBrtA",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "HUZe5",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "RFvls",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "M1GJG",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "iJXsZ",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Ml2Ow",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "J38CBv",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H13",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "SQDRS",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell H14",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "ThcOY",
+                                      "x": 40.32,
+                                      "y": 107.52,
+                                      "name": "Row I",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "wheRO",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I4",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Y7GMG",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I5",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "tIRjH",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "E61sw",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "qdNPI",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "Vui1v",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "RdoV5",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "QRIpJ",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "o8MN3W",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell I12",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "csAmT",
+                                      "x": 67.2,
+                                      "y": 120.96000000000001,
+                                      "name": "Row J",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "FW9y3",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell J6",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "b1sZj",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell J7",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "R5amd",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell J8",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "B9Y0i",
+                                          "type": "ref",
+                                          "ref": "iv4bA",
+                                          "name": "Cell J9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "ZUslt",
+                                          "type": "ref",
+                                          "ref": "iv4bA",
+                                          "name": "Cell J10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "S7yjrb",
+                                          "type": "ref",
+                                          "ref": "VMzGm",
+                                          "name": "Cell J11",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "frame",
+                                      "id": "ZzYu8",
+                                      "x": 107.52,
+                                      "y": 134.4,
+                                      "name": "Row K",
+                                      "gap": 0.64,
+                                      "children": [
+                                        {
+                                          "id": "EQ1fA",
+                                          "type": "ref",
+                                          "ref": "iv4bA",
+                                          "name": "Cell K9",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        },
+                                        {
+                                          "id": "QguXj",
+                                          "type": "ref",
+                                          "ref": "iv4bA",
+                                          "name": "Cell K10",
+                                          "width": 12.8,
+                                          "height": 12.8
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "path",
+                                  "id": "saARb",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Farm Outline",
+                                  "geometry": "M34 6l218-6 60 132-110 102-202-80z",
+                                  "viewBox": [
+                                    0,
+                                    0,
+                                    315,
+                                    234
+                                  ],
+                                  "width": 201.6,
+                                  "height": 149.76,
+                                  "stroke": "$ink",
+                                  "strokeWidth": 1.2,
+                                  "strokeLinejoin": "round"
+                                },
+                                {
+                                  "type": "icon",
+                                  "id": "t1HWr6",
+                                  "x": 144.23999999999998,
+                                  "y": 34.76,
+                                  "name": "Map Pin",
+                                  "width": 20,
+                                  "height": 20,
+                                  "icon": "map-pin",
+                                  "library": "lucide",
+                                  "fill": "$ink"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "FXS28",
+                          "name": "Where Caption",
+                          "fill": "$muted",
+                          "content": "Cell E12 · tap to change",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VRDqU",
+                  "name": "Photo",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "F8U7y",
+                      "name": "Photo Label",
+                      "fill": "$ink",
+                      "content": "Photo",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ACcpZ",
+                      "name": "Photo Row",
+                      "gap": 10,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "auJM6",
+                          "name": "Add/Camera",
+                          "width": 72,
+                          "height": 72,
+                          "fill": "#FFFFFF66",
+                          "cornerRadius": 12,
+                          "layout": "vertical",
+                          "gap": 4,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "UtVrh",
+                              "name": "Icon",
+                              "width": 22,
+                              "height": 22,
+                              "icon": "camera",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "W6UBTV",
+                              "name": "Label",
+                              "fill": "$accent",
+                              "content": "Camera",
+                              "fontFamily": "$font-lat",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "GrFkt",
+                              "layoutPosition": "absolute",
+                              "x": 12,
+                              "y": 0,
+                              "name": "Edge Top",
+                              "width": 48,
+                              "height": 1.5,
+                              "justifyContent": "space_between",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "E5YxbT",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "sJ5VK",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "wbIHX",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "aBY1u",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "v3dT5S",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "GqLG4",
+                              "layoutPosition": "absolute",
+                              "x": 12,
+                              "y": 70.5,
+                              "name": "Edge Bottom",
+                              "width": 48,
+                              "height": 1.5,
+                              "justifyContent": "space_between",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "tHbsI",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "WdDIR",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "tDjQL",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "uPlIv",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "PyCib",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 6,
+                                  "height": 1.5
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "BxFOq",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 12,
+                              "name": "Edge Left",
+                              "width": 1.5,
+                              "height": 48,
+                              "layout": "vertical",
+                              "justifyContent": "space_between",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "S0Y4KC",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "F62oIR",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "mu1t9",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "K6GgGy",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "JiXl8",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "sDDgn",
+                              "layoutPosition": "absolute",
+                              "x": 70.5,
+                              "y": 12,
+                              "name": "Edge Right",
+                              "width": 1.5,
+                              "height": 48,
+                              "layout": "vertical",
+                              "justifyContent": "space_between",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "id": "YEQcq",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "MNIAf",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "u5vBQ",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "BTQX9",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                },
+                                {
+                                  "type": "rectangle",
+                                  "id": "yUCKf",
+                                  "name": "Dash",
+                                  "fill": "#1E7A5A80",
+                                  "width": 1.5,
+                                  "height": 6
+                                }
+                              ]
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "eSxUH",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 0,
+                              "name": "Corner TL",
+                              "innerRadius": 0.875,
+                              "startAngle": 90,
+                              "sweepAngle": 90,
+                              "fill": "#1E7A5A80",
+                              "width": 24,
+                              "height": 24
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "YvvMu",
+                              "layoutPosition": "absolute",
+                              "x": 48,
+                              "y": 0,
+                              "name": "Corner TR",
+                              "innerRadius": 0.875,
+                              "sweepAngle": 90,
+                              "fill": "#1E7A5A80",
+                              "width": 24,
+                              "height": 24
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "f8fUB",
+                              "layoutPosition": "absolute",
+                              "x": 0,
+                              "y": 48,
+                              "name": "Corner BL",
+                              "innerRadius": 0.875,
+                              "startAngle": 180,
+                              "sweepAngle": 90,
+                              "fill": "#1E7A5A80",
+                              "width": 24,
+                              "height": 24
+                            },
+                            {
+                              "type": "ellipse",
+                              "id": "c6Xik",
+                              "layoutPosition": "absolute",
+                              "x": 48,
+                              "y": 48,
+                              "name": "Corner BR",
+                              "innerRadius": 0.875,
+                              "startAngle": 270,
+                              "sweepAngle": 90,
+                              "fill": "#1E7A5A80",
+                              "width": 24,
+                              "height": 24
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hDawL",
+                          "name": "Photo 1",
+                          "clip": true,
+                          "width": 72,
+                          "height": 72,
+                          "fill": {
+                            "type": "gradient",
+                            "gradientType": "linear",
+                            "enabled": true,
+                            "rotation": 150,
+                            "size": {
+                              "height": 1
+                            },
+                            "colors": [
+                              {
+                                "color": "#3F6B2A",
+                                "position": 0
+                              },
+                              {
+                                "color": "#5E8F3A",
+                                "position": 0.5
+                              },
+                              {
+                                "color": "#A9C46A",
+                                "position": 1
+                              }
+                            ]
+                          },
+                          "cornerRadius": 12,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "J7YhpG",
+                              "x": -6,
+                              "y": 10,
+                              "name": "Leaf",
+                              "rotation": 29.999999999999996,
+                              "fill": {
+                                "type": "gradient",
+                                "gradientType": "linear",
+                                "enabled": true,
+                                "rotation": 90,
+                                "size": {
+                                  "height": 1
+                                },
+                                "colors": [
+                                  {
+                                    "color": "#9CC25AE6",
+                                    "position": 0
+                                  },
+                                  {
+                                    "color": "#D8E08AE6",
+                                    "position": 1
+                                  }
+                                ]
+                              },
+                              "width": 84,
+                              "height": 30
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "d62GX",
+                              "x": 2,
+                              "y": 20,
+                              "name": "Vein",
+                              "rotation": -29.999999999999996,
+                              "fill": "#E9EFB399",
+                              "width": 70,
+                              "height": 1.5
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fqduR",
+                              "x": 50,
+                              "y": 4,
+                              "name": "Remove Badge",
+                              "width": 18,
+                              "height": 18,
+                              "fill": "#162019B3",
+                              "cornerRadius": 9,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "mS0v4",
+                                  "name": "X",
+                                  "width": 11,
+                                  "height": 11,
+                                  "icon": "x",
+                                  "library": "lucide",
+                                  "fill": "#FFFFFF"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y3S6fo",
+                  "name": "Note",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GA7J5",
+                      "name": "Note Label",
+                      "fill": "$ink",
+                      "content": "Note",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "P2bGb3",
+                      "name": "Note Field",
+                      "width": "fill_container",
+                      "height": 64,
+                      "fill": "$card",
+                      "cornerRadius": "$radius",
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "padding": [
+                        12,
+                        16
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZaJRY",
+                          "name": "Placeholder",
+                          "fill": "#8A978F",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Since Monday, lower leaves first",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-lat",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "Oz5k1",
+                  "type": "ref",
+                  "ref": "pklI4",
+                  "name": "Button/Primary",
+                  "width": "fill_container",
+                  "descendants": {
+                    "PV7lg": {
+                      "icon": "send"
+                    },
+                    "un6cp": {
+                      "content": "Send report",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 16
+                    }
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "rYNkw",
+                  "name": "My Reports",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    8,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fcccZ",
+                      "name": "Section Label",
+                      "fill": "$muted",
+                      "content": "MY REPORTS",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 0.6
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jIqzN",
+                      "name": "Report Row/Yellow stripes",
+                      "width": "fill_container",
+                      "fill": "$card",
+                      "cornerRadius": 12,
+                      "gap": 10,
+                      "padding": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "kSPve",
+                          "name": "Status Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "circle-check",
+                          "library": "lucide",
+                          "fill": "$level-normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "XCw24",
+                          "name": "Report Text",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "5 Oct · Yellow stripes · Cell E12 · Seen by officer",
+                          "lineHeight": 1.35,
+                          "fontFamily": "$font-lat",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mMs2l",
+                      "name": "Report Row/Insects",
+                      "width": "fill_container",
+                      "fill": "$card",
+                      "cornerRadius": 12,
+                      "gap": 10,
+                      "padding": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "SgENr",
+                          "name": "Status Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "send",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "B8XmEI",
+                          "name": "Report Text",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "28 Sep · Insects · Cell B4 · Sent",
+                          "lineHeight": 1.35,
+                          "fontFamily": "$font-lat",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "feSZb",
+              "type": "ref",
+              "ref": "uOlI5",
+              "name": "Tab Bar",
+              "width": "fill_container"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "O83P7d",
+          "name": "Screen/Alerts",
+          "clip": true,
+          "width": 390,
+          "fill": "$bg",
+          "layout": "vertical",
+          "children": [
+            {
+              "id": "X9EPNZ",
+              "type": "ref",
+              "ref": "dK8kE",
+              "name": "Status Bar",
+              "width": "fill_container"
+            },
+            {
+              "id": "ZPr6I",
+              "type": "ref",
+              "ref": "OZ8sH",
+              "name": "Header",
+              "width": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "r6AJpl",
+              "name": "Body",
+              "clip": true,
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": [
+                12,
+                20,
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "O0BFgl",
+                  "name": "Title Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "C0kaM",
+                      "name": "Heading",
+                      "fill": "$ink",
+                      "content": "Alerts",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 24,
+                      "fontWeight": "700",
+                      "letterSpacing": -0.4
+                    },
+                    {
+                      "type": "text",
+                      "id": "UDcAI",
+                      "name": "Subtext",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Red was sent to your phone. Yellow is only here.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font-lat",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hiHah",
+                  "name": "Day/TODAY, 13 OCT",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "o6KkX",
+                      "name": "Day Label",
+                      "fill": "$muted",
+                      "content": "TODAY, 13 OCT",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 0.6
+                    },
+                    {
+                      "id": "rYvW5",
+                      "type": "ref",
+                      "ref": "yk7Uk",
+                      "name": "Alert Row/Frost -3 tonight",
+                      "width": "fill_container",
+                      "descendants": {
+                        "M3dPyZ": {
+                          "fill": "$level-alarm"
+                        },
+                        "x4WTj": {
+                          "fill": "$level-alarm-soft"
+                        },
+                        "HqFRn": {
+                          "icon": "snowflake",
+                          "fill": "$level-alarm"
+                        },
+                        "cJJdD": {
+                          "content": "Frost -3 tonight"
+                        },
+                        "HfXUs": {
+                          "content": "Check the heads in 7 to 10 days. Nothing to spray."
+                        },
+                        "kVypr": {
+                          "content": "sure"
+                        },
+                        "bNniw": {
+                          "content": "13 Oct, 06:10"
+                        }
+                      }
+                    },
+                    {
+                      "id": "q6O7o",
+                      "type": "ref",
+                      "ref": "yk7Uk",
+                      "name": "Alert Row/Rust weather Tue to Thu",
+                      "width": "fill_container",
+                      "descendants": {
+                        "M3dPyZ": {
+                          "fill": "$level-watch"
+                        },
+                        "x4WTj": {
+                          "fill": "$level-watch-soft"
+                        },
+                        "HqFRn": {
+                          "icon": "cloud-drizzle",
+                          "fill": "$level-watch"
+                        },
+                        "cJJdD": {
+                          "content": "Rust weather Tue to Thu"
+                        },
+                        "HfXUs": {
+                          "content": "Check the flag leaves in the north-east corner."
+                        },
+                        "kVypr": {
+                          "content": "likely"
+                        },
+                        "bNniw": {
+                          "content": "13 Oct, 06:10"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "CRNod",
+                  "name": "Day/YESTERDAY",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "g27AV",
+                      "name": "Day Label",
+                      "fill": "$muted",
+                      "content": "YESTERDAY",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 0.6
+                    },
+                    {
+                      "id": "D5yEdo",
+                      "type": "ref",
+                      "ref": "yk7Uk",
+                      "name": "Alert Row/Dust storm Thursday",
+                      "width": "fill_container",
+                      "descendants": {
+                        "M3dPyZ": {
+                          "fill": "$level-alarm"
+                        },
+                        "x4WTj": {
+                          "fill": "$level-alarm-soft"
+                        },
+                        "HqFRn": {
+                          "icon": "wind",
+                          "fill": "$level-alarm"
+                        },
+                        "cJJdD": {
+                          "content": "Dust storm Thursday"
+                        },
+                        "HfXUs": {
+                          "content": "Delay spraying and harvest, shelter animals."
+                        },
+                        "kVypr": {
+                          "content": "sure"
+                        },
+                        "bNniw": {
+                          "content": "12 Oct, 18:40"
+                        },
+                        "Awpty": {
+                          "fill": "$accent",
+                          "stroke": "$accent"
+                        },
+                        "bUBMs": {
+                          "enabled": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FQXPC",
+                  "name": "Day/LAST WEEK",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ydYSL",
+                      "name": "Day Label",
+                      "fill": "$muted",
+                      "content": "LAST WEEK",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 0.6
+                    },
+                    {
+                      "id": "Iy3Bj",
+                      "type": "ref",
+                      "ref": "yk7Uk",
+                      "name": "Alert Row/Urea rain Friday",
+                      "width": "fill_container",
+                      "descendants": {
+                        "M3dPyZ": {
+                          "fill": "$level-watch"
+                        },
+                        "x4WTj": {
+                          "fill": "$level-watch-soft"
+                        },
+                        "HqFRn": {
+                          "icon": "cloud-rain",
+                          "fill": "$level-watch"
+                        },
+                        "cJJdD": {
+                          "content": "Urea rain Friday"
+                        },
+                        "HfXUs": {
+                          "content": "Spread urea on dry soil before the 14 mm rain."
+                        },
+                        "kVypr": {
+                          "content": "likely"
+                        },
+                        "bNniw": {
+                          "content": "8 Oct, 07:00"
+                        },
+                        "Awpty": {
+                          "fill": "$accent",
+                          "stroke": "$accent"
+                        },
+                        "bUBMs": {
+                          "enabled": true
+                        }
+                      }
+                    },
+                    {
+                      "id": "Ub5q6",
+                      "type": "ref",
+                      "ref": "yk7Uk",
+                      "name": "Alert Row/Field dropped 20%",
+                      "width": "fill_container",
+                      "descendants": {
+                        "M3dPyZ": {
+                          "fill": "$level-alarm"
+                        },
+                        "x4WTj": {
+                          "fill": "$level-alarm-soft"
+                        },
+                        "HqFRn": {
+                          "icon": "trending-down",
+                          "fill": "$level-alarm"
+                        },
+                        "cJJdD": {
+                          "content": "Field dropped 20%"
+                        },
+                        "HfXUs": {
+                          "content": "12 cells in the north-east corner, since 25 Sep."
+                        },
+                        "kVypr": {
+                          "content": "sure"
+                        },
+                        "bNniw": {
+                          "content": "7 Oct, 09:15"
+                        },
+                        "Awpty": {
+                          "fill": "$accent",
+                          "stroke": "$accent"
+                        },
+                        "bUBMs": {
+                          "enabled": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "T5uGVj",
+                  "name": "Empty State Example",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "#FFFFFF66",
+                  "cornerRadius": 12,
+                  "gap": 10,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "bya3p",
+                      "name": "Bell Off",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "bell-off",
+                      "library": "lucide",
+                      "fill": "$muted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Fv5Lf",
+                      "name": "Empty Text",
+                      "fill": "$muted",
+                      "content": "No alerts for Tomato plot",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nMkS8",
+                      "layoutPosition": "absolute",
+                      "x": 12,
+                      "y": 0,
+                      "name": "Edge Top",
+                      "width": 326,
+                      "height": 1.5,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "m5wfUD",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "CgRg7",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "L8v5q",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "MV79f",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "W7Fm7j",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "dSKco",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "b96OC",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "SrRQY",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "KxiQ7",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "zIHgE",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "M417CV",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "dFGKm",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "k9YPV",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "AsxbM",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "aANxl",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "W8K2Xx",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "pdeK8",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "z5FxP",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "mzMOl",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "N0IUx",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "V4Lpwa",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "SzuQ5",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "EdVUA",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "sgjqd",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "TVf2F",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "Z8ADzr",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "ls6eZ",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "C7Dcm",
+                      "layoutPosition": "absolute",
+                      "x": 12,
+                      "y": 54.5,
+                      "name": "Edge Bottom",
+                      "width": 326,
+                      "height": 1.5,
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "yxJTH",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "TVk1s",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "xkZum",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "V6tMmo",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "IgxML",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "ifXOR",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "ET1kc",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "UQveS",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "CZIu7",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "uKvwC",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "QZ5DV",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "DN5VV",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "CqLw9",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "RoVFs",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "YLDCg",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "n7e8g",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "Yljdg",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "o6TpB3",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "MreBu",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "Y2ogS",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "tYGiC",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "zoaXb",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "GBiVd",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "ohbmv",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "GR7o4",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "veJeb",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "FeT7s",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 6,
+                          "height": 1.5
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "St0MF",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 12,
+                      "name": "Edge Left",
+                      "width": 1.5,
+                      "height": 32,
+                      "layout": "vertical",
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "bIe16",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 1.5,
+                          "height": 6
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "Kq5IV",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 1.5,
+                          "height": 6
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "lhRex",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 1.5,
+                          "height": 6
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jsSJ3",
+                      "layoutPosition": "absolute",
+                      "x": 348.5,
+                      "y": 12,
+                      "name": "Edge Right",
+                      "width": 1.5,
+                      "height": 32,
+                      "layout": "vertical",
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "id": "RMALU",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 1.5,
+                          "height": 6
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "lNOSP",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 1.5,
+                          "height": 6
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "Z136KF",
+                          "name": "Dash",
+                          "fill": "#5E6E6480",
+                          "width": 1.5,
+                          "height": 6
+                        }
+                      ]
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "y4h3Z",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Corner TL",
+                      "innerRadius": 0.875,
+                      "startAngle": 90,
+                      "sweepAngle": 90,
+                      "fill": "#5E6E6480",
+                      "width": 24,
+                      "height": 24
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "ZzLCC",
+                      "layoutPosition": "absolute",
+                      "x": 326,
+                      "y": 0,
+                      "name": "Corner TR",
+                      "innerRadius": 0.875,
+                      "sweepAngle": 90,
+                      "fill": "#5E6E6480",
+                      "width": 24,
+                      "height": 24
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "SALxA",
+                      "layoutPosition": "absolute",
+                      "x": 0,
+                      "y": 32,
+                      "name": "Corner BL",
+                      "innerRadius": 0.875,
+                      "startAngle": 180,
+                      "sweepAngle": 90,
+                      "fill": "#5E6E6480",
+                      "width": 24,
+                      "height": 24
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "x81kv9",
+                      "layoutPosition": "absolute",
+                      "x": 326,
+                      "y": 32,
+                      "name": "Corner BR",
+                      "innerRadius": 0.875,
+                      "startAngle": 270,
+                      "sweepAngle": 90,
+                      "fill": "#5E6E6480",
+                      "width": 24,
+                      "height": 24
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "a9EtHh",
+              "type": "ref",
+              "ref": "uOlI5",
+              "name": "Tab Bar",
+              "width": "fill_container",
+              "descendants": {
+                "xXznH": {
+                  "fill": "$muted"
+                },
+                "CThGN": {
+                  "fill": "$muted",
+                  "fontWeight": "500"
+                },
+                "E8sIzG": {
+                  "type": "frame",
+                  "id": "KsgcK",
+                  "name": "Icon With Badge",
+                  "width": 22,
+                  "height": 22,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "X1zfy",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Icon",
+                      "width": 22,
+                      "height": 22,
+                      "icon": "bell",
+                      "library": "lucide",
+                      "fill": "$accent"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Fgxq6",
+                      "x": 12,
+                      "y": -5,
+                      "name": "Badge",
+                      "width": 16,
+                      "height": 16,
+                      "fill": "$level-alarm",
+                      "cornerRadius": 8,
+                      "stroke": "$card",
+                      "strokeWidth": 2,
+                      "strokeAlignment": "outer",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "yNfkf",
+                          "name": "Badge Count",
+                          "fill": "#FFFFFF",
+                          "content": "2",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 10,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "ppSgS": {
+                  "fill": "$accent",
+                  "fontWeight": "700"
+                }
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variables": {
