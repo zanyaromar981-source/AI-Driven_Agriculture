@@ -25,6 +25,16 @@ Status: v1, proposed by the frontend on 2026-10-08. Backend: confirm or edit eac
 
 Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verify. JSON in, JSON out, UTF-8.
 
+### 2.0 How the app connects (built 2026-10-08)
+- The server address is set when the app is built: `flutter build apk --release --dart-define=API_URL=https://<host>[/<base path>]`. The paths below are relative to it (`<API_URL>/farms`). Without `API_URL` the app runs on its built-in demo server (`app/lib/api/fake_api.dart`), which answers with exactly these shapes.
+- Headers the app sends: `Accept: application/json` always; `Content-Type: application/json; charset=utf-8` with a body; `Authorization: Bearer <token>` after sign-in; `Idempotency-Key` on `POST /farms`.
+- Errors: JSON `{"error": "<code>", ...}` with the HTTP status from section 4. Extra fields (`field`, `retry_after_s`, `source`) reach the app. A non-JSON error page still works; the app then takes the code from the status.
+- `401` on any call after sign-in signs the farmer out (back to the phone screen). `POST /auth/otp/verify` answering `401 bad_code` does not sign anyone out.
+- Waits: 10 s to connect, 20 s for an answer. No answer counts as offline: the app shows its saved copy and keeps unsent farms. So `status` and `plan` must answer from stored data (section 7C) and never fetch satellites or weather during the call.
+- Upload queue (unsent farms): on `401`, `5xx` or no answer it keeps the farm and tries again; on any other `4xx` (today including `429`) it drops the farm and tells the farmer. Send `422` only for a farm that can never be accepted, and `503` for "try later".
+- Android blocks plain `http://` addresses by default: use `https://`, or see open point 5.
+- Test without the phone: `app/test/http_api_test.dart` runs the app's real client against a small local server written from this file.
+
 ### 2.1 Sign in (OTP)
 - `POST /auth/otp/send` body `{"phone": "+9647501234567", "lang": "ku"}` → `200 {"sent": true, "retry_after_s": 59}`. Rate-limit per phone; same response whether the number is new or known.
 - `POST /auth/otp/verify` body `{"phone": "+9647501234567", "code": "123456"}` → `200 {"token": "...", "farms_count": 2}` or `401 {"error": "bad_code"}`. Codes expire in 10 minutes, 5 tries.
@@ -141,3 +151,4 @@ The app keeps a local copy of its farms, the last status and plan, and shows the
 2. OTP provider for Iraqi numbers (Twilio, local SMS gateway) and cost.
 3. Where the backend runs for the demo (laptop, DigitalOcean droplet) and the base URL.
 4. Voice: Google Chirp 2 `ckb-IQ` or type-only for the demo.
+5. Demo server address: `https://` works as it is; a plain `http://` address (for example a laptop on the venue Wi-Fi) also needs Android's cleartext setting turned on in the app. Decide before the demo.

@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 
 import 'api/api.dart';
 import 'api/fake_api.dart';
+import 'api/http_api.dart';
 import 'app_scope.dart';
+import 'config.dart';
 import 'l10n/strings.dart';
 import 'screens/my_farms_screen.dart';
 import 'screens/phone_screen.dart';
@@ -42,14 +44,21 @@ class JutyarApp extends StatefulWidget {
 
 class _JutyarAppState extends State<JutyarApp> with WidgetsBindingObserver {
   bool _ku = true;
-  late final Api _api = widget.api ?? FakeApi();
+  final _nav = GlobalKey<NavigatorState>();
+
+  /// The real server when the app was built with API_URL, else the demo one.
+  late final Api _api =
+      widget.api ??
+      (kApiUrl.isEmpty
+          ? FakeApi()
+          : HttpApi(kApiUrl, onUnauthorized: _signedOut));
   Timer? _retry;
 
   @override
   void initState() {
     super.initState();
     final s = widget.session;
-    if (s != null) _api.useToken(s.token);
+    if (s != null && !_isDemoTokenOnRealServer(s.token)) _api.useToken(s.token);
     WidgetsBinding.instance.addObserver(this);
     // Farms saved without internet go up by themselves when it comes back.
     _retry = Timer.periodic(const Duration(seconds: 30), (_) => _flush());
@@ -68,6 +77,19 @@ class _JutyarAppState extends State<JutyarApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) _flush();
   }
 
+  /// A sign-in saved by a demo build means nothing to the real server.
+  static bool _isDemoTokenOnRealServer(String token) =>
+      kApiUrl.isNotEmpty && token.startsWith('demo-token-');
+
+  /// The server refused the saved token: forget it, back to the phone screen.
+  Future<void> _signedOut() async {
+    await Session.clear();
+    _nav.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const PhoneScreen()),
+      (_) => false,
+    );
+  }
+
   void _flush() {
     if (Outbox.instance.items.isNotEmpty) Outbox.instance.flush(_api);
   }
@@ -81,6 +103,7 @@ class _JutyarAppState extends State<JutyarApp> with WidgetsBindingObserver {
       api: _api,
       setKu: (v) => setState(() => _ku = v),
       child: MaterialApp(
+        navigatorKey: _nav,
         title: 'Jutyar',
         debugShowCheckedModeBanner: false,
         theme: jutyarTheme(),
@@ -88,7 +111,7 @@ class _JutyarAppState extends State<JutyarApp> with WidgetsBindingObserver {
           textDirection: _ku ? TextDirection.rtl : TextDirection.ltr,
           child: child ?? const SizedBox.shrink(),
         ),
-        home: session == null
+        home: session == null || _isDemoTokenOnRealServer(session.token)
             ? const PhoneScreen()
             : MyFarmsScreen(digits: session.digits),
       ),
