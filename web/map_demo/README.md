@@ -17,8 +17,9 @@ Opening `index.html` straight from the disk also works. It needs internet for th
 - Real map tiles in WGS84 / Web Mercator, the same coordinates Google Maps uses: OpenStreetMap streets (default), Esri satellite, Esri streets, Esri topographic.
 - Governorates in one bright colour each. Click one (map or list) and its colour gives way to its districts, with sub-district borders dashed. Zoom in and the fills fade so the street map shows through.
 - Live cursor position: latitude and longitude to 6 decimals (about 0.1 m), degrees minutes seconds to 0.001", UTM 38S to the centimetre, metres per screen pixel, and which governorate, district and sub-district you are in (English and Sorani).
+- Latitude / longitude rulers on the top and left edges, with a grid on the map. Steps refine with the zoom, from 1 degree down to 1 second. A searched or clicked point gets dashed crosshair lines to both rulers and its exact value marked in red. Turn it off in the list on the right.
 - Click anywhere to drop a pin: coordinates, UTM, elevation (Open-Meteo, Copernicus DEM 90 m), Copy, Open in Google Maps, Open in OpenStreetMap.
-- Search box (press `/`): governorates, districts, sub-districts, towns and dams in English or Sorani; coordinates as `36.191174, 44.009414` or `36°11'28.2"N 44°00'33.9"E`; anything else goes to OpenStreetMap search inside the region. Pick a result and the map flies there and pins the exact point.
+- Search box (press `/`): governorates, districts, sub-districts, towns and dams in English or Sorani; coordinates as `36.191174, 44.009414`, `36°11'28.2"N 44°00'33.9"E`, `36 11 28.2 N 44 00 33.9 E` or `36°11.47'N 44°00.565'E` (longitude first also works); anything else goes to OpenStreetMap search inside the region. Pick a result and the map flies there and pins the exact point.
 - My location: browser GPS with its accuracy circle.
 
 ## Data and how it was built

@@ -19,7 +19,7 @@ body{font:14px/1.45 var(--f);color:var(--ink);background:var(--bg)}
 .ku{font-family:var(--ku);direction:rtl;unicode-bidi:isolate}
 
 /* top bar */
-.top{position:fixed;z-index:1000;top:12px;left:12px;right:12px;display:flex;gap:10px;align-items:flex-start;pointer-events:none}
+.top{position:fixed;z-index:1000;top:32px;left:34px;right:12px;display:flex;gap:10px;align-items:flex-start;pointer-events:none}
 .top>*{pointer-events:auto}
 .brand{background:var(--panel);border-radius:14px;padding:9px 14px;box-shadow:0 2px 14px #0000001f;display:flex;flex-direction:column;min-width:0}
 .brand b{font-weight:800;font-size:15px;letter-spacing:-.01em}
@@ -48,13 +48,13 @@ body{font:14px/1.45 var(--f);color:var(--ink);background:var(--bg)}
 .btn svg{width:16px;height:16px}
 
 /* breadcrumb */
-.crumb{position:fixed;z-index:1000;top:72px;left:12px;background:var(--panel);border-radius:12px;box-shadow:0 2px 14px #0000001f;padding:7px 12px;display:flex;gap:8px;align-items:center;font-size:13px}
+.crumb{position:fixed;z-index:1000;top:92px;left:34px;background:var(--panel);border-radius:12px;box-shadow:0 2px 14px #0000001f;padding:7px 12px;display:flex;gap:8px;align-items:center;font-size:13px}
 .crumb a{color:var(--accent);font-weight:600;cursor:pointer;text-decoration:none}
 .crumb .sep{color:var(--ink3)}
 .crumb[hidden]{display:none}
 
 /* coordinate panel */
-.coords{position:fixed;z-index:1000;left:12px;bottom:26px;background:#13201AF0;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 4px 20px #0000003d;min-width:300px;max-width:calc(100vw - 24px)}
+.coords{position:fixed;z-index:1000;left:34px;bottom:26px;background:#13201AF0;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 4px 20px #0000003d;min-width:300px;max-width:calc(100vw - 24px)}
 .coords .row{display:flex;justify-content:space-between;gap:16px;align-items:baseline}
 .coords .lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9FB3A9}
 .coords .big{font:600 17px var(--mono);letter-spacing:-.01em}
@@ -66,7 +66,7 @@ body{font:14px/1.45 var(--f);color:var(--ink);background:var(--bg)}
 .coords .hint{font-size:11.5px;color:#9FB3A9;margin-top:6px}
 
 /* legend */
-.legend{position:fixed;z-index:1000;right:12px;top:72px;width:260px;background:var(--panel);border-radius:14px;box-shadow:0 2px 14px #0000001f;padding:12px;max-height:calc(100vh - 170px);overflow:auto}
+.legend{position:fixed;z-index:1000;right:12px;top:92px;width:260px;background:var(--panel);border-radius:14px;box-shadow:0 2px 14px #0000001f;padding:12px;max-height:calc(100vh - 170px);overflow:auto}
 .legend h3{margin:0 0 2px;font-size:13px;font-weight:800}
 .legend .sub{font-size:12px;color:var(--ink3);margin-bottom:8px}
 .gv{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer}
@@ -88,11 +88,29 @@ body{font:14px/1.45 var(--f);color:var(--ink);background:var(--bg)}
   .brand{display:none}
   .legend{display:none}
   .legend.open{display:block;top:auto;bottom:12px;right:12px;left:12px;width:auto;max-height:55vh}
-  .coords{bottom:12px;min-width:0;left:12px;right:12px}
-  .crumb{top:66px}
+  .coords{bottom:12px;min-width:0;left:34px;right:12px}
+  .crumb{top:86px}
   .btn .t{display:none}
 }
 @media (min-width:821px){ #legendBtn{display:none} }
+
+/* latitude / longitude rulers */
+.ruler{position:fixed;z-index:950;background:#FFFFFFEB;pointer-events:none;overflow:hidden;font:600 10.5px var(--mono);color:var(--ink)}
+.rx{top:0;left:22px;right:0;height:22px;border-bottom:1px solid #13201A40}
+.ry{top:22px;left:0;bottom:0;width:22px;border-right:1px solid #13201A40}
+.rcorner{position:fixed;z-index:951;top:0;left:0;width:22px;height:22px;background:#13201A;color:#fff;font:700 7px/1.05 var(--f);display:grid;place-items:center;text-align:center;pointer-events:none}
+.tk{position:absolute;background:#13201A}
+.rx .tk{bottom:0;width:1px}
+.ry .tk{right:0;height:1px}
+.rx .lb{position:absolute;top:4px;white-space:nowrap;padding-left:3px}
+.ry .lb{position:absolute;left:4px;white-space:nowrap;transform-origin:left top;transform:rotate(-90deg);padding-left:3px}
+.rmark{position:absolute;background:#E8344E;color:#fff;border-radius:4px;padding:1px 5px;font:700 10.5px var(--mono);white-space:nowrap;z-index:2}
+.rx .rmark{top:3px;transform:translateX(-50%)}
+.ry .rmark{left:3px;transform-origin:left top;transform:rotate(-90deg) translateX(-50%)}
+.xh{position:fixed;inset:0;z-index:940;pointer-events:none}
+.xh .v{position:absolute;width:0;border-left:1.5px dashed #E8344E}
+.xh .h{position:absolute;height:0;border-top:1.5px dashed #E8344E}
+.ruler[hidden],.rcorner[hidden],.xh[hidden]{display:none}
 
 /* map labels */
 .lab{background:none;border:0;box-shadow:none;padding:0;color:var(--ink);font-weight:800;white-space:nowrap;
@@ -122,6 +140,10 @@ body{font:14px/1.45 var(--f);color:var(--ink);background:var(--bg)}
 </head>
 <body>
 <div id="map" aria-label="Map of the Kurdistan Region"></div>
+<div class="ruler rx" id="rx" aria-hidden="true"></div>
+<div class="ruler ry" id="ry" aria-hidden="true"></div>
+<div class="rcorner" id="rc" title="Latitude and longitude, WGS84">WGS<br>84</div>
+<div class="xh" id="xh" hidden></div>
 
 <div class="top">
   <div class="brand"><b>Kurdistan Region</b><span>4 governorates · 33 districts · 78 sub-districts</span></div>
@@ -146,6 +168,7 @@ body{font:14px/1.45 var(--f);color:var(--ink);background:var(--bg)}
   <div class="togs">
     <label><input type="checkbox" id="tSubs" checked> Sub-district borders</label>
     <label><input type="checkbox" id="tTowns" checked> Towns and dams</label>
+    <label><input type="checkbox" id="tGrid" checked> Latitude / longitude grid and rulers</label>
     <label><input type="checkbox" id="tCtx"> Kifri and Khanaqin (Diyala)</label>
   </div>
   <div class="src" id="src"></div>
@@ -185,6 +208,7 @@ L.control.layers({'Streets (OpenStreetMap)':osm, 'Satellite':sat, 'Esri streets'
 map.createPane('fills').style.zIndex = 410;
 map.createPane('lines').style.zIndex = 420;
 map.createPane('hl').style.zIndex = 430;
+map.createPane('grid').style.zIndex = 415;
 map.createPane('labels').style.zIndex = 640;
 
 /* ---------- layers ---------- */
@@ -443,16 +467,25 @@ INDEX.forEach(x => { x.n = norm(x.en); x.nk = norm(x.ku); });
 const RANK = {Town:0, Dam:0, Governorate:1, District:2, 'Sub-district':3};
 
 function parseCoords(s) {
-  const t = s.trim().replace(/,/g, ' ').replace(/\s+/g, ' ');
-  let m = t.match(/^(-?\d{1,2}(?:\.\d+)?)\s*°?\s*([NS])?\s+(-?\d{1,3}(?:\.\d+)?)\s*°?\s*([EW])?$/i);
+  const t = s.trim().replace(/[’‘′`´]/g, "'").replace(/[″“”]/g, '"').replace(/''/g, '"').replace(/º/g, '°');
+  const ok = (a, b) => (Math.abs(a) <= 90 && Math.abs(b) <= 180 ? {lat:a, lon:b} : null);
+  const m = t.match(/^(-?\d{1,2}(?:\.\d+)?)\s*°?\s*([NSns])?\s*[ ,;]+\s*(-?\d{1,3}(?:\.\d+)?)\s*°?\s*([EWew])?$/);
   if (m) { let a = +m[1], b = +m[3]; if (/s/i.test(m[2] || '')) a = -a; if (/w/i.test(m[4] || '')) b = -b; return ok(a, b); }
-  const p = /(\d{1,3})\s*[°d ]\s*(\d{1,2})\s*['′m ]\s*(\d{1,2}(?:\.\d+)?)\s*["″s]?\s*([NSEW])/gi; const parts = [...t.matchAll(p)];
-  if (parts.length === 2) {
-    const v = parts.map(x => ({v:(+x[1] + x[2] / 60 + x[3] / 3600) * (/[SW]/i.test(x[4]) ? -1 : 1), ax:/[NS]/i.test(x[4]) ? 'lat' : 'lon'}));
-    const lat = v.find(x => x.ax === 'lat'), lon = v.find(x => x.ax === 'lon'); if (lat && lon) return ok(lat.v, lon.v);
-  }
-  return null;
-  function ok(a, b) { if (Math.abs(a) <= 90 && Math.abs(b) <= 180) return {lat:a, lon:b}; return null; }
+  const parts = [...t.matchAll(/(\d{1,3}(?:\.\d+)?)\s*[°d]?\s*(?:(\d{1,2}(?:\.\d+)?)\s*['m]?\s*)?(?:(\d{1,2}(?:\.\d+)?)\s*["s]?\s*)?([NSEWnsew])?/g)]
+    .filter(x => x[0].trim() && (x[2] !== undefined || x[4] !== undefined || /°/.test(x[0])));
+  if (parts.length !== 2) return null;
+  const v = parts.map(x => {
+    const d = +x[1], mi = x[2] ? +x[2] : 0, se = x[3] ? +x[3] : 0;
+    if (mi >= 60 || se >= 60) return null;
+    const h = (x[4] || '').toUpperCase();
+    return {v:(d + mi / 60 + se / 3600) * (h === 'S' || h === 'W' ? -1 : 1), ax:h === 'E' || h === 'W' ? 'lon' : h === 'N' || h === 'S' ? 'lat' : ''};
+  });
+  if (v.includes(null)) return null;
+  let lat = v.find(x => x.ax === 'lat'), lon = v.find(x => x.ax === 'lon');
+  if (!lat && !lon) { lat = v[0]; lon = v[1]; }
+  else if (!lat) lat = v.find(x => x !== lon);
+  else if (!lon) lon = v.find(x => x !== lat);
+  return ok(lat.v, lon.v);
 }
 function localSearch(s) {
   const n = norm(s); if (!n) return [];
@@ -527,6 +560,74 @@ function choose(it) {
   map.flyToBounds(L.geoJSON(it.f).getBounds(), {padding:[60, 60], duration:.9});
   highlight(it.f);
 }
+/* ---------- latitude / longitude grid, rulers and crosshair ---------- */
+const STEPS = [3600, 1800, 900, 600, 300, 120, 60, 30, 15, 10, 5, 2, 1];   // arc-seconds
+const rx = document.getElementById('rx'), ry = document.getElementById('ry'), rc = document.getElementById('rc'), xh = document.getElementById('xh');
+const tGrid = document.getElementById('tGrid');
+const gridG = L.layerGroup();
+let crossAt = null;
+function fmtStep(v, step, pos, neg) {
+  const h = v >= 0 ? pos : neg, a = Math.abs(v) + 1e-9, d = Math.floor(a), mf = (a - d) * 60, mi = Math.floor(mf + 1e-7);
+  let D = d, M = mi, S = Math.round((mf - mi) * 60);
+  if (S === 60) { S = 0; M += 1; }
+  if (M === 60) { M = 0; D += 1; }
+  if (step >= 3600) return `${D}°${h}`;
+  if (step >= 60) return `${D}°${String(M).padStart(2, '0')}′${h}`;
+  return `${D}°${String(M).padStart(2, '0')}′${String(S).padStart(2, '0')}″${h}`;
+}
+function pickSteps(pxPerDeg) {
+  let major = STEPS[0];
+  for (const st of STEPS) { if (pxPerDeg * st / 3600 >= 120) major = st; else break; }
+  let minor = major;
+  for (const st of STEPS) if (st < major && major % st === 0 && pxPerDeg * st / 3600 >= 9) minor = st;
+  return {major, minor};
+}
+const shortDms = (v, p, n) => dms(v, p, n).replace(/(\.\d)\d\d″/, '$1″');
+function drawGrid() {
+  const on = tGrid.checked;
+  rx.hidden = ry.hidden = rc.hidden = !on;
+  if (!on) { map.removeLayer(gridG); xh.hidden = true; return; }
+  gridG.addTo(map); gridG.clearLayers();
+  const b = map.getBounds().pad(0.05), c = map.getCenter();
+  const p0 = map.latLngToContainerPoint([c.lat, c.lng]);
+  const pLat = map.latLngToContainerPoint([c.lat + 0.01, c.lng]), pLon = map.latLngToContainerPoint([c.lat, c.lng + 0.01]);
+  const latS = pickSteps(Math.abs(pLat.y - p0.y) * 100), lonS = pickSteps(Math.abs(pLon.x - p0.x) * 100);
+  const R = map.getContainer().getBoundingClientRect();
+  const range = (a, z, st) => { const out = []; for (let k = Math.ceil(a * 3600 / st); k * st <= z * 3600; k++) out.push(k * st); return out; };
+  let hx = '', hy = '';
+  for (const sec of range(b.getWest(), b.getEast(), lonS.minor)) {
+    const lon = sec / 3600, x = map.latLngToContainerPoint([c.lat, lon]).x + R.left - 22, major = sec % lonS.major === 0;
+    if (major) gridG.addLayer(L.polyline([[b.getSouth(), lon], [b.getNorth(), lon]], {pane:'grid', color:'#13201A', weight:0.9, opacity:.32, interactive:false}));
+    if (x < 0) continue;
+    hx += `<i class="tk" style="left:${x.toFixed(1)}px;height:${major ? 22 : 6}px"></i>` +
+      (major ? `<span class="lb" style="left:${x.toFixed(1)}px">${fmtStep(lon, lonS.major, 'E', 'W')}</span>` : '');
+  }
+  for (const sec of range(b.getSouth(), b.getNorth(), latS.minor)) {
+    const lat = sec / 3600, y = map.latLngToContainerPoint([lat, c.lng]).y + R.top - 22, major = sec % latS.major === 0;
+    if (major) gridG.addLayer(L.polyline([[lat, b.getWest()], [lat, b.getEast()]], {pane:'grid', color:'#13201A', weight:0.9, opacity:.32, interactive:false}));
+    if (y < 0) continue;
+    hy += `<i class="tk" style="top:${y.toFixed(1)}px;width:${major ? 22 : 6}px"></i>` +
+      (major ? `<span class="lb" style="top:${(y - 3).toFixed(1)}px">${fmtStep(lat, latS.major, 'N', 'S')}</span>` : '');
+  }
+  if (crossAt && map.getBounds().contains(crossAt)) {
+    const q = map.latLngToContainerPoint(crossAt), X = q.x + R.left, Y = q.y + R.top;
+    hx += `<i class="tk" style="left:${(X - 22).toFixed(1)}px;height:22px;background:#E8344E"></i><span class="rmark" style="left:${(X - 22).toFixed(1)}px">${shortDms(crossAt.lng, 'E', 'W')}</span>`;
+    hy += `<i class="tk" style="top:${(Y - 22).toFixed(1)}px;width:22px;background:#E8344E"></i><span class="rmark" style="top:${(Y - 22).toFixed(1)}px">${shortDms(crossAt.lat, 'N', 'S')}</span>`;
+    xh.hidden = false;
+    xh.innerHTML = `<i class="v" style="left:${X.toFixed(1)}px;top:22px;height:${Math.max(0, Y - 22).toFixed(1)}px"></i>` +
+      `<i class="h" style="top:${Y.toFixed(1)}px;left:22px;width:${Math.max(0, X - 22).toFixed(1)}px"></i>`;
+  } else xh.hidden = true;
+  rx.innerHTML = hx; ry.innerHTML = hy;
+}
+let gridRaf = null;
+const queueGrid = () => { if (gridRaf) return; gridRaf = requestAnimationFrame(() => { gridRaf = null; drawGrid(); }); };
+map.on('move zoom resize', queueGrid);
+window.addEventListener('resize', queueGrid);
+tGrid.onchange = drawGrid;
+const pinWithoutCross = dropPin;
+dropPin = function (ll, place) { crossAt = L.latLng(ll); pinWithoutCross(ll, place); queueGrid(); };
+setTimeout(drawGrid, 0);
+
 setTimeout(refreshVisibility, 0);
 })();
 </script>
