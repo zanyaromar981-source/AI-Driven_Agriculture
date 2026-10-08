@@ -5,5 +5,6 @@ pub mod farms;
 pub mod fires;
 pub mod insights;
 pub mod outlooks;
+pub mod staff;
 pub mod water;
 pub mod zones;

@@ -27,6 +27,11 @@ use crate::{
             RecordOutlookRunUseCase, RecordZoneOutlookUseCase, ViewSeasonOutlookUseCase,
             ViewZoneOutlookUseCase,
         },
+        staff::app::use_cases::{
+            AddStaffUseCase, CreateOwnerUseCase, CreateRoleUseCase, DeleteRoleUseCase,
+            EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase, ListRolesUseCase,
+            ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase, ViewStaffUseCase,
+        },
         water::app::use_cases::{
             RemoveWaterPlanEntryUseCase, SetWaterPlanEntryUseCase, ViewWaterPlanUseCase,
         },
@@ -117,6 +122,23 @@ pub struct AlwaFeature {
 }
 
 #[derive(Clone)]
+pub struct StaffFeature {
+    pub sign_in_use_case: Arc<SignInUseCase>,
+    pub identify_staff_use_case: Arc<IdentifyStaffUseCase>,
+    pub list_roles_use_case: Arc<ListRolesUseCase>,
+    pub view_role_use_case: Arc<ViewRoleUseCase>,
+    pub create_role_use_case: Arc<CreateRoleUseCase>,
+    pub edit_role_use_case: Arc<EditRoleUseCase>,
+    pub delete_role_use_case: Arc<DeleteRoleUseCase>,
+    pub list_staff_use_case: Arc<ListStaffUseCase>,
+    pub view_staff_use_case: Arc<ViewStaffUseCase>,
+    pub add_staff_use_case: Arc<AddStaffUseCase>,
+    pub edit_staff_use_case: Arc<EditStaffUseCase>,
+    pub remove_staff_use_case: Arc<RemoveStaffUseCase>,
+    pub create_owner_use_case: Arc<CreateOwnerUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -127,6 +149,7 @@ pub struct Features {
     pub outlook: OutlookFeature,
     pub water: WaterFeature,
     pub alwa: AlwaFeature,
+    pub staff: StaffFeature,
 }
 
 #[derive(Clone)]

@@ -78,6 +78,21 @@ use crate::{
             },
             infra::OutlookPostgresRepository,
         },
+        staff::{
+            app::{
+                PasswordHasher, RoleRepository, StaffRepository, StaffTokenIssuer,
+                use_cases::{
+                    AddStaffUseCase, CreateOwnerUseCase, CreateRoleUseCase, DeleteRoleUseCase,
+                    EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase, ListRolesUseCase,
+                    ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase,
+                    ViewStaffUseCase,
+                },
+            },
+            infra::{
+                Argon2idPasswordHasher, JwtStaffTokenIssuer, RolePostgresRepository,
+                StaffPostgresRepository,
+            },
+        },
         water::{
             app::{
                 WaterPlanRepository,
@@ -101,7 +116,7 @@ use crate::{
     infra::{Config, DBConnector},
     shared::{
         AlwaFeature, DamFeature, FarmFeature, FarmerFeature, Features, FireFeature, InsightFeature,
-        OutlookFeature, WaterFeature, ZoneFeature,
+        OutlookFeature, StaffFeature, WaterFeature, ZoneFeature,
     },
 };
 
@@ -285,6 +300,40 @@ pub async fn di_init(
         list_my_offers_use_case: Arc::new(ListMyOffersUseCase::new(alwa_repository)),
     };
 
+    let role_repository: Arc<dyn RoleRepository> =
+        Arc::new(RolePostgresRepository::new(db_context.conn_clone()));
+    let staff_repository: Arc<dyn StaffRepository> =
+        Arc::new(StaffPostgresRepository::new(db_context.conn_clone()));
+    let password_hasher: Arc<dyn PasswordHasher> = Arc::new(Argon2idPasswordHasher::new()?);
+    let staff_token_issuer: Arc<dyn StaffTokenIssuer> =
+        Arc::new(JwtStaffTokenIssuer::new(config.auth.clone()));
+
+    let staff = StaffFeature {
+        sign_in_use_case: Arc::new(SignInUseCase::new(
+            staff_repository.clone(),
+            password_hasher.clone(),
+            staff_token_issuer,
+        )),
+        identify_staff_use_case: Arc::new(IdentifyStaffUseCase::new(staff_repository.clone())),
+        list_roles_use_case: Arc::new(ListRolesUseCase::new(role_repository.clone())),
+        view_role_use_case: Arc::new(ViewRoleUseCase::new(role_repository.clone())),
+        create_role_use_case: Arc::new(CreateRoleUseCase::new(role_repository.clone())),
+        edit_role_use_case: Arc::new(EditRoleUseCase::new(role_repository.clone())),
+        delete_role_use_case: Arc::new(DeleteRoleUseCase::new(role_repository)),
+        list_staff_use_case: Arc::new(ListStaffUseCase::new(staff_repository.clone())),
+        view_staff_use_case: Arc::new(ViewStaffUseCase::new(staff_repository.clone())),
+        add_staff_use_case: Arc::new(AddStaffUseCase::new(
+            staff_repository.clone(),
+            password_hasher.clone(),
+        )),
+        edit_staff_use_case: Arc::new(EditStaffUseCase::new(
+            staff_repository.clone(),
+            password_hasher.clone(),
+        )),
+        remove_staff_use_case: Arc::new(RemoveStaffUseCase::new(staff_repository.clone())),
+        create_owner_use_case: Arc::new(CreateOwnerUseCase::new(staff_repository, password_hasher)),
+    };
+
     Ok(Features {
         farm,
         farmer,
@@ -295,5 +344,6 @@ pub async fn di_init(
         outlook,
         water,
         alwa,
+        staff,
     })
 }

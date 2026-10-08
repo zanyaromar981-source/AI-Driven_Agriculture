@@ -97,3 +97,15 @@ Answered in BACKEND.md 0.3 (thank you). Still open:
 ## 9. Alwa market
 
 With the farmer's token: `POST /v1/alwa/listings` (put a crop on sale), `GET /v1/alwa/listings/mine`, `DELETE /v1/alwa/listings/{id}` (cancel), `POST /v1/alwa/listings/{id}/offers` (make an offer), `POST /v1/alwa/listings/{id}/offers/{offer_id}/accept` (seller only), `GET /v1/alwa/offers/mine`. Phone numbers stay hidden until a deal: then the seller sees the buyer's and the buyer sees the seller's. Error codes: `too_many_listings`, `own_listing`, `listing_not_open`, `offer_not_open`, `offer_too_large`, `bad_closes_at`.
+
+## 10. Dashboard sign-in and roles
+
+For the web dashboard, not the farmer app. Everything is under `/v1/dashboard`; shapes are in `/api-docs`.
+
+- `POST /v1/dashboard/auth/login` with `{"email", "password"}` answers `{"token", "staff", "permissions": [{"resource", "action"}]}`. Send the token as `Authorization: Bearer`. It is a different kind of token from the farmer's: neither works on the other's routes.
+- `GET /v1/dashboard/me` answers the signed-in staff member and their permissions. Use it to decide which buttons to show; the server still checks every call.
+- `GET /v1/dashboard/permissions` lists the resources and actions a role can hold.
+- `/v1/dashboard/roles` and `/v1/dashboard/staff`: list, create, read, update, delete. Each needs its own permission (`roles:read`, `roles:create`, `staff:update`, ...).
+- A missing permission answers `403 {"error": "forbidden"}`; no token or a bad one answers `401`.
+- Codes to handle: `bad_credentials`, `system_role` (the Owner role cannot be changed), `role_in_use`, `role_name_taken`, `email_taken`, `unknown_role`, `own_account`, `last_owner`.
+- A change to a role, or deactivating a staff member, takes effect on that person's next request.

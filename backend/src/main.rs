@@ -20,12 +20,19 @@ use farm_doctor_api::{
         outlooks::web::{
             ingest_routes as outlook_ingest_routes, public_routes as outlook_public_routes,
         },
+        staff::{
+            app::use_cases::CreateOwnerInput,
+            web::{
+                dashboard_public_routes as staff_dashboard_public_routes,
+                dashboard_routes as staff_dashboard_routes,
+            },
+        },
         water::web::{ingest_routes as water_ingest_routes, public_routes as water_public_routes},
         zones::web::{ingest_routes as zone_ingest_routes, public_routes as zone_public_routes},
     },
     infra::{
-        BootstrappedApp, Config,
-        http::{auth, health_routes, service_key, swagger_ui},
+        BootstrappedApp, Config, di_init,
+        http::{auth, health_routes, service_key, staff_auth, swagger_ui},
         postgres_init, telemetry,
     },
     shared::{AppState, Phone, issue_jwt},
@@ -51,6 +58,14 @@ enum Commands {
         /// E.164 Iraqi mobile number, for example +9647501234567.
         phone: String,
     },
+    /// Create the first dashboard account, holding the Owner role. The
+    /// password is read from the environment variable OWNER_PASSWORD.
+    CreateOwner {
+        /// The email the owner signs in with.
+        email: String,
+        /// The name other staff see.
+        name: String,
+    },
 }
 
 #[tokio::main]
@@ -60,6 +75,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     match cli.command {
         Some(Commands::Migrate) => return run_migrations().await,
         Some(Commands::Token { phone }) => return print_token(phone),
+        Some(Commands::CreateOwner { email, name }) => return create_owner(email, name).await,
         Some(Commands::Serve) | None => {}
     }
 
@@ -93,6 +109,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(water_ingest_routes())
                         .merge(alwa_ingest_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), service_key)),
+                )
+                .nest(
+                    "/dashboard",
+                    Router::new()
+                        .merge(staff_dashboard_routes())
+                        // Other slices add their dashboard routes here, above
+                        // the layer: .merge(their_dashboard_routes())
+                        .layer(middleware::from_fn_with_state(state.clone(), staff_auth))
+                        .merge(staff_dashboard_public_routes()),
                 ),
         )
         .merge(health_routes())
@@ -141,6 +166,29 @@ fn print_token(phone: String) -> Result<(), Box<dyn std::error::Error + Send + S
     )?;
 
     println!("{token}");
+
+    Ok(())
+}
+
+async fn create_owner(
+    email: String,
+    name: String,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let password = std::env::var("OWNER_PASSWORD")
+        .map_err(|_| "OWNER_PASSWORD is not set: put the owner's password in it")?;
+
+    let input = CreateOwnerInput::new(email, name, password)?;
+    let email = String::from(&input.email);
+
+    let config = Config::from_env();
+    let db_context = postgres_init(&config).await?;
+    let features = di_init(&config, db_context).await?;
+
+    if features.staff.create_owner_use_case.execute(input).await? {
+        println!("Owner created: {email}");
+    } else {
+        println!("An account with the email {email} already exists: nothing was changed");
+    }
 
     Ok(())
 }
