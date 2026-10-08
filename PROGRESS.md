@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 17:15
+Last update: 2026-10-08 17:21
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -29,12 +29,12 @@ Last update: 2026-10-08 17:15
 ## Next
 - Design the farm home screen (my field from space, this week's plan, ask the Doctor)
 - Wire the dashboard to `now.json`
-- Claude API key in `farm_doctor/.env` so the Doctor can answer
+- Gemini API key (`GEMINI_API_KEY`) in `farm_doctor/.env` so the Doctor can answer
 
 ## Waiting on the backend
 - Confirm or edit `BACKEND.md` sections 1 and 2; answer section 6
 
 ## Needs from the user
-- Claude API key
+- Gemini API key from Google AI Studio (decided: Gemini is the Doctor)
 - Sorani speaker to check the Doctor's text
 - Organizer confirmation that pre-built work is allowed

@@ -23,7 +23,7 @@ Five AIs watch Kurdistan's farmland from space, from the weather, from farmers' 
 | 5 | **Outbreak map** | geotagged farmer reports and questions | similar reports within 20 km in the last 14 days | medium-weak |
 | + | **Dam watch** | Sentinel-2 (built) | Dukan / Darbandikhan area and % of full | strong |
 
-## The doctor (Claude, Sorani + English)
+## The doctor (Gemini, Sorani + English)
 Gets the five outputs as one JSON plus a short rulebook. Answers: most likely cause, how sure, **what to do now** (timing, non-chemical steps, "call the extension officer / vet"), what it cannot tell, and **which input drove each conclusion**. Hard rules: no pesticide or fertilizer doses; says "unsure, see an officer" when inputs conflict or confidence is low; answers only from the rulebook and checked notes; logs every case.
 
 ## Screens

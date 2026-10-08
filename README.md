@@ -6,7 +6,7 @@ Judging rule from the organizers: "what works, not presentation polish".
 
 ## One sentence
 
-Five AIs watch Kurdistan's farmland from space, from the weather, from farmers' photos and from farmers' reports, and one AI doctor (Claude) turns all of it into plain Sorani advice for farmers and a live picture for the Ministry of Agriculture and Water Resources.
+Five AIs watch Kurdistan's farmland from space, from the weather, from farmers' photos and from farmers' reports, and one AI doctor (Gemini, swappable with Claude) turns all of it into plain Sorani advice for farmers and a live picture for the Ministry of Agriculture and Water Resources.
 
 ## What it is
 
@@ -27,7 +27,7 @@ Five AIs watch Kurdistan's farmland from space, from the weather, from farmers' 
 | 5 | **Neighbour Watch** | geotagged farmer reports | similar reports within 20 km in the last 14 days (test data until the app collects real ones) |
 | + | **Dam Watch** | Sentinel-2 / Landsat lake area | Dukan and Darbandikhan area and % of full |
 
-### The Doctor (Claude)
+### The Doctor (Gemini)
 
 Gets the five outputs as one JSON plus a short rulebook. Answers in Sorani and English: most likely cause, how sure, what to do now, what it cannot tell, and which input drove each conclusion. Hard rules: **no pesticide or fertilizer doses**, says "unsure, see an officer" when inputs conflict, answers only from the rulebook and checked notes, logs every case.
 
@@ -41,7 +41,7 @@ Gets the five outputs as one JSON plus a short rulebook. Answers in Sorani and E
 
 ### Open items
 
-1. Claude API key for the Doctor (`farm_doctor/.env`, never committed).
+1. Gemini API key for the Doctor (`GEMINI_API_KEY` in `farm_doctor/.env`, never committed); Claude key optional as fallback.
 2. Sorani speech-to-text key (Google Chirp 2, `ckb-IQ`) or type-only for the demo.
 3. A native Sorani speaker to score the Doctor's answers.
 4. Pixxel (hyperspectral 5 m) and Hydrosat (thermal 70 m) prices or trial access for "which part of the farm is sick". Neither contacted yet.
