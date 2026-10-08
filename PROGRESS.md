@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 20:46
+Last update: 2026-10-08 20:48
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -19,6 +19,7 @@ Last update: 2026-10-08 20:46
 - Pitch deck in Pencil, `design/pitch_deck.pen`, 8 slides (cover, problem, solution, farmer app, live demo, proof, honesty, closing), name Khor (خۆر), olive and ochre palette, photo-led; first draft, awaiting team review
 - Map demo `web/map_demo/` (Leaflet, real map tiles): 4 governorates, 33 KRG districts, 78 sub-districts from the CSO 2019 KML regrouped by the KRG maps of Duhok, Erbil and Halabja; 66 towns at exact OSM points; live lat/lon to 6 decimals, DMS, UTM 38S; click to pin with elevation and an Open in Google Maps link; search in English, Sorani, coordinates or OpenStreetMap; GPS locate
 - Flutter app is ready for the real server: build with `--dart-define=API_URL=https://...` and it uses the server (BACKEND.md 2.0); without it, the demo server. Refused token signs out; no answer = offline (saved copies, upload queue keeps farms). Tested against a local test server
+- BACKEND.md v2: section 0 lists exactly what the app still needs from `backend/` (checked against a0ade90 and FRONTEND.md v2), answers FRONTEND.md section 7; plain http tested and works on Android
 - Repo on GitHub with CLAUDE.md rules
 - Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
@@ -48,8 +49,10 @@ Last update: 2026-10-08 20:46
 - Map demo: Sorani names for 5 sub-districts, Bamo sub-district shape, Erbil's Khabat / Bnaslawa / Barhka / Ainkawa district shapes
 - Gemini API key (`GEMINI_API_KEY`) in `farm_doctor/.env` so the Doctor can answer
 
-## Waiting on the backend
-- Confirm or edit `BACKEND.md` sections 1 and 2; answer section 6
+## Waiting on the backend (BACKEND.md section 0)
+- `GET /v1/farms/{id}/status`: blocks Home today (every farm shows "Could not load this farm"); the stub in BACKEND.md 2.3 is enough for now
+- `GET /v1/farms/{id}/plan` (Home opens without it)
+- Farm cells with `inside_pct` and crop areas from them, so sizes match the app (not blocking)
 
 ## Needs from the user
 - Gemini API key from Google AI Studio (decided: Gemini is the Doctor)
