@@ -13,7 +13,7 @@ Status: v1, proposed by the frontend on 2026-10-08. Backend: confirm or edit eac
 | Point | GPS corner tapped by the farmer: `{"lat": 36.0312, "lon": 44.6021, "acc_m": 6, "t": "2026-10-08T14:03:11Z"}` (WGS84 decimal degrees, accuracy in metres, UTC time). |
 | Cell grid | 10 m squares aligned to the Sentinel-2 pixel grid: **UTM zone 38N (EPSG:32638)**, cell = `{"e": floor(easting/10), "n": floor(northing/10)}`. One cell = one satellite pixel. The frontend computes `e`,`n` from lat/lon with proj4 (EPSG:4326 → EPSG:32638); the backend validates and may correct. |
 | Crop codes | `wheat`, `barley`, `tomato`, `cucumber`, `potato`, `onion`, `watermelon`, `grape`, `olive`, `sunflower`, `chickpea`, `empty`. Lower-case ASCII; the app maps them to emojis and Sorani labels. New codes only by editing this list on both sides. |
-| Area | dunam (1 dunam = 2,500 m² = 25 cells). The backend computes areas; the app only displays them. |
+| Area | dunam (1 dunam = 2,500 m²). **Farm area = the exact area inside the outline** (shoelace in UTM metres), not a cell count. Each cell carries `inside_pct` (0 to 100, how much of it lies inside the outline); crop areas = sum of their cells' inside areas, so crops add up to the farm area. The backend computes areas; the app shows the same numbers before saving. (Changed 2026-10-08: counting whole cells was up to 30% off on small plots.) |
 | Dates | ISO 8601, UTC for timestamps (`...Z`), plain `YYYY-MM-DD` for days. |
 | Language | every human-readable string the backend returns comes in both `"ku"` (Sorani, Arabic script) and `"en"`. The app shows `ku` by default. |
 | Condition levels | `normal`, `watch`, `alarm`, `none` (no data yet). Season labels: `too_early`, `normal`, `dry`, `drought`, `wet`. |
@@ -34,11 +34,14 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 - `POST /farms` body:
   ```json
   {"name": "کێڵگەی سەرەوە",
-   "points": [Point, Point, Point, ...],            // 3 to 50 corners, in walking order, polygon closes itself
-   "cells": [{"e": 462337, "n": 398812, "crop": "wheat"}, ...],   // every painted cell; unpainted cells inside the outline = "empty"
+   "points": [Point, Point, Point, ...],            // 3 to 50 dots in walking order, polygon closes itself (tapped corners, or a walked track the app trimmed to at most 50)
+   "cells": [{"e": 46415, "n": 398748, "crop": "wheat"}, ...],    // every cell inside the outline with its crop ("empty" if not painted)
    "created_offline_at": "2026-10-08T14:10:00Z"}
   ```
-  → `201 {"farm": Farm}`. Backend rules: snap points to the grid, reject if the polygon self-intersects (`422 {"error":"bad_polygon"}`), drop cells outside the outline and return them in `"dropped_cells"`.
+  → `201 {"farm": Farm, "dropped_cells": [{"e","n","crop"}...]}` (`dropped_cells` = the sent cells that fell outside the outline, usually empty). Backend rules: snap points to the grid, reject if the polygon self-intersects (`422 {"error":"bad_polygon"}`), drop cells outside the outline. Farm cells = every 10 m cell that overlaps the outline (edge cells are cut along the border and carry `inside_pct`); the app sends all of them, unpainted ones as `"empty"`. Edge cells with a small `inside_pct` are mixed pixels: the backend may skip them for greenness.
+  - Example check (2026-10-08, pyproj): point `{"lat": 36.0312, "lon": 44.6021}` is easting 464152.26, northing 3987482.22, so cell `{"e": 46415, "n": 398748}`. The earlier example `e: 462337` was wrong.
+  - `area_dunam` and each `crops[].dunam` are decimals (two places are enough); the app formats them. Farm `cells[]` items also carry `"inside_pct"`.
+  - `acc_m: 0` on a point means it was placed by hand on the map (test mode only), not by GPS.
   Farm: FarmSummary + `{"outline": [{"lat","lon"}...], "cells": [{"e","n","crop","greenness_pct": 0–200|null, "level": "normal|watch|alarm|none"}], "picture_date": "2026-10-05"|null}`
 - `PUT /farms/{id}/cells` body `{"cells": [{"e","n","crop"}...]}` → `200 {"farm": Farm}` (repaint crops).
 - `DELETE /farms/{id}` → `204`.
@@ -83,7 +86,8 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
 - The app caches the last `status`, `plan` and farms list; it shows the cached copy with its date when offline. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
-- Idempotency: the app sends `Idempotency-Key` headers on POSTs; repeat keys must not create duplicates.
+- Idempotency: the app sends `Idempotency-Key` headers on POSTs; repeat keys must not create duplicates. A repeated key returns the farm made the first time (the app retries uploads that lost their answer).
+- Outbox (built 2026-10-08): `POST /farms` is first written to a file on the phone, then sent; with no internet it stays there and is retried every 30 seconds and when the app comes back to the front. The border being marked is also saved on the phone after every dot, and the sign-in token is kept, so the app opens and works in the field with no signal. "No internet" = the request never reached the server; any 4xx answer removes the farm from the outbox (it will not succeed on retry).
 
 ## 4. Errors
 `400 bad_request`, `401 unauthorized`, `404 not_found`, `422 {error, field}` for validation, `429 rate_limited {retry_after_s}`, `503 upstream_down {source: "sentinel|weather|claude"}` when a feed is down (the app then shows the cached copy and the reason).
