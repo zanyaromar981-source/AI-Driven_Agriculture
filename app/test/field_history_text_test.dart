@@ -123,4 +123,86 @@ void main() {
     expect(cropFit(empty), isEmpty);
     expect(empty.ready, 0);
   });
+
+  group('new measures (live since 9 Oct 2026) win over the summary text', () {
+    final v2 = FarmInsights.fromJson(
+      jsonDecode(
+            File(
+              'test/fixtures/insights_farm2_measures.json',
+            ).readAsStringSync(),
+          )
+          as Map<String, dynamic>,
+    );
+
+    test('rain and frost read the measures', () {
+      expect(latestDroughts(v2.topic('rain')), ['2024/25']);
+      expect(lastFrost(v2.topic('weather')), (2, 19));
+      expect(hardFrost(v2.topic('weather')), (4, '2011/12'));
+      expect(
+        frostView(v2.topic('weather'))!.summary,
+        contains(
+          'hard spring frost came in 4 seasons since 1981, the latest 2011/12',
+        ),
+      );
+    });
+
+    InsightTopic topic(
+      String name,
+      Map<String, double> m, {
+      String summary = '',
+    }) => InsightTopic(
+      topic: name,
+      asOf: '2026-10-09',
+      source: '',
+      confidence: 'likely',
+      summaryEn: summary,
+      measures: [
+        for (final e in m.entries)
+          InsightMeasure(code: e.key, value: e.value, unit: '', labelEn: e.key),
+      ],
+    );
+
+    test('no hard spring frost ever: no frost warning, no suggestion', () {
+      final w = topic('weather', {
+        'frost_days_normal': 9,
+        'last_spring_frost_month': 1,
+        'last_spring_frost_day': 30,
+        'hard_spring_frost_seasons': 0,
+      });
+      expect(hardFrost(w), (0, null));
+      expect(
+        frostView(w)!.summary,
+        'About 9 frost nights a season. The last spring frost is usually around 30 January.',
+      );
+      final f = FarmInsights(topics: [w], json: const {});
+      expect(suggestions(f).any((x) => x.contains('frost')), isFalse);
+    });
+
+    test('best seasons from measures name the dry year that stayed green', () {
+      final green = topic('greenness', {
+        'best_season_1': 2025,
+        'best_season_2': 2024,
+        'best_season_3': 2015,
+        'weak_spots_10m_seasons': 8,
+      });
+      final rain = topic('rain', {'latest_drought_season': 2024});
+      final dry = topic('dryness', {
+        'peak_ndvi_in_droughts': 0.4,
+        'peak_ndvi_in_wet_seasons': 0.6,
+        'summer_green_seasons': 2,
+        'summer_seasons_seen': 40,
+        'fire_detections': 0,
+      });
+      expect(bestSeasons(green), ['2025/26', '2024/25', '2015/16']);
+      final v = drynessView(dry, rain: rain, green: green)!;
+      expect(
+        v.summary,
+        contains(
+          'but not always: 2024/25 was dry and still one of the greenest',
+        ),
+      );
+      expect(v.summary, contains('No fire was seen within about 1 km.'));
+      expect(v.chips[1], ('2 of 40', 'summers green'));
+    });
+  });
 }

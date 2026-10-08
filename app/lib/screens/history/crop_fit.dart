@@ -89,10 +89,11 @@ List<String> suggestions(FarmInsights f) {
       'About $share was dry here (${droughts.round()} since 1981). If you choose between wheat and barley, barley copes better with a dry year.',
     );
   }
-  final hard = hardFrostSeasons(f.topic('weather'));
-  if (hard.isNotEmpty) {
+  final (hardCount, _) = hardFrost(f.topic('weather'));
+  if (hardCount > 0) {
     out.add(
-      'Hard spring frost came ${hard.length} times since 1981. Ask your agricultural office which wheat variety heads late enough for this area.',
+      'Hard spring frost came $hardCount ${hardCount == 1 ? 'time' : 'times'} since 1981. '
+      'Ask your agricultural office which wheat variety heads late enough for this area.',
     );
   }
   final heat = f.topic('weather')?.m('spring_heat_days_normal');

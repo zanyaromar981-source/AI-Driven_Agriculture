@@ -39,6 +39,12 @@ String _num(double v, {int digits = 0}) {
   return t.endsWith('.') ? t.substring(0, t.length - 1) : t;
 }
 
+/// Start year to season name: 2024 -> "2024/25".
+String seasonName(double startYear) {
+  final y = startYear.round();
+  return '$y/${((y + 1) % 100).toString().padLeft(2, '0')}';
+}
+
 String _season(String? label) =>
     RegExp(r'(\d{4}/\d{2})').firstMatch(label ?? '')?.group(1) ?? 'last season';
 
@@ -84,8 +90,11 @@ List<(String, String)> _allNumbers(InsightTopic t) => [
       ),
 ];
 
-/// Seasons named as dry in the rain summary, e.g. "latest: 2020/21, 2024/25".
+/// The latest dry season(s): the latest_drought_season measure, or the
+/// seasons named in the summary text ("latest: 2020/21, 2024/25").
 List<String> latestDroughts(InsightTopic? rain) {
+  final y = rain?.m('latest_drought_season');
+  if (y != null) return [seasonName(y)];
   final m = RegExp(r'latest: ([^)]*)\)').firstMatch(rain?.summaryEn ?? '');
   if (m == null) return const [];
   return RegExp(
@@ -137,8 +146,12 @@ TopicView? rainView(InsightTopic? t) {
   );
 }
 
-/// "The last spring frost usually falls around 02-19" -> (2, 19).
+/// Usual last spring frost as (month, day): the measures, or the summary
+/// text ("usually falls around 02-19").
 (int, int)? lastFrost(InsightTopic? weather) {
+  final mo = weather?.m('last_spring_frost_month');
+  final d = weather?.m('last_spring_frost_day');
+  if (mo != null && d != null) return (mo.round(), d.round());
   final m = RegExp(
     r'last spring frost usually falls around (\d\d)-(\d\d)',
   ).firstMatch(weather?.summaryEn ?? '');
@@ -146,13 +159,20 @@ TopicView? rainView(InsightTopic? t) {
   return (int.parse(m.group(1)!), int.parse(m.group(2)!));
 }
 
-/// Seasons with hard spring frost named in the weather summary.
-List<String> hardFrostSeasons(InsightTopic? weather) {
+/// Hard spring frost since 1981 as (count, latest season): the measures, or
+/// the seasons named in the summary text ("came in: 1981/82, ...").
+(int, String?) hardFrost(InsightTopic? weather) {
+  final n = weather?.m('hard_spring_frost_seasons');
+  if (n != null) {
+    final y = weather?.m('latest_hard_spring_frost_season');
+    return (n.round(), y == null ? null : seasonName(y));
+  }
   final m = RegExp(r'came in: ([^.]*)\.').firstMatch(weather?.summaryEn ?? '');
-  if (m == null) return const [];
-  return RegExp(
+  if (m == null) return (0, null);
+  final seasons = RegExp(
     r'\d{4}/\d{2}',
   ).allMatches(m.group(1)!).map((x) => x.group(0)!).toList();
+  return (seasons.length, seasons.isEmpty ? null : seasons.last);
 }
 
 TopicView? frostView(InsightTopic? t) {
@@ -161,15 +181,16 @@ TopicView? frostView(InsightTopic? t) {
   final heat = t.m('spring_heat_days_normal');
   final heatTrend = t.m('spring_heat_days_trend_per_decade') ?? 0;
   final lf = lastFrost(t);
-  final hard = hardFrostSeasons(t);
+  final (hardCount, hardLatest) = hardFrost(t);
   final parts = <String>[];
   if (frost != null) parts.add('About ${_num(frost)} frost nights a season.');
   if (lf != null) {
     final when = '${lf.$2} ${_months[lf.$1 - 1]}';
     parts.add(
-      hard.isEmpty
+      hardCount == 0
           ? 'The last spring frost is usually around $when.'
-          : 'The last spring frost is usually around $when, but hard spring frost came in ${hard.length} seasons since 1981, the latest ${hard.last}.',
+          : 'The last spring frost is usually around $when, but hard spring frost came in $hardCount seasons since 1981'
+                '${hardLatest == null ? '' : ', the latest $hardLatest'}.',
     );
   }
   if (heat != null) {
@@ -198,8 +219,14 @@ TopicView? frostView(InsightTopic? t) {
   );
 }
 
-/// Best seasons named in the greenness summary, e.g. "Best seasons: 2024/25, 2015/16".
+/// The greenest seasons: best_season_1..3 measures, or the summary text
+/// ("Best seasons: 2024/25, 2015/16").
 List<String> bestSeasons(InsightTopic? green) {
+  final fromMeasures = [
+    for (final c in const ['best_season_1', 'best_season_2', 'best_season_3'])
+      if (green?.m(c) != null) seasonName(green!.m(c)!),
+  ];
+  if (fromMeasures.isNotEmpty) return fromMeasures;
   final m = RegExp(
     r'Best seasons: ([^.]*)\.',
   ).firstMatch(green?.summaryEn ?? '');
@@ -215,9 +242,11 @@ TopicView? greennessView(InsightTopic? t) {
   final pct = t.m('last_season_pct_of_normal');
   final weak = t.m('weak_share_pct');
   final season = _season(t.label('last_season_pct_of_normal'));
-  final tenM = RegExp(
-    r'10 m pixels over (\d+) seasons',
-  ).firstMatch(t.summaryEn)?.group(1);
+  final tenM =
+      t.m('weak_spots_10m_seasons')?.round().toString() ??
+      RegExp(
+        r'10 m pixels over (\d+) seasons',
+      ).firstMatch(t.summaryEn)?.group(1);
   final parts = <String>[];
   if (seasons != null) {
     parts.add('Seen from space in ${_num(seasons)} seasons since 1984.');
@@ -329,9 +358,9 @@ TopicView? drynessView(
   final wet = t.m('peak_ndvi_in_wet_seasons');
   final summerGreen = t.m('summer_green_seasons');
   final fires = t.m('fire_detections');
-  final summers = RegExp(
-    r'in \d+ of (\d+) seasons',
-  ).firstMatch(t.summaryEn)?.group(1);
+  final summers =
+      t.m('summer_seasons_seen')?.round().toString() ??
+      RegExp(r'in \d+ of (\d+) seasons').firstMatch(t.summaryEn)?.group(1);
   final fireYears = RegExp(
     r'\(years ([^)]*)\)',
   ).firstMatch(t.summaryEn)?.group(1);
