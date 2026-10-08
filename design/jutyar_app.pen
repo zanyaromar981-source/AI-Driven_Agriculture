@@ -99,20 +99,387 @@
               "name": "Logo Mark",
               "width": 34,
               "height": 34,
-              "fill": "$accent",
+              "fill": "$gold-soft",
               "cornerRadius": 10,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
                 {
-                  "type": "icon",
-                  "id": "x6I625",
-                  "name": "Wheat",
-                  "width": 20,
-                  "height": 20,
-                  "icon": "wheat",
-                  "library": "lucide",
-                  "fill": "#FFFFFF"
+                  "type": "frame",
+                  "id": "uAaQW",
+                  "name": "Grain Sun",
+                  "width": 26,
+                  "height": 26,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "fob30",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 1",
+                      "geometry": "M13 7q1.6-3.5 0-7-1.6 3.5 0 7z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "dLKa7",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 2",
+                      "geometry": "M14.77 7.27q2.56-2.88 2.06-6.69-2.56 2.87-2.06 6.69z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "ehahC",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 3",
+                      "geometry": "M16.38 8.04q3.29-1.99 3.94-5.78-3.29 1.99-3.94 5.78z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "wCxss",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 4",
+                      "geometry": "M17.69 9.26q3.73-0.93 5.47-4.37-3.73 0.94-5.47 4.37z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "dm9iy",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 5",
+                      "geometry": "M18.59 10.81q3.84 0.21 6.51-2.56-3.84-0.21-6.51 2.56z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "qriu2",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 6",
+                      "geometry": "M18.98 12.55q3.61 1.34 6.98-0.52-3.61-1.34-6.98 0.52z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "xwEpi",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 7",
+                      "geometry": "M18.85 14.34q3.06 2.33 6.82 1.55-3.05-2.34-6.82-1.55z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "a1EcOx",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 8",
+                      "geometry": "M18.2 16q2.23 3.14 6.06 3.5-2.23-3.14-6.06-3.5z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "s1j5cm",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 9",
+                      "geometry": "M17.08 17.4q1.21 3.65 4.76 5.13-1.21-3.65-4.76-5.13z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "IIvuf",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 10",
+                      "geometry": "M15.6 18.41q0.08 3.84 3.04 6.3-0.08-3.85-3.04-6.3z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "e0BCQX",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 11",
+                      "geometry": "M13.89 18.93q-1.06 3.7 1.05 6.92 1.06-3.69-1.05-6.92z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "v0cd6A",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 12",
+                      "geometry": "M12.11 18.93q-2.11 3.23-1.05 6.92 2.11-3.22 1.05-6.92z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "StVzm",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 13",
+                      "geometry": "M10.4 18.41q-2.96 2.45-3.04 6.3 2.96-2.46 3.04-6.3z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "G49peM",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 14",
+                      "geometry": "M8.92 17.4q-3.55 1.48-4.76 5.13 3.55-1.48 4.76-5.13z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "J3ztOC",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 15",
+                      "geometry": "M7.8 16q-3.83 0.36-6.06 3.5 3.83-0.36 6.06-3.5z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "G9aX0c",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 16",
+                      "geometry": "M7.15 14.34q-3.77-0.79-6.82 1.55 3.76 0.78 6.82-1.55z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "mQpG0",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 17",
+                      "geometry": "M7.02 12.55q-3.37-1.86-6.98-0.52 3.37 1.86 6.98 0.52z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "AOAqH",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 18",
+                      "geometry": "M7.41 10.81q-2.67-2.77-6.51-2.56 2.67 2.77 6.51 2.56z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "MNK1Z",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 19",
+                      "geometry": "M8.31 9.26q-1.74-3.43-5.47-4.37 1.74 3.44 5.47 4.37z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "PevrX",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 20",
+                      "geometry": "M9.62 8.04q-0.65-3.79-3.94-5.78 0.65 3.79 3.94 5.78z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "path",
+                      "id": "JJZv6",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Ray 21",
+                      "geometry": "M11.23 7.27q0.5-3.82-2.06-6.69-0.5 3.81 2.06 6.69z",
+                      "viewBox": [
+                        0,
+                        0,
+                        26,
+                        26
+                      ],
+                      "fill": "#8C6414",
+                      "width": 26,
+                      "height": 26
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "S8Ci0F",
+                      "x": 8,
+                      "y": 8,
+                      "name": "Centre",
+                      "fill": "#A6761C",
+                      "width": 10,
+                      "height": 10
+                    }
+                  ]
                 }
               ]
             },
@@ -17643,6 +18010,636 @@
                   ]
                 },
                 "ppSgS": {
+                  "fill": "$accent",
+                  "fontWeight": "700"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pNXVm",
+          "name": "Screen/Settings",
+          "clip": true,
+          "width": 390,
+          "height": 844,
+          "fill": "$bg",
+          "layout": "vertical",
+          "children": [
+            {
+              "id": "YLh1m",
+              "type": "ref",
+              "ref": "dK8kE",
+              "name": "Status Bar",
+              "width": "fill_container"
+            },
+            {
+              "id": "Za8ZM",
+              "type": "ref",
+              "ref": "OZ8sH",
+              "name": "Header",
+              "width": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "ZUOys",
+              "name": "Body",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "padding": [
+                12,
+                20,
+                24,
+                20
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dO2ck",
+                  "name": "Heading",
+                  "fill": "$ink",
+                  "content": "Settings",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "700",
+                  "letterSpacing": -0.4
+                },
+                {
+                  "type": "frame",
+                  "id": "Z6qao",
+                  "name": "Settings Card",
+                  "width": "fill_container",
+                  "fill": "$card",
+                  "cornerRadius": "$radius",
+                  "layout": "vertical",
+                  "padding": [
+                    0,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "OD3nr",
+                      "name": "Row/Language",
+                      "width": "fill_container",
+                      "height": 56,
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "gIbc0",
+                          "name": "Icon Tile",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "$accent-soft",
+                          "cornerRadius": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "IVOOa",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "languages",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "yiWk5",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "content": "Language",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "z4xYD8",
+                          "name": "Value",
+                          "width": "fill_container",
+                          "gap": 4,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "CKx2O",
+                              "name": "Kurdi",
+                              "fill": "$muted",
+                              "content": "کوردی",
+                              "fontFamily": "$font-ku",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "vODUX",
+                              "name": "Rest",
+                              "fill": "$muted",
+                              "content": "· English",
+                              "fontFamily": "$font-lat",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "TETcQ",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DJmxH",
+                      "name": "Row/Phone number",
+                      "width": "fill_container",
+                      "height": 56,
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "uyTrl",
+                          "name": "Icon Tile",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "$accent-soft",
+                          "cornerRadius": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "BHtpY",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "phone",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "hnoVJ",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "content": "Phone number",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bDoLx",
+                          "name": "Value",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "alignItems": "end",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "oAlYd",
+                              "name": "Number",
+                              "fill": "$muted",
+                              "content": "+964 750 123 4567",
+                              "fontFamily": "$font-lat",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "AGDbd",
+                              "name": "Change Link",
+                              "fill": "$accent",
+                              "content": "Change number",
+                              "fontFamily": "$font-lat",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "nxdX1",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Rf8ZH",
+                      "name": "Row/My farms",
+                      "width": "fill_container",
+                      "height": 56,
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "e1UEc",
+                          "name": "Icon Tile",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "$accent-soft",
+                          "cornerRadius": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "G1cMGU",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "map",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "E8O66",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "content": "My farms",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "N5moNq",
+                          "name": "Value",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "2 farms",
+                          "lineHeight": 1.35,
+                          "textAlign": "right",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "Mmmj4",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "tkXBH",
+                      "name": "Row/Notifications",
+                      "width": "fill_container",
+                      "height": 56,
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "IhGCk",
+                          "name": "Icon Tile",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "$accent-soft",
+                          "cornerRadius": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "k4VmK",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "bell",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "g5MHVi",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "content": "Notifications",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E2tpw",
+                      "name": "Toggle/Red alerts (sent to your phone)",
+                      "width": "fill_container",
+                      "height": 56,
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        40
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "J4uOV",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Red alerts (sent to your phone)",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "wqkHn",
+                          "name": "Switch On",
+                          "width": 44,
+                          "height": 26,
+                          "fill": "$accent",
+                          "cornerRadius": 13,
+                          "padding": 3,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "oIa34",
+                              "name": "Knob",
+                              "fill": "#FFFFFF",
+                              "width": 20,
+                              "height": 20
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Qn4zd",
+                      "name": "Toggle/Weekly plan, Sunday morning",
+                      "width": "fill_container",
+                      "height": 56,
+                      "stroke": "$line",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "strokeAlignment": "inner",
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        40
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Z9eTI0",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Weekly plan, Sunday morning",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "KyYbw",
+                          "name": "Switch On",
+                          "width": 44,
+                          "height": 26,
+                          "fill": "$accent",
+                          "cornerRadius": 13,
+                          "padding": 3,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "MyuzU",
+                              "name": "Knob",
+                              "fill": "#FFFFFF",
+                              "width": 20,
+                              "height": 20
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KVFcT",
+                      "name": "Row/About Jutyar",
+                      "width": "fill_container",
+                      "height": 56,
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "x1Llz",
+                          "name": "Icon Tile",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "$accent-soft",
+                          "cornerRadius": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "neoFx",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "info",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "jF5oY",
+                          "name": "Label",
+                          "fill": "$ink",
+                          "content": "About Jutyar",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GAyh4",
+                          "name": "Value",
+                          "fill": "$muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "v0.1 · data from satellites and weather",
+                          "lineHeight": 1.35,
+                          "textAlign": "right",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "Wk9YQ",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "C25pv",
+                  "name": "Delete Block",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": [
+                    8,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "id": "RGu0Q",
+                      "type": "ref",
+                      "ref": "rKGtX",
+                      "name": "Button/Ghost Delete",
+                      "width": "fill_container",
+                      "stroke": "$level-alarm",
+                      "descendants": {
+                        "zmA5H": {
+                          "icon": "trash-2",
+                          "fill": "$level-alarm"
+                        },
+                        "JQhSL": {
+                          "content": "Delete my account and farms",
+                          "fontFamily": "$font-lat",
+                          "fill": "$level-alarm"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "nqYKc",
+                      "name": "Delete Note",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Removes your phone number, farms, reports and questions.",
+                      "textAlign": "center",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "Aqy4K",
+                  "type": "ref",
+                  "ref": "zJp1j",
+                  "name": "Footer",
+                  "width": "fill_container"
+                }
+              ]
+            },
+            {
+              "id": "SvYOh",
+              "type": "ref",
+              "ref": "uOlI5",
+              "name": "Tab Bar",
+              "width": "fill_container",
+              "descendants": {
+                "xXznH": {
+                  "fill": "$muted"
+                },
+                "CThGN": {
+                  "fill": "$muted",
+                  "fontWeight": "500"
+                },
+                "Exr76": {
+                  "fill": "$accent"
+                },
+                "rZLF5": {
                   "fill": "$accent",
                   "fontWeight": "700"
                 }
