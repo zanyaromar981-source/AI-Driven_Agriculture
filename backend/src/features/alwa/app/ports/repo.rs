@@ -5,7 +5,9 @@ use crate::{
     app::Pagination,
     features::alwa::{
         app::AppError,
-        domain::{Crop, Deal, Listing, ListingStatus, Market, MarketSlug, Offer, Price},
+        domain::{
+            Crop, Deal, IdempotencyKey, Listing, ListingStatus, Market, MarketSlug, Offer, Price,
+        },
     },
     shared::Phone,
 };
@@ -71,7 +73,18 @@ pub trait AlwaRepository: Send + Sync + std::fmt::Debug {
 
     /// Creates a new entity. `entity.id()` must be `None`; the database
     /// assigns the id.
-    async fn create_listing(&self, entity: &Listing) -> Result<Listing, AppError>;
+    async fn create_listing(
+        &self,
+        entity: &Listing,
+        idempotency_key: Option<&IdempotencyKey>,
+    ) -> Result<Listing, AppError>;
+
+    /// Returns the listing an earlier post with the same key created.
+    async fn find_listing_by_idempotency_key(
+        &self,
+        seller: &Phone,
+        key: &IdempotencyKey,
+    ) -> Result<Option<Listing>, AppError>;
 
     /// Stores a cancelled listing. Fails with `ListingNotOpen` when the
     /// stored listing stopped being open in the meantime.

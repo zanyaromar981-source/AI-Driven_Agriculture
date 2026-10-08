@@ -8,7 +8,7 @@ use crate::{
             AppError, SignInChallengeRepository, SignInCodeGenerator, SignInCodeHasher,
             SignInCodeSender,
         },
-        domain::{Language, SignInChallenge},
+        domain::{FarmerError, Language, SignInChallenge},
     },
     shared::Phone,
 };
@@ -74,10 +74,30 @@ impl RequestSignInCodeUseCase {
             self.valid_for,
         );
 
-        self.challenges.save(&challenge).await?;
-        self.sender
-            .send(&input.phone, &code, input.language)
-            .await?;
+        // The check above reads; this is the step that decides. Of several
+        // requests arriving together only one stores a code and sends it.
+        if !self
+            .challenges
+            .save_if_due(&challenge, now - self.resend_after)
+            .await?
+        {
+            tracing::info!("sign-in code refused: another request just sent one");
+
+            return Err(FarmerError::CodeRequestedTooSoon(
+                self.resend_after.num_seconds().max(0) as u64
+            )
+            .into());
+        }
+
+        if let Err(error) = self.sender.send(&input.phone, &code, input.language).await {
+            // A code that never left must not hold the phone in its waiting
+            // time, or the farmer could not ask again.
+            self.challenges
+                .consume(&input.phone, challenge.code_hash())
+                .await?;
+
+            return Err(error);
+        }
 
         tracing::info!("sign-in code sent");
 
@@ -90,10 +110,7 @@ impl RequestSignInCodeUseCase {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::farmers::{
-        app::testing::{Call, Fakes, PHONE, phone},
-        domain::FarmerError,
-    };
+    use crate::features::farmers::app::testing::{Call, Fakes, PHONE, phone};
 
     fn use_case(fakes: &Fakes) -> RequestSignInCodeUseCase {
         RequestSignInCodeUseCase::new(
@@ -183,9 +200,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_failed_delivery_surfaces() {
+    async fn a_failed_delivery_surfaces_and_does_not_hold_the_phone_waiting() {
         let fakes = Fakes::failing_to_send();
 
         assert!(use_case(&fakes).execute(input()).await.is_err());
+        assert!(
+            fakes.stored_challenge().is_none(),
+            "a code that never left must not block the next request"
+        );
     }
 }

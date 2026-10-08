@@ -6,13 +6,14 @@ use crate::{
     app::{AppError as GlobalAppError, AuthContext},
     features::alwa::{
         app::{AlwaRepository, AppError, listing_cards::assemble_cards},
-        domain::{Listing, ListingCard, ListingDraft, MarketSlug},
+        domain::{IdempotencyKey, Listing, ListingCard, ListingDraft, MarketSlug},
     },
 };
 
 pub struct PostListingInput {
     pub market: MarketSlug,
     pub draft: ListingDraft,
+    pub idempotency_key: Option<IdempotencyKey>,
 }
 
 pub struct PostListingUseCase {
@@ -35,6 +36,22 @@ impl PostListingUseCase {
     ) -> Result<ListingCard, AppError> {
         let seller = auth_context.user().phone();
         let now = Utc::now();
+
+        // A repeat of a post that already went through (the app retries when
+        // an answer is lost) gets the listing it created the first time.
+        if let Some(key) = &input.idempotency_key
+            && let Some(existing) = self
+                .repository
+                .find_listing_by_idempotency_key(seller, key)
+                .await?
+        {
+            tracing::info!(
+                listing_id = existing.id().unwrap_or_default(),
+                "listing post repeated: returning the listing already posted"
+            );
+
+            return first_card(self.repository.as_ref(), existing, now).await;
+        }
 
         let Some(market) = self.repository.find_market_by_slug(&input.market).await? else {
             tracing::info!(
@@ -63,7 +80,27 @@ impl PostListingUseCase {
         }
 
         let listing = Listing::new(seller.clone(), &market, input.draft, now)?;
-        let posted = self.repository.create_listing(&listing).await?;
+        let posted = match self
+            .repository
+            .create_listing(&listing, input.idempotency_key.as_ref())
+            .await
+        {
+            Ok(posted) => posted,
+            Err(error) => {
+                // Two posts with one key can both pass the lookup above; the
+                // database lets one in, and the other gets that listing.
+                if let Some(key) = &input.idempotency_key
+                    && let Some(existing) = self
+                        .repository
+                        .find_listing_by_idempotency_key(seller, key)
+                        .await?
+                {
+                    return first_card(self.repository.as_ref(), existing, now).await;
+                }
+
+                return Err(error);
+            }
+        };
 
         tracing::info!(
             listing_id = posted.id().unwrap_or_default(),
@@ -74,12 +111,20 @@ impl PostListingUseCase {
             "listing posted"
         );
 
-        let cards = assemble_cards(self.repository.as_ref(), vec![posted], now).await?;
-
-        cards.into_iter().next().ok_or_else(|| {
-            GlobalAppError::MissingValue("The posted listing has no card".to_string()).into()
-        })
+        first_card(self.repository.as_ref(), posted, now).await
     }
+}
+
+async fn first_card(
+    repository: &dyn AlwaRepository,
+    listing: Listing,
+    now: chrono::DateTime<Utc>,
+) -> Result<ListingCard, AppError> {
+    let cards = assemble_cards(repository, vec![listing], now).await?;
+
+    cards.into_iter().next().ok_or_else(|| {
+        GlobalAppError::MissingValue("The posted listing has no card".to_string()).into()
+    })
 }
 
 #[cfg(test)]
@@ -101,6 +146,7 @@ mod tests {
         PostListingInput {
             market: market_slug(MARKET),
             draft: a_listing_draft(Utc::now() + Duration::days(2)),
+            idempotency_key: None,
         }
     }
 
@@ -174,6 +220,7 @@ mod tests {
                 PostListingInput {
                     market: market_slug(MARKET),
                     draft: a_listing_draft(Utc::now() - Duration::minutes(1)),
+                    idempotency_key: None,
                 },
             )
             .await;

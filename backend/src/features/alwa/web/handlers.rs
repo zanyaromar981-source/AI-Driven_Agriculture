@@ -234,9 +234,17 @@ pub async fn get_deals(
 pub async fn create_listing(
     State(state): State<AppState>,
     Extension(auth_context): Extension<AuthContext>,
+    headers: axum::http::HeaderMap,
     ValidatedJson(params): ValidatedJson<PostAlwaListingParams>,
 ) -> Result<ApiResponse<AlwaOneListingResponse>, WebError> {
-    let input = params.into_input()?;
+    // Repeat the same Idempotency-Key on a retry to get the listing already
+    // posted instead of a second one.
+    let idempotency_key = headers
+        .get("idempotency-key")
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_string);
+
+    let input = params.into_input(idempotency_key)?;
 
     let card = state
         .features

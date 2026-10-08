@@ -109,6 +109,8 @@ impl From<&Listing> for alwa_listings::ActiveModel {
             status: Set((*listing.status()).into()),
             created_at: Set(listing.created_at().naive_utc()),
             updated_at: Set(listing.updated_at().naive_utc()),
+            // Set by the repository when a listing is created with a key.
+            idempotency_key: NotSet,
         }
     }
 }

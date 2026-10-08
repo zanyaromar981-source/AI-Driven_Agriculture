@@ -1,0 +1,45 @@
+# A small stand-alone deployment: the API and its own Postgres.
+# Usage (from backend/deploy): cp .env.example .env, fill it in, then
+#   docker compose up -d --build
+name: farm-doctor
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: farm_doctor
+      POSTGRES_PASSWORD: ${DATABASE__PASSWORD:?set DATABASE__PASSWORD in .env}
+      POSTGRES_DB: farm_doctor
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U farm_doctor -d farm_doctor"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ..
+      args:
+        CARGO_BUILD_JOBS: ${CARGO_BUILD_JOBS:-2}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE__HOST: db
+      DATABASE__USERNAME: farm_doctor
+      DATABASE__PASSWORD: ${DATABASE__PASSWORD}
+      DATABASE__NAME: farm_doctor
+      AUTH__JWT_SECRET: ${AUTH__JWT_SECRET:?set AUTH__JWT_SECRET in .env}
+      AUTH__FIXED_SIGN_IN_CODE: ${AUTH__FIXED_SIGN_IN_CODE:-}
+      INGEST__SERVICE_KEY: ${INGEST__SERVICE_KEY:?set INGEST__SERVICE_KEY in .env}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PORT: "3000"
+    ports:
+      - "${PUBLIC_PORT:-8790}:3000"
+
+volumes:
+  db-data:

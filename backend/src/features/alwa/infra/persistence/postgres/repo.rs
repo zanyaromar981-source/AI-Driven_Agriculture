@@ -3,8 +3,10 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, NaiveDate, NaiveTime, Utc};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
+    ActiveModelTrait,
+    ActiveValue::Set,
+    ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
     sea_query::{Expr, OnConflict},
 };
 
@@ -13,8 +15,8 @@ use crate::{
     features::alwa::{
         app::{AlwaRepository, AppError, ListingFilter},
         domain::{
-            AlwaError, Crop, Deal, Listing, ListingStatus, Market, MarketSlug, Offer, OfferStatus,
-            Price,
+            AlwaError, Crop, Deal, IdempotencyKey, Listing, ListingStatus, Market, MarketSlug,
+            Offer, OfferStatus, Price,
         },
         infra::persistence::postgres::entities::{
             alwa_listings, alwa_markets, alwa_offers, alwa_prices,
@@ -117,7 +119,14 @@ impl AlwaPostgresRepository {
             .map_err(database_error)?;
 
         match locked {
-            Some(model) if model.status == stored(ListingStatus::Open) => Ok(()),
+            // The closing time is checked again here, under the lock: the
+            // use case checked it a moment earlier, and it may have passed.
+            Some(model)
+                if model.status == stored(ListingStatus::Open)
+                    && model.closes_at > Utc::now().naive_utc() =>
+            {
+                Ok(())
+            }
             Some(_) => Err(AlwaError::ListingNotOpen.into()),
             None => Err(GlobalAppError::NotFound.into()),
         }
@@ -321,13 +330,35 @@ impl AlwaRepository for AlwaPostgresRepository {
             .map_err(database_error)
     }
 
-    async fn create_listing(&self, entity: &Listing) -> Result<Listing, AppError> {
-        let model = alwa_listings::ActiveModel::from(entity)
-            .insert(&self.conn)
+    async fn create_listing(
+        &self,
+        entity: &Listing,
+        idempotency_key: Option<&IdempotencyKey>,
+    ) -> Result<Listing, AppError> {
+        let mut listing = alwa_listings::ActiveModel::from(entity);
+        listing.idempotency_key = Set(idempotency_key.map(String::from));
+
+        let model = listing.insert(&self.conn).await.map_err(database_error)?;
+
+        Listing::try_from((model, entity.market().clone()))
+    }
+
+    async fn find_listing_by_idempotency_key(
+        &self,
+        seller: &Phone,
+        key: &IdempotencyKey,
+    ) -> Result<Option<Listing>, AppError> {
+        let model = alwa_listings::Entity::find()
+            .filter(alwa_listings::Column::SellerPhone.eq(seller.as_str()))
+            .filter(alwa_listings::Column::IdempotencyKey.eq(key.as_str()))
+            .one(&self.conn)
             .await
             .map_err(database_error)?;
 
-        Listing::try_from((model, entity.market().clone()))
+        match model {
+            Some(model) => self.find_listing_by_id(model.id).await,
+            None => Ok(None),
+        }
     }
 
     async fn cancel_listing(&self, entity: &Listing) -> Result<(), AppError> {

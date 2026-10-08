@@ -8,9 +8,9 @@ use crate::{
     features::alwa::{
         app::{AlwaRepository, AppError, ListingFilter},
         domain::{
-            AlwaError, BuyerKind, Crop, Deal, DisplayName, Grade, Listing, ListingDraft,
-            ListingStatus, Market, MarketSlug, Offer, OfferDraft, OfferStatus, Pickup, Price,
-            PricePerKg, PriceSource, QuantityKg,
+            AlwaError, BuyerKind, Crop, Deal, DisplayName, Grade, IdempotencyKey, Listing,
+            ListingDraft, ListingStatus, Market, MarketSlug, Offer, OfferDraft, OfferStatus,
+            Pickup, Price, PricePerKg, PriceSource, QuantityKg,
         },
     },
     shared::Phone,
@@ -94,6 +94,8 @@ struct Store {
     prices: Vec<Price>,
     listings: Vec<Listing>,
     offers: Vec<Offer>,
+    /// Idempotency keys of posted listings, with the listing each created.
+    listing_keys: Vec<(String, i32)>,
     fail_with_database_error: bool,
 }
 
@@ -393,13 +395,38 @@ impl AlwaRepository for FakeAlwaRepository {
             .count() as u64)
     }
 
-    async fn create_listing(&self, entity: &Listing) -> Result<Listing, AppError> {
+    async fn find_listing_by_idempotency_key(
+        &self,
+        _seller: &Phone,
+        key: &IdempotencyKey,
+    ) -> Result<Option<Listing>, AppError> {
+        self.guard()?;
+
+        let store = self.store.lock().expect("store lock");
+
+        Ok(store
+            .listing_keys
+            .iter()
+            .find(|(stored, _)| stored == key.as_str())
+            .and_then(|(_, id)| store.listings.iter().find(|one| *one.id() == Some(*id)))
+            .cloned())
+    }
+
+    async fn create_listing(
+        &self,
+        entity: &Listing,
+        idempotency_key: Option<&IdempotencyKey>,
+    ) -> Result<Listing, AppError> {
         self.record(RepositoryCall::CreateListing);
         self.guard()?;
 
         let mut store = self.store.lock().expect("store lock");
         let created = listing_with(entity, 1_000 + store.listings.len() as i32);
         store.listings.push(created.clone());
+
+        if let (Some(key), Some(id)) = (idempotency_key, *created.id()) {
+            store.listing_keys.push((key.as_str().to_string(), id));
+        }
 
         Ok(created)
     }
