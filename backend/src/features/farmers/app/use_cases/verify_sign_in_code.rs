@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use chrono::Utc;
+use chrono::{Duration, Utc};
 
 use crate::{
     features::farmers::{
@@ -30,6 +30,7 @@ pub struct VerifySignInCodeUseCase {
     tokens: Arc<dyn TokenIssuer>,
     farms: Arc<dyn FarmCounter>,
     max_attempts: u32,
+    reuse_window: Duration,
 }
 
 impl VerifySignInCodeUseCase {
@@ -40,6 +41,7 @@ impl VerifySignInCodeUseCase {
         tokens: Arc<dyn TokenIssuer>,
         farms: Arc<dyn FarmCounter>,
         max_attempts: u32,
+        reuse_window: Duration,
     ) -> Self {
         Self {
             farmers,
@@ -48,40 +50,50 @@ impl VerifySignInCodeUseCase {
             tokens,
             farms,
             max_attempts,
+            reuse_window,
         }
     }
 
-    /// A phone with no open challenge is answered like a wrong code, so the
-    /// endpoint does not reveal whether a code was ever asked for.
+    /// A phone with no open challenge, or one that has used up its
+    /// attempts, is answered like a wrong code, so the endpoint does not
+    /// reveal whether a code was ever asked for.
     pub async fn execute(&self, input: VerifySignInCodeInput) -> Result<SignedIn, AppError> {
-        let Some(mut challenge) = self.challenges.find_by_phone(&input.phone).await? else {
-            tracing::info!("sign-in refused: no code was asked for");
+        let Some(challenge) = self
+            .challenges
+            .record_attempt(&input.phone, self.max_attempts)
+            .await?
+        else {
+            tracing::info!("sign-in refused: no open code, or too many attempts");
 
             return Err(FarmerError::WrongCode.into());
         };
 
         let presented = self.hasher.hash(&input.phone, &input.code);
 
-        if let Err(error) = challenge.verify(&presented, Utc::now(), self.max_attempts) {
-            // The failed attempt has to be remembered, or the limit on
-            // attempts would never be reached.
-            self.challenges.save(&challenge).await?;
+        let now = Utc::now();
 
+        if let Err(error) = challenge.check(&presented, now) {
             tracing::info!(attempts = *challenge.attempts(), %error, "sign-in refused");
 
             return Err(error.into());
         }
 
-        // A code works once.
-        self.challenges.delete(&input.phone).await?;
+        // A code signs in once. The same code is accepted again only for a
+        // short while after that, so that a sign-in whose answer was lost
+        // can be repeated by the app; after the window it is refused.
+        if !self
+            .challenges
+            .consume(&input.phone, &presented, now, now - self.reuse_window)
+            .await?
+        {
+            tracing::info!("sign-in refused: the code was used a while ago");
 
-        if self.farmers.find_by_phone(&input.phone).await?.is_none() {
-            self.farmers
-                .create(&Farmer::new(input.phone.clone(), *challenge.language()))
-                .await?;
-
-            tracing::info!("farmer registered on first sign-in");
+            return Err(FarmerError::WrongCode.into());
         }
+
+        self.farmers
+            .create_if_absent(&Farmer::new(input.phone.clone(), *challenge.language()))
+            .await?;
 
         let token = self.tokens.issue(&input.phone)?;
         let farms_count = self.farms.count_for(&input.phone).await?;
@@ -107,6 +119,7 @@ mod tests {
             Arc::new(fakes.clone()),
             Arc::new(fakes.clone()),
             MAX_ATTEMPTS,
+            Duration::minutes(2),
         )
     }
 
@@ -128,40 +141,70 @@ mod tests {
 
         assert_eq!(signed_in.token, format!("token-for-{PHONE}"));
         assert_eq!(signed_in.farms_count, 2);
-        assert!(fakes.calls().contains(&Call::CreateFarmer {
+        assert!(fakes.calls().contains(&Call::CreateFarmerIfAbsent {
             phone: PHONE.to_string()
         }));
+        assert!(fakes.has_farmer());
     }
 
     #[tokio::test]
-    async fn a_returning_farmer_is_not_registered_twice() {
+    async fn a_returning_farmer_keeps_the_profile_they_had() {
         let fakes = Fakes::with_open_challenge("123456").with_farmer();
+        let before = fakes.farmer_created_at();
 
         use_case(&fakes)
             .execute(input("123456"))
             .await
             .expect("signed in");
 
-        assert!(
-            !fakes
-                .calls()
-                .iter()
-                .any(|call| matches!(call, Call::CreateFarmer { .. }))
+        assert_eq!(
+            fakes.farmer_created_at(),
+            before,
+            "signing in again must not replace the farmer"
         );
     }
 
     #[tokio::test]
-    async fn a_code_works_only_once() {
+    async fn a_code_someone_else_just_used_is_refused() {
+        let fakes = Fakes::with_open_challenge("123456").losing_the_race_to_consume();
+
+        let result = use_case(&fakes).execute(input("123456")).await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Farmer(FarmerError::WrongCode))
+        ));
+        assert!(
+            !fakes.calls().contains(&Call::IssueToken),
+            "of two requests with the same right code only one may sign in"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_sign_in_repeated_straight_away_succeeds_again() {
         let fakes = Fakes::with_open_challenge("123456");
         let use_case = use_case(&fakes);
 
         use_case.execute(input("123456")).await.expect("first");
         let again = use_case.execute(input("123456")).await;
 
+        assert!(
+            again.is_ok(),
+            "the app repeats a sign-in whose answer was lost; it must not be locked out"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_code_used_a_while_ago_no_longer_works() {
+        let fakes = Fakes::with_open_challenge("123456").used(Duration::minutes(3));
+
+        let again = use_case(&fakes).execute(input("123456")).await;
+
         assert!(matches!(
             again,
             Err(AppError::Farmer(FarmerError::WrongCode))
         ));
+        assert!(!fakes.calls().contains(&Call::IssueToken));
     }
 
     #[tokio::test]
@@ -189,10 +232,11 @@ mod tests {
 
         let result = use_case.execute(input("123456")).await;
 
-        assert!(matches!(
-            result,
-            Err(AppError::Farmer(FarmerError::TooManyAttempts))
-        ));
+        assert!(
+            matches!(result, Err(AppError::Farmer(FarmerError::WrongCode))),
+            "otherwise a code could be guessed by trying all of them"
+        );
+        assert!(!fakes.calls().contains(&Call::IssueToken));
     }
 
     #[tokio::test]

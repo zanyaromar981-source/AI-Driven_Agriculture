@@ -71,6 +71,10 @@ pub struct SignInChallenge {
     attempts: u32,
     sent_at: DateTime<Utc>,
     expires_at: DateTime<Utc>,
+    /// When the code first signed someone in. For a short while after that
+    /// the same code is accepted again, because the app repeats a sign-in
+    /// whose answer was lost on the way back.
+    used_at: Option<DateTime<Utc>>,
 }
 
 impl SignInChallenge {
@@ -88,6 +92,7 @@ impl SignInChallenge {
             attempts: 0,
             sent_at: now,
             expires_at: now + valid_for,
+            used_at: None,
         }
     }
 
@@ -99,6 +104,7 @@ impl SignInChallenge {
         attempts: u32,
         sent_at: DateTime<Utc>,
         expires_at: DateTime<Utc>,
+        used_at: Option<DateTime<Utc>>,
     ) -> Self {
         Self {
             phone,
@@ -107,6 +113,7 @@ impl SignInChallenge {
             attempts,
             sent_at,
             expires_at,
+            used_at,
         }
     }
 
@@ -117,6 +124,12 @@ impl SignInChallenge {
         now: DateTime<Utc>,
         resend_after: Duration,
     ) -> Result<(), FarmerError> {
+        // A code that has done its job does not hold the phone waiting: a
+        // farmer who signs out can ask for the next one straight away.
+        if self.used_at.is_some() {
+            return Ok(());
+        }
+
         let wait = (self.sent_at + resend_after - now).num_seconds();
 
         if wait > 0 {
@@ -126,24 +139,13 @@ impl SignInChallenge {
         Ok(())
     }
 
-    /// Checks a presented code against the stored hash. Every call counts as
-    /// an attempt, including a correct one, so the caller must persist the
-    /// challenge after a failure and remove it after a success.
-    pub fn verify(
-        &mut self,
-        presented_hash: &str,
-        now: DateTime<Utc>,
-        max_attempts: u32,
-    ) -> Result<(), FarmerError> {
+    /// Checks a presented code against the stored hash. It does not count
+    /// the attempt: the repository does that in one step with the limit, so
+    /// that guesses sent at the same moment cannot slip past it.
+    pub fn check(&self, presented_hash: &str, now: DateTime<Utc>) -> Result<(), FarmerError> {
         if now >= self.expires_at {
             return Err(FarmerError::CodeExpired);
         }
-
-        if self.attempts >= max_attempts {
-            return Err(FarmerError::TooManyAttempts);
-        }
-
-        self.attempts += 1;
 
         if presented_hash != self.code_hash {
             return Err(FarmerError::WrongCode);
@@ -156,8 +158,6 @@ impl SignInChallenge {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const MAX_ATTEMPTS: u32 = 5;
 
     fn phone() -> Phone {
         Phone::new("+9647501234567".to_string()).expect("phone")
@@ -177,52 +177,31 @@ mod tests {
     fn the_right_code_passes() {
         let now = Utc::now();
 
-        assert!(challenge(now).verify("right", now, MAX_ATTEMPTS).is_ok());
+        assert!(challenge(now).check("right", now).is_ok());
     }
 
     #[test]
-    fn a_wrong_code_fails_and_is_counted() {
+    fn a_wrong_code_fails() {
         let now = Utc::now();
-        let mut challenge = challenge(now);
 
         assert!(matches!(
-            challenge.verify("wrong", now, MAX_ATTEMPTS),
+            challenge(now).check("wrong", now),
             Err(FarmerError::WrongCode)
         ));
-        assert_eq!(*challenge.attempts(), 1);
-    }
-
-    #[test]
-    fn after_the_last_allowed_attempt_even_the_right_code_is_refused() {
-        let now = Utc::now();
-        let mut challenge = challenge(now);
-
-        for _ in 0..MAX_ATTEMPTS {
-            let _ = challenge.verify("wrong", now, MAX_ATTEMPTS);
-        }
-
-        assert!(
-            matches!(
-                challenge.verify("right", now, MAX_ATTEMPTS),
-                Err(FarmerError::TooManyAttempts)
-            ),
-            "otherwise a code could be guessed by trying all of them"
-        );
     }
 
     #[test]
     fn the_code_stops_working_the_moment_it_expires() {
         let now = Utc::now();
-        let mut challenge = challenge(now);
 
         assert!(matches!(
-            challenge.verify("right", now + Duration::minutes(10), MAX_ATTEMPTS),
+            challenge(now).check("right", now + Duration::minutes(10)),
             Err(FarmerError::CodeExpired)
         ));
-        assert_eq!(
-            *challenge.attempts(),
-            0,
-            "an expired code is not an attempt"
+        assert!(
+            challenge(now)
+                .check("right", now + Duration::minutes(10) - Duration::seconds(1))
+                .is_ok()
         );
     }
 
@@ -238,6 +217,25 @@ mod tests {
         assert!(
             challenge
                 .ensure_can_resend(now + Duration::seconds(60), Duration::seconds(60))
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn a_used_code_does_not_make_the_phone_wait_for_the_next_one() {
+        let now = Utc::now();
+        let used = SignInChallenge::rehydrate(
+            phone(),
+            "right".to_string(),
+            Language::Sorani,
+            1,
+            now,
+            now + Duration::minutes(10),
+            Some(now),
+        );
+
+        assert!(
+            used.ensure_can_resend(now + Duration::seconds(1), Duration::seconds(60))
                 .is_ok()
         );
     }

@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the Farm Doctor region runner every 12 hours
+
+[Timer]
+OnCalendar=*-*-* 00,12:15:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

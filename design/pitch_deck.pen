@@ -192,45 +192,33 @@
       "width": 1920,
       "height": 1080,
       "fill": "$bg",
-      "layout": "none",
+      "layout": "vertical",
+      "gap": 48,
+      "padding": [
+        90,
+        120,
+        100,
+        120
+      ],
       "children": [
         {
           "type": "frame",
-          "id": "gLmZO",
-          "x": 0,
-          "y": 0,
-          "name": "Farmer Photo",
-          "width": 960,
-          "height": 1080,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "generated-1.png",
-            "mode": "cover"
-          }
-        },
-        {
-          "type": "frame",
-          "id": "fHg6V",
-          "x": 1080,
-          "y": 0,
-          "name": "Numbers",
-          "width": 720,
-          "height": 1080,
-          "layout": "vertical",
-          "gap": 56,
-          "justifyContent": "center",
+          "id": "ARIjr",
+          "name": "Header",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "r5FUmj",
+              "id": "wbzAm",
               "name": "Brand",
               "gap": 14,
               "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
-                  "id": "dmg2Y",
+                  "id": "djSxm",
                   "name": "Grain Sun",
                   "width": 44,
                   "height": 44,
@@ -238,7 +226,7 @@
                   "children": [
                     {
                       "type": "path",
-                      "id": "L65xb7",
+                      "id": "w4P4zI",
                       "x": 0,
                       "y": 0,
                       "name": "Rays",
@@ -255,7 +243,7 @@
                     },
                     {
                       "type": "ellipse",
-                      "id": "Ktqux",
+                      "id": "zGKLM",
                       "x": 15.84,
                       "y": 15.84,
                       "name": "Core",
@@ -267,7 +255,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "pFiKu",
+                  "id": "ayzDD",
                   "name": "Wordmark",
                   "fill": "$ink",
                   "content": "Khor",
@@ -278,76 +266,826 @@
               ]
             },
             {
+              "type": "text",
+              "id": "aVObj",
+              "name": "Page",
+              "fill": "$muted",
+              "content": "02 / 08",
+              "fontFamily": "$font-lat",
+              "fontSize": 22,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "pIfKV",
+          "name": "Title",
+          "fill": "$ink",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Farmers find out too late",
+          "lineHeight": 1.1,
+          "fontFamily": "$font-lat",
+          "fontSize": 68,
+          "fontWeight": "800",
+          "letterSpacing": -1.5
+        },
+        {
+          "type": "frame",
+          "id": "v5Ifpd",
+          "name": "Problem Gap Fix",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 20,
+          "alignItems": "center",
+          "children": [
+            {
               "type": "frame",
-              "id": "oNuYX",
-              "name": "KPI 50,000",
+              "id": "TLvMs",
+              "name": "Problem",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": {
+                "type": "image",
+                "enabled": true,
+                "url": "generated-1.png",
+                "mode": "cover"
+              },
+              "cornerRadius": 24,
               "layout": "vertical",
-              "gap": 4,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "bL2no",
+                  "name": "Shade",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": {
+                    "type": "gradient",
+                    "gradientType": "linear",
+                    "enabled": true,
+                    "rotation": 0,
+                    "size": {
+                      "height": 1
+                    },
+                    "colors": [
+                      {
+                        "color": "#382A1BF5",
+                        "position": 0
+                      },
+                      {
+                        "color": "#382A1B40",
+                        "position": 0.6
+                      },
+                      {
+                        "color": "#382A1B99",
+                        "position": 1
+                      }
+                    ]
+                  },
+                  "layout": "vertical",
+                  "padding": 36,
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TIwRm",
+                      "name": "Step Label",
+                      "fill": "#FFFFFF",
+                      "content": "THE PROBLEM",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 22,
+                      "fontWeight": "700",
+                      "letterSpacing": 3
+                    },
+                    {
+                      "type": "frame",
+                      "id": "s11T1T",
+                      "name": "Text",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "OvArk",
+                          "name": "Big Number",
+                          "fill": "#FFFFFF",
+                          "content": "800,000",
+                          "lineHeight": 1,
+                          "fontFamily": "$font-lat",
+                          "fontSize": 98,
+                          "fontWeight": "800",
+                          "letterSpacing": -3
+                        },
+                        {
+                          "type": "text",
+                          "id": "utxua",
+                          "name": "Caption",
+                          "fill": "$on-dark-muted",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "tonnes of wheat lost in the 2025 drought",
+                          "lineHeight": 1.25,
+                          "fontFamily": "$font-lat",
+                          "fontSize": 30,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "icon",
+              "id": "p4LYU",
+              "name": "Arrow",
+              "width": 48,
+              "height": 48,
+              "icon": "arrow-right",
+              "library": "lucide",
+              "fill": "$gold"
+            },
+            {
+              "type": "frame",
+              "id": "Yzqcy",
+              "name": "Gap",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "$soil",
+              "cornerRadius": 24,
+              "layout": "vertical",
+              "padding": 36,
+              "justifyContent": "space_between",
               "children": [
                 {
                   "type": "text",
-                  "id": "lZKFK",
-                  "name": "Number",
-                  "fill": "$ink",
-                  "content": "50,000",
-                  "lineHeight": 1,
+                  "id": "M0HhE",
+                  "name": "Step Label",
+                  "fill": "$gold",
+                  "content": "THE GAP",
                   "fontFamily": "$font-lat",
-                  "fontSize": 200,
-                  "fontWeight": "800",
-                  "letterSpacing": -6
+                  "fontSize": 22,
+                  "fontWeight": "700",
+                  "letterSpacing": 3
+                },
+                {
+                  "type": "frame",
+                  "id": "v6qSj",
+                  "name": "People",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 18,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "l65xM",
+                      "name": "Adviser",
+                      "gap": 16,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "NZUrt",
+                          "name": "Adviser Icon",
+                          "width": 84,
+                          "height": 84,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "$gold"
+                        },
+                        {
+                          "type": "text",
+                          "id": "RDxmf",
+                          "name": "Adviser Label",
+                          "fill": "$gold",
+                          "content": "1 adviser",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 44,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ChoBN",
+                      "name": "Farmers Row",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "vTgNG",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "m4dlQa",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "nnGvU",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "G8fW2U",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "is9Z1",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "cqL9o",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "PFXp4",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "uDjn5",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "qRuqz",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "XGB1A",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "C17ZfT",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "q3g1C",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xbQue",
+                      "name": "Farmers Row",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "djx5b",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "xJCCW",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "f5QBF",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "R1ujnS",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "yqFKY",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "a4Y7b",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "Ebdp2",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "rHdty",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "SVYgI",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "yvhRx",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "IIDYH",
+                          "name": "Farmer",
+                          "width": 32,
+                          "height": 32,
+                          "icon": "user-round",
+                          "library": "lucide",
+                          "fill": "#FFFFFF"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Dby1o",
+                      "name": "Farmers Label",
+                      "fill": "#FFFFFF",
+                      "content": "230 farmers",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 44,
+                      "fontWeight": "800"
+                    }
+                  ]
                 },
                 {
                   "type": "text",
-                  "id": "T0A89R",
-                  "name": "Label",
-                  "fill": "$muted",
-                  "content": "wheat farmers",
+                  "id": "p7CK6e",
+                  "name": "Caption",
+                  "fill": "$on-dark-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Too few advisers, so help comes late.",
+                  "lineHeight": 1.25,
                   "fontFamily": "$font-lat",
-                  "fontSize": 40,
+                  "fontSize": 30,
                   "fontWeight": "600"
                 }
               ]
             },
             {
+              "type": "icon",
+              "id": "L98Ibf",
+              "name": "Arrow",
+              "width": 48,
+              "height": 48,
+              "icon": "arrow-right",
+              "library": "lucide",
+              "fill": "$gold"
+            },
+            {
               "type": "frame",
-              "id": "gbXkF",
-              "name": "KPI 215",
+              "id": "i89xk",
+              "name": "Fix",
+              "clip": true,
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "$ink",
+              "cornerRadius": 24,
               "layout": "vertical",
-              "gap": 4,
+              "gap": 28,
+              "padding": [
+                36,
+                36,
+                0,
+                36
+              ],
               "children": [
                 {
                   "type": "text",
-                  "id": "L1Ier",
-                  "name": "Number",
-                  "fill": "$gold",
-                  "content": "215",
-                  "lineHeight": 1,
+                  "id": "ngsVY",
+                  "name": "Step Label",
+                  "fill": "$accent",
+                  "content": "OUR FIX",
                   "fontFamily": "$font-lat",
-                  "fontSize": 200,
-                  "fontWeight": "800",
-                  "letterSpacing": -6
+                  "fontSize": 22,
+                  "fontWeight": "700",
+                  "letterSpacing": 3
                 },
                 {
                   "type": "text",
-                  "id": "vDjW6",
-                  "name": "Label",
-                  "fill": "$muted",
-                  "content": "advisers",
+                  "id": "A2eyt",
+                  "name": "Caption",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Khor watches every field from space and advises the farmer each week.",
+                  "lineHeight": 1.25,
                   "fontFamily": "$font-lat",
-                  "fontSize": 40,
+                  "fontSize": 30,
                   "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "wPzve",
+                  "name": "Phone Wrap",
+                  "clip": true,
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Obd4D",
+                      "name": "Phone",
+                      "width": 300,
+                      "height": 649,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "pitch_assets/screen_cellcard.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": [
+                        30,
+                        30,
+                        0,
+                        0
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "mNvdi",
+      "x": 4080,
+      "y": 0,
+      "name": "03 App design",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$ink",
+      "layout": "vertical",
+      "gap": 56,
+      "padding": [
+        90,
+        120,
+        100,
+        120
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "NBjFj",
+          "name": "Header",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "p8wsEx",
+              "name": "Brand",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "UCqaW",
+                  "name": "Grain Sun",
+                  "width": 44,
+                  "height": 44,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "dwgyY",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Rays",
+                      "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
+                      "viewBox": [
+                        0,
+                        0,
+                        100,
+                        100
+                      ],
+                      "fill": "$gold",
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "zROqn",
+                      "x": 15.84,
+                      "y": 15.84,
+                      "name": "Core",
+                      "fill": "$gold",
+                      "width": 12.32,
+                      "height": 12.32
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "CxxLT",
+                  "name": "Wordmark",
+                  "fill": "#FFFFFF",
+                  "content": "Khor",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "800"
                 }
               ]
             },
             {
               "type": "text",
-              "id": "T1sr84",
-              "name": "Insight",
-              "fill": "$ink",
-              "content": "1 adviser for every 230 farmers",
+              "id": "Kj8EV",
+              "name": "Page",
+              "fill": "$on-dark-muted",
+              "content": "03 / 08",
               "fontFamily": "$font-lat",
-              "fontSize": 34,
-              "fontWeight": "700"
+              "fontSize": 22,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "DxGrk",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 80,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "uLdRE",
+              "name": "Text",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 48,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aHHJW",
+                  "name": "Label",
+                  "fill": "$gold",
+                  "content": "APP DESIGN",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 22,
+                  "fontWeight": "700",
+                  "letterSpacing": 3
+                },
+                {
+                  "type": "text",
+                  "id": "X9WA7R",
+                  "name": "Title",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "The whole farm on one phone",
+                  "lineHeight": 1.1,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 76,
+                  "fontWeight": "800",
+                  "letterSpacing": -1.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eE8Gk",
+              "name": "Phones",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XK4oq",
+                  "name": "Phone Wrap screen_grid",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VJW5o",
+                      "name": "Phone screen_grid",
+                      "clip": true,
+                      "width": 340,
+                      "height": 735,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "pitch_assets/screen_grid.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 32,
+                      "stroke": "#FFFFFF22",
+                      "strokeWidth": 2,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#16201922",
+                        "offset": {
+                          "x": 0,
+                          "y": 12
+                        },
+                        "blur": 32
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "p2Btw",
+                  "name": "Phone Wrap screen_cellcard",
+                  "padding": [
+                    40,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Vosik",
+                      "name": "Phone screen_cellcard",
+                      "clip": true,
+                      "width": 340,
+                      "height": 735,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "pitch_assets/screen_cellcard.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 32,
+                      "stroke": "#FFFFFF22",
+                      "strokeWidth": 2,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#16201922",
+                        "offset": {
+                          "x": 0,
+                          "y": 12
+                        },
+                        "blur": 32
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "TMouI",
+                  "name": "Phone Wrap screen_cropview",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "X0boJZ",
+                      "name": "Phone screen_cropview",
+                      "clip": true,
+                      "width": 340,
+                      "height": 735,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "pitch_assets/screen_cropview.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 32,
+                      "stroke": "#FFFFFF22",
+                      "strokeWidth": 2,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#16201922",
+                        "offset": {
+                          "x": 0,
+                          "y": 12
+                        },
+                        "blur": 32
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -356,9 +1094,9 @@
     {
       "type": "frame",
       "id": "qZUd7",
-      "x": 4080,
+      "x": 6120,
       "y": 0,
-      "name": "03 Solution",
+      "name": "04 App features",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -441,7 +1179,7 @@
               "id": "z0U8Q",
               "name": "Page",
               "fill": "$muted",
-              "content": "03 / 08",
+              "content": "04 / 08",
               "fontFamily": "$font-lat",
               "fontSize": 22,
               "fontWeight": "600"
@@ -455,7 +1193,7 @@
           "fill": "$ink",
           "textGrowth": "fixed-width",
           "width": "fill_container",
-          "content": "Five AIs watch. One doctor explains.",
+          "content": "Five AIs watch your field. One clear answer.",
           "lineHeight": 1.1,
           "fontFamily": "$font-lat",
           "fontSize": 68,
@@ -826,7 +1564,7 @@
               "name": "Icon",
               "width": 56,
               "height": 56,
-              "icon": "stethoscope",
+              "icon": "message-circle",
               "library": "lucide",
               "fill": "$gold"
             },
@@ -835,7 +1573,7 @@
               "id": "h1o3W",
               "name": "Doctor Title",
               "fill": "#FFFFFF",
-              "content": "One Doctor: plain Sorani advice for this week",
+              "content": "Advice for this week, in plain Sorani",
               "fontFamily": "$font-lat",
               "fontSize": 36,
               "fontWeight": "800"
@@ -846,16 +1584,16 @@
     },
     {
       "type": "frame",
-      "id": "mNvdi",
-      "x": 6120,
-      "y": 0,
-      "name": "04 Farmer app",
+      "id": "c6ptt",
+      "x": 0,
+      "y": 1200,
+      "name": "05 Calculations",
       "clip": true,
       "width": 1920,
       "height": 1080,
       "fill": "$ink",
       "layout": "vertical",
-      "gap": 56,
+      "gap": 44,
       "padding": [
         90,
         120,
@@ -865,7 +1603,34 @@
       "children": [
         {
           "type": "frame",
-          "id": "NBjFj",
+          "id": "PqApm",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Satellite Photo",
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-4.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "jD5eh",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Overlay",
+          "fill": "#2C3B1EB3",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "type": "frame",
+          "id": "I1TIV3",
           "name": "Header",
           "width": "fill_container",
           "justifyContent": "space_between",
@@ -873,14 +1638,14 @@
           "children": [
             {
               "type": "frame",
-              "id": "p8wsEx",
+              "id": "h9Q8d",
               "name": "Brand",
               "gap": 14,
               "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
-                  "id": "UCqaW",
+                  "id": "e1t9O",
                   "name": "Grain Sun",
                   "width": 44,
                   "height": 44,
@@ -888,7 +1653,7 @@
                   "children": [
                     {
                       "type": "path",
-                      "id": "dwgyY",
+                      "id": "H2YEG",
                       "x": 0,
                       "y": 0,
                       "name": "Rays",
@@ -905,7 +1670,7 @@
                     },
                     {
                       "type": "ellipse",
-                      "id": "zROqn",
+                      "id": "EUffW",
                       "x": 15.84,
                       "y": 15.84,
                       "name": "Core",
@@ -917,7 +1682,7 @@
                 },
                 {
                   "type": "text",
-                  "id": "CxxLT",
+                  "id": "O3P9za",
                   "name": "Wordmark",
                   "fill": "#FFFFFF",
                   "content": "Khor",
@@ -929,10 +1694,10 @@
             },
             {
               "type": "text",
-              "id": "Kj8EV",
+              "id": "GLn1N",
               "name": "Page",
               "fill": "$on-dark-muted",
-              "content": "04 / 08",
+              "content": "05 / 08",
               "fontFamily": "$font-lat",
               "fontSize": 22,
               "fontWeight": "600"
@@ -940,163 +1705,268 @@
           ]
         },
         {
-          "type": "frame",
-          "id": "DxGrk",
-          "name": "Body",
+          "type": "text",
+          "id": "JjB6q",
+          "name": "Title",
+          "fill": "#FFFFFF",
+          "textGrowth": "fixed-width",
           "width": "fill_container",
-          "height": "fill_container",
-          "gap": 80,
+          "content": "How Khor calculates a field",
+          "lineHeight": 1.1,
+          "fontFamily": "$font-lat",
+          "fontSize": 68,
+          "fontWeight": "800",
+          "letterSpacing": -1.5
+        },
+        {
+          "type": "frame",
+          "id": "GWWxB",
+          "name": "Formula",
+          "width": "fill_container",
+          "gap": 28,
           "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "uLdRE",
-              "name": "Text",
+              "id": "xcHwI",
+              "name": "Greenness today",
               "width": "fill_container",
+              "fill": "#FFFFFF1F",
+              "cornerRadius": 24,
               "layout": "vertical",
-              "gap": 48,
+              "gap": 10,
+              "padding": [
+                36,
+                40
+              ],
               "children": [
                 {
                   "type": "text",
-                  "id": "aHHJW",
-                  "name": "Label",
-                  "fill": "$gold",
-                  "content": "THE FARMER APP",
+                  "id": "jDMxi",
+                  "name": "Term",
+                  "fill": "#FFFFFF",
+                  "content": "Greenness today",
                   "fontFamily": "$font-lat",
-                  "fontSize": 22,
-                  "fontWeight": "700",
-                  "letterSpacing": 3
+                  "fontSize": 44,
+                  "fontWeight": "800"
                 },
                 {
                   "type": "text",
-                  "id": "X9WA7R",
-                  "name": "Title",
+                  "id": "ZjEqD",
+                  "name": "Term Note",
+                  "fill": "$on-dark-muted",
+                  "content": "Sentinel-2, every 10 m cell",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "bDNqk",
+              "name": "Operator",
+              "fill": "$gold",
+              "content": "÷",
+              "fontFamily": "$font-lat",
+              "fontSize": 84,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "rHMot",
+              "name": "Its own normal",
+              "width": "fill_container",
+              "fill": "#FFFFFF1F",
+              "cornerRadius": 24,
+              "layout": "vertical",
+              "gap": 10,
+              "padding": [
+                36,
+                40
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "TDNdQ",
+                  "name": "Term",
                   "fill": "#FFFFFF",
+                  "content": "Its own normal",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 44,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "vRBqz",
+                  "name": "Term Note",
+                  "fill": "$on-dark-muted",
+                  "content": "25 years of satellite history",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Y49nqB",
+              "name": "Operator",
+              "fill": "$gold",
+              "content": "=",
+              "fontFamily": "$font-lat",
+              "fontSize": 84,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "dddFL",
+              "name": "78% of normal",
+              "width": "fill_container",
+              "fill": "$gold",
+              "cornerRadius": 24,
+              "layout": "vertical",
+              "gap": 10,
+              "padding": [
+                36,
+                40
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Zoftg",
+                  "name": "Term",
+                  "fill": "$soil",
+                  "content": "78% of normal",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 44,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "X0ecC",
+                  "name": "Term Note",
+                  "fill": "$soil",
+                  "content": "the app marks the cell Watch",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tybN8",
+          "name": "KPIs",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 60,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "oK42E",
+              "name": "KPI 100%",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "J3X8O",
+                  "name": "Number",
+                  "fill": "#FFFFFF",
+                  "content": "100%",
+                  "lineHeight": 1,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 130,
+                  "fontWeight": "800",
+                  "letterSpacing": -4
+                },
+                {
+                  "type": "text",
+                  "id": "CR0ML",
+                  "name": "Label",
+                  "fill": "$on-dark-muted",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "The whole farm on one phone",
-                  "lineHeight": 1.1,
+                  "content": "match with NASA's own satellite service",
+                  "lineHeight": 1.3,
                   "fontFamily": "$font-lat",
-                  "fontSize": 76,
-                  "fontWeight": "800",
-                  "letterSpacing": -1.5
+                  "fontSize": 30,
+                  "fontWeight": "500"
                 }
               ]
             },
             {
               "type": "frame",
-              "id": "eE8Gk",
-              "name": "Phones",
-              "gap": 32,
-              "alignItems": "center",
+              "id": "KOXzP",
+              "name": "KPI 88%",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
               "children": [
                 {
-                  "type": "frame",
-                  "id": "XK4oq",
-                  "name": "Phone Wrap screen_grid",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "VJW5o",
-                      "name": "Phone screen_grid",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_grid.png",
-                        "mode": "cover"
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
-                    }
-                  ]
+                  "type": "text",
+                  "id": "uNU1s",
+                  "name": "Number",
+                  "fill": "$gold",
+                  "content": "88%",
+                  "lineHeight": 1,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 130,
+                  "fontWeight": "800",
+                  "letterSpacing": -4
                 },
                 {
-                  "type": "frame",
-                  "id": "p2Btw",
-                  "name": "Phone Wrap screen_cellcard",
-                  "padding": [
-                    40,
-                    0,
-                    0,
-                    0
-                  ],
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "Vosik",
-                      "name": "Phone screen_cellcard",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_cellcard.png",
-                        "mode": "cover"
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
-                    }
-                  ]
+                  "type": "text",
+                  "id": "lgCaO",
+                  "name": "Label",
+                  "fill": "$on-dark-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "right over 26 past seasons",
+                  "lineHeight": 1.3,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eQT4Z",
+              "name": "KPI −56%",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CyUfE",
+                  "name": "Number",
+                  "fill": "$mustard",
+                  "content": "10 m",
+                  "lineHeight": 1,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 130,
+                  "fontWeight": "800",
+                  "letterSpacing": -4
                 },
                 {
-                  "type": "frame",
-                  "id": "TMouI",
-                  "name": "Phone Wrap screen_cropview",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "X0boJZ",
-                      "name": "Phone screen_cropview",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_cropview.png",
-                        "mode": "cover"
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
-                    }
-                  ]
+                  "type": "text",
+                  "id": "PFFMK",
+                  "name": "Label",
+                  "fill": "$on-dark-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "one cell is one satellite pixel",
+                  "lineHeight": 1.3,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "500"
                 }
               ]
             }
@@ -1106,10 +1976,1133 @@
     },
     {
       "type": "frame",
-      "id": "jy0NE",
-      "x": 0,
+      "id": "RU9ku",
+      "x": 2040,
       "y": 1200,
-      "name": "05 Live demo",
+      "name": "06 Water",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$ink",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "jM9Kk",
+          "x": 120,
+          "y": 90,
+          "name": "Header",
+          "width": 1680,
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "qwMGY",
+              "name": "Brand",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "aSuq9",
+                  "name": "Grain Sun",
+                  "width": 44,
+                  "height": 44,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "kzhBH",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Rays",
+                      "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
+                      "viewBox": [
+                        0,
+                        0,
+                        100,
+                        100
+                      ],
+                      "fill": "$gold",
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "b3scCz",
+                      "x": 15.84,
+                      "y": 15.84,
+                      "name": "Core",
+                      "fill": "$gold",
+                      "width": 12.32,
+                      "height": 12.32
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "V3Eku5",
+                  "name": "Wordmark",
+                  "fill": "#FFFFFF",
+                  "content": "Khor",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "X43oF",
+              "name": "Page",
+              "fill": "$on-dark-muted",
+              "content": "06 / 08",
+              "fontFamily": "$font-lat",
+              "fontSize": 22,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FdYFD",
+          "x": 870,
+          "y": 64,
+          "name": "Zone Map",
+          "width": 988,
+          "height": 951.6,
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "f6UUh1",
+              "x": 0,
+              "y": 0.26,
+              "name": "Zone · Zakho",
+              "geometry": "M0 64.9l2.9-4 40.8-6.9 6.6-15.1 14.5-17.7-0.6-3.9 8.5-3.3-2.2-7 12.6-6.8 31.8 14 13.5-8.7 25.3-4.5 2.6 3.5-13.2 20.6 11.4 6.5 2.3 11.4-14 4.4-4.9 15.4-6.4 4.1-15.4-3.3-24.4 6.5 3.7 4.4-4.5 7.4-52.1-19.4-21.7 2.9-12.6 15.1-4.1-3.5 4-5-4.4-7.1z",
+              "viewBox": [
+                0,
+                0.2,
+                156.8,
+                81.7
+              ],
+              "fill": "#FFFFFF17",
+              "width": 203.84000000000003,
+              "height": 106.21000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "zqLvB",
+              "x": 177.84000000000003,
+              "y": 5.8500000000000005,
+              "name": "Zone · Amedi",
+              "geometry": "M136.8 60.2l5.5-6.4 0.3-6.4 14.3-4.8-2.4-10.9-11.5-6.5 13.3-20.7 13.6 3.4 13.7 9.4 9-5.7 24.2 18.6 15.3-1.7 14.2 8.9 9.9-4 16.3 1 11.5 9 2.9-6 13.9-2.2 6.1-13.9 11.6-9.1 12.8 9.9 1.3 21.4-5.7 11.4-30.5 19.7-10.7 12.5-27.7-3.9-12.2 13.2 15.3 9.8-1 22.6-60.6-2.6-2.3-17.9-15.8-1.9 1.5-3.8-7.6-8.3-8.1 2.8-3.4-6.7 0.9-15.5-27.9-14.7z",
+              "viewBox": [
+                136.8,
+                4.5,
+                195.8,
+                124.3
+              ],
+              "fill": "#FFFFFF17",
+              "width": 254.54000000000002,
+              "height": 161.59,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "giEPw",
+              "x": 117.13,
+              "y": 82.68,
+              "name": "Zone · Duhok",
+              "geometry": "M90.1 70.5l26-6.9 36.7 2.1 12.5 10.5-1.5 13.9 3.5 7 8.1-2.9 7.9 8.2-5.9 10.4-5.7 2.1-14 24.9-45.2-10.9-7.6-8.3 2.8-2.8-4.6-8.3 3.5-4.1-11-10.3-4.7-13.2 4.2-7.4-5-4z",
+              "viewBox": [
+                90.1,
+                63.6,
+                93.2,
+                76.2
+              ],
+              "fill": "#FFFFFF17",
+              "width": 121.16000000000001,
+              "height": 99.06,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "qrI5n",
+              "x": 5.8500000000000005,
+              "y": 81.25,
+              "name": "Zone · Sumel",
+              "geometry": "M4.5 80.5l12.4-15.1 21.9-2.9 46.6 15 9.7 11.2 0.7 6.7 10.8 9.8-3.1 4.6 4.3 16.1 44.4 15.1-15.7 10.3-47 4.4-2.4-6.1-9.6-2-19.1-21.9-5.8-0.3-3.5 6-12.8-12.9-5.2-24.5-4-0.4-2.3 9.3-2.5-1.1-9.4-7-8.4-14.3z",
+              "viewBox": [
+                4.5,
+                62.5,
+                147.7,
+                93.2
+              ],
+              "fill": "#FFFFFF17",
+              "width": 192.01,
+              "height": 121.16000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "Ffoo6",
+              "x": 191.75,
+              "y": 138.32000000000002,
+              "name": "Zone · Shekhan",
+              "geometry": "M147.5 146.7l10.3-7.1 13.9-24.7 9-8.5 16.4 1.8 2.7 18 46 3.5-2.7 23.5-16.1 29.1-8 22.1 1 6.9-5.5 1-17-14.7-12.6-1.9 0.9-6.5-14.1 7.6-10.3-2.4 1.3-12.2 6-2.7 2.4-7-7.4-12.8 10.5-14.9-26.7 1.9z",
+              "viewBox": [
+                147.5,
+                106.4,
+                98.3,
+                105.9
+              ],
+              "fill": "#FFFFFF17",
+              "width": 127.79,
+              "height": 137.67000000000002,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "hzJBJ",
+              "x": 309.01,
+              "y": 107.38,
+              "name": "Zone · Akre",
+              "geometry": "M237.7 165.7l0.1-6.7 5.3-5.9 2.7-23.4 14.4-1.3 0.8-22.2-15.7-7.9 15.6-15.7 24.8 4.5 31.1 21.5 8.2 8.2 0.5 7.3 33.6 11.9 14.3 16.6-6.8 14.7-26.2 22.4-7.3-3.9-6.1 5.5-2.6-5.3-4.4 0.1-15.7 16.5-6-0.2-2.7 8.1-7.3-1.1-9.6-19.9-8.3 0.8 0.4-6.5-14.5-16.3-14.2 5.9 0-7.5-4.4-0.2z",
+              "viewBox": [
+                237.7,
+                82.6,
+                135.7,
+                127.9
+              ],
+              "fill": "#FFFFFF17",
+              "width": 176.41,
+              "height": 166.27,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "AJaHF",
+              "x": 282.23,
+              "y": 215.28,
+              "name": "Zone · Bardarash",
+              "geometry": "M217.1 228.6l5-7.3-3.1-17 18.7-38.6 4.5-0.1-0.1 7.8 14.2-5.9 14.9 16.7-0.9 5.9 8.5-0.8 9.5 20.1 0.4 8.3-10.2 5.5 0.5 10.6-13.5 17-13.6-2.1-1.7-11.9-4.2-2.8-9.4 6.2-8-7.9-7.3 1.5-4.2-5.2z",
+              "viewBox": [
+                217.1,
+                165.6,
+                71.6,
+                85.2
+              ],
+              "fill": "#FFFFFF17",
+              "width": 93.08,
+              "height": 110.76,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "B92Ba",
+              "x": 317.07,
+              "y": 296.14000000000004,
+              "name": "Zone · Erbil",
+              "geometry": "M243.9 273.4l4.6-9.1 13.9-9.4 12.3-15.5 4.7-11.3 15.5-0.3 14.5 4.1 9.7 10.5 19.6 3.5 15.6 9.7 2.3 23.4 6.7 11.1-14.2 2.8-30.2 14.9-4.9 6.2-5.4-0.3-2.1-7.1-11.1-2-16.4 6.9-6.5-1.7-3.7 8.7-6.1 1.5-3.3-1.6 1.4-7-4.4-8.7 15.7-18.6-15.4-10.8-12.8 0.1z",
+              "viewBox": [
+                243.9,
+                227.8,
+                119.4,
+                92.2
+              ],
+              "fill": "#FFFFFF17",
+              "width": 155.22,
+              "height": 119.86000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "yM9go",
+              "x": 334.88000000000005,
+              "y": 377.13000000000005,
+              "name": "Zone · Dashti Hawler",
+              "geometry": "M257.6 325.9l1.8-7.5 7.5 1.8 5.4-10.5 6.7 1.8 18.7-6.9 9 2 1.9 7 4.4 0.6 36.1-21.3 14.2-2.8 5.8 34.1-6.6 25 4.1 19.1-23.5-5.9-2.9 14.6-11.4 0.2-60.5-38.9-10.7-12.4z",
+              "viewBox": [
+                257.6,
+                290.1,
+                111.5,
+                87.1
+              ],
+              "fill": "#FFFFFF17",
+              "width": 144.95000000000002,
+              "height": 113.22999999999999,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "ke72k",
+              "x": 247.26,
+              "y": 355.29,
+              "name": "Zone · Makhmur",
+              "geometry": "M190.2 398.4l4.9-34.1 12.3-14.2-0.1-11.7-12.2-2.9-2.5-7.1 18.7-7.3 5.2-13.4 22-31.3 18.1-3.1 15.6 10.8-15.7 18.5 4.3 8.9-3.1 14.6 10.6 12.2 35.2 22.8-21.3 26.6-10.6 5.1 8.7 15.3-10.9 8.2-1.3 16.7-15 3.7-0.8 10.2-17.2-2-3.8 12.3-26.5-7.2 2.2-21.4-9.2-4.8 0.6-14.8-8.2-10.6z",
+              "viewBox": [
+                190.2,
+                273.3,
+                113.3,
+                183.9
+              ],
+              "fill": "#FFFFFF17",
+              "width": 147.29,
+              "height": 239.07000000000002,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "tvVar",
+              "x": 463.58000000000004,
+              "y": 338.78000000000003,
+              "name": "Zone · Koya",
+              "geometry": "M356.6 279.1l0.6-12.5 8.7-2.2 4.2 3.3 7.5-0.6 1.2-4.5 11.9 0.6 23.8 4.8 4-7.4 8.5 5.7 14.5-0.2 7 9.6-0.5 6.3-10.1 1.4-2.5 15 30.1 21 30 34.4-4.6 2.5-7.2-3.9-3.5 6.2-7.5 2.5-3-4.7-3.7 3.9-33.9-8.8-13.7 9.4-13.6-2.9-17.3 9.8-20.9 0.5-4.1-19.2 6.5-21.8-3.8-12.8 1.3-16.1-9.9-19.3z",
+              "viewBox": [
+                356.6,
+                260.6,
+                138.9,
+                107.7
+              ],
+              "fill": "#FFFFFF17",
+              "width": 180.57000000000002,
+              "height": 140.01000000000002,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "RuzvC",
+              "x": 361.66,
+              "y": 218.01,
+              "name": "Zone · Shaqlawa",
+              "geometry": "M278.2 223.2l10.3-5.5-1.1-8.1 8.8 0.6 2-8 6.2 0.2 15.5-16.3 7.2 4.9 5.9-5.2 7.5 3.6 21.2-20.4 7.9-1.3 5.2 12 12.5 12.8 9.4 27.9 11.6-7.4 26.9 11.8-16.9 17.8 6.8 20.3-7.7-2-2.5 7.1-35.7-5.4-1.4 4.5-12.2-2.6-5.5 3.4-5.5-2.3-0.5-10.1-15.4-9.6-19.6-3.5-15.8-12.7-23.9-1.6-1.2-4.9z",
+              "viewBox": [
+                278.2,
+                167.7,
+                157,
+                100.3
+              ],
+              "fill": "#FFFFFF17",
+              "width": 204.1,
+              "height": 130.39000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "KzMgb",
+              "x": 472.55,
+              "y": 58.239999999999995,
+              "name": "Zone · Soran",
+              "geometry": "M363.5 140.2l14.5 0.6 6.2 8.1 18.6 1.3 6.1 7.5 7.4-1.7 5.4-12.6-26-18.1-11-21.7-11.7-7.5 8.7-13.3-2.7-5.5 29.8-9.9 25.3-22.6 31.3 8.8-5.3 8.3 4.4 9.7 7.1 7.8 5.8-1.8 10.2 6.7-4.7 14.1 5.1 13.7-13.3 20.8 1.9 7.1 6.1 1.9-0.8 5.8-37.5 2-2.8 18 7.6 11-8.7-7-12.1 3.3-16.7-4.5-19.1 11.1 42.6 43.2-26.7-11.8-11.6 7.7-9.7-28.2-12.5-12.9-2.6-9.4-6.4-2.5 7.7-14.7-9.9-12.8z",
+              "viewBox": [
+                363.5,
+                44.8,
+                124.5,
+                180
+              ],
+              "fill": "#FFFFFF17",
+              "width": 161.85,
+              "height": 234,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "h132E",
+              "x": 509.99,
+              "y": 221.65,
+              "name": "Zone · Rawanduz",
+              "geometry": "M392.3 181.7l19.3-11.2 16.8 4.5 12.1-3.3 39 41.7-9.4 7.2-20.4 2.5-9.4-3.1-5.1 4.7-42.9-43z",
+              "viewBox": [
+                392.3,
+                170.5,
+                87.2,
+                54.2
+              ],
+              "fill": "#FFFFFF17",
+              "width": 113.36000000000001,
+              "height": 70.46000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "kRj7R",
+              "x": 573.8199999999999,
+              "y": 183.95000000000002,
+              "name": "Zone · Choman",
+              "geometry": "M441.4 155l3.1-5.4 37.1-2.1 1.1-5.6 5.1-0.4 24 11.1 6.1 13.2-0.8 10.5-6 6.2 1.4 8.5-6.6 5.3-3.8 21.1-22.6-4-36.3-42.3-1.8-16.1z",
+              "viewBox": [
+                441.4,
+                141.5,
+                76.5,
+                75.9
+              ],
+              "fill": "#FFFFFF17",
+              "width": 99.45,
+              "height": 98.67000000000002,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "lHxmL",
+              "x": 371.15000000000003,
+              "y": 17.94,
+              "name": "Zone · Mergasor",
+              "geometry": "M285.5 88.1l10.8-13.4 30.5-19.8 5.6-10.6-1.2-22-11.3-8.5 19.4 1.1 18.9 9.1 7.4 10 2 13.9-9.3 4.3-7.5 12.6 8.6 12.3 4.8 16.4 18.4 7.6 13 24.2 26.4 18.2-5.7 12.7-7.1 1.7-6.5-7.8-18.7-1.2-6-8.1-14.5-0.6-38-16-0.6-7.3-8.2-8.3-31.2-20.5z",
+              "viewBox": [
+                285.5,
+                13.8,
+                136.5,
+                144.1
+              ],
+              "fill": "#FFFFFF17",
+              "width": 177.45000000000002,
+              "height": 187.33,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "c0h3E",
+              "x": 653.77,
+              "y": 486.98,
+              "name": "Zone · Sulaymaniyah",
+              "geometry": "M502.9 411.2l2.6-17.9 9.1-0.3 7.6 7.3 11.4 3.1 12.6-27.4 8.5 3.1 1.2-4.5 18.5 16.3 3.6-0.8 21 34.7-16.6 3.1 3.2 34.4-14.5-4.1 2.3-8.5-6.6-3.5-11 12-5.4-9.2-7.6-3.8-0.8 8-3.5 1.8-35.6-43.8z",
+              "viewBox": [
+                502.9,
+                374.6,
+                96.1,
+                87.7
+              ],
+              "fill": "#FFFFFF17",
+              "width": 124.92999999999999,
+              "height": 114.01,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "AiPHB",
+              "x": 700.0500000000001,
+              "y": 552.24,
+              "name": "Zone · Qaradagh",
+              "geometry": "M538.5 455l3.5-1.9 0.2-8.2 8.4 4.2 5 9 11.2-11.9 6.7 3.4-2.2 8.7 13.9 3.4-2.5-34.7 20.3-2.2 13.3 7.9 6.4 8.5-1.2 8.5 10.4 10 3.6 0.2 0.2-4.6 6.2 7.2-5 0.7-1.3 5.1 2.8 14.2-7.8-1.9-2.1 9.8 3.1 7.5-5.8 12.6-14-0.9 4.4 8.9 9.6 6.7-5.9 1.5 2 6.9-40.1-20.6-43.3-58z",
+              "viewBox": [
+                538.5,
+                424.8,
+                103.4,
+                108.8
+              ],
+              "fill": "#FFFFFF17",
+              "width": 134.42000000000002,
+              "height": 141.44,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "cRA48",
+              "x": 826.2800000000001,
+              "y": 579.8000000000001,
+              "name": "Zone · Sharazur",
+              "geometry": "M635.6 468l11.5-14.2 4.9 0.6-2.2 9.6 11.3-0.3 4.2-15 5.7-2.7 14.6 6.8-3.4 12.2 4.6 0.8 0.5 23.6-13.7 15-12.4-15.9-22.2-8.2-3.4-12.3z",
+              "viewBox": [
+                635.6,
+                446,
+                51.7,
+                58.4
+              ],
+              "fill": "#FFFFFF17",
+              "width": 67.21000000000001,
+              "height": 75.92,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "x98pjw",
+              "x": 836.5500000000001,
+              "y": 588.64,
+              "name": "Zone · Halabja",
+              "geometry": "M643.5 536.7l8-5.6 13.4 0.4-3.5-14.6 25.8-27.6-0.4-23-4.7-0.6 3.5-12.9 12.6 4.1 4.7 11.1 15.3 11.8 5.2 12.4-8.4 11.7 14.1 3.6 3.3 5.5-8.7 7.3-0.7 8.9 6 4.8-12.1 7.2-9.3-2-2 11.1-9.9-7.1-15.5-3-0.3 8.4-8.4 2.3 3.1 19-8.9 13.7-11-3.6-4.9-31.8-6.3-11.5z",
+              "viewBox": [
+                643.5,
+                452.8,
+                88.9,
+                130.8
+              ],
+              "fill": "#FFFFFF17",
+              "width": 115.57000000000001,
+              "height": 170.04000000000002,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "IoaPt",
+              "x": 848.12,
+              "y": 463.58000000000004,
+              "name": "Zone · Penjwen",
+              "geometry": "M652.4 367.5l16.2-0.2 6.2-5.6 22.4 1.6 14.1-6.7 9.4 4.1-1.2 4.3 4.9 5.7 9.3 1.1 16.6-8.1 7.9 2.3 1.8 7.7-20.8 17.8-7.2-1.7-8.4 7.3-20.7-2.2-6.9 4.4-2.2 10.2 2.8 15.3-7-0.8 6.3 11.7-4.2 4.5 6.5 16.7-2.8 0-27.9-9.4-4.6-6-1.5-6.4 5.6-1.8 2.8-17.9-6.5-28.4-10.1-10.1-0.8-9.4z",
+              "viewBox": [
+                652.4,
+                356.6,
+                107.6,
+                100.3
+              ],
+              "fill": "#FFFFFF17",
+              "width": 139.88,
+              "height": 130.39000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "Blrxt",
+              "x": 760.5,
+              "y": 420.81,
+              "name": "Zone · Sharbazher",
+              "geometry": "M585 400.8l0.5-15.7 11.3-3.3 0.2-11.3 8.2-10.2-2.2-4.5 4.2-10.4-5.9-7 0.7-14.4 7.7-0.3 15.9 11.8 21.4 34.1 5.4-2.1 0.9 9.4 10 10 6.8 30.7-3 16-5.7 1.8 6.1 12.1-2.2 10.2-4.1 6.1-11.9 0.3 1.3-10.3-8.7 8.7-6.3-7.2 0.2 4.9-3.8-0.4-10.6-10.2 1.4-8.3-6.4-8.5-17.4-8-14-24z",
+              "viewBox": [
+                585,
+                323.7,
+                85.1,
+                140.4
+              ],
+              "fill": "#FFFFFF17",
+              "width": 110.63,
+              "height": 182.52,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "OYrRV",
+              "x": 710.97,
+              "y": 418.86,
+              "name": "Zone · Mawat",
+              "geometry": "M546.9 351.6l10.7-9.9-4.3-8.9 14.6-10.6 3.2 6.3 8.3 1.5 7.8-5.4 14.8-0.6-0.7 14.2 5.9 7.3-4.1 10.1 2.3 4.5-8.4 10.7 0 11.2-11.5 3.2-0.5 15.6-6.9-10.5-3.6 0.8-22.9-20.3 6.2-14.8-10.9-4.4z",
+              "viewBox": [
+                546.9,
+                322.2,
+                60.3,
+                78.6
+              ],
+              "fill": "#FFFFFF17",
+              "width": 78.39,
+              "height": 102.17999999999999,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "TwfYk",
+              "x": 543.66,
+              "y": 287.3,
+              "name": "Zone · Ranya",
+              "geometry": "M418.2 242.6l18.3-21 29.5-0.6 9.7 14.2-7.1 8.1 37.1 35.4 0.5 4.6 20.3 6.5 41.4 32.4-14.4 10.6 4.7 8.2-8.5 7.8-9.1-1.8-24.2-17.8-17.7 3.5 6-14.1-6.8-10.8-33.3-23.6-11.2 6.8-6-2.8-5-7.6 5.6 1.1-0.7-8.7-12.5-9.4-8 2.7-8.6-23.7z",
+              "viewBox": [
+                418.2,
+                221,
+                149.7,
+                127.8
+              ],
+              "fill": "#FFFFFF17",
+              "width": 194.60999999999999,
+              "height": 166.14000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "ljYbx",
+              "x": 605.8000000000001,
+              "y": 260.90999999999997,
+              "name": "Zone · Pshdar",
+              "geometry": "M466 221l12.3-8.2 23.5 4.8 5.1-16.9 7.8 5.4 6.2 16.2 7.2 5.9 23.1-4.8 5.8 10.3-0.2 17.8 5.8 7.1-6.4 5.1 9.5 4 2.3 22 8.6 14.8-8.7 17.7-41.3-32.3-20.6-6.7-0.5-4.6-37.1-35.5 7.2-7.9-9.6-14.2z",
+              "viewBox": [
+                466,
+                200.7,
+                110.6,
+                121.5
+              ],
+              "fill": "#FFFFFF17",
+              "width": 143.78,
+              "height": 157.95000000000002,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "rJI8d",
+              "x": 546.26,
+              "y": 456.82,
+              "name": "Zone · Chamchamal",
+              "geometry": "M420.2 532.7l12.9-11 11.3-1.4 5.8-26.9 7.9-6.1-6.9-15.1 15.2-12.9-0.6-9.9-10.7-5.6-0.3-26.5 9.2-18.7-16.2-6 2.4-6.4-9.1-11.2 0.6-12.8-5.7 6.5-3.8-17.3 33.6 8.7 4-3.8 3.1 4.7 11-8.7 10.9 2.5 10.7 38.5-1.4 20.2 77.7 99.4 23.3 12.3-10.5 6.1 0.9 6.6-5.1 5.7-1.7-2.9-23.7 4.6-25.5-1.9-13.3 5.4-23.6 19.8-5.1-0.1-6.6-8.9-19.5-1.3-14.8-9.2-12.6 1.6-3.8 6.9-20-24.9z",
+              "viewBox": [
+                420.2,
+                351.4,
+                184.9,
+                217.2
+              ],
+              "fill": "#FFFFFF17",
+              "width": 240.37,
+              "height": 282.36,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "xVtFO",
+              "x": 645.45,
+              "y": 682.7600000000001,
+              "name": "Zone · Kalar",
+              "geometry": "M496.5 580.8l1-12.3 7.9-0.5 23-20.7 17.5-5.4 19.2 3.4 24-4.7 1.6 2.9 4.8-5.7-1.2-6.6 10.8-6 15.8 9.8-2 8.8 12.1 7-5.3 3.6-5.8 28.9-9.5 7.5-17 29.7-5.8 22.9-17.7 4.3-17.4 19.8-7.3-15.4 4.8-5.3-3.1-8.8 6.5-4.8-1.8-6.1-15.6-15.8-10 3.2 2.2-6.9-4.9-11.7-9.3 10.1-12.5-8.8-5-16.4z",
+              "viewBox": [
+                496.5,
+                525.2,
+                134.5,
+                142.3
+              ],
+              "fill": "#FFFFFF17",
+              "width": 174.85,
+              "height": 184.99,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "Eq0HZ",
+              "x": 563.6800000000001,
+              "y": 770.77,
+              "name": "Zone · Kifri",
+              "geometry": "M433.6 669.7l22.9-24.5-6-11.7 23.4-13.4 2.6-17.5 10.9-1.1 10.9-8.6 15.7 12.9 9.1-10.1 5.2 12.3-2.5 6 10.3-2.7 17.5 21.8-6.6 5 3.2 8.6-4.8 5.4 5.2 10.9-13.1 22.3-24.2-6.8-2.2 3.2 11.3 5.8-6 8.8 2.3 6.4-39 29.8-14.6-22.7-16.8-14-14.7-26.1z",
+              "viewBox": [
+                433.6,
+                592.9,
+                120,
+                139.6
+              ],
+              "fill": "#FFFFFF17",
+              "width": 156,
+              "height": 181.48,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "E5ncu0",
+              "x": 564.33,
+              "y": 364.52,
+              "name": "Zone · Dukan",
+              "geometry": "M434.1 295l7.1-14.6 10.9 10.4 12.4-6.7 17.4 10.8 19.6 17.2 3.2 7.2-4.6 11.9 16.2-2 24.2 17.7 8 0.5 1.7 6.5 6.3 0.3-4.3 16.9 3.4 7.6-9.5-2.6-12.2 27.3-11.7-3.1-7.7-7.3-9 0.3-11.9-43.9-28.1-30.1-31.4-24.3z",
+              "viewBox": [
+                434.1,
+                280.4,
+                122.4,
+                123
+              ],
+              "fill": "#D49A3766",
+              "width": 159.12,
+              "height": 159.9,
+              "stroke": "$gold",
+              "strokeWidth": 5,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "O06CV",
+              "x": 795.21,
+              "y": 623.35,
+              "name": "Zone · Darbandikhan",
+              "geometry": "M611.7 509.5l14.1 0.6 5.8-12.5-3.6-7 3.1-11.1 28.1 7.7 14.4 17.2-12.7 13.7 4.2 13.6-13.2-0.6-12 5.8-8.9 13.9-12.1-6.8 3.2-11.7-2.6-5.9 5.8-1.5-9.2-6.5-4.4-8.9z",
+              "viewBox": [
+                611.7,
+                479.5,
+                61.9,
+                71.3
+              ],
+              "fill": "#D49A3766",
+              "width": 80.47,
+              "height": 92.69,
+              "stroke": "$gold",
+              "strokeWidth": 5,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "frame",
+              "id": "XJxcw",
+              "x": 453.5,
+              "y": 272,
+              "name": "Pin · Dukan",
+              "fill": "$gold",
+              "cornerRadius": 44,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#00000055",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 24
+              },
+              "gap": 12,
+              "padding": [
+                14,
+                26,
+                14,
+                18
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "bYaeK",
+                  "name": "Drop",
+                  "width": 40,
+                  "height": 40,
+                  "icon": "droplet",
+                  "library": "lucide",
+                  "fill": "$soil"
+                },
+                {
+                  "type": "text",
+                  "id": "TFkmg",
+                  "name": "Pin Percent",
+                  "fill": "$soil",
+                  "content": "92%",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 52,
+                  "fontWeight": "800",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "l5rQl",
+                  "name": "Pin Name",
+                  "fill": "$soil",
+                  "content": "Dukan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SWD9S",
+              "x": 605.9,
+              "y": 730.3000000000001,
+              "name": "Pin · Darbandikhan",
+              "fill": "$gold",
+              "cornerRadius": 44,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#00000055",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 24
+              },
+              "gap": 12,
+              "padding": [
+                14,
+                26,
+                14,
+                18
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "KgH1A",
+                  "name": "Drop",
+                  "width": 40,
+                  "height": 40,
+                  "icon": "droplet",
+                  "library": "lucide",
+                  "fill": "$soil"
+                },
+                {
+                  "type": "text",
+                  "id": "CDLtg",
+                  "name": "Pin Percent",
+                  "fill": "$soil",
+                  "content": "63%",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 52,
+                  "fontWeight": "800",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "D4WyI2",
+                  "name": "Pin Name",
+                  "fill": "$soil",
+                  "content": "Darbandikhan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xTYFX",
+          "x": 120,
+          "y": 0,
+          "name": "Left",
+          "width": 720,
+          "height": 1080,
+          "layout": "vertical",
+          "gap": 56,
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "QLpiM",
+              "name": "Title",
+              "fill": "#FFFFFF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "How full are Slemani's lakes?",
+              "lineHeight": 1.1,
+              "fontFamily": "$font-lat",
+              "fontSize": 68,
+              "fontWeight": "800",
+              "letterSpacing": -1.5
+            },
+            {
+              "type": "frame",
+              "id": "M0T3AC",
+              "name": "Gauge · Dukan",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PYznD",
+                  "name": "Lake Name",
+                  "fill": "#FFFFFF",
+                  "content": "Dukan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "frame",
+                  "id": "G9lUF",
+                  "name": "Bar Row 2025",
+                  "width": "fill_container",
+                  "gap": 18,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "B0T3lX",
+                      "name": "Year",
+                      "fill": "$on-dark-muted",
+                      "content": "2025",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EiWLZ",
+                      "name": "Track",
+                      "clip": true,
+                      "width": 500,
+                      "height": 30,
+                      "fill": "#FFFFFF1F",
+                      "cornerRadius": 15,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 15,
+                          "id": "z7vGzU",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Fill",
+                          "fill": "#FFFFFF66",
+                          "width": 155,
+                          "height": 30
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "u1MawY",
+                      "name": "Value",
+                      "fill": "#FFFFFF",
+                      "content": "31%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "psgZx",
+                  "name": "Bar Row 2026",
+                  "width": "fill_container",
+                  "gap": 18,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Yblsi",
+                      "name": "Year",
+                      "fill": "$on-dark-muted",
+                      "content": "2026",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SwwCX",
+                      "name": "Track",
+                      "clip": true,
+                      "width": 500,
+                      "height": 30,
+                      "fill": "#FFFFFF1F",
+                      "cornerRadius": 15,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 15,
+                          "id": "wxfWa",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Fill",
+                          "fill": "$gold",
+                          "width": 460,
+                          "height": 30
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "a4Ed1F",
+                      "name": "Value",
+                      "fill": "$gold",
+                      "content": "92%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sXEk5",
+              "name": "Gauge · Darbandikhan",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KpIi9",
+                  "name": "Lake Name",
+                  "fill": "#FFFFFF",
+                  "content": "Darbandikhan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "frame",
+                  "id": "k8GLtc",
+                  "name": "Bar Row 2025",
+                  "width": "fill_container",
+                  "gap": 18,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TlyOg",
+                      "name": "Year",
+                      "fill": "$on-dark-muted",
+                      "content": "2025",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b4PwV",
+                      "name": "Track",
+                      "clip": true,
+                      "width": 500,
+                      "height": 30,
+                      "fill": "#FFFFFF1F",
+                      "cornerRadius": 15,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 15,
+                          "id": "zM7NC",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Fill",
+                          "fill": "#FFFFFF66",
+                          "width": 210,
+                          "height": 30
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "kLnSh",
+                      "name": "Value",
+                      "fill": "#FFFFFF",
+                      "content": "42%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "O1inw",
+                  "name": "Bar Row 2026",
+                  "width": "fill_container",
+                  "gap": 18,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tHGkE",
+                      "name": "Year",
+                      "fill": "$on-dark-muted",
+                      "content": "2026",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hlb6j",
+                      "name": "Track",
+                      "clip": true,
+                      "width": 500,
+                      "height": 30,
+                      "fill": "#FFFFFF1F",
+                      "cornerRadius": 15,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 15,
+                          "id": "Fz2AA",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Fill",
+                          "fill": "$gold",
+                          "width": 315,
+                          "height": 30
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "E0pHYc",
+                      "name": "Value",
+                      "fill": "$gold",
+                      "content": "63%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "S0aDZU",
+          "x": 120,
+          "y": 960,
+          "name": "Source",
+          "fill": "$on-dark-muted",
+          "textGrowth": "fixed-width",
+          "width": 700,
+          "content": "Share of full lake area each September, measured by Khor on Sentinel-2 images.",
+          "lineHeight": 1.3,
+          "fontFamily": "$font-lat",
+          "fontSize": 20,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "jy0NE",
+      "x": 4080,
+      "y": 1200,
+      "name": "07 Live demo",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -1192,7 +3185,7 @@
               "id": "s0iZU",
               "name": "Page",
               "fill": "$muted",
-              "content": "05 / 08",
+              "content": "07 / 08",
               "fontFamily": "$font-lat",
               "fontSize": 22,
               "fontWeight": "600"
@@ -1503,470 +3496,10 @@
     },
     {
       "type": "frame",
-      "id": "c6ptt",
-      "x": 2040,
-      "y": 1200,
-      "name": "06 Proof",
-      "clip": true,
-      "width": 1920,
-      "height": 1080,
-      "fill": "$ink",
-      "layout": "vertical",
-      "gap": 56,
-      "padding": [
-        90,
-        120,
-        100,
-        120
-      ],
-      "children": [
-        {
-          "type": "frame",
-          "id": "PqApm",
-          "layoutPosition": "absolute",
-          "x": 0,
-          "y": 0,
-          "name": "Satellite Photo",
-          "width": 1920,
-          "height": 1080,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "generated-4.png",
-            "mode": "cover"
-          }
-        },
-        {
-          "type": "rectangle",
-          "id": "jD5eh",
-          "layoutPosition": "absolute",
-          "x": 0,
-          "y": 0,
-          "name": "Overlay",
-          "fill": "#2C3B1EB3",
-          "width": 1920,
-          "height": 1080
-        },
-        {
-          "type": "frame",
-          "id": "I1TIV3",
-          "name": "Header",
-          "width": "fill_container",
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "h9Q8d",
-              "name": "Brand",
-              "gap": 14,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "e1t9O",
-                  "name": "Grain Sun",
-                  "width": 44,
-                  "height": 44,
-                  "layout": "none",
-                  "children": [
-                    {
-                      "type": "path",
-                      "id": "H2YEG",
-                      "x": 0,
-                      "y": 0,
-                      "name": "Rays",
-                      "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
-                      "viewBox": [
-                        0,
-                        0,
-                        100,
-                        100
-                      ],
-                      "fill": "$gold",
-                      "width": 44,
-                      "height": 44
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "EUffW",
-                      "x": 15.84,
-                      "y": 15.84,
-                      "name": "Core",
-                      "fill": "$gold",
-                      "width": 12.32,
-                      "height": 12.32
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "O3P9za",
-                  "name": "Wordmark",
-                  "fill": "#FFFFFF",
-                  "content": "Khor",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 24,
-                  "fontWeight": "800"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "id": "GLn1N",
-              "name": "Page",
-              "fill": "$on-dark-muted",
-              "content": "06 / 08",
-              "fontFamily": "$font-lat",
-              "fontSize": 22,
-              "fontWeight": "600"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "id": "JjB6q",
-          "name": "Title",
-          "fill": "#FFFFFF",
-          "textGrowth": "fixed-width",
-          "width": "fill_container",
-          "content": "Checked against 26 seasons",
-          "lineHeight": 1.1,
-          "fontFamily": "$font-lat",
-          "fontSize": 68,
-          "fontWeight": "800",
-          "letterSpacing": -1.5
-        },
-        {
-          "type": "frame",
-          "id": "tybN8",
-          "name": "KPIs",
-          "width": "fill_container",
-          "height": "fill_container",
-          "gap": 60,
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "oK42E",
-              "name": "KPI 100%",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": 16,
-              "children": [
-                {
-                  "type": "text",
-                  "id": "J3X8O",
-                  "name": "Number",
-                  "fill": "#FFFFFF",
-                  "content": "100%",
-                  "lineHeight": 1,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 180,
-                  "fontWeight": "800",
-                  "letterSpacing": -4
-                },
-                {
-                  "type": "text",
-                  "id": "CR0ML",
-                  "name": "Label",
-                  "fill": "$on-dark-muted",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "match with NASA's own satellite service",
-                  "lineHeight": 1.3,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 32,
-                  "fontWeight": "500"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "KOXzP",
-              "name": "KPI 88%",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": 16,
-              "children": [
-                {
-                  "type": "text",
-                  "id": "uNU1s",
-                  "name": "Number",
-                  "fill": "$gold",
-                  "content": "88%",
-                  "lineHeight": 1,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 180,
-                  "fontWeight": "800",
-                  "letterSpacing": -4
-                },
-                {
-                  "type": "text",
-                  "id": "lgCaO",
-                  "name": "Label",
-                  "fill": "$on-dark-muted",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "right over 26 seasons",
-                  "lineHeight": 1.3,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 32,
-                  "fontWeight": "500"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "eQT4Z",
-              "name": "KPI −56%",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": 16,
-              "children": [
-                {
-                  "type": "text",
-                  "id": "CyUfE",
-                  "name": "Number",
-                  "fill": "$mustard",
-                  "content": "−56%",
-                  "lineHeight": 1,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 180,
-                  "fontWeight": "800",
-                  "letterSpacing": -4
-                },
-                {
-                  "type": "text",
-                  "id": "PFFMK",
-                  "name": "Label",
-                  "fill": "$on-dark-muted",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "Dukan lake in 2025, measured from space",
-                  "lineHeight": 1.3,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 32,
-                  "fontWeight": "500"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "RU9ku",
-      "x": 4080,
-      "y": 1200,
-      "name": "07 Honesty",
-      "clip": true,
-      "width": 1920,
-      "height": 1080,
-      "fill": "$bg",
-      "layout": "none",
-      "children": [
-        {
-          "type": "frame",
-          "id": "ZC4tB",
-          "x": 1060,
-          "y": 0,
-          "name": "Rust Photo",
-          "width": 860,
-          "height": 1080,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "generated-3.png",
-            "mode": "cover"
-          }
-        },
-        {
-          "type": "frame",
-          "id": "kivfS",
-          "x": 120,
-          "y": 0,
-          "name": "Honesty Block",
-          "width": 860,
-          "height": 1080,
-          "layout": "vertical",
-          "gap": 56,
-          "justifyContent": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "zHUMn",
-              "name": "Brand",
-              "gap": 14,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "GZ0yX",
-                  "name": "Grain Sun",
-                  "width": 44,
-                  "height": 44,
-                  "layout": "none",
-                  "children": [
-                    {
-                      "type": "path",
-                      "id": "tumAb",
-                      "x": 0,
-                      "y": 0,
-                      "name": "Rays",
-                      "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
-                      "viewBox": [
-                        0,
-                        0,
-                        100,
-                        100
-                      ],
-                      "fill": "$gold",
-                      "width": 44,
-                      "height": 44
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "cXQsG",
-                      "x": 15.84,
-                      "y": 15.84,
-                      "name": "Core",
-                      "fill": "$gold",
-                      "width": 12.32,
-                      "height": 12.32
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "LB4nQ",
-                  "name": "Wordmark",
-                  "fill": "$ink",
-                  "content": "Khor",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 24,
-                  "fontWeight": "800"
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "id": "B7FkI",
-              "name": "Title",
-              "fill": "$ink",
-              "textGrowth": "fixed-width",
-              "width": "fill_container",
-              "content": "What we cannot claim yet",
-              "lineHeight": 1.1,
-              "fontFamily": "$font-lat",
-              "fontSize": 68,
-              "fontWeight": "800",
-              "letterSpacing": -1.5
-            },
-            {
-              "type": "frame",
-              "id": "UXKq6",
-              "name": "Lab vs Field",
-              "gap": 36,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "ciGJ9",
-                  "name": "KPI 99%",
-                  "layout": "vertical",
-                  "gap": 8,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "oRsyy",
-                      "name": "Number",
-                      "fill": "#B5B39C",
-                      "content": "99%",
-                      "lineHeight": 1,
-                      "fontFamily": "$font-lat",
-                      "fontSize": 170,
-                      "fontWeight": "800",
-                      "letterSpacing": -5
-                    },
-                    {
-                      "type": "text",
-                      "id": "wmNoj",
-                      "name": "Label",
-                      "fill": "$muted",
-                      "content": "in the lab",
-                      "fontFamily": "$font-lat",
-                      "fontSize": 34,
-                      "fontWeight": "600"
-                    }
-                  ]
-                },
-                {
-                  "type": "icon",
-                  "id": "e8rIce",
-                  "name": "Arrow",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "arrow-right",
-                  "library": "lucide",
-                  "fill": "$muted"
-                },
-                {
-                  "type": "frame",
-                  "id": "ZaqlV",
-                  "name": "KPI 72%",
-                  "layout": "vertical",
-                  "gap": 8,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "V8ARV",
-                      "name": "Number",
-                      "fill": "$ink",
-                      "content": "72%",
-                      "lineHeight": 1,
-                      "fontFamily": "$font-lat",
-                      "fontSize": 170,
-                      "fontWeight": "800",
-                      "letterSpacing": -5
-                    },
-                    {
-                      "type": "text",
-                      "id": "o0rk9",
-                      "name": "Label",
-                      "fill": "$muted",
-                      "content": "in a real field",
-                      "fontFamily": "$font-lat",
-                      "fontSize": 34,
-                      "fontWeight": "600"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "id": "kFJqT",
-              "name": "Insight",
-              "fill": "$gold",
-              "textGrowth": "fixed-width",
-              "width": "fill_container",
-              "content": "Not yet tested on Kurdistan's own fields.",
-              "fontFamily": "$font-lat",
-              "fontSize": 34,
-              "fontWeight": "700"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "XxvPB",
       "x": 6120,
       "y": 1200,
-      "name": "08 Closing",
+      "name": "08 Summary",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -2027,7 +3560,7 @@
           "y": 110,
           "name": "Label",
           "fill": "$gold",
-          "content": "WHAT HAPPENS NEXT",
+          "content": "SUMMARY",
           "fontFamily": "$font-lat",
           "fontSize": 24,
           "fontWeight": "700",
@@ -2039,25 +3572,177 @@
           "x": 120,
           "y": 0,
           "name": "Closing Block",
-          "width": 1060,
+          "width": 1100,
           "height": 1080,
           "layout": "vertical",
-          "gap": 36,
+          "gap": 44,
           "justifyContent": "center",
           "children": [
             {
               "type": "text",
-              "id": "J6fTp",
+              "id": "u1moT",
               "name": "Headline",
               "fill": "#FFFFFF",
-              "textGrowth": "fixed-width",
-              "width": "fill_container",
-              "content": "100 local photos, checked with the plant-protection office.",
+              "content": "What Khor delivers",
               "lineHeight": 1.1,
               "fontFamily": "$font-lat",
               "fontSize": 84,
               "fontWeight": "800",
               "letterSpacing": -2
+            },
+            {
+              "type": "frame",
+              "id": "p35rsF",
+              "name": "Results",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 26,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "p77ZjU",
+                  "name": "Result 5 AIs",
+                  "width": "fill_container",
+                  "gap": 32,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gqOZR",
+                      "name": "Result Number",
+                      "fill": "$gold",
+                      "textGrowth": "fixed-width",
+                      "width": 250,
+                      "content": "5 AIs",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 60,
+                      "fontWeight": "800",
+                      "letterSpacing": -1.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "vaOBu",
+                      "name": "Result Text",
+                      "fill": "#FFFFFF",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "running for 16 zones today",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "E5QFE",
+                  "name": "Result 88%",
+                  "width": "fill_container",
+                  "gap": 32,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "g3kb8",
+                      "name": "Result Number",
+                      "fill": "$gold",
+                      "textGrowth": "fixed-width",
+                      "width": 250,
+                      "content": "88%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 60,
+                      "fontWeight": "800",
+                      "letterSpacing": -1.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "r8fct",
+                      "name": "Result Text",
+                      "fill": "#FFFFFF",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "right over 26 past seasons",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OAwqV",
+                  "name": "Result 14",
+                  "width": "fill_container",
+                  "gap": 32,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "dy2wE",
+                      "name": "Result Number",
+                      "fill": "$gold",
+                      "textGrowth": "fixed-width",
+                      "width": 250,
+                      "content": "14",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 60,
+                      "fontWeight": "800",
+                      "letterSpacing": -1.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "nMTk7",
+                      "name": "Result Text",
+                      "fill": "#FFFFFF",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "app screens designed, plus the Ministry dashboard",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yU17X",
+                  "name": "Result 2 lakes",
+                  "width": "fill_container",
+                  "gap": 32,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "AFVWT",
+                      "name": "Result Number",
+                      "fill": "$gold",
+                      "textGrowth": "fixed-width",
+                      "width": 250,
+                      "content": "2 lakes",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 60,
+                      "fontWeight": "800",
+                      "letterSpacing": -1.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "mgFEi",
+                      "name": "Result Text",
+                      "fill": "#FFFFFF",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "measured from space: Dukan 92%, Darbandikhan 63%",
+                      "lineHeight": 1.25,
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -2112,7 +3797,7 @@
               "id": "gv1Au",
               "name": "Team",
               "fill": "$on-dark-muted",
-              "content": "Khor · Team of 5 · [team names]",
+              "content": "Next: field test with 100 local photos · [team names]",
               "fontFamily": "$font-lat",
               "fontSize": 26,
               "fontWeight": "500"

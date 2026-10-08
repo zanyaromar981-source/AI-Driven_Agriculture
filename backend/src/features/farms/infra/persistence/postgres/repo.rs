@@ -11,7 +11,7 @@ use crate::{
     app::AppError as GlobalAppError,
     features::farms::{
         app::{AppError, FarmRepository},
-        domain::{Cell, Crop, Farm, FarmSummary, IdempotencyKey},
+        domain::{Cell, Crop, Farm, FarmLocation, FarmSummary, IdempotencyKey},
         infra::persistence::postgres::{
             entities::{farm_cells, farms},
             mappings::cell_active_model,
@@ -143,6 +143,16 @@ impl FarmRepository for FarmPostgresRepository {
             .map_err(database_error)
     }
 
+    async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError> {
+        let models = farms::Entity::find()
+            .order_by_asc(farms::Column::Id)
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        models.into_iter().map(FarmLocation::try_from).collect()
+    }
+
     async fn create(&self, entity: &Farm) -> Result<Farm, AppError> {
         let transaction = self.conn.begin().await.map_err(database_error)?;
 
@@ -180,14 +190,20 @@ impl FarmRepository for FarmPostgresRepository {
         let model = farms::ActiveModel::from(entity)
             .update(&transaction)
             .await
-            .map_err(database_error)?;
+            .map_err(|error| match error {
+                // The farm was deleted between this request loading it and
+                // writing it: it is gone, which is not a server fault.
+                DbErr::RecordNotUpdated => GlobalAppError::NotFound.into(),
+                other => database_error(other),
+            })?;
 
         // Cells are never added or removed after creation, so an update only
-        // has to move each cell to the crop it now carries. Rows that already
-        // hold that crop are left untouched.
+        // has to move the repainted cells to the crop they now carry. Cells
+        // this request did not change are not written, so a repaint running
+        // at the same moment on other cells is not undone.
         let mut ids_per_crop: HashMap<Crop, Vec<i32>> = HashMap::new();
 
-        for cell in entity.cells() {
+        for cell in entity.cells().iter().filter(|cell| cell.repainted()) {
             let id = cell_id(cell)?;
 
             ids_per_crop.entry(cell.crop()).or_default().push(id);

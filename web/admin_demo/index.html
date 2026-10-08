@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartSuli Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="demo-bar">Demo of the Ministry Control Room. Sample data, nothing is saved or sent. Real map borders from <code>web/map_demo</code>.</div>
+<header class="top">
+  <a class="brand" href="#overview"><span class="mark"><i data-lucide="droplets"></i></span><span>SmartSuli</span><span class="tag">Control room</span></a>
+  <button class="search-btn" id="searchBtn"><i data-lucide="search"></i><span>Search farms, officers, settings</span><kbd>/</kbd></button>
+  <div class="top-right">
+    <span class="env" title="This server answers with sample data">DEMO</span>
+    <button class="icon-btn" id="approvalsBtn" title="Waiting for your approval"><i data-lucide="stamp"></i><span class="dot" id="approvalsCount">0</span></button>
+    <div class="lang"><button class="on">EN</button><button>سۆرانی</button></div>
+    <button class="who" id="whoBtn"><span class="avatar" id="whoAvatar">SA</span><span class="who-text"><b id="whoName">Shilan Ahmed</b><small id="whoRole">District officer</small></span><i data-lucide="chevron-down"></i></button>
+    <div class="menu" id="whoMenu" hidden></div>
+  </div>
+</header>
+<div class="shell">
+  <nav class="side" id="side"></nav>
+  <main id="main"></main>
+</div>
+<div class="drawer-bg" id="drawerBg" hidden></div>
+<aside class="drawer" id="drawer" hidden></aside>
+<div class="modal-bg" id="modalBg" hidden><div class="modal" id="modal"></div></div>
+<div class="toasts" id="toasts"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+<script src="../map_demo/kri_map_data.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

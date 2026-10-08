@@ -1,0 +1,200 @@
+[
+ {
+  "slug": "akre",
+  "name": "Akre",
+  "lat": 36.7545,
+  "lon": 43.9623
+ },
+ {
+  "slug": "amedi",
+  "name": "Amedi",
+  "lat": 37.0906,
+  "lon": 43.5788
+ },
+ {
+  "slug": "bardarash",
+  "name": "Bardarash",
+  "lat": 36.4913,
+  "lon": 43.6901
+ },
+ {
+  "slug": "duhok",
+  "name": "Duhok",
+  "lat": 36.9431,
+  "lon": 43.105
+ },
+ {
+  "slug": "shekhan",
+  "name": "Shekhan",
+  "lat": 36.6993,
+  "lon": 43.4151
+ },
+ {
+  "slug": "sumel",
+  "name": "Sumel",
+  "lat": 36.9533,
+  "lon": 42.7079
+ },
+ {
+  "slug": "zakho",
+  "name": "Zakho",
+  "lat": 37.2021,
+  "lon": 42.9043
+ },
+ {
+  "slug": "chuman",
+  "name": "Chuman",
+  "lat": 36.6115,
+  "lon": 44.8887
+ },
+ {
+  "slug": "erbil",
+  "name": "Erbil",
+  "lat": 36.2116,
+  "lon": 43.9744
+ },
+ {
+  "slug": "harir",
+  "name": "Harir",
+  "lat": 36.5525,
+  "lon": 44.2128
+ },
+ {
+  "slug": "khalifan",
+  "name": "Khalifan",
+  "lat": 36.6024,
+  "lon": 44.3813
+ },
+ {
+  "slug": "koya",
+  "name": "Koya",
+  "lat": 36.1005,
+  "lon": 44.5512
+ },
+ {
+  "slug": "makhmur",
+  "name": "Makhmur",
+  "lat": 35.8225,
+  "lon": 43.6523
+ },
+ {
+  "slug": "mergasor",
+  "name": "Mergasor",
+  "lat": 37.0122,
+  "lon": 44.0571
+ },
+ {
+  "slug": "pirmam",
+  "name": "Pirmam",
+  "lat": 36.4036,
+  "lon": 44.0912
+ },
+ {
+  "slug": "qushtapa",
+  "name": "Qushtapa",
+  "lat": 35.951,
+  "lon": 44.0196
+ },
+ {
+  "slug": "rawanduz",
+  "name": "Rawanduz",
+  "lat": 36.5353,
+  "lon": 44.6497
+ },
+ {
+  "slug": "shaqlawa",
+  "name": "Shaqlawa",
+  "lat": 36.361,
+  "lon": 44.4411
+ },
+ {
+  "slug": "sidakan",
+  "name": "Sidakan",
+  "lat": 36.9396,
+  "lon": 44.6423
+ },
+ {
+  "slug": "soran",
+  "name": "Soran",
+  "lat": 36.6942,
+  "lon": 44.5271
+ },
+ {
+  "slug": "taqtaq",
+  "name": "Taqtaq",
+  "lat": 35.9622,
+  "lon": 44.4917
+ },
+ {
+  "slug": "chamchamal",
+  "name": "Chamchamal",
+  "lat": 35.4147,
+  "lon": 45.0014
+ },
+ {
+  "slug": "darbandikhan",
+  "name": "Darbandikhan",
+  "lat": 35.1856,
+  "lon": 45.7129
+ },
+ {
+  "slug": "dukan",
+  "name": "Dukan",
+  "lat": 35.9202,
+  "lon": 45.0363
+ },
+ {
+  "slug": "kalar",
+  "name": "Kalar",
+  "lat": 34.8395,
+  "lon": 45.3271
+ },
+ {
+  "slug": "penjwen",
+  "name": "Penjwen",
+  "lat": 35.648,
+  "lon": 45.9311
+ },
+ {
+  "slug": "pshdar",
+  "name": "Pshdar",
+  "lat": 36.2651,
+  "lon": 45.1019
+ },
+ {
+  "slug": "ranya",
+  "name": "Ranya",
+  "lat": 36.1668,
+  "lon": 44.9169
+ },
+ {
+  "slug": "sharazur",
+  "name": "Sharazur",
+  "lat": 35.3553,
+  "lon": 45.8313
+ },
+ {
+  "slug": "sharbazher",
+  "name": "Sharbazher",
+  "lat": 35.7034,
+  "lon": 45.6279
+ },
+ {
+  "slug": "sulaymaniyah",
+  "name": "Sulaymaniyah",
+  "lat": 35.4424,
+  "lon": 45.4209
+ },
+ {
+  "slug": "halabja",
+  "name": "Halabja",
+  "lat": 35.1079,
+  "lon": 45.9822
+ },
+ {
+  "slug": "khurmal",
+  "name": "Khurmal",
+  "lat": 35.3599,
+  "lon": 46.0241
+ }
+]

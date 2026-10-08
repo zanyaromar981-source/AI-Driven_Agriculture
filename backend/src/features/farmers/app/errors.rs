@@ -11,7 +11,7 @@ impl ToErrorInfo for FarmerError {
         match self {
             // One code for every way a code can fail: the app shows the same
             // "wrong code" screen, and an attacker learns nothing extra.
-            FarmerError::WrongCode | FarmerError::CodeExpired | FarmerError::TooManyAttempts => {
+            FarmerError::WrongCode | FarmerError::CodeExpired => {
                 ErrorInfo::with_code(ErrorKind::Authentication, "bad_code", self.to_string())
             }
             FarmerError::CodeRequestedTooSoon(seconds) => {
@@ -50,11 +50,7 @@ mod tests {
 
     #[test]
     fn every_failed_code_looks_the_same_to_the_caller() {
-        for error in [
-            FarmerError::WrongCode,
-            FarmerError::CodeExpired,
-            FarmerError::TooManyAttempts,
-        ] {
+        for error in [FarmerError::WrongCode, FarmerError::CodeExpired] {
             let info = error.to_error_info();
 
             assert_eq!(info.kind, ErrorKind::Authentication);

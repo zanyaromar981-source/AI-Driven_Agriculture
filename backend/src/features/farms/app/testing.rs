@@ -7,8 +7,8 @@ use crate::{
     features::farms::{
         app::{AppError, FarmRepository},
         domain::{
-            Cell, Crop, Farm, FarmName, FarmSummary, GridCell, IdempotencyKey, Outline,
-            PaintedCell, Point,
+            Cell, Crop, Farm, FarmLocation, FarmName, FarmSummary, GridCell, IdempotencyKey,
+            Outline, PaintedCell, Point,
         },
     },
     shared::Phone,
@@ -23,6 +23,7 @@ pub enum RepositoryCall {
     FindByIdempotencyKeyAndOwner { key: String, owner: String },
     FindByIdAndOwner { id: i32, owner: String },
     CountByOwner { owner: String },
+    FindAllLocations,
     Create,
     Update,
     Delete { id: i32, owner: String },
@@ -33,6 +34,7 @@ struct Script {
     owned_count: u64,
     existing: Option<Farm>,
     fail_with_database_error: bool,
+    nothing_to_delete: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -55,6 +57,13 @@ impl FakeFarmRepository {
     pub fn holding(existing: Farm) -> Self {
         let fake = Self::new();
         fake.script.lock().expect("script lock").existing = Some(existing);
+        fake
+    }
+
+    /// The farm a delete asks for is not there (or belongs to someone else).
+    pub fn holding_nothing_to_delete() -> Self {
+        let fake = Self::new();
+        fake.script.lock().expect("script lock").nothing_to_delete = true;
         fake
     }
 
@@ -139,6 +148,24 @@ impl FarmRepository for FakeFarmRepository {
         Ok(self.script.lock().expect("script lock").owned_count)
     }
 
+    async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError> {
+        self.record(RepositoryCall::FindAllLocations);
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .existing
+            .as_ref()
+            .map(|one| {
+                vec![FarmLocation::rehydrate(
+                    one.id().unwrap_or_default(),
+                    one.outline(),
+                )]
+            })
+            .unwrap_or_default())
+    }
+
     async fn create(&self, entity: &Farm) -> Result<Farm, AppError> {
         self.record(RepositoryCall::Create);
         self.guard()?;
@@ -159,6 +186,10 @@ impl FarmRepository for FakeFarmRepository {
             owner: String::from(owner),
         });
         self.guard()?;
+
+        if self.script.lock().expect("script lock").nothing_to_delete {
+            return Err(crate::app::AppError::NotFound.into());
+        }
 
         Ok(())
     }

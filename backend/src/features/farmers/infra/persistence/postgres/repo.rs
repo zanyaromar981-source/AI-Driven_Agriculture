@@ -1,7 +1,9 @@
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter,
-    sea_query::OnConflict,
+    ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, ExprTrait,
+    QueryFilter,
+    sea_query::{Expr, OnConflict},
 };
 
 use crate::{
@@ -43,13 +45,16 @@ impl FarmerRepository for FarmerPostgresRepository {
         model.map(Farmer::try_from).transpose()
     }
 
-    async fn create(&self, entity: &Farmer) -> Result<Farmer, AppError> {
-        let model = farmers::ActiveModel::from(entity)
-            .insert(&self.conn)
+    async fn create_if_absent(&self, entity: &Farmer) -> Result<(), AppError> {
+        // The phone is unique, so two sign-ins racing for a new phone cannot
+        // both insert: the second does nothing.
+        farmers::Entity::insert(farmers::ActiveModel::from(entity))
+            .on_conflict_do_nothing_on([farmers::Column::Phone])
+            .exec(&self.conn)
             .await
             .map_err(database_error)?;
 
-        Farmer::try_from(model)
+        Ok(())
     }
 
     async fn update(&self, entity: &Farmer) -> Result<Farmer, AppError> {
@@ -91,33 +96,104 @@ impl SignInChallengeRepository for SignInChallengePostgresRepository {
         model.map(SignInChallenge::try_from).transpose()
     }
 
-    async fn save(&self, challenge: &SignInChallenge) -> Result<(), AppError> {
-        // The phone is the key, so saving a new challenge replaces the old.
-        sign_in_challenges::Entity::insert(sign_in_challenges::ActiveModel::from(challenge))
-            .on_conflict(
-                OnConflict::column(sign_in_challenges::Column::Phone)
-                    .update_columns([
-                        sign_in_challenges::Column::CodeHash,
-                        sign_in_challenges::Column::Language,
-                        sign_in_challenges::Column::Attempts,
-                        sign_in_challenges::Column::SentAt,
-                        sign_in_challenges::Column::ExpiresAt,
-                    ])
-                    .to_owned(),
+    async fn save_if_due(
+        &self,
+        challenge: &SignInChallenge,
+        sent_before: DateTime<Utc>,
+    ) -> Result<bool, AppError> {
+        // The phone is the key, so saving a new challenge replaces the old,
+        // but only an old one that was sent long enough ago. One statement
+        // checks and writes, so requests at the same moment cannot all pass.
+        let stored =
+            sign_in_challenges::Entity::insert(sign_in_challenges::ActiveModel::from(challenge))
+                .on_conflict(
+                    OnConflict::column(sign_in_challenges::Column::Phone)
+                        .update_columns([
+                            sign_in_challenges::Column::CodeHash,
+                            sign_in_challenges::Column::Language,
+                            sign_in_challenges::Column::Attempts,
+                            sign_in_challenges::Column::SentAt,
+                            sign_in_challenges::Column::ExpiresAt,
+                            sign_in_challenges::Column::UsedAt,
+                        ])
+                        // A code that was already used does not hold the
+                        // phone waiting; an unused one does until it is old
+                        // enough.
+                        .action_and_where(
+                            Expr::col((
+                                sign_in_challenges::Entity,
+                                sign_in_challenges::Column::SentAt,
+                            ))
+                            .lte(sent_before.naive_utc())
+                            .or(Expr::col((
+                                sign_in_challenges::Entity,
+                                sign_in_challenges::Column::UsedAt,
+                            ))
+                            .is_not_null()),
+                        )
+                        .to_owned(),
+                )
+                .exec_without_returning(&self.conn)
+                .await
+                .map_err(database_error)?;
+
+        Ok(stored > 0)
+    }
+
+    async fn record_attempt(
+        &self,
+        phone: &Phone,
+        max_attempts: u32,
+    ) -> Result<Option<SignInChallenge>, AppError> {
+        // One statement counts the attempt and enforces the limit, so
+        // guesses sent at the same moment are counted one after another.
+        let counted = sign_in_challenges::Entity::update_many()
+            .col_expr(
+                sign_in_challenges::Column::Attempts,
+                Expr::col(sign_in_challenges::Column::Attempts).add(1),
+            )
+            .filter(sign_in_challenges::Column::Phone.eq(phone.as_str()))
+            .filter(
+                sign_in_challenges::Column::Attempts
+                    .lt(i32::try_from(max_attempts).unwrap_or(i32::MAX)),
+            )
+            .exec_with_returning(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        counted
+            .into_iter()
+            .next()
+            .map(SignInChallenge::try_from)
+            .transpose()
+    }
+
+    async fn consume(
+        &self,
+        phone: &Phone,
+        code_hash: &str,
+        now: DateTime<Utc>,
+        reusable_since: DateTime<Utc>,
+    ) -> Result<bool, AppError> {
+        // One statement decides: the first use stamps the time, a repeat
+        // inside the window leaves the stamp alone, anything later matches
+        // no row.
+        let result = sign_in_challenges::Entity::update_many()
+            .col_expr(
+                sign_in_challenges::Column::UsedAt,
+                Expr::cust_with_values("COALESCE(used_at, $1)", [now.naive_utc()]),
+            )
+            .filter(sign_in_challenges::Column::Phone.eq(phone.as_str()))
+            .filter(sign_in_challenges::Column::CodeHash.eq(code_hash))
+            .filter(
+                Condition::any()
+                    .add(sign_in_challenges::Column::UsedAt.is_null())
+                    .add(sign_in_challenges::Column::UsedAt.gt(reusable_since.naive_utc())),
             )
             .exec(&self.conn)
             .await
             .map_err(database_error)?;
 
-        Ok(())
-    }
-
-    async fn delete(&self, phone: &Phone) -> Result<(), AppError> {
-        sign_in_challenges::Entity::delete_by_id(phone.as_str())
-            .exec(&self.conn)
-            .await
-            .map_err(database_error)?;
-
-        Ok(())
+        Ok(result.rows_affected > 0)
     }
 }

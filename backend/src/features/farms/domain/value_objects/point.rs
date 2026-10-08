@@ -3,12 +3,14 @@ use getset::CopyGetters;
 
 use crate::{features::farms::domain::FarmError, shared::DomainError};
 
-/// UTM zone 38N spans 42 to 48 degrees east. Three degrees either side still
-/// project cleanly; beyond that the grid no longer describes the ground.
-const MIN_LON: f64 = 39.0;
-const MAX_LON: f64 = 51.0;
-const MIN_LAT: f64 = 0.0;
-const MAX_LAT: f64 = 84.0;
+/// A box around the Kurdistan Region with a margin. It sits inside UTM zone
+/// 38N (42 to 48 degrees east), so every accepted point projects cleanly,
+/// and it keeps a mistyped corner from stretching an outline across a
+/// continent.
+const MIN_LON: f64 = 41.0;
+const MAX_LON: f64 = 48.0;
+const MIN_LAT: f64 = 33.0;
+const MAX_LAT: f64 = 39.0;
 
 /// A GPS corner the farmer tapped while walking the field edge.
 #[derive(Clone, Copy, Debug, PartialEq, CopyGetters)]
@@ -63,6 +65,8 @@ mod tests {
     fn rejects_a_point_far_outside_the_grid_zone() {
         assert!(Point::new(36.0, 10.0, None, None).is_err());
         assert!(Point::new(-36.0, 44.6, None, None).is_err());
+        assert!(Point::new(30.0, 44.6, None, None).is_err());
+        assert!(Point::new(36.0, 50.0, None, None).is_err());
     }
 
     #[test]
