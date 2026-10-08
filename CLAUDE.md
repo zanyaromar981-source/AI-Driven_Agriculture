@@ -22,3 +22,7 @@ Read `README.md` first, then the END of `STATUS.md` (newest entries are at the b
 ## Frontend and backend contract
 
 11. `BACKEND.md` (repo root) is what the frontend needs from the backend: payloads, endpoints, shared definitions. Keep it updated with every frontend change that touches data. After every `git pull`, check for `FRONTEND.md`: it is what the backend expects from the frontend, and the frontend follows it strictly. Disagreements are settled in the files, not in code.
+
+## Pushing
+
+12. Push after every major change. If a pull or push hits a merge conflict, do not resolve it alone: stop and tell the user which files conflict, then decide together.
