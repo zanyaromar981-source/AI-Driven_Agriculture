@@ -68,6 +68,26 @@ fn main() {
                     "farm_insights",
                     "src/features/insights/infra/persistence/postgres/entities",
                 ),
+                (
+                    "zones,sub_zones,zone_readings,sub_zone_readings",
+                    "src/features/zones/infra/persistence/postgres/entities",
+                ),
+                (
+                    "dams,dam_readings",
+                    "src/features/dams/infra/persistence/postgres/entities",
+                ),
+                (
+                    "season_outlooks,outlook_runs",
+                    "src/features/outlooks/infra/persistence/postgres/entities",
+                ),
+                (
+                    "water_plan_entries",
+                    "src/features/water/infra/persistence/postgres/entities",
+                ),
+                (
+                    "alwa_markets,alwa_prices,alwa_listings,alwa_offers",
+                    "src/features/alwa/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

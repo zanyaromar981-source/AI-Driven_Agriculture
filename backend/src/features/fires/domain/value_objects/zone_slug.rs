@@ -43,15 +43,15 @@ mod tests {
     #[test]
     fn accepts_a_plain_and_a_hyphenated_slug() {
         assert!(ZoneSlug::new("chamchamal".to_string()).is_ok());
-        assert!(ZoneSlug::new("dashti-hawler".to_string()).is_ok());
+        assert!(ZoneSlug::new("qadir-karam".to_string()).is_ok());
     }
 
     #[test]
     fn rejects_capitals_digits_spaces_and_other_scripts() {
         assert!(ZoneSlug::new("Chamchamal".to_string()).is_err());
         assert!(ZoneSlug::new("zone1".to_string()).is_err());
-        assert!(ZoneSlug::new("dashti hawler".to_string()).is_err());
-        assert!(ZoneSlug::new("dashti_hawler".to_string()).is_err());
+        assert!(ZoneSlug::new("qadir karam".to_string()).is_err());
+        assert!(ZoneSlug::new("qadir_karam".to_string()).is_err());
         assert!(ZoneSlug::new("چەمچەماڵ".to_string()).is_err());
     }
 

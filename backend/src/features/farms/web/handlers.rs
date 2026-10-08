@@ -7,7 +7,7 @@ use axum_extra::extract::WithRejection;
 
 use super::{
     dtos::{
-        CreateFarmParams, FarmSummaryResponse, FarmsResponse, OneFarmResponse,
+        CreateFarmParams, FarmStatusResponse, FarmSummaryResponse, FarmsResponse, OneFarmResponse,
         RepaintFarmCellsParams, SavedFarmResponse,
     },
     errors::WebError,
@@ -124,6 +124,38 @@ pub async fn get_farm(
         .await?;
 
     Ok(ApiResponse::ok(OneFarmResponse::try_from(&farm)?))
+}
+
+/// Get a farm's status from space
+///
+/// Answers from stored readings only. None exist yet, so the measured
+/// fields are `null`; the crop plots come from the farm itself.
+#[utoipa::path(
+    get,
+    path = "/v1/farms/{id}/status",
+    tag = "farms",
+    params(("id" = String, Path, description = "Farm ID")),
+    responses(
+        (status = 200, description = "Farm status retrieved successfully", body = FarmStatusResponse),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 404, description = "Farm not found", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn get_farm_status(
+    State(state): State<AppState>,
+    Extension(auth_context): Extension<AuthContext>,
+    WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
+) -> Result<ApiResponse<FarmStatusResponse>, WebError> {
+    let farm = state
+        .features
+        .farm
+        .view_farm_use_case
+        .execute(&auth_context, farm_id(&id)?)
+        .await?;
+
+    Ok(ApiResponse::ok(FarmStatusResponse::from(&farm)))
 }
 
 /// Repaint the crops on a farm's cells

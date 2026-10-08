@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::Validate;
@@ -318,5 +318,71 @@ impl TryFrom<(&Farm, &[GridCell])> for SavedFarmResponse {
             farm: FarmResponse::try_from(farm)?,
             dropped_cells: dropped_cells.iter().map(Into::into).collect(),
         })
+    }
+}
+
+/// One crop plot in the status answer. `greenness_pct_of_normal` stays
+/// `null` and `level` stays `none` until a satellite reading exists.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct CropStatusResponse {
+    pub crop: Crop,
+    pub dunam: f64,
+    pub greenness_pct_of_normal: Option<i32>,
+    pub level: Level,
+}
+
+/// How a cell, a crop or a farm is doing. `none` means no data yet.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum Level {
+    Normal,
+    Watch,
+    Alarm,
+    None,
+}
+
+/// One cell's reading from space.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct CellStatusResponse {
+    pub e: i32,
+    pub n: i32,
+    pub greenness_pct: Option<i32>,
+    pub level: Level,
+    pub since: Option<NaiveDate>,
+}
+
+/// The farm seen from space. No satellite job writes readings yet, so every
+/// measured field is `null` and `cells` is empty: the app shows "waiting for
+/// the first satellite picture". The crop plots are real, taken from the
+/// farm's painted cells.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FarmStatusResponse {
+    pub picture_date: Option<NaiveDate>,
+    pub next_picture_expected: Option<NaiveDate>,
+    pub greenness_pct_of_normal: Option<i32>,
+    pub weak_where: Option<String>,
+    pub cells: Vec<CellStatusResponse>,
+    pub crops: Vec<CropStatusResponse>,
+}
+
+impl From<&Farm> for FarmStatusResponse {
+    fn from(farm: &Farm) -> Self {
+        Self {
+            picture_date: None,
+            next_picture_expected: None,
+            greenness_pct_of_normal: None,
+            weak_where: None,
+            cells: Vec::new(),
+            crops: farm
+                .crop_areas()
+                .iter()
+                .map(|area| CropStatusResponse {
+                    crop: area.crop().into(),
+                    dunam: area.dunam(),
+                    greenness_pct_of_normal: None,
+                    level: Level::None,
+                })
+                .collect(),
+        }
     }
 }

@@ -12,6 +12,7 @@ src/
   features/
     farmers/  sign in with a code, the farmer's profile
     farms/    a farmer's farms
+    insights/ zones/ dams/ outlooks/ water/ fires/ alwa/
       domain/   (every slice has these four) entities, value objects, rules. No database, no HTTP
       app/      use cases and the repository port
       infra/    the Postgres repository behind that port
@@ -56,14 +57,28 @@ cargo test
 
 ## What is here today
 
-| Route | What it does |
-|---|---|
-| `POST /v1/auth/otp/send`, `POST /v1/auth/otp/verify` | sign in with a phone and a code |
-| `GET /v1/me`, `PUT /v1/me` | the farmer's profile |
-| `GET /v1/farms` | the signed-in farmer's farms (summary of each) |
-| `POST /v1/farms` | create a farm from walked corners and painted cells |
-| `GET /v1/farms/{id}` | one farm with its outline and cells |
-| `PUT /v1/farms/{id}/cells` | repaint crops on cells |
-| `DELETE /v1/farms/{id}` | delete a farm and its cells |
+39 routes; the full list with shapes is at `/api-docs`. By slice:
+
+| Slice | Routes | For |
+|---|---|---|
+| `farmers` | `/v1/auth/otp/send`, `/v1/auth/otp/verify`, `/v1/me` | sign in, profile |
+| `farms` | `/v1/farms`, `/v1/farms/{id}`, `/{id}/cells`, `/{id}/status` | a farmer's farms |
+| `insights` | `/v1/farms/{id}/insights` | water, groundwater, soil, rain per farm |
+| `zones` | `/v1/region/overview`, `/v1/zones/{slug}`, `/v1/region/compare` | dashboard: 33 districts |
+| `dams` | `/v1/dams`, `/v1/dams/{slug}/history` | dashboard: dam levels |
+| `outlooks` | `/v1/outlooks`, `/v1/outlooks/zones/{zone_slug}` | dashboard: next-season outlook |
+| `water` | `/v1/water/plan` | dashboard: water plan |
+| `fires` | `/v1/fires` | dashboard: fire detections |
+| `alwa` | `/v1/alwa/...` | wholesale market: prices, listings, offers, deals |
 
 Answers use the body shapes of `BACKEND.md`; errors are `{"error": "<code>", "detail": "..."}`.
+
+## Pushing data in
+
+The backend stores and serves numbers; it does not compute them. The data jobs write through `PUT /v1/ingest/...` with the header `X-Service-Key: <INGEST__SERVICE_KEY>`. Every write is an upsert on a natural key (district and month, dam and day, fire id, farm and topic), so a job can run again safely. `GET /v1/ingest/farms` lists every farm's centre point and which topics it already has, without phone numbers. Example:
+
+```sh
+curl -X PUT localhost:3000/v1/ingest/dams/dukan/readings/2026-09-21 \
+  -H "X-Service-Key: $INGEST__SERVICE_KEY" -H 'content-type: application/json' \
+  -d '{"pct_full": 88, "volume_bn_m3": 6.14, "source": "Sentinel-2 lake area"}'
+```

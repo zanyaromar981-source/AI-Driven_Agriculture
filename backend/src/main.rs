@@ -8,10 +8,20 @@ use axum::{Router, middleware};
 use clap::{Parser, Subcommand};
 use farm_doctor_api::{
     features::{
+        alwa::web::{
+            ingest_routes as alwa_ingest_routes, public_routes as alwa_public_routes,
+            routes as alwa_routes,
+        },
+        dams::web::{ingest_routes as dam_ingest_routes, public_routes as dam_public_routes},
         farmers::web::{public_routes as farmer_public_routes, routes as farmer_routes},
         farms::web::routes as farm_routes,
         fires::web::{ingest_routes as fire_ingest_routes, public_routes as fire_public_routes},
         insights::web::{ingest_routes as insight_ingest_routes, routes as insight_routes},
+        outlooks::web::{
+            ingest_routes as outlook_ingest_routes, public_routes as outlook_public_routes,
+        },
+        water::web::{ingest_routes as water_ingest_routes, public_routes as water_public_routes},
+        zones::web::{ingest_routes as zone_ingest_routes, public_routes as zone_public_routes},
     },
     infra::{
         BootstrappedApp, Config,
@@ -63,14 +73,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(farm_routes())
                 .merge(farmer_routes())
                 .merge(insight_routes())
+                .merge(alwa_routes())
                 .layer(middleware::from_fn_with_state(state.clone(), auth))
                 .merge(farmer_public_routes())
                 .merge(fire_public_routes())
+                .merge(zone_public_routes())
+                .merge(dam_public_routes())
+                .merge(outlook_public_routes())
+                .merge(water_public_routes())
+                .merge(alwa_public_routes())
                 .nest(
                     "/ingest",
                     Router::new()
                         .merge(fire_ingest_routes())
                         .merge(insight_ingest_routes())
+                        .merge(zone_ingest_routes())
+                        .merge(dam_ingest_routes())
+                        .merge(outlook_ingest_routes())
+                        .merge(water_ingest_routes())
+                        .merge(alwa_ingest_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), service_key)),
                 ),
         )
