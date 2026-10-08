@@ -1,0 +1,596 @@
+[
+{
+"en": "Duhok",
+"ku": "دهۆک",
+"lat": 36.85426,
+"lon": 42.992453,
+"sub": "Markaz Duhok",
+"osm": "node/99474380",
+"kind": "city"
+},
+{
+"en": "Zakho",
+"ku": "زاخۆ",
+"lat": 37.143376,
+"lon": 42.682291,
+"sub": "Markaz Zakho",
+"osm": "relation/7462925",
+"kind": "residential"
+},
+{
+"en": "Batifa",
+"ku": "باتیفا",
+"lat": 37.170905,
+"lon": 43.012403,
+"sub": "Batifa",
+"osm": "way/541360653",
+"kind": "residential"
+},
+{
+"en": "Darkar",
+"ku": "دەرکار",
+"lat": 37.198652,
+"lon": 42.822544,
+"sub": "Dercar",
+"osm": "node/2480157973",
+"kind": "town"
+},
+{
+"en": "Sumel",
+"ku": "سێمێل",
+"lat": 36.856859,
+"lon": 42.847266,
+"sub": "Markaz Sumail",
+"osm": "way/290684256",
+"kind": "residential"
+},
+{
+"en": "Batel",
+"ku": "باتێل",
+"lat": 36.960806,
+"lon": 42.681008,
+"sub": "Bateel",
+"osm": "node/2488238143",
+"kind": "town"
+},
+{
+"en": "Faida",
+"ku": "فایدە",
+"lat": 36.759627,
+"lon": 42.928798,
+"sub": "Fayde",
+"osm": "node/2488213208",
+"kind": "town"
+},
+{
+"en": "Zawita",
+"ku": "زاویتە",
+"lat": 36.906658,
+"lon": 43.146902,
+"sub": "Zawita",
+"osm": "node/2482486470",
+"kind": "town"
+},
+{
+"en": "Mangesh",
+"ku": "مانگێشک",
+"lat": 36.856091,
+"lon": 43.015936,
+"sub": "Al-Duski",
+"osm": "way/284050148",
+"kind": "residential"
+},
+{
+"en": "Amedi",
+"ku": "ئامێدی",
+"lat": 37.091969,
+"lon": 43.487438,
+"sub": "Markaz Al-Amadiya",
+"osm": "relation/12031215",
+"kind": "town"
+},
+{
+"en": "Kani Masi",
+"ku": "کانی ماسێ",
+"lat": 37.228841,
+"lon": 43.438851,
+"sub": "Barwari Bala",
+"osm": "relation/11075439",
+"kind": "administrative"
+},
+{
+"en": "Deraluk",
+"ku": "دێرەلووک",
+"lat": 37.055263,
+"lon": 43.648005,
+"sub": "Nerwa Rekan",
+"osm": "node/2482498582",
+"kind": "town"
+},
+{
+"en": "Shiladze",
+"ku": "شیلادزێ",
+"lat": 37.03001,
+"lon": 43.784588,
+"sub": "Nerwa Rekan",
+"osm": "relation/18338060",
+"kind": "administrative"
+},
+{
+"en": "Sarsang",
+"ku": "سەرسەنگ",
+"lat": 37.034897,
+"lon": 43.320829,
+"sub": "Sarsank",
+"osm": "relation/11075436",
+"kind": "administrative"
+},
+{
+"en": "Bamarni",
+"ku": "بامەڕنێ",
+"lat": 37.121434,
+"lon": 43.270131,
+"sub": "Sarsank",
+"osm": "way/844213486",
+"kind": "town"
+},
+{
+"en": "Shekhan",
+"ku": "شێخان",
+"lat": 36.696868,
+"lon": 43.353063,
+"sub": "Markaz Al-Shikhan",
+"osm": "node/2488246719",
+"kind": "town"
+},
+{
+"en": "Atrush",
+"ku": "ئەترووش",
+"lat": 36.838056,
+"lon": 43.335833,
+"sub": "Atreesh",
+"osm": "way/865541494",
+"kind": "town"
+},
+{
+"en": "Qasrok",
+"ku": "قەسرۆک",
+"lat": 36.699828,
+"lon": 43.600721,
+"sub": "Qasruk",
+"osm": "node/4779993129",
+"kind": "town"
+},
+{
+"en": "Akre",
+"ku": "ئاکرێ",
+"lat": 36.730486,
+"lon": 43.874893,
+"sub": "Markaz Aqra",
+"osm": "node/599171922",
+"kind": "town"
+},
+{
+"en": "Dinarta",
+"ku": "دینارتێ",
+"lat": 36.798635,
+"lon": 43.986556,
+"sub": "Dinarta",
+"osm": "node/2488259513",
+"kind": "town"
+},
+{
+"en": "Bijil",
+"ku": "بجیل",
+"lat": 36.729216,
+"lon": 44.018103,
+"sub": "Begeel",
+"osm": "node/2488259403",
+"kind": "town"
+},
+{
+"en": "Bardarash",
+"ku": "بەردەڕەش",
+"lat": 36.5027,
+"lon": 43.588907,
+"sub": "Bardarash",
+"osm": "node/1418004700",
+"kind": "town"
+},
+{
+"en": "Kalak",
+"ku": "کەلەک",
+"lat": 36.268249,
+"lon": 43.634735,
+"sub": "Bardarash",
+"osm": "way/321216331",
+"kind": "town"
+},
+{
+"en": "Erbil",
+"ku": "هەولێر",
+"lat": 36.191174,
+"lon": 44.009414,
+"sub": "Markaz Erbil",
+"osm": "node/599019138",
+"kind": "city"
+},
+{
+"en": "Ankawa",
+"ku": "عەنکاوە",
+"lat": 36.228359,
+"lon": 43.995335,
+"sub": "Markaz Erbil",
+"osm": "way/779291148",
+"kind": "administrative"
+},
+{
+"en": "Khabat",
+"ku": "خەبات",
+"lat": 36.271672,
+"lon": 43.679754,
+"sub": "Markaz Erbil",
+"osm": "way/321215272",
+"kind": "town"
+},
+{
+"en": "Qushtapa",
+"ku": "قوشتەپە",
+"lat": 35.983933,
+"lon": 44.043554,
+"sub": "Qushtappa",
+"osm": "way/1332407212",
+"kind": "town"
+},
+{
+"en": "Bnaslawa",
+"ku": "بنەسڵاوە",
+"lat": 36.152085,
+"lon": 44.11212,
+"sub": "Markaz Erbil",
+"osm": "node/2135696849",
+"kind": "town"
+},
+{
+"en": "Makhmur",
+"ku": "مەخموور",
+"lat": 35.775517,
+"lon": 43.579952,
+"sub": "Markaz Makhmour",
+"osm": "way/303004383",
+"kind": "residential"
+},
+{
+"en": "Gwer",
+"ku": "گوێر",
+"lat": 36.045863,
+"lon": 43.497884,
+"sub": "Gwyer",
+"osm": "node/5026595076",
+"kind": "town"
+},
+{
+"en": "Dibaga",
+"ku": "دیبەگە",
+"lat": 35.87532,
+"lon": 43.809997,
+"sub": "Dibaga",
+"osm": "node/5215121862",
+"kind": "town"
+},
+{
+"en": "Koya",
+"ku": "کۆیە",
+"lat": 36.084808,
+"lon": 44.627689,
+"sub": "Markaz Koysinjaq",
+"osm": "node/470018430",
+"kind": "town"
+},
+{
+"en": "Taq Taq",
+"ku": "تەقتەق",
+"lat": 35.888861,
+"lon": 44.585565,
+"sub": "Taq Taq",
+"osm": "node/2488270116",
+"kind": "town (OSM node tagged oilfield)"
+},
+{
+"en": "Shorsh",
+"ku": "شۆڕش",
+"lat": 36.096122,
+"lon": 44.406462,
+"sub": "Shorsh",
+"osm": "relation/11078385",
+"kind": "administrative"
+},
+{
+"en": "Shaqlawa",
+"ku": "شەقڵاوە",
+"lat": 36.40003,
+"lon": 44.336768,
+"sub": "Khoshnaw",
+"osm": "node/599046987",
+"kind": "town"
+},
+{
+"en": "Salahaddin",
+"ku": "سەڵاحەدین",
+"lat": 36.382703,
+"lon": 44.202575,
+"sub": "Salah Al-Din",
+"osm": "node/2488260198",
+"kind": "town"
+},
+{
+"en": "Harir",
+"ku": "هەریر",
+"lat": 36.551844,
+"lon": 44.354093,
+"sub": "Harir",
+"osm": "relation/11077975",
+"kind": "administrative"
+},
+{
+"en": "Soran",
+"ku": "سۆران",
+"lat": 36.655477,
+"lon": 44.542204,
+"sub": "Diana",
+"osm": "way/512266233",
+"kind": "city"
+},
+{
+"en": "Rawanduz",
+"ku": "ڕەواندز",
+"lat": 36.614596,
+"lon": 44.526519,
+"sub": "Markaz Rawanduz",
+"osm": "node/2488205967",
+"kind": "town"
+},
+{
+"en": "Khalifan",
+"ku": "خەلیفان",
+"lat": 36.605613,
+"lon": 44.409719,
+"sub": "Khailfan",
+"osm": "relation/7477749",
+"kind": "residential"
+},
+{
+"en": "Choman",
+"ku": "چۆمان",
+"lat": 36.63631,
+"lon": 44.886767,
+"sub": "Balak",
+"osm": "node/2480243570",
+"kind": "town"
+},
+{
+"en": "Haji Omaran",
+"ku": "حاجی ئۆمەران",
+"lat": 36.675474,
+"lon": 45.044045,
+"sub": "Haji Omaran",
+"osm": "node/2480241725",
+"kind": "town"
+},
+{
+"en": "Sidakan",
+"ku": "سیدەکان",
+"lat": 36.803556,
+"lon": 44.663435,
+"sub": "Bradost",
+"osm": "node/2488199582",
+"kind": "town"
+},
+{
+"en": "Mergasor",
+"ku": "مێرگەسۆر",
+"lat": 36.837688,
+"lon": 44.306501,
+"sub": "Mergasur",
+"osm": "relation/3829922",
+"kind": "administrative"
+},
+{
+"en": "Barzan",
+"ku": "بارزان",
+"lat": 36.930451,
+"lon": 44.039377,
+"sub": "Barzan",
+"osm": "node/2488259320",
+"kind": "town"
+},
+{
+"en": "Sulaymaniyah",
+"ku": "سلێمانی",
+"lat": 35.55705,
+"lon": 45.442596,
+"sub": "Sarchnar",
+"osm": "node/663060430",
+"kind": "city"
+},
+{
+"en": "Chamchamal",
+"ku": "چەمچەماڵ",
+"lat": 35.531101,
+"lon": 44.827191,
+"sub": "Markaz Chamchamal",
+"osm": "node/248441616",
+"kind": "town"
+},
+{
+"en": "Sangaw",
+"ku": "سەنگاو",
+"lat": 35.285515,
+"lon": 45.179774,
+"sub": "Cenkaw",
+"osm": "way/364382836",
+"kind": "residential"
+},
+{
+"en": "Darbandikhan",
+"ku": "دەربەندیخان",
+"lat": 35.115305,
+"lon": 45.682926,
+"sub": "Markaz Derbendikhan",
+"osm": "node/2489389602",
+"kind": "town"
+},
+{
+"en": "Dukan",
+"ku": "دوکان",
+"lat": 35.930643,
+"lon": 44.962935,
+"sub": "Sourdash",
+"osm": "node/2488279815",
+"kind": "town"
+},
+{
+"en": "Kalar",
+"ku": "کەلار",
+"lat": 34.631287,
+"lon": 45.31673,
+"sub": "Markaz Kalar",
+"osm": "way/1255205469",
+"kind": "residential"
+},
+{
+"en": "Penjwen",
+"ku": "پێنجوێن",
+"lat": 35.622208,
+"lon": 45.948845,
+"sub": "Markaz Panjwin",
+"osm": "node/598456956",
+"kind": "town"
+},
+{
+"en": "Qaladze",
+"ku": "قەڵادزێ",
+"lat": 36.180876,
+"lon": 45.124141,
+"sub": "Markaz Pshdar",
+"osm": "node/2488312897",
+"kind": "town"
+},
+{
+"en": "Ranya",
+"ku": "ڕانیە",
+"lat": 36.256525,
+"lon": 44.882789,
+"sub": "Markaz Rania",
+"osm": "node/598459803",
+"kind": "town"
+},
+{
+"en": "Chwarta",
+"ku": "چوارتا",
+"lat": 35.717567,
+"lon": 45.570245,
+"sub": "Markaz Sharbazher",
+"osm": "relation/10843465",
+"kind": "administrative"
+},
+{
+"en": "Mawat",
+"ku": "ماوەت",
+"lat": 35.902187,
+"lon": 45.414114,
+"sub": "Mawat",
+"osm": "node/2488293575",
+"kind": "town"
+},
+{
+"en": "Qaradagh",
+"ku": "قەرەداغ",
+"lat": 35.309874,
+"lon": 45.391495,
+"sub": "Qaradagh",
+"osm": "node/2488607945",
+"kind": "town"
+},
+{
+"en": "Bazian",
+"ku": "بازیان",
+"lat": 35.580605,
+"lon": 45.115356,
+"sub": "Bazian",
+"osm": "relation/15574051",
+"kind": "administrative"
+},
+{
+"en": "Said Sadiq",
+"ku": "سەیدسادق",
+"lat": 35.352891,
+"lon": 45.866856,
+"sub": "Shahrazur",
+"osm": "node/2480128285",
+"kind": "town"
+},
+{
+"en": "Hero",
+"ku": "هێرۆ",
+"lat": 36.124359,
+"lon": 45.282505,
+"sub": "Hero",
+"osm": "node/2488309543",
+"kind": "town"
+},
+{
+"en": "Halabja",
+"ku": "هەڵەبجە",
+"lat": 35.179206,
+"lon": 45.987368,
+"sub": "Markaz Halabja",
+"osm": "node/598253294",
+"kind": "city"
+},
+{
+"en": "Khurmal",
+"ku": "خورماڵ",
+"lat": 35.298627,
+"lon": 46.035937,
+"sub": "Khourmal",
+"osm": "way/260130589",
+"kind": "residential"
+},
+{
+"en": "Byara",
+"ku": "بیارە",
+"lat": 35.230827,
+"lon": 46.12064,
+"sub": "Beyara",
+"osm": "node/7369662108",
+"kind": "town"
+},
+{
+"en": "Tawella",
+"ku": "تەوێڵە",
+"lat": 35.199444,
+"lon": 46.186111,
+"sub": "Beyara",
+"osm": "way/791238875",
+"kind": "residential"
+},
+{
+"en": "Sirwan",
+"ku": "سیروان",
+"lat": 35.254165,
+"lon": 45.939939,
+"sub": "Markaz Halabja",
+"osm": "node/2267760082",
+"kind": "town"
+},
+{
+"en": "Kifri",
+"ku": "کفری",
+"lat": 34.686596,
+"lon": 44.96035,
+"sub": "Markaz Kifri",
+"osm": "node/8465028264",
+"kind": "town"
+}
+]

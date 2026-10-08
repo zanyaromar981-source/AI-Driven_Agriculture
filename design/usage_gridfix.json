@@ -1,0 +1,18 @@
+{
+  "agentType": "claude",
+  "model": "claude-opus-5-5",
+  "reason": "finished",
+  "usage": {
+    "inputTokens": 44,
+    "outputTokens": 28484,
+    "cacheCreationInputTokens": 74753,
+    "cacheReadInputTokens": 1731665,
+    "numTurns": 22,
+    "totalCostUsd": 1.5144900000000003,
+    "durationMs": 295429,
+    "contextTokens": 109109,
+    "contextWindow": 1000000,
+    "skillDocsTokensEstimate": 12576,
+    "injectedPromptTokensEstimate": 478
+  }
+}
