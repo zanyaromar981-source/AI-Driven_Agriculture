@@ -279,4 +279,242 @@ abstract class Api {
 
   /// Use a token saved on the phone from an earlier sign-in.
   void useToken(String token);
+
+  /// GET /farms/{id}: the outline and cells, to draw the farm.
+  Future<Farm> getFarm(String id);
+
+  /// GET /farms/{id}/status: the latest satellite reading per cell.
+  Future<FarmStatusReport> getFarmStatus(String id);
+
+  /// GET /farms/{id}/plan: the next 10 days of weather turned into farm work.
+  Future<FarmPlan> getPlan(String id);
+}
+
+// ---- Farm Home: BACKEND.md 2.2 (GET /farms/{id}), 2.3 (status), 2.4 (plan) ----
+
+int? _int(Object? v) => (v as num?)?.round();
+
+extension FarmCellToJson on FarmCell {
+  Map<String, dynamic> toJson() => {
+    'e': e,
+    'n': n,
+    'crop': crop,
+    'greenness_pct': greennessPct,
+    'level': level.name,
+    'inside_pct': insidePct,
+  };
+}
+
+/// Lets the phone keep a copy of a farm for offline use.
+extension FarmToJson on Farm {
+  Map<String, dynamic> toJson() => {
+    ...summary.toJson(),
+    'outline': [
+      for (final p in outline) {'lat': p.lat, 'lon': p.lon},
+    ],
+    'cells': [for (final c in cells) c.toJson()],
+    'picture_date': pictureDate,
+  };
+}
+
+/// One cell in `GET /farms/{id}/status`.
+class CellReading {
+  const CellReading({
+    required this.e,
+    required this.n,
+    this.greennessPct,
+    required this.level,
+    this.since,
+  });
+  final int e;
+  final int n;
+
+  /// This cell vs its own normal for this week (100 = normal); null = cloudy or no data.
+  final int? greennessPct;
+  final FarmStatus level;
+
+  /// First day of the current level, `YYYY-MM-DD`.
+  final String? since;
+
+  factory CellReading.fromJson(Map<String, dynamic> j) => CellReading(
+    e: (j['e'] as num).toInt(),
+    n: (j['n'] as num).toInt(),
+    greennessPct: _int(j['greenness_pct']),
+    level: farmStatusFrom(j['level'] as String?),
+    since: j['since'] as String?,
+  );
+}
+
+/// One crop plot in the status answer (BACKEND.md 2.9).
+class CropReading {
+  const CropReading({
+    required this.crop,
+    required this.dunam,
+    this.greennessPctOfNormal,
+    required this.level,
+  });
+  final String crop;
+  final double dunam;
+  final int? greennessPctOfNormal;
+  final FarmStatus level;
+
+  factory CropReading.fromJson(Map<String, dynamic> j) => CropReading(
+    crop: j['crop'] as String,
+    dunam: (j['dunam'] as num).toDouble(),
+    greennessPctOfNormal: _int(j['greenness_pct_of_normal']),
+    level: farmStatusFrom(j['level'] as String?),
+  );
+}
+
+/// `GET /farms/{id}/status` (BACKEND.md 2.3 plus the crop list from 2.9).
+class FarmStatusReport {
+  const FarmStatusReport({
+    required this.json,
+    this.pictureDate,
+    this.cloudPct,
+    this.greennessPctOfNormal,
+    this.pctOfNeighbours,
+    this.surface,
+    this.weakSharePct,
+    this.weakWhere,
+    required this.cells,
+    required this.crops,
+    this.nextPictureExpected,
+  });
+
+  /// The answer as received, so the phone can keep it for offline use.
+  final Map<String, dynamic> json;
+  final String? pictureDate;
+  final int? cloudPct;
+  final int? greennessPctOfNormal;
+  final int? pctOfNeighbours;
+
+  /// bare, sparse, growing, dense.
+  final String? surface;
+  final int? weakSharePct;
+
+  /// north-east, middle-centre, ... (null = no weak patch).
+  final String? weakWhere;
+  final List<CellReading> cells;
+  final List<CropReading> crops;
+  final String? nextPictureExpected;
+
+  factory FarmStatusReport.fromJson(Map<String, dynamic> j) => FarmStatusReport(
+    json: j,
+    pictureDate: j['picture_date'] as String?,
+    cloudPct: _int(j['cloud_pct']),
+    greennessPctOfNormal: _int(j['greenness_pct_of_normal']),
+    pctOfNeighbours: _int(j['pct_of_neighbours']),
+    surface: j['surface'] as String?,
+    weakSharePct: _int(j['weak_share_pct']),
+    weakWhere: j['weak_where'] as String?,
+    cells: [
+      for (final c in (j['cells'] as List? ?? const []))
+        CellReading.fromJson(c as Map<String, dynamic>),
+    ],
+    crops: [
+      for (final c in (j['crops'] as List? ?? const []))
+        CropReading.fromJson(c as Map<String, dynamic>),
+    ],
+    nextPictureExpected: j['next_picture_expected'] as String?,
+  );
+}
+
+/// A weather alert on one day (BACKEND.md 2.4).
+class PlanAlert {
+  const PlanAlert({
+    required this.type,
+    required this.day,
+    this.value,
+    required this.level,
+    required this.ku,
+    required this.en,
+  });
+
+  /// frost, heat, heavy_rain, dry_spell, rust_weather, sunn_pest, dust,
+  /// spray_window, sowing_rain, urea_rain.
+  final String type;
+  final String day;
+  final double? value;
+  final FarmStatus level;
+  final String ku;
+  final String en;
+
+  String text(bool inKu) => inKu ? ku : en;
+
+  factory PlanAlert.fromJson(Map<String, dynamic> j) => PlanAlert(
+    type: j['type'] as String,
+    day: j['day'] as String,
+    value: (j['value'] as num?)?.toDouble(),
+    level: farmStatusFrom(j['level'] as String?),
+    ku: j['ku'] as String? ?? '',
+    en: j['en'] as String? ?? '',
+  );
+}
+
+/// One thing to do (or not do) this week.
+class PlanDecision {
+  const PlanDecision({required this.code, required this.ku, required this.en});
+
+  /// sow_wait, sow_go, urea_go, urea_hold, spray_ok, check_rust,
+  /// count_sunn_pest, frost_check, heat_check, dust_delay.
+  final String code;
+  final String ku;
+  final String en;
+
+  String text(bool inKu) => inKu ? ku : en;
+
+  factory PlanDecision.fromJson(Map<String, dynamic> j) => PlanDecision(
+    code: j['code'] as String,
+    ku: j['ku'] as String? ?? '',
+    en: j['en'] as String? ?? '',
+  );
+}
+
+/// `GET /farms/{id}/plan` (BACKEND.md 2.4). Never more than 10 days.
+class FarmPlan {
+  const FarmPlan({
+    required this.json,
+    required this.from,
+    required this.rainMm,
+    required this.tmin,
+    required this.tmax,
+    required this.alerts,
+    required this.decisions,
+    required this.source,
+    required this.issued,
+  });
+
+  /// The answer as received, so the phone can keep it for offline use.
+  final Map<String, dynamic> json;
+  final DateTime from;
+  final List<double?> rainMm;
+  final List<double?> tmin;
+  final List<double?> tmax;
+  final List<PlanAlert> alerts;
+  final List<PlanDecision> decisions;
+  final String source;
+  final DateTime issued;
+
+  static List<double?> _nums(Object? v) => [
+    for (final x in (v as List? ?? const [])) (x as num?)?.toDouble(),
+  ];
+
+  factory FarmPlan.fromJson(Map<String, dynamic> j) => FarmPlan(
+    json: j,
+    from: DateTime.parse(j['from'] as String),
+    rainMm: _nums(j['rain_mm']),
+    tmin: _nums(j['tmin']),
+    tmax: _nums(j['tmax']),
+    alerts: [
+      for (final a in (j['alerts'] as List? ?? const []))
+        PlanAlert.fromJson(a as Map<String, dynamic>),
+    ],
+    decisions: [
+      for (final d in (j['decisions'] as List? ?? const []))
+        PlanDecision.fromJson(d as Map<String, dynamic>),
+    ],
+    source: j['source'] as String? ?? '',
+    issued: DateTime.parse(j['issued'] as String),
+  );
 }

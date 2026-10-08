@@ -31,6 +31,7 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 ### 2.2 My farms
 - `GET /farms` → `200 {"farms": [FarmSummary]}`
   FarmSummary: `{"id": "f_01HX...", "name": "کێڵگەی سەرەوە", "area_dunam": 120, "crops": [{"crop":"wheat","dunam":96},{"crop":"tomato","dunam":16}], "status": "normal|watch|alarm|none", "last_picture": "2026-10-05", "centroid": {"lat":36.03,"lon":44.60}}`
+- `GET /farms/{id}` → `200 {"farm": Farm}`, or `404 not_found` when the farm is not this phone's. Added 2026-10-08: Home needs the outline and cells to draw each farm.
 - `POST /farms` body:
   ```json
   {"name": "کێڵگەی سەرەوە",
@@ -49,6 +50,7 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 ### 2.3 My field from space (Field Eye)
 - `GET /farms/{id}/status` → `200 {"picture_date": "2026-10-05", "cloud_pct": 0, "greenness_pct_of_normal": 101, "pct_of_neighbours": 85, "surface": "bare|sparse|growing|dense", "weak_share_pct": 0, "weak_where": "north-east"|null, "cells": [{"e","n","greenness_pct","level","since": "2026-09-25"|null}...], "history": [{"year": 2025, "greenness": 0.079}, ...], "next_picture_expected": "2026-10-10"}`
   Rule: `greenness_pct` is the cell vs its own normal for this week (100 = normal). `null` when cloudy. The backend fetches Sentinel-2; the app never calls satellites.
+  App side (2026-10-08): Home also reads `crops` (2.9) and counts cells by area, `sum(inside_pct) / 100`, so an edge cell half inside counts as half and the count matches the dunams (25 cells = 1 dunam).
 
 ### 2.4 This week's plan (Weather Planner)
 - `GET /farms/{id}/plan` → `200 {"from": "2026-10-08", "days": 10, "rain_mm": [0,0,2.1,...], "tmin": [...], "tmax": [...], "alerts": [{"type": "frost|heat|heavy_rain|dry_spell|rust_weather|sunn_pest|dust|spray_window|sowing_rain|urea_rain", "day": "2026-10-12", "value": -2.1, "level": "watch|alarm", "ku": "...", "en": "..."}], "decisions": [{"code": "sow_wait|sow_go|urea_go|urea_hold|spray_ok|check_rust|count_sunn_pest|frost_check|heat_check|dust_delay", "ku": "...", "en": "..."}], "source": "Open-Meteo (ECMWF/GraphCast family)", "issued": "2026-10-08T06:00:00Z"}`
@@ -77,6 +79,7 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 ### 2.9 App decisions that affect the backend (2026-10-08)
 - Field edge: the farmer **always walks the corners**; no satellite edge suggestion in the app flow (SAM stays a backend tool for the Ministry map).
 - Home shows all farms stacked: `GET /farms` must return every farm with enough to draw the grid summary (`status`, `last_picture`, `crops`), and `GET /farms/{id}/status` is called per farm on open.
+- Opening a farm (built 2026-10-08): a tap in My farms opens Home at that farm. Home calls `GET /farms/{id}`, `/status` and `/plan` for every farm and keeps the last copy of each on the phone, shown with its date when offline. Home shows the `en` texts until the Sorani check.
 - Cell tap views: cell, crop plot, whole farm. The backend adds per-crop summaries to 2.3: `"crops": [{"crop","dunam","greenness_pct_of_normal","level"}]` and the whole-farm `greenness_pct_of_normal` (already there).
 - Labels: new screens are English for now; Sorani comes later, but the backend keeps returning both `ku` and `en`.
 

@@ -174,4 +174,72 @@ class S {
     ),
     FarmStatus.none => t('هێشتا نەچێنراوە', 'not sown yet'),
   };
+
+  // Farm Home. English for now (decision 2026-10-08, BACKEND.md 2.9);
+  // Sorani comes after a native speaker's check.
+  String get tabHome => 'Home';
+  String get tabAlerts => 'Alerts';
+  String get tabAsk => 'Ask the Doctor';
+  String get tabSettings => 'Settings';
+  String get notBuilt => 'Not built yet';
+  String get viewCells => 'Cells';
+  String get viewCrops => 'Crops';
+  String get viewFarm => 'Farm';
+  String fromSpace(String date, String? next) => next == null
+      ? 'From space $date'
+      : 'From space $date · next picture $next';
+  String waitingFirst(String? next) => next == null
+      ? 'Waiting for the first satellite picture'
+      : 'Waiting for the first satellite picture · expected $next';
+  String levelName(FarmStatus l) => switch (l) {
+    FarmStatus.normal => 'Normal',
+    FarmStatus.watch => 'Watch',
+    FarmStatus.alarm => 'Alarm',
+    FarmStatus.none => 'No data',
+  };
+
+  /// "north-east" -> "north-east corner", "middle-east" -> "east side".
+  String place(String where) {
+    final [ns, ew] = where.contains('-') ? where.split('-') : [where, 'centre'];
+    if (ns == 'middle' && ew == 'centre') return 'middle';
+    if (ns == 'middle') return '$ew side';
+    if (ew == 'centre') return '$ns side';
+    return '$where corner';
+  }
+
+  String weakLine(int weak, int measured, String? where) => weak == 0
+      ? 'No weak cells · $measured measured'
+      : '$weak of $measured cells weak${where == null ? '' : ' · ${place(where)}'}';
+  String get notMeasured => 'Not measured yet';
+  String get thisWeek => 'THIS WEEK';
+  String pctOfNormal(int p) => '$p% of normal';
+  String cellName(String label) => 'Cell $label';
+  String sinceLine(String date, int days) {
+    final w = days ~/ 7;
+    final span = w >= 1
+        ? (w == 1 ? '1 week' : '$w weeks')
+        : (days == 1 ? '1 day' : '$days days');
+    return 'Since $date · $span';
+  }
+
+  String compareLine(int? neighbours, int? whole) => [
+    if (neighbours != null) 'Neighbours $neighbours%',
+    if (whole != null) 'whole farm $whole%',
+  ].join(' · ');
+  String get askSpot => 'Ask about this spot';
+  String get reportHere => 'Report here';
+  String get noReading => 'No satellite reading for this cell yet';
+  String measuredOn(String part, String all) =>
+      'measured on $part of $all dunam';
+  String offlineCopy(String when) => 'No internet. Showing the copy from $when';
+  String get weatherDown => 'Weather forecast not available right now';
+  String forecastSource(String src, String when) =>
+      'Forecast: $src · issued $when';
+  String get nothingToDo => 'Nothing to act on in the next 10 days';
+  String get loadFailed => 'Could not load this farm';
+  String get retry => 'Try again';
+  String get notSownYet => 'not sown yet';
+  String get wholeFarmLabel => 'Whole farm';
+  String get dunamEn => 'dunam';
+  String get farmingAssistant => 'Farming assistant';
 }

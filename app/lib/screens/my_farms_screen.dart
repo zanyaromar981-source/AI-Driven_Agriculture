@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/farm_card.dart';
 import 'add_farm/corners_screen.dart';
+import 'home/home_screen.dart';
 
 /// What the list shows: from the server, or the last copy saved on the phone.
 class _FarmList {
@@ -86,6 +87,17 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
             : DateTime.parse(j['saved_at'] as String).toLocal(),
       );
     }
+  }
+
+  /// Home shows every farm stacked; it opens at the one that was tapped.
+  Future<void> _openFarm(List<FarmSummary> farms, String id) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => HomeScreen(farms: farms, openId: id),
+      ),
+    );
+    if (!mounted) return;
+    _reload();
   }
 
   Future<void> _addFarm() async {
@@ -174,10 +186,7 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
                 for (final p in pending)
                   FarmCard(farm: p.summary, waiting: true, onTap: () {}),
                 for (final f in list.farms)
-                  FarmCard(
-                    farm: f,
-                    onTap: () => showToast(context, '${s.opening} ${f.name}'),
-                  ),
+                  FarmCard(farm: f, onTap: () => _openFarm(list.farms, f.id)),
                 AddFarmCard(onTap: _addFarm),
               ],
             );
