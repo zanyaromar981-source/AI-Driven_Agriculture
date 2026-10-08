@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kurdistan Region Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@500;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --ink:#13201A; --ink2:#4A5A52; --ink3:#7D8A83; --line:#E3E7E2; --panel:#FFFFFF; --bg:#F5F7F4; --accent:#0F7A5A;
+  --duhok:#2FB45A; --erbil:#F4B223; --suly:#1FA2E0; --halabja:#EC4C6B;
+  --f:"Inter","Segoe UI",system-ui,sans-serif; --ku:"Noto Sans Arabic","Segoe UI",Tahoma,sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:14px/1.45 var(--f);color:var(--ink);background:var(--bg)}
+#map{position:fixed;inset:0;background:#DDE6E0}
+.ku{font-family:var(--ku);direction:rtl;unicode-bidi:isolate}
+
+/* top bar */
+.top{position:fixed;z-index:1000;top:12px;left:12px;right:12px;display:flex;gap:10px;align-items:flex-start;pointer-events:none}
+.top>*{pointer-events:auto}
+.brand{background:var(--panel);border-radius:14px;padding:9px 14px;box-shadow:0 2px 14px #0000001f;display:flex;flex-direction:column;min-width:0}
+.brand b{font-weight:800;font-size:15px;letter-spacing:-.01em}
+.brand span{font-size:12px;color:var(--ink3)}
+.search{position:relative;flex:1;max-width:520px}
+.search input{width:100%;font:500 15px var(--f);padding:12px 40px 12px 42px;border:0;border-radius:14px;background:var(--panel);box-shadow:0 2px 14px #0000001f;color:var(--ink);outline:none}
+.search input:focus{box-shadow:0 0 0 3px #0F7A5A33,0 2px 14px #0000001f}
+.search svg{position:absolute;left:14px;top:13px;width:18px;height:18px;color:var(--ink3)}
+.search .clr{position:absolute;right:8px;top:7px;border:0;background:none;font-size:20px;color:var(--ink3);cursor:pointer;width:30px;height:30px;border-radius:8px}
+.search .clr:hover{background:var(--bg)}
+.results{position:absolute;top:52px;left:0;right:0;background:var(--panel);border-radius:14px;box-shadow:0 8px 30px #00000029;max-height:min(60vh,460px);overflow:auto;padding:6px}
+.results[hidden]{display:none}
+.res{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer}
+.res:hover,.res.on{background:#EEF5F1}
+.res i{width:12px;height:12px;border-radius:4px;flex:none}
+.res .t{flex:1;min-width:0}
+.res .t b{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .t span{font-size:12px;color:var(--ink3)}
+.res .k{font-size:11px;font-weight:600;color:var(--ink2);background:var(--bg);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.res .ku{font-size:13px;color:var(--ink2)}
+.rhead{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:8px 10px 4px}
+.rnote{font-size:12.5px;color:var(--ink3);padding:8px 10px}
+.btns{display:flex;gap:8px}
+.btn{font:600 13px var(--f);background:var(--panel);color:var(--ink);border:0;border-radius:12px;padding:11px 13px;box-shadow:0 2px 14px #0000001f;cursor:pointer;display:flex;gap:7px;align-items:center;white-space:nowrap}
+.btn:hover{background:#F0F5F2}
+.btn svg{width:16px;height:16px}
+
+/* breadcrumb */
+.crumb{position:fixed;z-index:1000;top:72px;left:12px;background:var(--panel);border-radius:12px;box-shadow:0 2px 14px #0000001f;padding:7px 12px;display:flex;gap:8px;align-items:center;font-size:13px}
+.crumb a{color:var(--accent);font-weight:600;cursor:pointer;text-decoration:none}
+.crumb .sep{color:var(--ink3)}
+.crumb[hidden]{display:none}
+
+/* coordinate panel */
+.coords{position:fixed;z-index:1000;left:12px;bottom:26px;background:#13201AF0;color:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 4px 20px #0000003d;min-width:300px;max-width:calc(100vw - 24px)}
+.coords .row{display:flex;justify-content:space-between;gap:16px;align-items:baseline}
+.coords .lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9FB3A9}
+.coords .big{font:600 17px var(--mono);letter-spacing:-.01em}
+.coords .mono{font:500 12.5px var(--mono);color:#DDE8E2}
+.coords .where{margin-top:8px;padding-top:8px;border-top:1px solid #FFFFFF22;font-size:13px}
+.coords .where b{font-weight:700}
+.coords .where .ku{color:#BFD3C9;font-size:13px}
+.coords .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.coords .hint{font-size:11.5px;color:#9FB3A9;margin-top:6px}
+
+/* legend */
+.legend{position:fixed;z-index:1000;right:12px;top:72px;width:260px;background:var(--panel);border-radius:14px;box-shadow:0 2px 14px #0000001f;padding:12px;max-height:calc(100vh - 170px);overflow:auto}
+.legend h3{margin:0 0 2px;font-size:13px;font-weight:800}
+.legend .sub{font-size:12px;color:var(--ink3);margin-bottom:8px}
+.gv{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer}
+.gv:hover{background:#F1F6F3}
+.gv i{width:16px;height:16px;border-radius:5px;flex:none}
+.gv .n{flex:1}
+.gv .n b{display:block;font-weight:700}
+.gv .n span{font-size:12px;color:var(--ink3)}
+.gv .ku{font-size:13px;color:var(--ink2)}
+.dl{margin:2px 0 6px 34px;display:grid;gap:2px}
+.dl div{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:3px 6px;border-radius:7px;cursor:pointer}
+.dl div:hover{background:#F1F6F3}
+.dl i{width:10px;height:10px;border-radius:3px;flex:none}
+.dl .ku{margin-left:auto;font-size:12px;color:var(--ink3)}
+.togs{border-top:1px solid var(--line);margin-top:8px;padding-top:8px;display:grid;gap:4px;font-size:13px}
+.togs label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.src{font-size:11px;color:var(--ink3);margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+@media (max-width:820px){
+  .brand{display:none}
+  .legend{display:none}
+  .legend.open{display:block;top:auto;bottom:12px;right:12px;left:12px;width:auto;max-height:55vh}
+  .coords{bottom:12px;min-width:0;left:12px;right:12px}
+  .crumb{top:66px}
+  .btn .t{display:none}
+}
+@media (min-width:821px){ #legendBtn{display:none} }
+
+/* map labels */
+.lab{background:none;border:0;box-shadow:none;padding:0;color:var(--ink);font-weight:800;white-space:nowrap;
+  text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 6px #fff,0 0 10px #ffffffcc}
+.lab::before{display:none}
+.lab.gov{font-size:17px;letter-spacing:.12em;text-transform:uppercase}
+.lab.gov small{display:block;text-align:center;font:700 14px var(--ku);letter-spacing:0;text-transform:none;color:var(--ink2)}
+.lab.dist{font-size:13.5px;font-weight:800}
+.lab.dist small{display:block;text-align:center;font:600 12px var(--ku);color:var(--ink2)}
+.lab.subd{font-size:11.5px;font-weight:600;color:#26342D;font-style:italic}
+.lab.town{font-size:12px;font-weight:700}
+.lab.town small{font:600 11px var(--ku);color:var(--ink2);margin-left:4px}
+.townDot{width:9px;height:9px;border-radius:50%;background:#fff;border:2.5px solid #13201A;box-shadow:0 0 0 2px #ffffffaa}
+.damDot{width:22px;height:22px;border-radius:50%;background:#1E6FD9;border:2px solid #fff;box-shadow:0 1px 6px #0006;display:grid;place-items:center;color:#fff;font-size:12px}
+.pin{width:18px;height:18px;border-radius:50%;background:#E8344E;border:3px solid #fff;box-shadow:0 0 0 2px #E8344E66,0 2px 8px #0006}
+.pulse{width:18px;height:18px;border-radius:50%;background:#E8344E;border:3px solid #fff;animation:p 1.6s ease-out infinite}
+@keyframes p{0%{box-shadow:0 0 0 0 #E8344Eaa}100%{box-shadow:0 0 0 26px #E8344E00}}
+.leaflet-popup-content{font:13px/1.45 var(--f);margin:12px 14px}
+.pp b{font-size:14px}
+.pp .mono{font:500 12.5px var(--mono)}
+.pp .acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.pp button,.pp a{font:600 12px var(--f);border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--ink);text-decoration:none}
+.pp button:hover,.pp a:hover{background:#F1F6F3}
+.leaflet-control-layers{border-radius:12px!important;border:0!important;box-shadow:0 2px 14px #0000001f!important}
+.leaflet-bottom.leaflet-right{margin-bottom:0}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Map of the Kurdistan Region"></div>
+
+<div class="top">
+  <div class="brand"><b>Kurdistan Region</b><span>4 governorates · 33 districts · 78 sub-districts</span></div>
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search a place, Sorani name, or coordinates  (press /)" aria-label="Search">
+    <button class="clr" id="clr" title="Clear" hidden>×</button>
+    <div class="results" id="res" hidden></div>
+  </div>
+  <div class="btns">
+    <button class="btn" id="locate" title="Show my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span class="t">My location</span></button>
+    <button class="btn" id="legendBtn" title="Governorates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  </div>
+</div>
+
+<div class="crumb" id="crumb" hidden></div>
+
+<aside class="legend" id="legend">
+  <h3>Governorates</h3>
+  <div class="sub">Click one to open its districts</div>
+  <div id="govList"></div>
+  <div class="togs">
+    <label><input type="checkbox" id="tSubs" checked> Sub-district borders</label>
+    <label><input type="checkbox" id="tTowns" checked> Towns and dams</label>
+    <label><input type="checkbox" id="tCtx"> Kifri and Khanaqin (Diyala)</label>
+  </div>
+  <div class="src" id="src"></div>
+</aside>
+
+<div class="coords" id="coords">
+  <div class="row"><span class="lbl">Latitude, longitude (WGS84)</span><span class="lbl" id="zoomLbl"></span></div>
+  <div class="big" id="cLL">Move over the map</div>
+  <div class="mono" id="cDMS">&nbsp;</div>
+  <div class="mono" id="cUTM">&nbsp;</div>
+  <div class="where" id="cWhere">&nbsp;</div>
+  <div class="hint" id="cHint">Click anywhere to drop a pin and copy its exact coordinates</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="kri_map_data.js"></script>
+<script>
+(() => {
+const K = window.KRI;
+const GOV_COLOR = {Duhok:'#2FB45A', Erbil:'#F4B223', Sulaymaniyah:'#1FA2E0', Halabja:'#EC4C6B', Context:'#B9BFC6'};
+const map = L.map('map', {zoomControl:false, minZoom:6, maxZoom:19, zoomSnap:0.25, wheelPxPerZoomLevel:90, worldCopyJump:false});
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.control.scale({position:'bottomright', imperial:false, maxWidth:160}).addTo(map);
+
+/* basemaps: all WGS84 / Web Mercator, the same coordinate system Google Maps uses */
+const streets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+  {maxZoom:19, attribution:'&copy; Esri, HERE, Garmin, OpenStreetMap contributors'});
+const sat = L.layerGroup([
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, attribution:'Imagery &copy; Esri, Maxar, Earthstar Geographics'}),
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:19})
+]);
+const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'&copy; OpenStreetMap contributors'});
+const topo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, attribution:'&copy; Esri'});
+osm.addTo(map);
+L.control.layers({'Streets (OpenStreetMap)':osm, 'Satellite':sat, 'Esri streets':streets, 'Topographic':topo}, null, {position:'bottomright'}).addTo(map);
+
+map.createPane('fills').style.zIndex = 410;
+map.createPane('lines').style.zIndex = 420;
+map.createPane('hl').style.zIndex = 430;
+map.createPane('labels').style.zIndex = 640;
+
+/* ---------- layers ---------- */
+const govLayers = {}, distLayers = {}, subLayers = {};
+let openGov = null, openDist = null;
+
+const govStyle = f => ({pane:'fills', color:'#ffffff', weight:3, fillColor:f.properties.color, fillOpacity:.55});
+const govOpen  = () => ({pane:'fills', color:'#13201A', weight:3.5, fillOpacity:0, opacity:.85});
+const distStyle = f => ({pane:'fills', color:'#ffffff', weight:2.2, fillColor:f.properties.color, fillOpacity:.62});
+const subStyle = () => ({pane:'lines', color:'#ffffff', weight:1.1, opacity:.95, dashArray:'4 4', fill:false, interactive:false});
+
+const govG = L.geoJSON(K.governorates, {style:govStyle, onEachFeature:(f, l) => {
+  govLayers[f.properties.gov] = l;
+  l.on('click', e => { L.DomEvent.stop(e); openGovernorate(f.properties.gov); });
+  l.on('mouseover', () => { if (openGov !== f.properties.gov) l.setStyle({fillOpacity:.72}); });
+  l.on('mouseout', () => { if (openGov !== f.properties.gov) l.setStyle({fillOpacity:.55}); });
+}}).addTo(map);
+
+const distG = L.geoJSON(K.districts, {style:distStyle, filter:f => f.properties.gov !== 'Context', onEachFeature:(f, l) => {
+  distLayers[f.properties.gov + '|' + f.properties.en] = l;
+  l.on('click', e => { L.DomEvent.stop(e); openDistrict(f.properties.gov, f.properties.en); dropPin(e.latlng); });
+  l.on('mouseover', () => l.setStyle({fillOpacity:.78}));
+  l.on('mouseout', () => l.setStyle({fillOpacity:openDist === f.properties.gov + '|' + f.properties.en ? .3 : .62}));
+}});
+const ctxG = L.geoJSON(K.districts, {filter:f => f.properties.gov === 'Context',
+  style:() => ({pane:'fills', color:'#8C949C', weight:1.5, dashArray:'6 5', fillColor:'#B9BFC6', fillOpacity:.35})});
+const subG = L.geoJSON(K.subdistricts, {style:subStyle, filter:f => f.properties.gov !== 'Context', onEachFeature:(f, l) => { subLayers[f.properties.en] = l; }});
+
+/* labels */
+const label = (ll, html, cls) => L.tooltip({permanent:true, direction:'center', className:'lab ' + cls, pane:'labels', interactive:false}).setLatLng(ll).setContent(html);
+const govLabels = L.layerGroup(K.governorates.features.map(f => label(f.properties.c, `${f.properties.en}<small>${f.properties.ku}</small>`, 'gov'))).addTo(map);
+const distLabels = {};
+K.districts.features.forEach(f => { if (f.properties.gov === 'Context') return;
+  (distLabels[f.properties.gov] ||= L.layerGroup()).addLayer(label(f.properties.c, `${f.properties.en}${f.properties.ku ? `<small>${f.properties.ku}</small>` : ''}`, 'dist')); });
+const subLabels = L.layerGroup(K.subdistricts.features.filter(f => f.properties.gov !== 'Context')
+  .map(f => label(f.properties.c, f.properties.en.replace(/^Markaz /, '') , 'subd')));
+
+/* towns and dams */
+const CAPITALS = ['Duhok', 'Erbil', 'Sulaymaniyah', 'Halabja'];
+const DIST_SEATS = ['Zakho', 'Sumel', 'Amedi', 'Shekhan', 'Akre', 'Bardarash', 'Qushtapa', 'Makhmur', 'Koya', 'Taq Taq', 'Shaqlawa', 'Harir',
+  'Salahaddin', 'Rawanduz', 'Soran', 'Khalifan', 'Choman', 'Sidakan', 'Mergasor', 'Chamchamal', 'Darbandikhan', 'Dukan', 'Kalar', 'Penjwen',
+  'Qaladze', 'Ranya', 'Chwarta', 'Said Sadiq', 'Khurmal'];
+const townTier = {1:L.layerGroup(), 2:L.layerGroup(), 3:L.layerGroup()};
+const ctxTowns = L.layerGroup();
+const townG = {addLayer:(m, t) => (t && t.gov === 'Context' ? ctxTowns : townTier[t ? (CAPITALS.includes(t.en) ? 1 : DIST_SEATS.includes(t.en) ? 2 : 3) : 2]).addLayer(m)};
+K.towns.forEach(t => {
+  const m = L.marker([t.lat, t.lon], {icon:L.divIcon({className:'', html:'<div class="townDot"></div>', iconSize:[9,9]}), pane:'labels', title:t.en});
+  m.bindTooltip(`${t.en}<small>${t.ku}</small>`, {permanent:true, direction:'right', offset:[6,0], className:'lab town'});
+  m.on('click', e => { L.DomEvent.stop(e); dropPin(L.latLng(t.lat, t.lon), t); });
+  townG.addLayer(m, t);
+});
+K.dams.forEach(d => {
+  const m = L.marker([d.lat, d.lon], {icon:L.divIcon({className:'', html:'<div class="damDot">💧</div>', iconSize:[22,22]}), pane:'labels', title:d.en});
+  m.bindTooltip(d.en, {permanent:true, direction:'right', offset:[10,0], className:'lab town'});
+  m.on('click', e => { L.DomEvent.stop(e); dropPin(L.latLng(d.lat, d.lon), d); });
+  townG.addLayer(m);
+});
+
+const KRI_BOUNDS = govG.getBounds();
+map.fitBounds(KRI_BOUNDS, {padding:[60, 60]});
+map.setMaxBounds(KRI_BOUNDS.pad(1.2));
+
+/* ---------- open / close: city colour gives way to its districts ---------- */
+const crumb = document.getElementById('crumb');
+function setCrumb() {
+  if (!openGov) { crumb.hidden = true; return; }
+  const gk = K.governorates.features.find(f => f.properties.gov === openGov).properties.ku;
+  crumb.hidden = false;
+  crumb.innerHTML = `<a id="cAll">All Kurdistan</a><span class="sep">›</span><b>${openGov}</b> <span class="ku">${gk}</span>` +
+    (openDist ? `<span class="sep">›</span><b>${openDist.split('|')[1]}</b>` : '');
+  document.getElementById('cAll').onclick = closeAll;
+}
+function openGovernorate(gov, fit = true) {
+  if (openGov && openGov !== gov) closeGov(openGov);
+  openGov = gov; openDist = null;
+  govLayers[gov].setStyle(govOpen());
+  govLayers[gov].bringToBack();
+  Object.entries(distLayers).forEach(([k, l]) => { if (k.startsWith(gov + '|')) { distG.addLayer(l); l.setStyle(distStyle(l.feature)); } });
+  if (!map.hasLayer(distG)) distG.addTo(map);
+  distG.eachLayer(l => { if (!l.feature.properties.gov || l.feature.properties.gov !== gov) distG.removeLayer(l); });
+  govLabels.eachLayer(t => { const f = K.governorates.features.find(g => g.properties.c[0] === t.getLatLng().lat && g.properties.c[1] === t.getLatLng().lng); t.setOpacity(f && f.properties.gov === gov ? 0 : 1); });
+  Object.entries(distLabels).forEach(([g, lg]) => g === gov ? lg.addTo(map) : map.removeLayer(lg));
+  if (fit) map.flyToBounds(govLayers[gov].getBounds(), {padding:[70, 70], duration:.8});
+  setCrumb(); refreshVisibility();
+}
+function closeGov(gov) {
+  govLayers[gov].setStyle(govStyle(govLayers[gov].feature));
+  Object.entries(distLayers).forEach(([k, l]) => { if (k.startsWith(gov + '|')) distG.removeLayer(l); });
+  if (distLabels[gov]) map.removeLayer(distLabels[gov]);
+}
+function closeAll() {
+  if (openGov) closeGov(openGov);
+  openGov = null; openDist = null;
+  govLabels.eachLayer(t => t.setOpacity(1));
+  map.flyToBounds(KRI_BOUNDS, {padding:[60, 60], duration:.8});
+  setCrumb(); refreshVisibility();
+}
+function openDistrict(gov, dist, fit = false) {
+  if (openGov !== gov) openGovernorate(gov, false);
+  if (openDist && distLayers[openDist]) distLayers[openDist].setStyle(distStyle(distLayers[openDist].feature));
+  openDist = gov + '|' + dist;
+  const l = distLayers[openDist];
+  l.setStyle({fillOpacity:.3, weight:3.5, color:'#13201A'});
+  if (fit) map.flyToBounds(l.getBounds(), {padding:[60, 60], duration:.8});
+  setCrumb();
+}
+
+/* zoom-dependent detail */
+const tSubs = document.getElementById('tSubs'), tTowns = document.getElementById('tTowns'), tCtx = document.getElementById('tCtx');
+function refreshVisibility() {
+  const z = map.getZoom();
+  const showSubs = tSubs.checked && (openGov || z >= 9);
+  showSubs ? subG.addTo(map) : map.removeLayer(subG);
+  (tSubs.checked && z >= 10) ? subLabels.addTo(map) : map.removeLayer(subLabels);
+  [[1, 6], [2, 9], [3, 10.5]].forEach(([k, zmin]) => (tTowns.checked && z >= zmin) ? townTier[k].addTo(map) : map.removeLayer(townTier[k]));
+  tCtx.checked ? ctxG.addTo(map) : map.removeLayer(ctxG);
+  (tCtx.checked && tTowns.checked && z >= 9) ? ctxTowns.addTo(map) : map.removeLayer(ctxTowns);
+  if (!openGov && z >= 9.5) { const c = map.getCenter(); const g = whereIs(c.lat, c.lng); if (g.gov && g.gov.properties.gov !== 'Context') openGovernorate(g.gov.properties.gov, false); }
+  govLabels.eachLayer(t => t.getElement() && (t.getElement().style.display = z >= 10.5 ? 'none' : ''));
+  const fade = z >= 15 ? .18 : z >= 13 ? .35 : z >= 11.5 ? .6 : 1;
+  map.getPane('fills').style.opacity = fade;
+  document.getElementById('zoomLbl').textContent = 'zoom ' + z.toFixed(2);
+}
+map.on('zoomend', refreshVisibility);
+[tSubs, tTowns, tCtx].forEach(e => e.onchange = refreshVisibility);
+map.on('click', () => { /* pin is handled below */ });
+
+/* ---------- legend ---------- */
+const govList = document.getElementById('govList');
+K.governorates.features.forEach(f => {
+  const p = f.properties;
+  const row = document.createElement('div'); row.className = 'gv';
+  row.innerHTML = `<i style="background:${p.color}"></i><div class="n"><b>${p.en}</b><span>${p.districts.length} districts · ${Math.round(p.area_km2).toLocaleString()} km²</span></div><span class="ku">${p.ku}</span>`;
+  const dl = document.createElement('div'); dl.className = 'dl'; dl.hidden = true;
+  K.districts.features.filter(d => d.properties.gov === p.gov).forEach(d => {
+    const r = document.createElement('div');
+    r.innerHTML = `<i style="background:${d.properties.color}"></i>${d.properties.en}<span class="ku">${d.properties.ku || ''}</span>`;
+    r.onclick = () => openDistrict(p.gov, d.properties.en, true);
+    dl.appendChild(r);
+  });
+  row.onclick = () => { openGovernorate(p.gov); govList.querySelectorAll('.dl').forEach(x => x.hidden = true); dl.hidden = false; };
+  govList.append(row, dl);
+});
+document.getElementById('src').textContent = K.source;
+document.getElementById('legendBtn').onclick = () => document.getElementById('legend').classList.toggle('open');
+
+/* ---------- geometry helpers ---------- */
+function inRing(lat, lon, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function inFeature(lat, lon, f) {
+  const b = f.properties.bbox; if (lat < b[0] || lat > b[2] || lon < b[1] || lon > b[3]) return false;
+  return f.geometry.coordinates.some(poly => inRing(lat, lon, poly[0]) && !poly.slice(1).some(h => inRing(lat, lon, h)));
+}
+function whereIs(lat, lon) {
+  const sub = K.subdistricts.features.find(f => inFeature(lat, lon, f));
+  const dist = sub && K.districts.features.find(d => d.properties.gov === sub.properties.gov && d.properties.en === sub.properties.dist);
+  const gov = sub && (K.governorates.features.find(g => g.properties.gov === sub.properties.gov) || {properties:{gov:'Context', en:'Diyala (outside the four governorates)', ku:'', color:'#B9BFC6'}});
+  return {sub, dist, gov};
+}
+
+/* ---------- coordinate formats ---------- */
+function dms(v, pos, neg) {
+  const h = v >= 0 ? pos : neg; v = Math.abs(v);
+  const d = Math.floor(v), mf = (v - d) * 60, m = Math.floor(mf), s = (mf - m) * 60;
+  return `${d}°${String(m).padStart(2, '0')}′${s.toFixed(3).padStart(6, '0')}″${h}`;
+}
+function utm(lat, lon) {
+  const a = 6378137, f = 1 / 298.257223563, k0 = 0.9996, e2 = f * (2 - f), ep2 = e2 / (1 - e2);
+  const zone = Math.floor((lon + 180) / 6) + 1, lon0 = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const φ = lat * Math.PI / 180, λ = lon * Math.PI / 180;
+  const N = a / Math.sqrt(1 - e2 * Math.sin(φ) ** 2), T = Math.tan(φ) ** 2, C = ep2 * Math.cos(φ) ** 2, A = Math.cos(φ) * (λ - lon0);
+  const M = a * ((1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256) * φ - (3 * e2 / 8 + 3 * e2 ** 2 / 32 + 45 * e2 ** 3 / 1024) * Math.sin(2 * φ)
+    + (15 * e2 ** 2 / 256 + 45 * e2 ** 3 / 1024) * Math.sin(4 * φ) - (35 * e2 ** 3 / 3072) * Math.sin(6 * φ));
+  const E = k0 * N * (A + (1 - T + C) * A ** 3 / 6 + (5 - 18 * T + T * T + 72 * C - 58 * ep2) * A ** 5 / 120) + 500000;
+  const Nn = k0 * (M + N * Math.tan(φ) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A ** 4 / 24 + (61 - 58 * T + T * T + 600 * C - 330 * ep2) * A ** 6 / 720));
+  const band = 'CDEFGHJKLMNPQRSTUVWXX'[Math.floor((lat + 80) / 8)];
+  return `UTM ${zone}${band}  ${E.toFixed(2)} E  ${Nn.toFixed(2)} N`;
+}
+const mPerPx = lat => 156543.03392 * Math.cos(lat * Math.PI / 180) / 2 ** map.getZoom();
+
+const cLL = document.getElementById('cLL'), cDMS = document.getElementById('cDMS'), cUTM = document.getElementById('cUTM'), cWhere = document.getElementById('cWhere');
+function whereHTML(w) {
+  if (!w.sub) return '<span style="color:#9FB3A9">Outside the Kurdistan Region governorates</span>';
+  const g = w.gov.properties, d = w.dist ? w.dist.properties : null, s = w.sub.properties;
+  const sn = s.en.startsWith('Markaz ') ? s.en.slice(7) + ' centre' : s.en;
+  return `<span class="sw" style="background:${d ? d.color : g.color}"></span><b>${g.en}</b> › ${d ? d.en : ''} › ${sn}` +
+    `<div class="ku">${[g.ku, d && d.ku, s.ku].filter(Boolean).join(' ‹ ')}</div>`;
+}
+function showCoords(ll) {
+  const lat = ll.lat, lon = ll.lng;
+  cLL.textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+  cDMS.textContent = `${dms(lat, 'N', 'S')}  ${dms(lon, 'E', 'W')}`;
+  cUTM.textContent = `${utm(lat, lon)}  ·  ${mPerPx(lat) < 1 ? (mPerPx(lat) * 100).toFixed(0) + ' cm' : mPerPx(lat).toFixed(1) + ' m'}/px`;
+  cWhere.innerHTML = whereHTML(whereIs(lat, lon));
+}
+let rafPending = null;
+map.on('mousemove', e => { if (rafPending) return; rafPending = requestAnimationFrame(() => { rafPending = null; showCoords(e.latlng); }); });
+
+/* ---------- pin ---------- */
+let pin = null;
+function dropPin(ll, place) {
+  if (pin) map.removeLayer(pin);
+  const lat = ll.lat, lon = ll.lng, w = whereIs(lat, lon);
+  pin = L.marker(ll, {icon:L.divIcon({className:'', html:'<div class="pin"></div>', iconSize:[18,18]}), zIndexOffset:1000}).addTo(map);
+  const id = 'e' + Date.now();
+  const txt = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+  pin.bindPopup(`<div class="pp">${place ? `<b>${place.en}</b> <span class="ku">${place.ku || ''}</span><br>` : ''}
+    <div class="mono">${txt}</div><div class="mono">${dms(lat, 'N', 'S')} ${dms(lon, 'E', 'W')}</div><div class="mono">${utm(lat, lon)}</div>
+    <div class="mono" id="${id}">Elevation: loading…</div>
+    <div style="margin-top:6px">${w.sub ? `${w.gov.properties.en} › ${w.dist ? w.dist.properties.en : ''} › ${w.sub.properties.en}` : 'Outside the four governorates'}</div>
+    ${place && place.osm ? `<div style="color:#7D8A83;font-size:11.5px">OpenStreetMap ${place.osm}</div>` : ''}
+    <div class="acts"><button data-copy="${txt}">Copy</button>
+    <a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lon.toFixed(6)}">Open in Google Maps</a>
+    <a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${lat.toFixed(6)}&mlon=${lon.toFixed(6)}#map=17/${lat.toFixed(6)}/${lon.toFixed(6)}">OSM</a></div></div>`, {maxWidth:340}).openPopup();
+  fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat.toFixed(6)}&longitude=${lon.toFixed(6)}`)
+    .then(r => r.ok ? r.json() : Promise.reject()).then(j => { const el = document.getElementById(id); if (el) el.textContent = `Elevation: ${Math.round(j.elevation[0])} m (Copernicus DEM 90 m)`; })
+    .catch(() => { const el = document.getElementById(id); if (el) el.textContent = 'Elevation: not available right now'; });
+  showCoords(ll);
+}
+map.on('click', e => dropPin(e.latlng));
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-copy]'); if (!b) return;
+  navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1200); });
+});
+
+/* ---------- my location ---------- */
+let me = null;
+document.getElementById('locate').onclick = () => {
+  if (!navigator.geolocation) return alertBox('This browser has no location access');
+  navigator.geolocation.getCurrentPosition(p => {
+    const ll = L.latLng(p.coords.latitude, p.coords.longitude);
+    if (me) map.removeLayer(me);
+    me = L.layerGroup([L.circle(ll, {radius:p.coords.accuracy, color:'#1E6FD9', weight:1, fillOpacity:.12}),
+      L.circleMarker(ll, {radius:7, color:'#fff', weight:3, fillColor:'#1E6FD9', fillOpacity:1})]).addTo(map);
+    map.flyTo(ll, 17); dropPin(ll, {en:`You are here (±${Math.round(p.coords.accuracy)} m)`, ku:''});
+  }, err => alertBox('Location not available: ' + err.message), {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+};
+function alertBox(msg) { cWhere.innerHTML = `<span style="color:#FFB4B4">${msg}</span>`; }
+
+/* ---------- search ---------- */
+const q = document.getElementById('q'), res = document.getElementById('res'), clr = document.getElementById('clr');
+const norm = s => (s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[ي]/g, 'ی').replace(/[ك]/g, 'ک').replace(/[ە]/g, 'ه').replace(/markaz /g, '').replace(/[^\p{L}\p{N} ]/gu, ' ').replace(/\s+/g, ' ').trim();
+const INDEX = [];
+K.governorates.features.forEach(f => INDEX.push({kind:'Governorate', en:f.properties.en, ku:f.properties.ku, color:f.properties.color, f, sub:'Governorate'}));
+K.districts.features.forEach(f => f.properties.gov !== 'Context' && INDEX.push({kind:'District', en:f.properties.en, ku:f.properties.ku, color:f.properties.color, f, sub:`District of ${f.properties.gov}`}));
+K.subdistricts.features.forEach(f => f.properties.gov !== 'Context' && INDEX.push({kind:'Sub-district', en:f.properties.en.replace(/^Markaz (.*)$/, '$1 centre'), ku:f.properties.ku, color:f.properties.color, f, sub:`${f.properties.dist}, ${f.properties.gov}`}));
+K.towns.forEach(t => INDEX.push({kind:'Town', en:t.en, ku:t.ku, color:GOV_COLOR[t.gov] || '#999', pt:t, sub:`${t.dist}, ${t.gov}`}));
+K.dams.forEach(d => INDEX.push({kind:'Dam', en:d.en, ku:d.ku, color:'#1E6FD9', pt:d, sub:`${d.dist}, ${d.gov}`}));
+INDEX.forEach(x => { x.n = norm(x.en); x.nk = norm(x.ku); });
+const RANK = {Town:0, Dam:0, Governorate:1, District:2, 'Sub-district':3};
+
+function parseCoords(s) {
+  const t = s.trim().replace(/,/g, ' ').replace(/\s+/g, ' ');
+  let m = t.match(/^(-?\d{1,2}(?:\.\d+)?)\s*°?\s*([NS])?\s+(-?\d{1,3}(?:\.\d+)?)\s*°?\s*([EW])?$/i);
+  if (m) { let a = +m[1], b = +m[3]; if (/s/i.test(m[2] || '')) a = -a; if (/w/i.test(m[4] || '')) b = -b; return ok(a, b); }
+  const p = /(\d{1,3})\s*[°d ]\s*(\d{1,2})\s*['′m ]\s*(\d{1,2}(?:\.\d+)?)\s*["″s]?\s*([NSEW])/gi; const parts = [...t.matchAll(p)];
+  if (parts.length === 2) {
+    const v = parts.map(x => ({v:(+x[1] + x[2] / 60 + x[3] / 3600) * (/[SW]/i.test(x[4]) ? -1 : 1), ax:/[NS]/i.test(x[4]) ? 'lat' : 'lon'}));
+    const lat = v.find(x => x.ax === 'lat'), lon = v.find(x => x.ax === 'lon'); if (lat && lon) return ok(lat.v, lon.v);
+  }
+  return null;
+  function ok(a, b) { if (Math.abs(a) <= 90 && Math.abs(b) <= 180) return {lat:a, lon:b}; return null; }
+}
+function localSearch(s) {
+  const n = norm(s); if (!n) return [];
+  return INDEX.map(x => {
+    let sc = -1;
+    if (x.n === n || x.nk === n) sc = 100; else if (x.n.startsWith(n) || x.nk.startsWith(n)) sc = 80;
+    else if (x.n.split(' ').some(w => w.startsWith(n)) || x.nk.split(' ').some(w => w.startsWith(n))) sc = 60;
+    else if (x.n.includes(n) || (x.nk && x.nk.includes(n))) sc = 40;
+    return sc < 0 ? null : {x, sc:sc - RANK[x.kind]};
+  }).filter(Boolean).sort((a, b) => b.sc - a.sc).slice(0, 9).map(r => r.x);
+}
+let items = [], sel = -1, osmTimer = null, osmSeq = 0;
+function render(local, osm, osmState, coord) {
+  items = [];
+  let h = '';
+  if (coord) { items.push({kind:'Coordinates', coord}); h += `<div class="rhead">Coordinates</div>` + row(items.length - 1, '#E8344E', `${coord.lat.toFixed(6)}, ${coord.lon.toFixed(6)}`, 'Go to this exact point', 'Point'); }
+  if (local.length) { h += `<div class="rhead">Kurdistan Region</div>`; local.forEach(x => { items.push(x); h += row(items.length - 1, x.color, x.en, x.sub, x.kind, x.ku); }); }
+  if (osm && osm.length) { h += `<div class="rhead">OpenStreetMap</div>`; osm.forEach(o => { items.push({kind:'OSM', o}); h += row(items.length - 1, '#7D8A83', o.name || o.display_name.split(',')[0], o.display_name.split(',').slice(1, 4).join(','), o.type); }); }
+  if (osmState) h += `<div class="rnote">${osmState}</div>`;
+  if (!h) h = '<div class="rnote">No match yet. Try a town, a Sorani name, or coordinates like 36.191174, 44.009414</div>';
+  res.innerHTML = h; res.hidden = false; sel = -1;
+  res.querySelectorAll('.res').forEach(el => el.onclick = () => choose(items[+el.dataset.i]));
+}
+function row(i, color, title, sub, kind, ku) {
+  return `<div class="res" data-i="${i}"><i style="background:${color}"></i><div class="t"><b>${esc(title)}</b><span>${esc(sub || '')}</span></div>${ku ? `<span class="ku">${esc(ku)}</span>` : ''}<span class="k">${esc(kind || '')}</span></div>`;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[c]));
+q.addEventListener('input', () => {
+  const s = q.value; clr.hidden = !s;
+  if (!s.trim()) { res.hidden = true; return; }
+  const coord = parseCoords(s), local = coord ? [] : localSearch(s);
+  render(local, null, !coord && s.trim().length >= 3 ? 'Searching OpenStreetMap…' : '', coord);
+  clearTimeout(osmTimer);
+  if (coord || s.trim().length < 3) return;
+  const my = ++osmSeq;
+  osmTimer = setTimeout(() => {
+    const url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({q:s, format:'jsonv2', countrycodes:'iq', limit:'6', viewbox:'42.2,37.5,46.5,34.3', bounded:'1', 'accept-language':'en,ckb'});
+    fetch(url).then(r => r.json()).then(j => { if (my === osmSeq) render(local, j, j.length ? '' : 'Nothing more on OpenStreetMap'); })
+      .catch(() => { if (my === osmSeq) render(local, null, 'OpenStreetMap search is not reachable'); });
+  }, 650);
+});
+q.addEventListener('keydown', e => {
+  const els = [...res.querySelectorAll('.res')];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!els.length) return; sel = (sel + (e.key === 'ArrowDown' ? 1 : -1) + els.length) % els.length; els.forEach((x, i) => x.classList.toggle('on', i === sel)); els[sel].scrollIntoView({block:'nearest'}); }
+  if (e.key === 'Enter') { e.preventDefault(); const it = items[sel >= 0 ? +els[sel].dataset.i : 0]; if (it) choose(it); }
+  if (e.key === 'Escape') { q.value = ''; res.hidden = true; clr.hidden = true; q.blur(); }
+});
+clr.onclick = () => { q.value = ''; res.hidden = true; clr.hidden = true; q.focus(); };
+document.addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); } });
+document.addEventListener('click', e => { if (!e.target.closest('.search')) res.hidden = true; });
+
+let flash = null;
+function highlight(f) {
+  if (flash) map.removeLayer(flash);
+  flash = L.geoJSON(f, {pane:'hl', style:{color:'#E8344E', weight:4, fill:false, dashArray:null}}).addTo(map);
+}
+function choose(it) {
+  res.hidden = true; q.blur();
+  if (it.kind === 'Coordinates') { const ll = L.latLng(it.coord.lat, it.coord.lon); map.once('moveend', () => dropPin(ll, {en:'Searched point', ku:''})); map.flyTo(ll, 17, {duration:1}); return; }
+  if (it.kind === 'OSM') {
+    const o = it.o, ll = L.latLng(+o.lat, +o.lon);
+    if (o.boundingbox && o.category === 'boundary') map.flyToBounds([[+o.boundingbox[0], +o.boundingbox[2]], [+o.boundingbox[1], +o.boundingbox[3]]], {duration:1});
+    else map.flyTo(ll, 17, {duration:1});
+    map.once('moveend', () => dropPin(ll, {en:o.name || o.display_name.split(',')[0], ku:'', osm:`${o.osm_type}/${o.osm_id}`}));
+    return;
+  }
+  if (it.pt) { const ll = L.latLng(it.pt.lat, it.pt.lon); if (it.pt.gov && govLayers[it.pt.gov]) openGovernorate(it.pt.gov, false); map.once('moveend', () => dropPin(ll, it.pt)); map.flyTo(ll, 16, {duration:1}); return; }
+  const p = it.f.properties;
+  if (p.level === 'governorate') { openGovernorate(p.gov); highlight(it.f); return; }
+  if (p.level === 'district') { openDistrict(p.gov, p.en, true); highlight(it.f); return; }
+  openDistrict(p.gov, p.dist, false);
+  map.flyToBounds(L.geoJSON(it.f).getBounds(), {padding:[60, 60], duration:.9});
+  highlight(it.f);
+}
+setTimeout(refreshVisibility, 0);
+})();
+</script>
+</body>
+</html>

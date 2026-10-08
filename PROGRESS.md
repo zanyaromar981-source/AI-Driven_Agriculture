@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 19:58
+Last update: 2026-10-08 20:10
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -16,6 +16,7 @@ Last update: 2026-10-08 19:58
 - Flutter app `app/` (Jutyar): Sign in (phone, code, my farms) and Add farm (walk the corners with GPS, paint crops on the 10 m grid, farm ready, save; map styles Satellite with Kurdish place names, Map, Terrain; walk mode; exact area; works offline with upload later) working on a fake server with BACKEND.md shapes; 8 tests; runs on the user's phone
 - Flutter Home (open a farm): a tap in My farms opens Home with all farms stacked, scrolled to that farm. Per farm: Cells / Crops / Farm views drawn from the outline (works offline), cell card on tap, weak-cell line counted by area, This week from the live Open-Meteo forecast with the Weather Planner rules, last copy kept on the phone. Tab bar in place (only Home works). English labels for now
 - Pitch deck in Pencil, `design/pitch_deck.pen`, 8 slides (cover, problem, solution, farmer app, live demo, proof, honesty, closing), name Khor (خۆر), olive and ochre palette, photo-led; first draft, awaiting team review
+- Map demo `web/map_demo/` (Leaflet, real map tiles): 4 governorates, 33 KRG districts, 78 sub-districts from the CSO 2019 KML regrouped by the KRG maps of Duhok, Erbil and Halabja; 66 towns at exact OSM points; live lat/lon to 6 decimals, DMS, UTM 38S; click to pin with elevation and an Open in Google Maps link; search in English, Sorani, coordinates or OpenStreetMap; GPS locate
 - Repo on GitHub with CLAUDE.md rules
 - Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
@@ -30,7 +31,8 @@ Last update: 2026-10-08 19:58
 
 ## Decisions pending (user)
 - Farm size still not accurate on the phone: which number, and the real size?
-- Map source: user dislikes the current map (asked for Google, then Leaflet)
+- Map source: user dislikes the current map (asked for Google, then Leaflet). Leaflet map demo built in `web/map_demo/` for review
+- Dashboard map in `design/dashboard/jutyar_dashboard.pen`: keep the new borders and labels on screen 01, or roll back (the height colours were rejected)
 
 ## Next
 - Flutter: Ask the Doctor, Report, Alerts, Settings (Home done; its Ask and Report buttons say "not built yet")
@@ -38,6 +40,7 @@ Last update: 2026-10-08 19:58
 - Flutter: set `kTestMode` to false before any release
 - Pitch deck: swap the AI satellite picture on slide 6 for a real Sentinel-2 capture, add team names, decide on a "who pays" slide
 - Wire the dashboard to `now.json`
+- Map demo: Sorani names for 5 sub-districts, Bamo sub-district shape, Erbil's Khabat / Bnaslawa / Barhka / Ainkawa district shapes
 - Gemini API key (`GEMINI_API_KEY`) in `farm_doctor/.env` so the Doctor can answer
 
 ## Waiting on the backend

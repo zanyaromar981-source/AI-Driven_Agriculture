@@ -19,6 +19,7 @@ Status: v1, proposed by the frontend on 2026-10-08. Backend: confirm or edit eac
 | Condition levels | `normal`, `watch`, `alarm`, `none` (no data yet). Season labels: `too_early`, `normal`, `dry`, `drought`, `wet`. |
 | Confidence | `sure`, `likely`, `unsure`. |
 | Numbers | the backend never rounds away precision needed for display; the app rounds. Percentages are 0–100 integers unless stated. |
+| Admin units (added 2026-10-08) | 4 governorates (`Duhok`, `Erbil`, `Sulaymaniyah`, `Halabja`), 33 KRG districts, 78 sub-districts, as in `web/map_demo/kri_map_data.js`. Shapes are Iraq CSO 2019 sub-districts regrouped the KRG way (Akre, Shekhan, Bardarash in Duhok; Soran, Khalifan, Chuman, Sidakan, Mergasor, Harir, Pirmam, Taqtaq, Qushtapa as Erbil districts; Shahrazur in Sulaymaniyah). Kifri and Khanaqin are context only. Use the English `en` names as keys, `ku` for display. |
 
 ## 2. Endpoints the app needs
 
@@ -75,6 +76,7 @@ Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verif
 
 ### 2.8 Dashboard (Ministry, no login)
 - `GET /region/now` → the structure of `web/now.json` (zones with field_eye, weather, season, neighbours; dams; summary; brief). Keep that shape; the dashboard already reads it.
+- Map demo (`web/map_demo/`, 2026-10-08) needs no backend: boundaries and towns are a static file. It calls two free public services from the browser: Nominatim (OpenStreetMap search, max 1 request per second, only when the user types 3+ letters) and Open-Meteo elevation (one call per dropped pin). If the dashboard later needs per-district numbers, key them by the admin unit `en` names above.
 
 ### 2.9 App decisions that affect the backend (2026-10-08)
 - Field edge: the farmer **always walks the corners**; no satellite edge suggestion in the app flow (SAM stays a backend tool for the Ministry map).
