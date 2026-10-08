@@ -82,3 +82,23 @@ curl -X PUT localhost:3000/v1/ingest/dams/dukan/readings/2026-09-21 \
   -H "X-Service-Key: $INGEST__SERVICE_KEY" -H 'content-type: application/json' \
   -d '{"pct_full": 88, "volume_bn_m3": 6.14, "source": "Sentinel-2 lake area"}'
 ```
+
+## Hosting it
+
+`Dockerfile` builds the server; `deploy/docker-compose.yml` runs it with its own Postgres:
+
+```sh
+cd backend/deploy
+cp .env.example .env     # fill in the three secrets; never commit .env
+docker compose up -d --build
+```
+
+The API then answers on `PUBLIC_PORT` (default 8790). Migrations run on every start.
+
+## Data jobs
+
+`jobs/` holds the scripts that compute numbers and push them in (see `jobs/README.md`). `deploy/systemd/` has the timer that runs the region runner every 12 hours.
+
+## Rules of the code
+
+`CLAUDE.md` in this folder.

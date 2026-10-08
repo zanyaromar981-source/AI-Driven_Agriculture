@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::NaiveDate;
 use sea_orm::{
     ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QuerySelect,
-    sea_query::OnConflict,
+    sea_query::{Expr, ExprTrait, OnConflict},
 };
 
 use crate::{
@@ -74,12 +74,33 @@ impl InsightRepository for InsightPostgresRepository {
                         farm_insights::Column::Measures,
                         farm_insights::Column::UpdatedAt,
                     ])
+                    // A slower copy of a job must not put an older reading
+                    // back over a newer one.
+                    .action_and_where(Expr::cust("excluded.as_of").gte(Expr::col((
+                        farm_insights::Entity,
+                        farm_insights::Column::AsOf,
+                    ))))
                     .to_owned(),
             )
             .exec_with_returning(&self.conn)
-            .await
-            .map_err(database_error)?;
+            .await;
 
-        FarmInsight::try_from(model)
+        match model {
+            Ok(model) => FarmInsight::try_from(model),
+            // Nothing was written because a newer reading is stored: answer
+            // with that one.
+            Err(DbErr::RecordNotInserted | DbErr::RecordNotFound(_)) => {
+                let kept = farm_insights::Entity::find()
+                    .filter(farm_insights::Column::FarmId.eq(*entity.farm_id()))
+                    .filter(farm_insights::Column::Topic.eq(String::from(*entity.topic())))
+                    .one(&self.conn)
+                    .await
+                    .map_err(database_error)?
+                    .ok_or(GlobalAppError::NotFound)?;
+
+                FarmInsight::try_from(kept)
+            }
+            Err(error) => Err(database_error(error)),
+        }
     }
 }

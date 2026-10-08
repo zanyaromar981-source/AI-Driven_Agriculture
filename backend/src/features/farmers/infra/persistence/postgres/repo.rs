@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, ExprTrait, QueryFilter,
     sea_query::{Expr, OnConflict},
@@ -94,25 +95,39 @@ impl SignInChallengeRepository for SignInChallengePostgresRepository {
         model.map(SignInChallenge::try_from).transpose()
     }
 
-    async fn save(&self, challenge: &SignInChallenge) -> Result<(), AppError> {
-        // The phone is the key, so saving a new challenge replaces the old.
-        sign_in_challenges::Entity::insert(sign_in_challenges::ActiveModel::from(challenge))
-            .on_conflict(
-                OnConflict::column(sign_in_challenges::Column::Phone)
-                    .update_columns([
-                        sign_in_challenges::Column::CodeHash,
-                        sign_in_challenges::Column::Language,
-                        sign_in_challenges::Column::Attempts,
-                        sign_in_challenges::Column::SentAt,
-                        sign_in_challenges::Column::ExpiresAt,
-                    ])
-                    .to_owned(),
-            )
-            .exec(&self.conn)
-            .await
-            .map_err(database_error)?;
+    async fn save_if_due(
+        &self,
+        challenge: &SignInChallenge,
+        sent_before: DateTime<Utc>,
+    ) -> Result<bool, AppError> {
+        // The phone is the key, so saving a new challenge replaces the old,
+        // but only an old one that was sent long enough ago. One statement
+        // checks and writes, so requests at the same moment cannot all pass.
+        let stored =
+            sign_in_challenges::Entity::insert(sign_in_challenges::ActiveModel::from(challenge))
+                .on_conflict(
+                    OnConflict::column(sign_in_challenges::Column::Phone)
+                        .update_columns([
+                            sign_in_challenges::Column::CodeHash,
+                            sign_in_challenges::Column::Language,
+                            sign_in_challenges::Column::Attempts,
+                            sign_in_challenges::Column::SentAt,
+                            sign_in_challenges::Column::ExpiresAt,
+                        ])
+                        .action_and_where(
+                            Expr::col((
+                                sign_in_challenges::Entity,
+                                sign_in_challenges::Column::SentAt,
+                            ))
+                            .lte(sent_before.naive_utc()),
+                        )
+                        .to_owned(),
+                )
+                .exec_without_returning(&self.conn)
+                .await
+                .map_err(database_error)?;
 
-        Ok(())
+        Ok(stored > 0)
     }
 
     async fn record_attempt(

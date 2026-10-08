@@ -7,6 +7,7 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
+    #[sea_orm(unique_key = "idx_alwa_listings_seller_phone_idempotency_key")]
     pub seller_phone: String,
     pub seller_name: Option<String>,
     pub crop: String,
@@ -21,6 +22,8 @@ pub struct Model {
     pub status: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
+    #[sea_orm(unique_key = "idx_alwa_listings_seller_phone_idempotency_key")]
+    pub idempotency_key: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

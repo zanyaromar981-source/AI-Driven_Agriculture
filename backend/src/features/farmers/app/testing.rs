@@ -160,13 +160,29 @@ impl SignInChallengeRepository for Fakes {
         Ok(self.script.lock().expect("script lock").challenge.clone())
     }
 
-    async fn save(&self, challenge: &SignInChallenge) -> Result<(), AppError> {
+    async fn save_if_due(
+        &self,
+        challenge: &SignInChallenge,
+        sent_before: chrono::DateTime<chrono::Utc>,
+    ) -> Result<bool, AppError> {
+        let mut script = self.script.lock().expect("script lock");
+
+        if script
+            .challenge
+            .as_ref()
+            .is_some_and(|open| *open.sent_at() > sent_before)
+        {
+            return Ok(false);
+        }
+
+        script.challenge = Some(challenge.clone());
+        drop(script);
+
         self.record(Call::SaveChallenge {
             phone: String::from(challenge.phone()),
         });
-        self.script.lock().expect("script lock").challenge = Some(challenge.clone());
 
-        Ok(())
+        Ok(true)
     }
 
     async fn record_attempt(

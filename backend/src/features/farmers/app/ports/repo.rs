@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 
 use crate::{
     features::farmers::{
@@ -25,8 +26,15 @@ pub trait FarmerRepository: Send + Sync + std::fmt::Debug {
 pub trait SignInChallengeRepository: Send + Sync + std::fmt::Debug {
     async fn find_by_phone(&self, phone: &Phone) -> Result<Option<SignInChallenge>, AppError>;
 
-    /// Stores the challenge, replacing any other the phone has.
-    async fn save(&self, challenge: &SignInChallenge) -> Result<(), AppError>;
+    /// Stores the challenge, replacing any other the phone has, unless that
+    /// other one was sent after `sent_before`. Returns whether it was stored.
+    /// The check and the write are one step, so several requests for a code
+    /// at the same moment store, and send, only one.
+    async fn save_if_due(
+        &self,
+        challenge: &SignInChallenge,
+        sent_before: DateTime<Utc>,
+    ) -> Result<bool, AppError>;
 
     /// Counts one attempt against the phone's challenge and returns it, in
     /// one step. Returns `None` when the phone has no challenge or has used

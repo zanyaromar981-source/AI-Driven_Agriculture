@@ -190,7 +190,12 @@ impl FarmRepository for FarmPostgresRepository {
         let model = farms::ActiveModel::from(entity)
             .update(&transaction)
             .await
-            .map_err(database_error)?;
+            .map_err(|error| match error {
+                // The farm was deleted between this request loading it and
+                // writing it: it is gone, which is not a server fault.
+                DbErr::RecordNotUpdated => GlobalAppError::NotFound.into(),
+                other => database_error(other),
+            })?;
 
         // Cells are never added or removed after creation, so an update only
         // has to move the repainted cells to the crop they now carry. Cells

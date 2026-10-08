@@ -57,7 +57,7 @@ Shapes are those of `BACKEND.md` 2.2. Notes on what the backend does with them:
 - `area_dunam` is the area inside the walked outline (not rounded). `crops[].dunam` counts painted cells, 25 cells to a dunam. `crops` never lists `empty`; largest crop first.
 - The farm's cells are every 10 m cell whose centre is inside the outline. The backend works this list out itself; cells the app did not paint come back as `empty`.
 - A painted cell that is not inside the outline is left out and listed in `dropped_cells` as `{"e", "n"}`. This is not an error.
-- `Idempotency-Key` on `POST /v1/farms` is honoured: a repeat with the same key and phone returns the farm created the first time, with status `201` and an empty `dropped_cells`.
+- `Idempotency-Key` on `POST /v1/farms` (and on `POST /v1/alwa/listings`) is honoured: a repeat with the same key and phone returns the farm created the first time, with status `201` and an empty `dropped_cells`.
 - `PUT /v1/farms/{id}/cells` changes only the cells listed. To clear a cell, send it with `"crop": "empty"`.
 - A farm of another phone answers `404`, the same as a farm that does not exist.
 - Not sent yet, because there are no satellite readings in the database: `status`, `last_picture`, `picture_date`, and on cells `greenness_pct`, `level`, `inside_pct`. The app already treats them as optional.

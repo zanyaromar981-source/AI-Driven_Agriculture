@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sea_orm::{
     ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryOrder,
-    sea_query::OnConflict,
+    sea_query::{Expr, ExprTrait, OnConflict},
 };
 
 use crate::{
@@ -69,12 +69,32 @@ impl FireRepository for FirePostgresRepository {
                         fires::Column::Source,
                         fires::Column::UpdatedAt,
                     ])
+                    // A slower copy of a job must not put an older sighting
+                    // back over a newer one.
+                    .action_and_where(
+                        Expr::cust("excluded.detected_at")
+                            .gte(Expr::col((fires::Entity, fires::Column::DetectedAt))),
+                    )
                     .to_owned(),
             )
             .exec_with_returning(&self.conn)
-            .await
-            .map_err(database_error)?;
+            .await;
 
-        Fire::try_from(model)
+        match model {
+            Ok(model) => Fire::try_from(model),
+            // Nothing was written because a newer sighting is stored: answer
+            // with that one.
+            Err(DbErr::RecordNotInserted | DbErr::RecordNotFound(_)) => {
+                let kept = fires::Entity::find()
+                    .filter(fires::Column::ExternalId.eq(entity.external_id().as_str()))
+                    .one(&self.conn)
+                    .await
+                    .map_err(database_error)?
+                    .ok_or(GlobalAppError::NotFound)?;
+
+                Fire::try_from(kept)
+            }
+            Err(error) => Err(database_error(error)),
+        }
     }
 }

@@ -14,9 +14,9 @@ use crate::{
             },
         },
         domain::{
-            self, Deal, DealsSummary, DisplayName, HistoryDays, Listing, ListingCard, ListingDraft,
-            Market, MarketSlug, Note, Offer, OfferDraft, PlacedOffer, Price, PricePerKg,
-            PriceSource, QuantityKg, ZoneSlug,
+            self, Deal, DealsSummary, DisplayName, HistoryDays, IdempotencyKey, Listing,
+            ListingCard, ListingDraft, Market, MarketSlug, Note, Offer, OfferDraft, PlacedOffer,
+            Price, PricePerKg, PriceSource, QuantityKg, ZoneSlug,
         },
     },
     shared::{DomainError, Phone},
@@ -649,8 +649,9 @@ pub struct PostAlwaListingParams {
 }
 
 impl PostAlwaListingParams {
-    pub fn into_input(self) -> Result<PostListingInput, AppError> {
+    pub fn into_input(self, idempotency_key: Option<String>) -> Result<PostListingInput, AppError> {
         Ok(PostListingInput {
+            idempotency_key: idempotency_key.map(IdempotencyKey::new).transpose()?,
             market: MarketSlug::new(self.market)?,
             draft: ListingDraft {
                 seller_name: self.seller_name.map(DisplayName::new).transpose()?,
