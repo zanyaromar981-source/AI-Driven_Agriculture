@@ -13,6 +13,7 @@ Last update: 2026-10-08 17:09
 - Web: time-machine app `web/index.html`; Ministry dashboard template `web/dashboard.html` (map-first, no data wired); sign-in mock `web/app_signin.html`; 50 logos `web/logos.html`
 - Design in Pencil, one file `design/jutyar_app.pen`: page Sign in (phone, code, my farms), page Add farm (walk-and-tap corners, paint the 10 m grid with crop emojis, farm ready)
 - Repo on GitHub with CLAUDE.md rules
+- Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
 
 ## In progress

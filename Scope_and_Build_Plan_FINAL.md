@@ -1,5 +1,7 @@
 # FINAL scope and build plan — "Farm Doctor" (2026-10-08)
 
+> Updated 2026-10-08 evening: the farmer side is a **Flutter mobile app** (working name Jutyar); the Telegram bot is out. Details in STATUS.md and PROGRESS.md.
+
 Replaces `Scope_Wheat_Drought_Alarm.md`. Decisions behind it: no long-range forecasts (now + 10 days only); software only; helpful for the public; everything backed by `reports/What_AI_Can_Do_For_KRI_Agriculture.md` (analysis of 96,941 papers) and `reports/Farm_Advice_Research.md`.
 
 ## One sentence
@@ -25,7 +27,7 @@ Five AIs watch Kurdistan's farmland from space, from the weather, from farmers' 
 Gets the five outputs as one JSON plus a short rulebook. Answers: most likely cause, how sure, **what to do now** (timing, non-chemical steps, "call the extension officer / vet"), what it cannot tell, and **which input drove each conclusion**. Hard rules: no pesticide or fertilizer doses; says "unsure, see an officer" when inputs conflict or confidence is low; answers only from the rulebook and checked notes; logs every case.
 
 ## Screens
-1. **Telegram bot (farmers):** send a location pin, a voice note or text in Sorani, or photos → the doctor's answer plus the field's satellite picture. Weekly "this week on your farm" message per village.
+1. **Flutter mobile app (farmers, working name Jutyar):** sign in with a phone number and an SMS code (no password, no name; several farms per number); add a farm by walking to each corner and tapping a GPS dot (works offline), then painting the 10 m grid with crop emojis (several crops per farm); Home shows every farm from space (cells coloured normal / watch / alarm), this week's 10-day alerts and actions; tap a cell for the small card, or switch to crop-plot and whole-farm views; Ask the Doctor with text and photos (voice later); report a problem; alerts list; one red push a day at most. Designed in Pencil (`design/jutyar_app.pen`) first, Flutter after.
 2. **Web map (Ministry and public):** Kurdistan → 5 areas → 16 zones: season label, field condition, 10-day alerts, outbreak pins, dams, farmland-loss history. Built on the existing app (hex map, time machine, Sorani).
 3. **Time machine (proof):** replay 2008 (drought) and 2016 (wet) as they were measured; "From space" layer. The forecast game is removed.
 
@@ -45,7 +47,7 @@ Long-range forecasts (season, El Niño, climate), the Predict/Reveal game, droug
 | When | Backend | Frontend | Data/AI | Testing | Presentation |
 |---|---|---|---|---|---|
 | **Day 1 morning** | FastAPI skeleton; tool endpoints: field_eye, season_check, weather10, dam_watch (wrap existing scripts) | strip forecast game from web app; new "Now" home: season label + 10-day alerts | rulebook v1 (weather rules with numbers); KRI disease notes (rust, sunn pest, septoria, aphids, weeds) | test set: 20 field pins with known answers (2008 brown, 2016 green, 2025 Dukan) | storyline + honesty slide |
-| **Day 1 afternoon** | Telegram bot: pin → field_eye + doctor; photos → photo_triage | outbreak pins layer; Ministry area panel | doctor prompt: JSON in, Sorani out, provenance, refusal rules | 10 Sorani questions to the doctor, scored by a native speaker | record the 2008 time-machine clip |
+| **Day 1 afternoon** | Flutter skeleton: sign in, farm list, farm home (from the Pencil screens) | outbreak pins layer; Ministry area panel | doctor prompt: JSON in, Sorani out, provenance, refusal rules | 10 Sorani questions to the doctor, scored by a native speaker | record the 2008 time-machine clip |
 | **Day 1 night** | report logging; voice note → Sorani speech-to-text (Google Chirp) | polish animations; phone layout | photo test on Halabja dataset + 20 web photos | the disagreement case works end to end | rehearse demo 1 |
 | **Day 2 morning** | weekly village message job; dam_watch live refresh | "From space" layer in the Now view | calibrate confidence wording; weekly brief generator | full demo run ×3, fix breaks | slides final, 3-min timing |
 | **Day 2 afternoon** | freeze; backups; offline fallback JSON | freeze | validation numbers on the honesty slide | final checklist | rehearse ×3 with the judges' questions |
@@ -54,7 +56,7 @@ Owner of each script today: `web/build_data.py`, `web/build_greenness.py`, `evid
 
 ## Open items (need you)
 1. Claude API key.
-2. Telegram bot token (BotFather, 2 minutes).
+2. A Flutter build machine and one test phone (Android).
 3. Google Cloud key for Sorani speech-to-text (or type-only for the demo).
 4. A native Sorani speaker to score the doctor's answers.
 5. Ask the organizers whether pre-built work is allowed.
