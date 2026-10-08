@@ -16,12 +16,16 @@ import '../../store/draft.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/farm_map.dart';
+import 'farm_edit.dart';
 import 'paint_screen.dart';
 
 /// Add farm, step 1 of 3: mark the field edge, either by tapping "Dot" at each
 /// corner, or by walking the edge while the app places the dots.
 class CornersScreen extends StatefulWidget {
-  const CornersScreen({super.key});
+  const CornersScreen({super.key, this.edit});
+
+  /// Set when an existing farm is being edited: start from its border.
+  final FarmEdit? edit;
 
   @override
   State<CornersScreen> createState() => _CornersScreenState();
@@ -66,7 +70,13 @@ class _CornersScreenState extends State<CornersScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _restoreDraft();
+    final edit = widget.edit;
+    if (edit != null) {
+      _points.addAll(edit.points);
+      _centred = true;
+    } else {
+      _restoreDraft();
+    }
     _startGps();
   }
 
@@ -79,7 +89,9 @@ class _CornersScreenState extends State<CornersScreen>
       _walkMode = d.walk;
     });
     _centred = true;
-    if (_mapReady) _showAllDots();
+    if (_mapReady) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showAllDots());
+    }
     showToast(context, AppScope.read(context).s.draftBack);
   }
 
@@ -98,7 +110,50 @@ class _CornersScreenState extends State<CornersScreen>
     );
   }
 
-  void _saveDraft() => Draft.save(_points, walk: _walkMode);
+  /// The draft is for a new farm only; an edit starts from the saved farm.
+  void _saveDraft() {
+    if (widget.edit == null) Draft.save(_points, walk: _walkMode);
+  }
+
+  /// Drag a dot to move it (not while a walk is being recorded).
+  int? _dragging;
+
+  /// The dot under [local] (screen position on the map), if any.
+  int? _dotAt(Offset local) {
+    if (!_mapReady) return null;
+    final cam = _map.camera;
+    int? best;
+    var bestD = 28.0;
+    for (final (i, p) in _points.indexed) {
+      final d = (cam.latLngToScreenOffset(_ll(p)) - local).distance;
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  void _endDrag() {
+    if (_dragging == null) return;
+    setState(() => _dragging = null);
+    _saveDraft();
+  }
+
+  void _moveDot(int i, Offset delta) {
+    if (i >= _points.length) return;
+    final cam = _map.camera;
+    final at = cam.latLngToScreenOffset(_ll(_points[i])) + delta;
+    final ll = cam.screenOffsetToLatLng(at);
+    setState(
+      () => _points[i] = GeoPoint(
+        lat: ll.latitude,
+        lon: ll.longitude,
+        accM: 0,
+        t: DateTime.now(),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -319,7 +374,8 @@ class _CornersScreenState extends State<CornersScreen>
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => PaintScreen(points: List.of(_points)),
+        builder: (_) =>
+            PaintScreen(points: List.of(_points), edit: widget.edit),
       ),
     );
   }
@@ -351,19 +407,26 @@ class _CornersScreenState extends State<CornersScreen>
         ? s.walked(_walkedM.round(), _points.length)
         : _points.isEmpty
         ? null
-        : s.corners(_points.length);
+        : _points.length < 3
+        ? s.corners(_points.length)
+        : '${s.corners(_points.length)} · '
+              '\u2066${fmtM2(polygonAreaM2(dots))}\u2069 ${s.m2}';
 
     return MapPage(
       step: 1,
       heading: MapHeading(
         ku: ku,
-        title: s.cornersTitle,
+        title: widget.edit == null ? s.cornersTitle : s.editTitle,
         sub: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 10,
           children: [
             Text(
-              _walkMode ? s.walkSub : s.cornersSub,
+              _walkMode
+                  ? s.walkSub
+                  : widget.edit != null
+                  ? s.dragHint
+                  : s.cornersSub,
               style: jText(ku, size: 15, color: JColors.muted),
             ),
             _ModeToggle(
@@ -382,17 +445,35 @@ class _CornersScreenState extends State<CornersScreen>
               options: MapOptions(
                 initialCenter: _slemani,
                 initialZoom: 16,
+                // Editing: start already framed on the farm, so its map
+                // pictures load straight away.
+                initialCameraFit: widget.edit == null
+                    ? null
+                    : CameraFit.bounds(
+                        bounds: LatLngBounds.fromPoints([
+                          for (final p in widget.edit!.points) _ll(p),
+                        ]),
+                        padding: const EdgeInsets.fromLTRB(40, 90, 40, 120),
+                        maxZoom: 19,
+                      ),
                 minZoom: 5,
                 maxZoom: 20,
                 backgroundColor: const Color(0xFF717A50),
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                // While a finger holds a dot the map stays still.
+                interactionOptions: InteractionOptions(
+                  flags: _dragging != null
+                      ? InteractiveFlag.none
+                      : InteractiveFlag.all & ~InteractiveFlag.rotate,
                 ),
                 onTap: kTestMode ? (_, ll) => _addTapped(ll) : null,
                 onMapReady: () {
                   _mapReady = true;
                   if (_points.isNotEmpty) {
-                    _showAllDots();
+                    if (widget.edit == null) {
+                      WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => _showAllDots(),
+                      );
+                    }
                   } else {
                     _centreOnce();
                   }
@@ -447,16 +528,26 @@ class _CornersScreenState extends State<CornersScreen>
                   ),
                 MarkerLayer(
                   markers: [
-                    for (final d in dots)
+                    for (final (i, d) in dots.indexed)
                       Marker(
                         point: d,
-                        width: 16,
-                        height: 16,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: JColors.accent, width: 3),
+                        width: 30,
+                        height: 30,
+                        child: IgnorePointer(
+                          child: Center(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 120),
+                              width: _dragging == i ? 26 : 16,
+                              height: _dragging == i ? 26 : 16,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: JColors.accent,
+                                  width: 3,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -474,6 +565,23 @@ class _CornersScreenState extends State<CornersScreen>
                         ),
                       ),
                   ],
+                ),
+                // A finger that lands on a dot moves that dot; any other
+                // touch still pans and zooms the map.
+                Listener(
+                  behavior: HitTestBehavior.translucent,
+                  onPointerDown: (e) {
+                    if (_recording || _dragging != null) return;
+                    final i = _dotAt(e.localPosition);
+                    if (i != null) setState(() => _dragging = i);
+                  },
+                  onPointerMove: (e) {
+                    final i = _dragging;
+                    if (i != null) _moveDot(i, e.delta);
+                  },
+                  onPointerUp: (_) => _endDrag(),
+                  onPointerCancel: (_) => _endDrag(),
+                  child: const SizedBox.expand(),
                 ),
                 mapAttribution(style),
               ],

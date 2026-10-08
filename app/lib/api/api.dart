@@ -277,6 +277,17 @@ abstract class Api {
     String? idempotencyKey,
   });
 
+  /// PUT /farms/{id}: change a farm's outline, cells and name. Same body
+  /// and rules as [createFarm]; answers like it.
+  Future<CreateFarmResult> updateFarm(
+    String id,
+    NewFarmRequest request, {
+    String? idempotencyKey,
+  });
+
+  /// DELETE /farms/{id}: the farm is gone for good (answers 204).
+  Future<void> deleteFarm(String id);
+
   /// Use a token saved on the phone from an earlier sign-in.
   void useToken(String token);
 

@@ -82,6 +82,8 @@ class _Server {
               {'e': 1, 'n': 1, 'crop': 'wheat'},
             ],
           });
+        case ('PUT', '/farms/f_1'):
+          send(200, {'farm': farm, 'dropped_cells': []});
         case ('GET', '/farms/f_1'):
           send(200, {'farm': farm});
         case ('GET', '/farms/f_1/status'):
@@ -230,6 +232,30 @@ void main() {
     });
     expect(res.farm.summary.id, 'f_1');
     expect(res.droppedCells, 1);
+  });
+
+  test('edit farm: PUT /farms/{id} with body and Idempotency-Key', () async {
+    final api = await signedIn();
+    final t = DateTime.utc(2026, 10, 8, 21, 0);
+    final res = await api.updateFarm(
+      'f_1',
+      NewFarmRequest(
+        name: 'Renamed',
+        points: [GeoPoint(lat: 36.03, lon: 44.6, accM: 0, t: t)],
+        cells: const [CellCrop(e: 46415, n: 398748, crop: 'barley')],
+        createdOfflineAt: t,
+      ),
+      idempotencyKey: 'key-edit',
+    );
+    final req = server.seen.last;
+    expect(req.method, 'PUT');
+    expect(req.path, endsWith('/farms/f_1'));
+    expect(req.headers.value('idempotency-key'), 'key-edit');
+    final body = jsonDecode(req.body) as Map;
+    expect(body['name'], 'Renamed');
+    expect((body['cells'] as List).single['crop'], 'barley');
+    expect(res.farm.summary.id, 'f_1');
+    expect(res.droppedCells, 0);
   });
 
   test('farm, status and plan are read into the app models', () async {

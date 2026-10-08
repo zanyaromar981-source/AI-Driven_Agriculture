@@ -249,5 +249,33 @@ class S {
   String get selectedArea => t('هەڵبژێردراو', 'Selected');
   String get oneSquare => t('یەک خانە', 'One square');
   String get insideFarm => t('لەناو کێڵگەکەدا', 'inside the farm');
+  // Edit a farm
+  String get editFarm => t('دەستکاری', 'Edit');
+  String get editTitle =>
+      t('سنووری کێڵگەکە دەستکاری بکە', 'Edit the field edge');
+  String get dragHint => t(
+    'خاڵێک ڕابکێشە بۆ جووڵاندنی، یان خاڵ زیاد بکە',
+    'Drag a dot to move it, or add dots',
+  );
+  String get saveChanges => t('گۆڕانکارییەکان پاشەکەوت بکە', 'Save changes');
+  String get changesSaved => t('گۆڕانکارییەکان پاشەکەوت کران', 'Changes saved');
+  String get changesSavedOffline => t(
+    'لەسەر مۆبایلەکە پاشەکەوت کران. کە ئینتەرنێت هەبوو دەنێردرێن',
+    'Saved on the phone. The changes upload when there is internet.',
+  );
+  // Delete a farm
+  String get deleteFarm => t('سڕینەوەی کێڵگە', 'Delete farm');
+  String deleteTitle(String name) => t('"$name" بسڕیتەوە؟', 'Delete "$name"?');
+  String get deleteBody => t('کێڵگەکە و سنوور و ڕووەکەکانی دەسڕێنەوە. ناگەڕێتەوە.',
+      'The farm, its border and its crops are removed. This cannot be undone.');
+  String get delete => t('بیسڕەوە', 'Delete');
+  String get deleted => t('کێڵگەکە سڕایەوە', 'Farm deleted');
+  String get deletedOffline => t('لەسەر مۆبایلەکە سڕایەوە. کە ئینتەرنێت هەبوو سێرڤەر ئاگادار دەکرێتەوە',
+      'Deleted on the phone. The server is told when there is internet.');
+  String get farmMenu => t('کێڵگە', 'Farm');
+
   String squares(int n) => t('$n خانە', n == 1 ? '1 square' : '$n squares');
+
+  // Each farm opens on its own screen (user, 2026-10-08); back to the list.
+  String get backToFarms => 'My farms';
 }

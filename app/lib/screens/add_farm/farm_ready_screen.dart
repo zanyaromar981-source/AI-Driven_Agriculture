@@ -11,6 +11,7 @@ import '../../store/outbox.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/farm_map.dart';
+import 'farm_edit.dart';
 
 /// Add farm, step 3 of 3: check the crops, name the farm, save it.
 class FarmReadyScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class FarmReadyScreen extends StatefulWidget {
     required this.inside,
     required this.corners,
     required this.crops,
+    this.edit,
   });
 
   final List<GeoPoint> points;
@@ -33,12 +35,15 @@ class FarmReadyScreen extends StatefulWidget {
   final Map<CellKey, List<LatLng>> corners;
   final Map<CellKey, String> crops;
 
+  /// Set when an existing farm is being edited: saving changes it (PUT).
+  final FarmEdit? edit;
+
   @override
   State<FarmReadyScreen> createState() => _FarmReadyScreenState();
 }
 
 class _FarmReadyScreenState extends State<FarmReadyScreen> {
-  String? _name;
+  late String? _name = widget.edit?.name;
   bool _busy = false;
 
   /// crop code -> its cells, biggest first; unpainted cells count as "empty".
@@ -135,8 +140,9 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
               .reduce((a, b) => a + b) /
           widget.outline.length,
     );
+    final edit = widget.edit;
     final summary = FarmSummary(
-      id: 'local',
+      id: edit?.id ?? 'local',
       name: name,
       areaDunam: _round2(_totalM2 / 2500),
       crops: [
@@ -148,10 +154,10 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
       lat: centre.latitude,
       lon: centre.longitude,
     );
-    await Outbox.instance.add(request, summary);
+    await Outbox.instance.add(request, summary, farmId: edit?.id);
     // Keep the map around this farm on the phone, for viewing it offline later.
     prefetchFarmMap(widget.outline);
-    await Draft.clear();
+    if (edit == null) await Draft.clear();
     final result = await Outbox.instance.flush(scope.api);
     if (!mounted) return;
     if (result.rejected.contains(name)) {
@@ -159,11 +165,18 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
       setState(() => _busy = false);
       return;
     }
-    showToast(
-      context,
-      Outbox.instance.items.isEmpty ? s.saved : s.savedOffline,
+    final uploaded = !Outbox.instance.items.any(
+      (i) => i.request.name == name && i.farmId == edit?.id,
     );
-    Navigator.of(context).popUntil((r) => r.isFirst);
+    if (edit == null) {
+      showToast(context, uploaded ? s.saved : s.savedOffline);
+      Navigator.of(context).popUntil((r) => r.isFirst);
+    } else {
+      // Back to the farm that was being edited: close farm ready, paint, edge.
+      showToast(context, uploaded ? s.changesSaved : s.changesSavedOffline);
+      var closed = 0;
+      Navigator.of(context).popUntil((r) => closed++ >= 3 || r.isFirst);
+    }
   }
 
   static double _round2(double v) => (v * 100).round() / 100;
@@ -341,7 +354,7 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
           onPressed: _busy ? null : () => Navigator.of(context).pop(),
         ),
         PrimaryButton(
-          label: s.save,
+          label: widget.edit == null ? s.save : s.saveChanges,
           icon: Icons.check_rounded,
           loading: _busy,
           onPressed: _save,

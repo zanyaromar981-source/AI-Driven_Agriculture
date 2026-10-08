@@ -11,19 +11,22 @@ import '../../geo.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/farm_map.dart';
+import 'farm_edit.dart';
 import 'farm_ready_screen.dart';
 
 /// Add farm, step 2 of 3: swipe over the 10 m cells, then pick what grows there.
 class PaintScreen extends StatefulWidget {
-  const PaintScreen({super.key, required this.points});
+  const PaintScreen({super.key, required this.points, this.edit});
   final List<GeoPoint> points;
+
+  /// Set when editing a farm: its crops are painted in from the start.
+  final FarmEdit? edit;
 
   @override
   State<PaintScreen> createState() => _PaintScreenState();
 }
 
 class _PaintScreenState extends State<PaintScreen> {
-
   late final List<LatLng> _outline = [
     for (final p in widget.points) LatLng(p.lat, p.lon),
   ];
@@ -37,7 +40,12 @@ class _PaintScreenState extends State<PaintScreen> {
     for (final c in _cells) c: cellCorners(c),
   };
 
-  final Map<CellKey, String> _crops = {};
+  /// Crops painted so far; when editing, the farm's crops for every cell
+  /// that is still inside the (maybe changed) border.
+  late final Map<CellKey, String> _crops = {
+    for (final e in (widget.edit?.crops ?? const <CellKey, String>{}).entries)
+      if (_cellSet.contains(e.key)) e.key: e.value,
+  };
   final Set<CellKey> _selected = {};
   String? _lastCrop;
   Offset? _lastDrag;
@@ -98,6 +106,7 @@ class _PaintScreenState extends State<PaintScreen> {
       MaterialPageRoute<void>(
         builder: (_) => FarmReadyScreen(
           points: widget.points,
+          edit: widget.edit,
           outline: _outline,
           cells: _cells,
           inside: _inside,

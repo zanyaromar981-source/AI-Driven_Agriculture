@@ -24,6 +24,9 @@ class FakeApi implements Api {
   String? _phone;
   final List<Map<String, dynamic>> _created = [];
   final Map<String, Map<String, dynamic>> _byKey = {};
+
+  /// Ids of deleted farms (also hides deleted demo farms).
+  final Set<String> _deleted = {};
   bool _loaded = false;
 
   /// For tests: skip the internet check and the file on the phone.
@@ -37,6 +40,9 @@ class FakeApi implements Api {
     for (final f in (j?['created'] as List? ?? const [])) {
       _created.add((f as Map).cast<String, dynamic>());
     }
+    _deleted.addAll([
+      for (final d in (j?['deleted'] as List? ?? const [])) d as String,
+    ]);
     (j?['keys'] as Map?)?.forEach((k, v) {
       final f = _created.where((c) => c['id'] == v);
       if (f.isNotEmpty) _byKey[k as String] = f.first;
@@ -48,6 +54,7 @@ class FakeApi implements Api {
     await LocalStore.write('fake_server', {
       'created': _created,
       'keys': {for (final e in _byKey.entries) e.key: e.value['id']},
+      'deleted': _deleted.toList(),
     });
   }
 
@@ -133,8 +140,80 @@ class FakeApi implements Api {
     if (seen != null) {
       return CreateFarmResult(farm: Farm.fromJson(seen), droppedCells: 0);
     }
-    final body = request.toJson();
+    final (farm, dropped) = _buildFarm(
+      request.toJson(),
+      'f_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    _created.add(farm);
+    if (idempotencyKey != null) _byKey[idempotencyKey] = farm;
+    await _save();
+    final response = <String, dynamic>{'farm': farm, 'dropped_cells': dropped};
+    return CreateFarmResult(
+      farm: Farm.fromJson(response['farm'] as Map<String, dynamic>),
+      droppedCells: (response['dropped_cells'] as List).length,
+    );
+  }
 
+  /// PUT /farms/{id}: replaces the outline, cells and name of one of this
+  /// phone's farms (a demo farm gets an edited copy that hides the original).
+  @override
+  Future<CreateFarmResult> updateFarm(
+    String id,
+    NewFarmRequest request, {
+    String? idempotencyKey,
+  }) async {
+    await _online();
+    await _load();
+    await Future<void>.delayed(_latency);
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    final seen = idempotencyKey == null ? null : _byKey[idempotencyKey];
+    if (seen != null) {
+      return CreateFarmResult(farm: Farm.fromJson(seen), droppedCells: 0);
+    }
+    if (!_farmsJson(_phone!).any((f) => f['id'] == id)) {
+      throw ApiException(404, 'not_found');
+    }
+    final old = _farmsJson(_phone!).firstWhere((f) => f['id'] == id);
+    final (farm, dropped) = _buildFarm(request.toJson(), id);
+    farm['status'] = old['status'] ?? 'none';
+    farm['last_picture'] = old['last_picture'];
+    final i = _created.indexWhere((f) => f['id'] == id);
+    if (i >= 0) {
+      _created[i] = farm;
+    } else {
+      _created.add(farm);
+    }
+    if (idempotencyKey != null) _byKey[idempotencyKey] = farm;
+    await _save();
+    final response = <String, dynamic>{'farm': farm, 'dropped_cells': dropped};
+    return CreateFarmResult(
+      farm: Farm.fromJson(response['farm'] as Map<String, dynamic>),
+      droppedCells: (response['dropped_cells'] as List).length,
+    );
+  }
+
+  /// DELETE /farms/{id}: 404 when it is not one of this phone's farms.
+  @override
+  Future<void> deleteFarm(String id) async {
+    await _online();
+    await _load();
+    await Future<void>.delayed(_latency);
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    if (!_farmsJson(_phone!).any((f) => f['id'] == id)) {
+      throw ApiException(404, 'not_found');
+    }
+    _created.removeWhere((f) => f['id'] == id);
+    _deleted.add(id);
+    await _save();
+  }
+
+  /// Server rules for a farm body: area = exact outline area; cells = every
+  /// cell that overlaps the outline, cut along the border; sent cells that do
+  /// not overlap are dropped; overlapping cells not sent count as "empty".
+  (Map<String, dynamic>, List<Map<String, dynamic>>) _buildFarm(
+    Map<String, dynamic> body,
+    String id,
+  ) {
     final points = [
       for (final p in body['points'] as List)
         LatLng(
@@ -148,10 +227,6 @@ class FakeApi implements Api {
     if (selfIntersects(points)) {
       throw ApiException(422, 'bad_polygon', {'field': 'points'});
     }
-
-    // Server rules: area = exact outline area; cells = every cell that overlaps
-    // the outline, cut along the border; sent cells that do not overlap are
-    // dropped; overlapping cells that were not sent count as "empty".
     final touching = cellsTouching(points);
     final sent = <CellKey, String>{
       for (final c in body['cells'] as List)
@@ -183,9 +258,8 @@ class FakeApi implements Api {
         points.map((p) => p.latitude).reduce((a, b) => a + b) / points.length;
     final lon =
         points.map((p) => p.longitude).reduce((a, b) => a + b) / points.length;
-
     final farm = <String, dynamic>{
-      'id': 'f_${DateTime.now().microsecondsSinceEpoch}',
+      'id': id,
       'name': body['name'],
       'area_dunam': _round2(polygonAreaM2(points) / 2500),
       'crops': [
@@ -201,14 +275,7 @@ class FakeApi implements Api {
       'cells': cells,
       'picture_date': null,
     };
-    _created.add(farm);
-    if (idempotencyKey != null) _byKey[idempotencyKey] = farm;
-    await _save();
-    final response = <String, dynamic>{'farm': farm, 'dropped_cells': dropped};
-    return CreateFarmResult(
-      farm: Farm.fromJson(response['farm'] as Map<String, dynamic>),
-      droppedCells: (response['dropped_cells'] as List).length,
-    );
+    return (farm, dropped);
   }
 
   // ---- Farm Home: GET /farms/{id}, /status, /plan ----
@@ -758,9 +825,16 @@ class FakeApi implements Api {
 
   static double _round2(double v) => (v * 100).round() / 100;
 
+  /// Demo farms (unless edited, then the edited copy in [_created] is used)
+  /// plus farms made on this phone.
   List<Map<String, dynamic>> _farmsJson(String phone) => [
-    ...(phone.endsWith('0') ? const <Map<String, dynamic>>[] : _demoFarms),
-    ..._created,
+    if (!phone.endsWith('0'))
+      for (final d in _demoFarms)
+        if (!_created.any((c) => c['id'] == d['id']) &&
+            !_deleted.contains(d['id']))
+          d,
+    for (final c in _created)
+      if (!_deleted.contains(c['id'])) c,
   ];
 
   static const _demoFarms = <Map<String, dynamic>>[

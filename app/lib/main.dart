@@ -91,7 +91,8 @@ class _JutyarAppState extends State<JutyarApp> with WidgetsBindingObserver {
   }
 
   void _flush() {
-    if (Outbox.instance.items.isNotEmpty) Outbox.instance.flush(_api);
+    final box = Outbox.instance;
+    if (box.items.isNotEmpty || box.deletes.isNotEmpty) box.flush(_api);
   }
 
   @override

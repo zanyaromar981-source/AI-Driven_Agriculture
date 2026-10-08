@@ -12,6 +12,7 @@ class PendingFarm {
     required this.request,
     required this.summary,
     required this.queuedAt,
+    this.farmId,
   });
 
   /// Sent as `Idempotency-Key`, so a retry never makes a second farm.
@@ -22,11 +23,15 @@ class PendingFarm {
   final FarmSummary summary;
   final DateTime queuedAt;
 
+  /// Set when this is a change to an existing farm (PUT), null for a new farm.
+  final String? farmId;
+
   Map<String, dynamic> toJson() => {
     'key': key,
     'request': request.toJson(),
     'summary': summary.toJson(),
     'queued_at': queuedAt.toUtc().toIso8601String(),
+    if (farmId != null) 'farm_id': farmId,
   };
 
   factory PendingFarm.fromJson(Map<String, dynamic> j) => PendingFarm(
@@ -34,6 +39,7 @@ class PendingFarm {
     request: NewFarmRequest.fromJson(j['request'] as Map<String, dynamic>),
     summary: FarmSummary.fromJson(j['summary'] as Map<String, dynamic>),
     queuedAt: DateTime.parse(j['queued_at'] as String),
+    farmId: j['farm_id'] as String?,
   );
 }
 
@@ -57,6 +63,10 @@ class Outbox extends ChangeNotifier {
 
   static const _name = 'outbox';
   final List<PendingFarm> _items = [];
+
+  /// Farms deleted on the phone, waiting to be deleted on the server.
+  final List<String> _deletes = [];
+  List<String> get deletes => List.unmodifiable(_deletes);
   bool _loaded = false;
   bool _flushing = false;
 
@@ -66,6 +76,9 @@ class Outbox extends ChangeNotifier {
     if (_loaded) return;
     _loaded = true;
     final j = await LocalStore.read(_name);
+    _deletes.addAll([
+      for (final d in (j?['deletes'] as List? ?? const [])) d as String,
+    ]);
     for (final e in (j?['items'] as List? ?? const [])) {
       try {
         _items.add(PendingFarm.fromJson(e as Map<String, dynamic>));
@@ -76,6 +89,7 @@ class Outbox extends ChangeNotifier {
 
   Future<void> _persist() => LocalStore.write(_name, {
     'items': [for (final i in _items) i.toJson()],
+    'deletes': _deletes,
   });
 
   static String newKey() {
@@ -84,9 +98,27 @@ class Outbox extends ChangeNotifier {
         '${List.generate(8, (_) => r.nextInt(36).toRadixString(36)).join()}';
   }
 
-  Future<PendingFarm> add(NewFarmRequest request, FarmSummary summary) async {
+  /// Delete a farm: any waiting change to it is dropped, and the delete goes
+  /// to the server now or when there is internet.
+  Future<void> delete(String farmId) async {
     await load();
+    _items.removeWhere((i) => i.farmId == farmId);
+    if (!_deletes.contains(farmId)) _deletes.add(farmId);
+    await _persist();
+    notifyListeners();
+  }
+
+  /// Queue a new farm, or with [farmId] a change to an existing farm. A newer
+  /// change replaces an older one of the same farm that is still waiting.
+  Future<PendingFarm> add(
+    NewFarmRequest request,
+    FarmSummary summary, {
+    String? farmId,
+  }) async {
+    await load();
+    if (farmId != null) _items.removeWhere((i) => i.farmId == farmId);
     final item = PendingFarm(
+      farmId: farmId,
       key: newKey(),
       request: request,
       summary: summary,
@@ -98,38 +130,68 @@ class Outbox extends ChangeNotifier {
     return item;
   }
 
-  /// Try to send everything waiting, oldest first. Stops at the first sign of no internet.
+  /// Send everything waiting: deletes first, then new farms and edits, oldest
+  /// first. Stops at the first sign that the server cannot be reached now.
   Future<FlushResult> flush(Api api) async {
     await load();
-    if (_flushing || _items.isEmpty) return const FlushResult();
+    if (_flushing || (_items.isEmpty && _deletes.isEmpty)) {
+      return const FlushResult();
+    }
     _flushing = true;
     var sent = 0;
+    var changed = false;
     final rejected = <String>[];
     var offline = false;
+    // Keep and try later: no internet, not signed in, timeout, too many
+    // requests (429) or a server error. Losing a walked farm because the
+    // server was busy would be far worse than waiting.
+    bool later(ApiException e) =>
+        e.isOffline ||
+        const {401, 408, 429}.contains(e.status) ||
+        e.status >= 500;
     try {
+      for (final id in List.of(_deletes)) {
+        try {
+          await api.deleteFarm(id);
+        } on ApiException catch (e) {
+          if (later(e)) {
+            offline = e.isOffline;
+            return FlushResult(
+              sent: sent,
+              rejected: rejected,
+              offline: offline,
+            );
+          }
+          // 404: already gone. Any other refusal will not change on retry.
+        }
+        _deletes.remove(id);
+        changed = true;
+      }
       for (final item in List.of(_items)) {
         try {
-          await api.createFarm(item.request, idempotencyKey: item.key);
+          final id = item.farmId;
+          if (id == null) {
+            await api.createFarm(item.request, idempotencyKey: item.key);
+          } else {
+            await api.updateFarm(id, item.request, idempotencyKey: item.key);
+          }
           _items.remove(item);
           sent++;
+          changed = true;
         } on ApiException catch (e) {
-          // Keep the farm and try later: no internet, not signed in, timeout,
-          // too many requests (429) or a server error. Losing a walked farm
-          // because the server was busy would be far worse than waiting.
-          if (e.isOffline ||
-              const {401, 408, 429}.contains(e.status) ||
-              e.status >= 500) {
+          if (later(e)) {
             offline = e.isOffline;
             break;
           }
           // The server refused it (e.g. bad_polygon): sending again will not help.
           _items.remove(item);
           rejected.add(item.request.name);
+          changed = true;
         }
       }
     } finally {
       _flushing = false;
-      if (sent > 0 || rejected.isNotEmpty) {
+      if (changed) {
         await _persist();
         notifyListeners();
       }
