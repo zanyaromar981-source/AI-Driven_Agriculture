@@ -3,10 +3,13 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 
 use crate::{
-    app::{AuthContext, Pagination, User},
+    app::{AuthContext, User},
     features::farms::{
         app::{AppError, FarmRepository},
-        domain::{Cell, Crop, Farm, FarmName, FarmSummary, GridCell, Outline, PaintedCell, Point},
+        domain::{
+            Cell, Crop, Farm, FarmName, FarmSummary, GridCell, IdempotencyKey, Outline,
+            PaintedCell, Point,
+        },
     },
     shared::Phone,
 };
@@ -16,7 +19,8 @@ pub const MAX_CELLS: usize = 1_000;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RepositoryCall {
-    FindAllByOwner { owner: String, page: u64 },
+    FindAllByOwner { owner: String },
+    FindByIdempotencyKeyAndOwner { key: String, owner: String },
     FindByIdAndOwner { id: i32, owner: String },
     CountByOwner { owner: String },
     Create,
@@ -87,26 +91,33 @@ impl FakeFarmRepository {
 
 #[async_trait]
 impl FarmRepository for FakeFarmRepository {
-    async fn find_all_by_owner(
-        &self,
-        owner: &Phone,
-        pagination: &Pagination,
-    ) -> Result<(Vec<FarmSummary>, Option<u64>), AppError> {
+    async fn find_all_by_owner(&self, owner: &Phone) -> Result<Vec<FarmSummary>, AppError> {
         self.record(RepositoryCall::FindAllByOwner {
             owner: String::from(owner),
-            page: *pagination.page(),
         });
         self.guard()?;
 
         let script = self.script.lock().expect("script lock");
-        let rows = script
+
+        Ok(script
             .existing
             .as_ref()
             .map(|one| vec![summary_of(one)])
-            .unwrap_or_default();
-        let total = pagination.is_first_page().then_some(script.owned_count);
+            .unwrap_or_default())
+    }
 
-        Ok((rows, total))
+    async fn find_by_idempotency_key_and_owner(
+        &self,
+        key: &IdempotencyKey,
+        owner: &Phone,
+    ) -> Result<Option<Farm>, AppError> {
+        self.record(RepositoryCall::FindByIdempotencyKeyAndOwner {
+            key: key.as_str().to_string(),
+            owner: String::from(owner),
+        });
+        self.guard()?;
+
+        Ok(self.script.lock().expect("script lock").existing.clone())
     }
 
     async fn find_by_id_and_owner(&self, id: i32, owner: &Phone) -> Result<Option<Farm>, AppError> {
@@ -167,6 +178,7 @@ fn persisted(entity: &Farm, id: i32) -> Farm {
         entity.owner().clone(),
         entity.outline().clone(),
         cells,
+        entity.idempotency_key().clone(),
         *entity.created_offline_at(),
         *entity.created_at(),
         *entity.updated_at(),
@@ -225,6 +237,7 @@ pub fn a_farm() -> Farm {
         Phone::new(OWNER.to_string()).expect("phone"),
         an_outline(),
         vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)],
+        None,
         None,
         MAX_CELLS,
     )

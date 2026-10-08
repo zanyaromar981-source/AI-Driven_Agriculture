@@ -51,10 +51,16 @@ fn main() {
             // One invocation per feature: `-t` limits generation to that
             // feature's tables so each entity lands inside the feature that
             // owns it, instead of one shared module outside the features.
-            let entity_targets = [(
-                "farms,farm_cells",
-                "src/features/farms/infra/persistence/postgres/entities",
-            )];
+            let entity_targets = [
+                (
+                    "farms,farm_cells",
+                    "src/features/farms/infra/persistence/postgres/entities",
+                ),
+                (
+                    "farmers,sign_in_challenges",
+                    "src/features/farmers/infra/persistence/postgres/entities",
+                ),
+            ];
 
             for (table, output_dir) in entity_targets {
                 let entity_path = Path::new(&manifest_dir).join(output_dir);

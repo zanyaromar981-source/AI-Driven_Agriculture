@@ -5,7 +5,7 @@ pub mod routes;
 
 pub use dtos::{
     CellParams, CellResponse, CentroidResponse, CreateFarmParams, Crop, CropAreaResponse,
-    FarmResponse, FarmSummaryResponse, GridCellResponse, OutlinePointResponse, PointParams,
-    RepaintFarmCellsParams, SavedFarmResponse,
+    FarmResponse, FarmSummaryResponse, FarmsResponse, GridCellResponse, OneFarmResponse,
+    OutlinePointResponse, PointParams, RepaintFarmCellsParams, SavedFarmResponse,
 };
 pub use routes::routes;

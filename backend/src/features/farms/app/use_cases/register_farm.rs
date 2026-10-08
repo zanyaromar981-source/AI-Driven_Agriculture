@@ -6,7 +6,7 @@ use crate::{
     app::AuthContext,
     features::farms::{
         app::{AppError, FarmRepository},
-        domain::{Farm, FarmName, GridCell, Outline, PaintedCell},
+        domain::{Farm, FarmName, GridCell, IdempotencyKey, Outline, PaintedCell},
     },
 };
 
@@ -14,6 +14,7 @@ pub struct RegisterFarmInput {
     pub name: FarmName,
     pub outline: Outline,
     pub painted: Vec<PaintedCell>,
+    pub idempotency_key: Option<IdempotencyKey>,
     pub created_offline_at: Option<DateTime<Utc>>,
 }
 
@@ -37,13 +38,28 @@ impl RegisterFarmUseCase {
     }
 
     /// Returns the registered farm and the painted cells that were dropped
-    /// because they fall outside its outline.
+    /// because they fall outside its outline. An upload that repeats the
+    /// idempotency key of an earlier one returns that earlier farm.
     pub async fn execute(
         &self,
         auth_context: &AuthContext,
         input: RegisterFarmInput,
     ) -> Result<(Farm, Vec<GridCell>), AppError> {
         let owner = auth_context.user().phone();
+
+        if let Some(key) = &input.idempotency_key
+            && let Some(existing) = self
+                .repository
+                .find_by_idempotency_key_and_owner(key, owner)
+                .await?
+        {
+            tracing::info!(
+                farm_id = existing.id().unwrap_or_default(),
+                "registration repeated: returning the farm already created"
+            );
+
+            return Ok((existing, Vec::new()));
+        }
 
         let owned = self.repository.count_by_owner(owner).await?;
 
@@ -62,6 +78,7 @@ impl RegisterFarmUseCase {
             owner.clone(),
             input.outline,
             input.painted,
+            input.idempotency_key,
             input.created_offline_at,
             self.max_cells_per_farm,
         )?;
@@ -91,6 +108,10 @@ mod tests {
         domain::{Crop, FarmError},
     };
 
+    fn a_key() -> IdempotencyKey {
+        IdempotencyKey::new("upload-1".to_string()).expect("key")
+    }
+
     const MAX: u64 = 3;
 
     fn input(painted: Vec<PaintedCell>) -> RegisterFarmInput {
@@ -98,6 +119,7 @@ mod tests {
             name: FarmName::new("Upper field".to_string()).expect("name"),
             outline: an_outline(),
             painted,
+            idempotency_key: None,
             created_offline_at: None,
         }
     }
@@ -190,6 +212,54 @@ mod tests {
             Err(AppError::Farm(FarmError::TooManyCells(10)))
         ));
         assert!(!repository.calls().contains(&RepositoryCall::Create));
+    }
+
+    #[tokio::test]
+    async fn a_repeated_upload_returns_the_farm_already_created() {
+        let repository =
+            FakeFarmRepository::holding(crate::features::farms::app::testing::a_farm());
+        let use_case = RegisterFarmUseCase::new(Arc::new(repository.clone()), MAX, MAX_CELLS);
+
+        let (farm, dropped) = use_case
+            .execute(
+                &auth_context(),
+                RegisterFarmInput {
+                    idempotency_key: Some(a_key()),
+                    ..input(vec![])
+                },
+            )
+            .await
+            .expect("farm");
+
+        assert_eq!(*farm.id(), Some(7));
+        assert!(dropped.is_empty());
+        assert_eq!(
+            repository.calls(),
+            vec![RepositoryCall::FindByIdempotencyKeyAndOwner {
+                key: "upload-1".to_string(),
+                owner: OWNER.to_string(),
+            }],
+            "a repeat must not count the quota or write again"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_first_upload_with_a_key_is_registered() {
+        let repository = FakeFarmRepository::new();
+        let use_case = RegisterFarmUseCase::new(Arc::new(repository.clone()), MAX, MAX_CELLS);
+
+        let result = use_case
+            .execute(
+                &auth_context(),
+                RegisterFarmInput {
+                    idempotency_key: Some(a_key()),
+                    ..input(vec![])
+                },
+            )
+            .await;
+
+        assert!(result.is_ok());
+        assert!(repository.calls().contains(&RepositoryCall::Create));
     }
 
     #[tokio::test]

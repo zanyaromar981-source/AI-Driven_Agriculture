@@ -8,43 +8,25 @@ use utoipa::ToSchema;
 
 use crate::app::{AppError, ErrorInfo, ErrorKind, ToErrorInfo};
 
+/// The body of every error answer: `{"error": "<code>", ...}`. The app acts
+/// on `error`; `detail` is English text for people reading logs.
 #[derive(Serialize, Debug, ToSchema)]
-pub struct FieldError {
-    pub field: String,
-    pub title: String,
+pub struct ErrorBody {
+    pub error: String,
     pub detail: String,
-}
-
-#[derive(Serialize, ToSchema)]
-pub struct ErrorWrapper {
-    errors: Vec<FieldError>,
-}
-
-impl ErrorWrapper {
-    pub fn new(errors: Vec<FieldError>) -> Self {
-        Self { errors }
-    }
-
-    pub fn single(
-        field: impl Into<String>,
-        title: impl Into<String>,
-        detail: impl Into<String>,
-    ) -> Self {
-        Self {
-            errors: vec![FieldError {
-                field: field.into(),
-                title: title.into(),
-                detail: detail.into(),
-            }],
-        }
-    }
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub field: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub retry_after_s: Option<u64>,
 }
 
 #[derive(Debug)]
 pub struct HttpErrorResponse {
     status: StatusCode,
-    title: &'static str,
+    code: &'static str,
     detail: String,
+    field: Option<String>,
+    retry_after_s: Option<u64>,
 }
 
 impl HttpErrorResponse {
@@ -52,11 +34,23 @@ impl HttpErrorResponse {
         error.to_error_info().into()
     }
 
-    pub fn bad_request(title: &'static str, detail: impl Into<String>) -> Self {
+    pub fn bad_request(detail: impl Into<String>) -> Self {
         Self {
             status: StatusCode::BAD_REQUEST,
-            title,
+            code: "bad_request",
             detail: detail.into(),
+            field: None,
+            retry_after_s: None,
+        }
+    }
+
+    pub fn invalid_field(field: impl Into<String>, detail: impl Into<String>) -> Self {
+        Self {
+            status: StatusCode::UNPROCESSABLE_ENTITY,
+            code: ErrorKind::InvalidInput.default_code(),
+            detail: detail.into(),
+            field: Some(field.into()),
+            retry_after_s: None,
         }
     }
 }
@@ -78,8 +72,10 @@ impl From<ErrorInfo> for HttpErrorResponse {
 
         Self {
             status,
-            title: info.title,
+            code: info.code,
             detail,
+            field: None,
+            retry_after_s: info.retry_after_s,
         }
     }
 }
@@ -88,7 +84,12 @@ impl IntoResponse for HttpErrorResponse {
     fn into_response(self) -> Response {
         (
             self.status,
-            Json(ErrorWrapper::single("global", self.title, self.detail)),
+            Json(ErrorBody {
+                error: self.code.to_string(),
+                detail: self.detail,
+                field: self.field,
+                retry_after_s: self.retry_after_s,
+            }),
         )
             .into_response()
     }
@@ -107,6 +108,7 @@ fn status_for_error_kind(kind: ErrorKind) -> StatusCode {
         ErrorKind::Authorization => StatusCode::FORBIDDEN,
         ErrorKind::NotFound => StatusCode::NOT_FOUND,
         ErrorKind::Conflict => StatusCode::CONFLICT,
+        ErrorKind::RateLimited => StatusCode::TOO_MANY_REQUESTS,
         ErrorKind::Persistence => StatusCode::INTERNAL_SERVER_ERROR,
         ErrorKind::UpstreamUnavailable => StatusCode::SERVICE_UNAVAILABLE,
         // The remote dependency understood the request but declined the
@@ -137,6 +139,10 @@ mod tests {
         assert_eq!(
             status_for_error_kind(ErrorKind::NotFound),
             StatusCode::NOT_FOUND
+        );
+        assert_eq!(
+            status_for_error_kind(ErrorKind::RateLimited),
+            StatusCode::TOO_MANY_REQUESTS
         );
         assert_eq!(
             status_for_error_kind(ErrorKind::Persistence),
@@ -207,9 +213,25 @@ mod tests {
     }
 
     #[test]
-    fn the_title_still_says_which_kind_of_failure_it_was() {
-        let response = HttpErrorResponse::from(ErrorInfo::new(ErrorKind::Persistence, "raw"));
+    fn the_code_still_says_which_failure_it_was() {
+        let specific = HttpErrorResponse::from(ErrorInfo::with_code(
+            ErrorKind::InvalidInput,
+            "bad_polygon",
+            "The farm outline crosses itself",
+        ));
+        let general = HttpErrorResponse::from(ErrorInfo::new(ErrorKind::Persistence, "raw"));
 
-        assert_eq!(response.title, "Repository Error");
+        assert_eq!(specific.code, "bad_polygon");
+        assert_eq!(general.code, "server_error");
+    }
+
+    #[test]
+    fn a_rate_limit_tells_the_caller_how_long_to_wait() {
+        let response = HttpErrorResponse::from(
+            ErrorInfo::new(ErrorKind::RateLimited, "Too many codes requested").retry_after(42),
+        );
+
+        assert_eq!(response.status, StatusCode::TOO_MANY_REQUESTS);
+        assert_eq!(response.retry_after_s, Some(42));
     }
 }

@@ -1,12 +1,11 @@
 use axum::{
     Json,
     extract::{FromRequest, Request, rejection::JsonRejection},
-    http::StatusCode,
     response::{IntoResponse, Response},
 };
 use validator::Validate;
 
-use super::errors::{ErrorWrapper, FieldError};
+use super::errors::HttpErrorResponse;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ValidatedJson<T>(pub T);
@@ -41,35 +40,30 @@ pub enum ValidationRejection {
 
 impl IntoResponse for ValidationRejection {
     fn into_response(self) -> Response {
-        let (status, error_wrapper) = match self {
-            ValidationRejection::JsonRejection(rejection) => (
-                StatusCode::BAD_REQUEST,
-                ErrorWrapper::single("global", "Invalid Request Body", rejection.to_string()),
-            ),
+        match self {
+            ValidationRejection::JsonRejection(rejection) => {
+                HttpErrorResponse::bad_request(rejection.to_string()).into_response()
+            }
             ValidationRejection::ValidationError(errors) => {
-                let field_errors: Vec<FieldError> = errors
+                // The body carries one `field`, so the first failing field is
+                // the one reported.
+                let (field, detail) = errors
                     .field_errors()
                     .into_iter()
-                    .flat_map(|(field, errors)| {
-                        errors.iter().map(move |error| FieldError {
-                            field: field.to_string(),
-                            title: "Validation Error".to_string(),
-                            detail: error
-                                .message
-                                .as_ref()
-                                .map(|m| m.to_string())
-                                .unwrap_or_else(|| "Invalid value".to_string()),
-                        })
+                    .next()
+                    .map(|(field, errors)| {
+                        let detail = errors
+                            .first()
+                            .and_then(|error| error.message.as_ref())
+                            .map(|message| message.to_string())
+                            .unwrap_or_else(|| "Invalid value".to_string());
+
+                        (field.to_string(), detail)
                     })
-                    .collect();
+                    .unwrap_or_else(|| ("body".to_string(), "Invalid value".to_string()));
 
-                (
-                    StatusCode::UNPROCESSABLE_ENTITY,
-                    ErrorWrapper::new(field_errors),
-                )
+                HttpErrorResponse::invalid_field(field, detail).into_response()
             }
-        };
-
-        (status, Json(error_wrapper)).into_response()
+        }
     }
 }

@@ -7,6 +7,7 @@ pub enum ErrorKind {
     Authorization,
     NotFound,
     Conflict,
+    RateLimited,
     Persistence,
     UpstreamUnavailable,
     UpstreamRejected,
@@ -16,19 +17,22 @@ pub enum ErrorKind {
 }
 
 impl ErrorKind {
-    pub const fn default_title(self) -> &'static str {
+    /// The machine code the app reads in the `error` field when a failure
+    /// has no more specific one.
+    pub const fn default_code(self) -> &'static str {
         match self {
-            ErrorKind::InvalidInput => "Validation Error",
-            ErrorKind::Authentication => "Unauthorized",
-            ErrorKind::Authorization => "Forbidden",
-            ErrorKind::NotFound => "Resource Not Found",
-            ErrorKind::Conflict => "Conflict",
-            ErrorKind::Persistence => "Repository Error",
-            ErrorKind::UpstreamUnavailable => "Upstream Unavailable",
-            ErrorKind::UpstreamRejected => "Upstream Rejected Request",
-            ErrorKind::UpstreamInvalidResponse => "Invalid Upstream Response",
-            ErrorKind::UpstreamFailure => "Integration Error",
-            ErrorKind::Internal => "Internal Server Error",
+            ErrorKind::InvalidInput => "invalid",
+            ErrorKind::Authentication => "unauthorized",
+            ErrorKind::Authorization => "forbidden",
+            ErrorKind::NotFound => "not_found",
+            ErrorKind::Conflict => "conflict",
+            ErrorKind::RateLimited => "rate_limited",
+            ErrorKind::UpstreamUnavailable => "upstream_down",
+            ErrorKind::UpstreamRejected => "upstream_rejected",
+            ErrorKind::Persistence
+            | ErrorKind::UpstreamInvalidResponse
+            | ErrorKind::UpstreamFailure
+            | ErrorKind::Internal => "server_error",
         }
     }
 }
@@ -36,25 +40,34 @@ impl ErrorKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ErrorInfo {
     pub kind: ErrorKind,
-    pub title: &'static str,
+    pub code: &'static str,
     pub detail: String,
+    /// Seconds the caller should wait before trying again, when known.
+    pub retry_after_s: Option<u64>,
 }
 
 impl ErrorInfo {
     pub fn new(kind: ErrorKind, detail: impl Into<String>) -> Self {
         Self {
             kind,
-            title: kind.default_title(),
+            code: kind.default_code(),
             detail: detail.into(),
+            retry_after_s: None,
         }
     }
 
-    pub fn with_title(kind: ErrorKind, title: &'static str, detail: impl Into<String>) -> Self {
+    pub fn with_code(kind: ErrorKind, code: &'static str, detail: impl Into<String>) -> Self {
         Self {
             kind,
-            title,
+            code,
             detail: detail.into(),
+            retry_after_s: None,
         }
+    }
+
+    pub fn retry_after(mut self, seconds: u64) -> Self {
+        self.retry_after_s = Some(seconds);
+        self
     }
 }
 
@@ -261,13 +274,14 @@ mod tests {
     }
 
     #[test]
-    fn every_kind_has_a_title() {
+    fn every_kind_has_a_code() {
         for kind in [
             ErrorKind::InvalidInput,
             ErrorKind::Authentication,
             ErrorKind::Authorization,
             ErrorKind::NotFound,
             ErrorKind::Conflict,
+            ErrorKind::RateLimited,
             ErrorKind::Persistence,
             ErrorKind::UpstreamUnavailable,
             ErrorKind::UpstreamRejected,
@@ -275,7 +289,18 @@ mod tests {
             ErrorKind::UpstreamFailure,
             ErrorKind::Internal,
         ] {
-            assert!(!kind.default_title().is_empty(), "{kind:?} has no title");
+            assert!(!kind.default_code().is_empty(), "{kind:?} has no code");
         }
+    }
+
+    #[test]
+    fn the_codes_the_app_already_reads_are_spelled_as_the_contract_has_them() {
+        assert_eq!(ErrorKind::Authentication.default_code(), "unauthorized");
+        assert_eq!(ErrorKind::NotFound.default_code(), "not_found");
+        assert_eq!(ErrorKind::RateLimited.default_code(), "rate_limited");
+        assert_eq!(
+            ErrorKind::UpstreamUnavailable.default_code(),
+            "upstream_down"
+        );
     }
 }

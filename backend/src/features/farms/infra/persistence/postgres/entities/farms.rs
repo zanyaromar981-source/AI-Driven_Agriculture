@@ -8,9 +8,12 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub name: String,
+    #[sea_orm(unique_key = "idx_farms_phone_idempotency_key")]
     pub phone: String,
     #[sea_orm(column_type = "JsonBinary")]
     pub outline: Json,
+    #[sea_orm(unique_key = "idx_farms_phone_idempotency_key")]
+    pub idempotency_key: Option<String>,
     pub created_offline_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,

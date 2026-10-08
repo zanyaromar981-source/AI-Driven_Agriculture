@@ -1,6 +1,6 @@
 use axum::{
     Router,
-    routing::{delete, get, put},
+    routing::{get, put},
 };
 
 use crate::shared::AppState;
@@ -12,7 +12,10 @@ pub fn routes() -> Router<AppState> {
         "/farms",
         Router::new()
             .route("/", get(handlers::get_farms).post(handlers::create_farm))
-            .route("/{id}", delete(handlers::delete_farm))
+            .route(
+                "/{id}",
+                get(handlers::get_farm).delete(handlers::delete_farm),
+            )
             .route("/{id}/cells", put(handlers::repaint_farm_cells)),
     )
 }

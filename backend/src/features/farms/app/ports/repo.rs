@@ -1,27 +1,28 @@
 use async_trait::async_trait;
 
 use crate::{
-    app::Pagination,
     features::farms::{
         app::AppError,
-        domain::{Farm, FarmSummary},
+        domain::{Farm, FarmSummary, IdempotencyKey},
     },
     shared::Phone,
 };
 
 #[async_trait]
 pub trait FarmRepository: Send + Sync + std::fmt::Debug {
-    /// Returns the page, and the total row count only on the first page. Later
-    /// pages get `None`: the count is not recomputed, and the client is expected
-    /// to have kept the one it was given.
-    async fn find_all_by_owner(
-        &self,
-        owner: &Phone,
-        pagination: &Pagination,
-    ) -> Result<(Vec<FarmSummary>, Option<u64>), AppError>;
+    /// Returns every farm the owner has, oldest first. The list is short by
+    /// construction: the number of farms per owner is capped.
+    async fn find_all_by_owner(&self, owner: &Phone) -> Result<Vec<FarmSummary>, AppError>;
 
     /// Returns the farm with all of its cells.
     async fn find_by_id_and_owner(&self, id: i32, owner: &Phone) -> Result<Option<Farm>, AppError>;
+
+    /// Returns the farm an earlier upload with the same key created.
+    async fn find_by_idempotency_key_and_owner(
+        &self,
+        key: &IdempotencyKey,
+        owner: &Phone,
+    ) -> Result<Option<Farm>, AppError>;
 
     async fn count_by_owner(&self, owner: &Phone) -> Result<u64, AppError>;
 

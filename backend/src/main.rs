@@ -7,7 +7,10 @@ use std::time::Duration;
 use axum::{Router, middleware};
 use clap::{Parser, Subcommand};
 use farm_doctor_api::{
-    features::farms::web::routes as farm_routes,
+    features::{
+        farmers::web::{public_routes as farmer_public_routes, routes as farmer_routes},
+        farms::web::routes as farm_routes,
+    },
     infra::{
         BootstrappedApp, Config,
         http::{auth, health_routes, swagger_ui},
@@ -31,8 +34,7 @@ enum Commands {
     Serve,
     /// Run database migrations.
     Migrate,
-    /// Print a sign-in token for a phone number. For local work, until the
-    /// SMS code sign-in exists.
+    /// Print a sign-in token for a phone number, for local work with curl.
     Token {
         /// E.164 Iraqi mobile number, for example +9647501234567.
         phone: String,
@@ -57,7 +59,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             "/v1",
             Router::new()
                 .merge(farm_routes())
-                .layer(middleware::from_fn_with_state(state.clone(), auth)),
+                .merge(farmer_routes())
+                .layer(middleware::from_fn_with_state(state.clone(), auth))
+                .merge(farmer_public_routes()),
         )
         .merge(health_routes())
         .merge(swagger_ui())

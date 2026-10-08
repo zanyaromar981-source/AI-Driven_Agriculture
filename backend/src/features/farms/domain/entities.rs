@@ -4,7 +4,9 @@ use chrono::{DateTime, Utc};
 use getset::{CopyGetters, Getters};
 
 use crate::{
-    features::farms::domain::{Crop, FarmError, FarmName, GridCell, Outline, PaintedCell},
+    features::farms::domain::{
+        Crop, FarmError, FarmName, GridCell, IdempotencyKey, Outline, PaintedCell,
+    },
     shared::Phone,
 };
 
@@ -45,6 +47,8 @@ pub struct Farm {
     owner: Phone,
     outline: Outline,
     cells: Vec<Cell>,
+    /// Set when the app sent one with the upload; see `IdempotencyKey`.
+    idempotency_key: Option<IdempotencyKey>,
     /// When the farmer drew the farm, if the app was offline at the time.
     created_offline_at: Option<DateTime<Utc>>,
     created_at: DateTime<Utc>,
@@ -61,6 +65,7 @@ impl Farm {
         owner: Phone,
         outline: Outline,
         painted: Vec<PaintedCell>,
+        idempotency_key: Option<IdempotencyKey>,
         created_offline_at: Option<DateTime<Utc>>,
         max_cells: usize,
     ) -> Result<(Self, Vec<GridCell>), FarmError> {
@@ -82,6 +87,7 @@ impl Farm {
             owner,
             outline,
             cells,
+            idempotency_key,
             created_offline_at,
             created_at: now,
             updated_at: now,
@@ -100,6 +106,7 @@ impl Farm {
         owner: Phone,
         outline: Outline,
         cells: Vec<Cell>,
+        idempotency_key: Option<IdempotencyKey>,
         created_offline_at: Option<DateTime<Utc>>,
         created_at: DateTime<Utc>,
         updated_at: DateTime<Utc>,
@@ -110,6 +117,7 @@ impl Farm {
             owner,
             outline,
             cells,
+            idempotency_key,
             created_offline_at,
             created_at,
             updated_at,
@@ -130,8 +138,10 @@ impl Farm {
         &self.owner == phone
     }
 
+    /// The area inside the walked outline. The cell count is close to it but
+    /// not equal, because cells on the edge are in or out as a whole.
     pub fn area_dunam(&self) -> f64 {
-        GridCell::dunams(self.cells.len())
+        self.outline.area_dunam()
     }
 
     pub fn crop_areas(&self) -> Vec<CropArea> {
@@ -181,7 +191,7 @@ pub struct FarmSummary {
 
 impl FarmSummary {
     /// Reconstruct from persisted state: the farm row and how many cells it
-    /// has under each crop, `Empty` included.
+    /// has under each crop.
     pub fn rehydrate(
         id: i32,
         name: FarmName,
@@ -189,12 +199,10 @@ impl FarmSummary {
         cells_per_crop: Vec<(Crop, usize)>,
         created_at: DateTime<Utc>,
     ) -> Self {
-        let total_cells: usize = cells_per_crop.iter().map(|(_, cells)| cells).sum();
-
         Self {
             id,
             name,
-            area_dunam: GridCell::dunams(total_cells),
+            area_dunam: outline.area_dunam(),
             crops: crop_areas(cells_per_crop),
             centroid: outline.centroid(),
             created_at,
@@ -250,6 +258,7 @@ mod tests {
             Phone::new("+9647501234567".to_string()).expect("phone"),
             outline(),
             painted,
+            None,
             None,
             MAX_CELLS,
         )
@@ -315,10 +324,10 @@ mod tests {
     }
 
     #[test]
-    fn the_area_counts_every_cell_and_the_crops_skip_the_empty_ones() {
+    fn the_area_is_the_outlines_and_the_crops_skip_the_empty_cells() {
         let (farm, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)]);
 
-        assert_eq!(farm.area_dunam(), GridCell::dunams(farm.cells().len()));
+        assert_eq!(farm.area_dunam(), outline().area_dunam());
         assert_eq!(farm.crop_areas().len(), 1);
         assert_eq!(farm.crop_areas()[0].dunam(), GridCell::dunams(1));
     }
@@ -376,7 +385,7 @@ mod tests {
             Utc::now(),
         );
 
-        assert_eq!(*summary.area_dunam(), 120.0);
+        assert_eq!(*summary.area_dunam(), outline().area_dunam());
         assert_eq!(
             summary
                 .crops()

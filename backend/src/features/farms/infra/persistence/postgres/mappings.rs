@@ -6,7 +6,9 @@ use crate::{
     app::AppError as GlobalAppError,
     features::farms::{
         app::AppError,
-        domain::{Cell, Crop, Farm, FarmName, FarmSummary, GridCell, Outline, Point},
+        domain::{
+            Cell, Crop, Farm, FarmName, FarmSummary, GridCell, IdempotencyKey, Outline, Point,
+        },
         infra::persistence::postgres::entities::{farm_cells, farms},
     },
     shared::Phone,
@@ -78,6 +80,7 @@ impl TryFrom<(farms::Model, Vec<farm_cells::Model>)> for Farm {
                 .into_iter()
                 .map(Cell::try_from)
                 .collect::<Result<Vec<_>, _>>()?,
+            model.idempotency_key.map(IdempotencyKey::new).transpose()?,
             model.created_offline_at.map(|at| at.and_utc()),
             model.created_at.and_utc(),
             model.updated_at.and_utc(),
@@ -116,6 +119,7 @@ impl From<&Farm> for farms::ActiveModel {
             name: Set(farm.name().into()),
             phone: Set(farm.owner().into()),
             outline: Set(stored_outline(farm.outline())),
+            idempotency_key: Set(farm.idempotency_key().as_ref().map(Into::into)),
             created_offline_at: Set(farm.created_offline_at().map(|at| at.naive_utc())),
             created_at: Set(farm.created_at().naive_utc()),
             updated_at: Set(farm.updated_at().naive_utc()),

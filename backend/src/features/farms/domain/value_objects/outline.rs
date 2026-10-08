@@ -54,6 +54,10 @@ impl Outline {
         doubled.abs() / 2.0
     }
 
+    pub fn area_dunam(&self) -> f64 {
+        self.area_m2() / (GridCell::SIZE_M * GridCell::SIZE_M * GridCell::PER_DUNAM)
+    }
+
     /// The mean of the corners as `(lat, lon)`. Good enough to place a pin
     /// or pick the nearest weather point; it is not the centre of mass.
     pub fn centroid(&self) -> (f64, f64) {

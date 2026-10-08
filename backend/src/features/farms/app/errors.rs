@@ -11,9 +11,11 @@ impl ToErrorInfo for FarmError {
         match self {
             FarmError::OutlineCornerCount { .. }
             | FarmError::OutlineSelfIntersects
-            | FarmError::OutlineEnclosesNoCells
-            | FarmError::TooManyCells(_) => {
-                ErrorInfo::new(ErrorKind::InvalidInput, self.to_string())
+            | FarmError::OutlineEnclosesNoCells => {
+                ErrorInfo::with_code(ErrorKind::InvalidInput, "bad_polygon", self.to_string())
+            }
+            FarmError::TooManyCells(_) => {
+                ErrorInfo::with_code(ErrorKind::InvalidInput, "farm_too_large", self.to_string())
             }
             FarmError::DomainError(err) => err.to_error_info(),
         }
@@ -42,7 +44,7 @@ impl ToErrorInfo for AppError {
             AppError::Domain(err) => err.to_error_info(),
             AppError::GlobalAppError(err) => err.to_error_info(),
             AppError::MaxFarmsPerUserReached(_) => {
-                ErrorInfo::new(ErrorKind::InvalidInput, self.to_string())
+                ErrorInfo::with_code(ErrorKind::InvalidInput, "too_many_farms", self.to_string())
             }
         }
     }

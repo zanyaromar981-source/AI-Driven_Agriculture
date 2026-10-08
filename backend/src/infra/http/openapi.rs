@@ -5,12 +5,17 @@ use utoipa::{
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
+    features::farmers::web::{
+        EditProfileParams, Language, ProfileResponse, SendSignInCodeParams, SignInCodeSentResponse,
+        SignedInResponse, VerifySignInCodeParams, handlers as farmer_handlers,
+    },
     features::farms::web::{
         CellParams, CellResponse, CentroidResponse, CreateFarmParams, Crop, CropAreaResponse,
-        FarmResponse, FarmSummaryResponse, GridCellResponse, OutlinePointResponse, PointParams,
-        RepaintFarmCellsParams, SavedFarmResponse, handlers as farm_handlers,
+        FarmResponse, FarmSummaryResponse, FarmsResponse, GridCellResponse, OneFarmResponse,
+        OutlinePointResponse, PointParams, RepaintFarmCellsParams, SavedFarmResponse,
+        handlers as farm_handlers,
     },
-    infra::http::{ErrorWrapper, FieldError, Meta, ResponseWrapper, health},
+    infra::http::{ErrorBody, health},
 };
 
 struct BearerAuth;
@@ -36,8 +41,13 @@ impl Modify for BearerAuth {
     paths(
         farm_handlers::get_farms,
         farm_handlers::create_farm,
+        farm_handlers::get_farm,
         farm_handlers::repaint_farm_cells,
         farm_handlers::delete_farm,
+        farmer_handlers::send_sign_in_code,
+        farmer_handlers::verify_sign_in_code,
+        farmer_handlers::get_profile,
+        farmer_handlers::update_profile,
         health::liveness,
         health::readiness,
     ),
@@ -55,15 +65,21 @@ impl Modify for BearerAuth {
         CellResponse,
         GridCellResponse,
         Crop,
-        ResponseWrapper<SavedFarmResponse>,
-        ResponseWrapper<Vec<FarmSummaryResponse>>,
-        ErrorWrapper,
-        FieldError,
-        Meta
+        FarmsResponse,
+        OneFarmResponse,
+        SendSignInCodeParams,
+        SignInCodeSentResponse,
+        VerifySignInCodeParams,
+        SignedInResponse,
+        EditProfileParams,
+        ProfileResponse,
+        Language,
+        ErrorBody
     )),
     modifiers(&BearerAuth),
     tags(
         (name = "farm-doctor-api", description = "Farm Doctor API"),
+        (name = "farmers", description = "Sign in with a phone and a code, and the farmer's profile"),
         (name = "farms", description = "A farmer's farms: outline, cell grid and crops")
     ),
     info(

@@ -25,6 +25,17 @@ pub struct Auth {
     pub issuer: String,
     pub audience: String,
     pub token_ttl_days: u64,
+    pub sign_in_code: SignInCode,
+}
+
+#[derive(Clone, Debug)]
+pub struct SignInCode {
+    pub valid_minutes: i64,
+    pub resend_after_seconds: i64,
+    pub max_attempts: u32,
+    /// When set, every sign-in code is this value. For demos and local work
+    /// only: anyone who knows it can sign in as any phone.
+    pub fixed: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -87,6 +98,23 @@ impl Config {
                 token_ttl_days: fetch_env_with_default("AUTH__TOKEN_TTL_DAYS", "30")
                     .parse::<u64>()
                     .unwrap(),
+                sign_in_code: SignInCode {
+                    valid_minutes: fetch_env_with_default("AUTH__CODE_VALID_MINUTES", "10")
+                        .parse::<i64>()
+                        .unwrap(),
+                    resend_after_seconds: fetch_env_with_default(
+                        "AUTH__CODE_RESEND_AFTER_SECONDS",
+                        "60",
+                    )
+                    .parse::<i64>()
+                    .unwrap(),
+                    max_attempts: fetch_env_with_default("AUTH__CODE_MAX_ATTEMPTS", "5")
+                        .parse::<u32>()
+                        .unwrap(),
+                    fixed: dotenvy::var("AUTH__FIXED_SIGN_IN_CODE")
+                        .ok()
+                        .filter(|code| !code.trim().is_empty()),
+                },
             },
             log_level: fetch_env_with_default("LOG_LEVEL", "INFO")
                 .to_uppercase()

@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::Validate;
@@ -11,8 +11,8 @@ use crate::{
             use_cases::{RegisterFarmInput, RepaintFarmCellsInput},
         },
         domain::{
-            self, Cell, CropArea, Farm, FarmName, FarmSummary, GridCell, Outline, PaintedCell,
-            Point,
+            self, Cell, CropArea, Farm, FarmName, FarmSummary, GridCell, IdempotencyKey, Outline,
+            PaintedCell, Point,
         },
     },
 };
@@ -109,7 +109,10 @@ pub struct CreateFarmParams {
 }
 
 impl CreateFarmParams {
-    pub fn into_input(self) -> Result<RegisterFarmInput, AppError> {
+    pub fn into_input(
+        self,
+        idempotency_key: Option<String>,
+    ) -> Result<RegisterFarmInput, AppError> {
         let points = self
             .points
             .into_iter()
@@ -120,6 +123,7 @@ impl CreateFarmParams {
             name: FarmName::new(self.name)?,
             outline: Outline::new(points)?,
             painted: self.cells.into_iter().map(Into::into).collect(),
+            idempotency_key: idempotency_key.map(IdempotencyKey::new).transpose()?,
             created_offline_at: self.created_offline_at,
         })
     }
@@ -213,41 +217,49 @@ impl From<&GridCell> for GridCellResponse {
     }
 }
 
+/// The id is an opaque string to the app. `status` and `last_picture` are
+/// left out until satellite readings exist; the app treats a missing status
+/// as `none`.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct FarmSummaryResponse {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     pub area_dunam: f64,
     pub crops: Vec<CropAreaResponse>,
     pub centroid: CentroidResponse,
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
 }
 
 impl From<&FarmSummary> for FarmSummaryResponse {
     fn from(summary: &FarmSummary) -> Self {
         Self {
-            id: *summary.id(),
+            id: summary.id().to_string(),
             name: summary.name().into(),
             area_dunam: *summary.area_dunam(),
             crops: summary.crops().iter().map(Into::into).collect(),
             centroid: (*summary.centroid()).into(),
-            created_at: summary.created_at().naive_utc(),
+            created_at: *summary.created_at(),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FarmsResponse {
+    pub farms: Vec<FarmSummaryResponse>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct FarmResponse {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     pub area_dunam: f64,
     pub crops: Vec<CropAreaResponse>,
     pub centroid: CentroidResponse,
     pub outline: Vec<OutlinePointResponse>,
     pub cells: Vec<CellResponse>,
-    pub created_offline_at: Option<NaiveDateTime>,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_offline_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl TryFrom<&Farm> for FarmResponse {
@@ -261,16 +273,31 @@ impl TryFrom<&Farm> for FarmResponse {
         })?;
 
         Ok(Self {
-            id,
+            id: id.to_string(),
             name: farm.name().into(),
             area_dunam: farm.area_dunam(),
             crops: farm.crop_areas().iter().map(Into::into).collect(),
             centroid: farm.outline().centroid().into(),
             outline: farm.outline().points().iter().map(Into::into).collect(),
             cells: farm.cells().iter().map(Into::into).collect(),
-            created_offline_at: farm.created_offline_at().map(|at| at.naive_utc()),
-            created_at: farm.created_at().naive_utc(),
-            updated_at: farm.updated_at().naive_utc(),
+            created_offline_at: *farm.created_offline_at(),
+            created_at: *farm.created_at(),
+            updated_at: *farm.updated_at(),
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct OneFarmResponse {
+    pub farm: FarmResponse,
+}
+
+impl TryFrom<&Farm> for OneFarmResponse {
+    type Error = AppError;
+
+    fn try_from(farm: &Farm) -> Result<Self, Self::Error> {
+        Ok(Self {
+            farm: FarmResponse::try_from(farm)?,
         })
     }
 }

@@ -3,7 +3,9 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
-use crate::{features::farms::app::AppError, infra::http::HttpErrorResponse};
+use crate::{
+    app::AppError as GlobalAppError, features::farms::app::AppError, infra::http::HttpErrorResponse,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum WebError {
@@ -17,21 +19,24 @@ pub enum WebError {
     QueryRejection(#[from] QueryRejection),
 }
 
+impl WebError {
+    pub fn not_found() -> Self {
+        Self::AppError(GlobalAppError::NotFound.into())
+    }
+}
+
 impl IntoResponse for WebError {
     fn into_response(self) -> Response {
         match &self {
             WebError::AppError(err) => HttpErrorResponse::from_error(err).into_response(),
             WebError::JsonRejection(err) => {
-                HttpErrorResponse::bad_request("Invalid Request Body", err.to_string())
-                    .into_response()
+                HttpErrorResponse::bad_request(err.to_string()).into_response()
             }
             WebError::PathRejection(err) => {
-                HttpErrorResponse::bad_request("Invalid Path Parameter", err.to_string())
-                    .into_response()
+                HttpErrorResponse::bad_request(err.to_string()).into_response()
             }
             WebError::QueryRejection(err) => {
-                HttpErrorResponse::bad_request("Invalid Query Parameter", err.to_string())
-                    .into_response()
+                HttpErrorResponse::bad_request(err.to_string()).into_response()
             }
         }
     }

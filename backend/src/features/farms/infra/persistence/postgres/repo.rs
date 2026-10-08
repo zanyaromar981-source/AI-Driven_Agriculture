@@ -8,10 +8,10 @@ use sea_orm::{
 };
 
 use crate::{
-    app::{AppError as GlobalAppError, Pagination},
+    app::AppError as GlobalAppError,
     features::farms::{
         app::{AppError, FarmRepository},
-        domain::{Cell, Crop, Farm, FarmSummary},
+        domain::{Cell, Crop, Farm, FarmSummary, IdempotencyKey},
         infra::persistence::postgres::{
             entities::{farm_cells, farms},
             mappings::cell_active_model,
@@ -62,28 +62,10 @@ impl FarmPostgresRepository {
 
 #[async_trait]
 impl FarmRepository for FarmPostgresRepository {
-    async fn find_all_by_owner(
-        &self,
-        owner: &Phone,
-        pagination: &Pagination,
-    ) -> Result<(Vec<FarmSummary>, Option<u64>), AppError> {
-        let owned = farms::Entity::find().filter(farms::Column::Phone.eq(owner.as_str()));
-
-        let total_count = match pagination.is_first_page() {
-            true => Some(
-                owned
-                    .clone()
-                    .count(&self.conn)
-                    .await
-                    .map_err(database_error)?,
-            ),
-            false => None,
-        };
-
-        let models = owned
+    async fn find_all_by_owner(&self, owner: &Phone) -> Result<Vec<FarmSummary>, AppError> {
+        let models = farms::Entity::find()
+            .filter(farms::Column::Phone.eq(owner.as_str()))
             .order_by_asc(farms::Column::Id)
-            .offset(pagination.skip())
-            .limit(*pagination.rows_per_page())
             .all(&self.conn)
             .await
             .map_err(database_error)?;
@@ -112,16 +94,32 @@ impl FarmRepository for FarmPostgresRepository {
                 .push((count.crop, usize::try_from(count.cells).unwrap_or_default()));
         }
 
-        let summaries = models
+        models
             .into_iter()
             .map(|model| {
                 let cells = cells_per_crop.remove(&model.id).unwrap_or_default();
 
                 FarmSummary::try_from((model, cells))
             })
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect()
+    }
 
-        Ok((summaries, total_count))
+    async fn find_by_idempotency_key_and_owner(
+        &self,
+        key: &IdempotencyKey,
+        owner: &Phone,
+    ) -> Result<Option<Farm>, AppError> {
+        let model = farms::Entity::find()
+            .filter(farms::Column::Phone.eq(owner.as_str()))
+            .filter(farms::Column::IdempotencyKey.eq(key.as_str()))
+            .one(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        match model {
+            Some(model) => Ok(Some(Self::load(&self.conn, model).await?)),
+            None => Ok(None),
+        }
     }
 
     async fn find_by_id_and_owner(&self, id: i32, owner: &Phone) -> Result<Option<Farm>, AppError> {

@@ -39,6 +39,9 @@ async-trait = "0.1.91"
 mimalloc = { version = "0.1", features = ["secure"] }
 clap = { version = "4.6", features = ["derive"] }
 getset = "0.1.6"
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.9"
 
 opentelemetry = { version = "0.32", features = ["trace"] }
 opentelemetry-otlp = { version = "0.32", default-features = false, features = [

@@ -15,6 +15,7 @@ impl MigrationTrait for Migration {
                     .col(string_len(Farms::Name, 100))
                     .col(string(Farms::Phone))
                     .col(json_binary(Farms::Outline))
+                    .col(string_len_null(Farms::IdempotencyKey, 128))
                     .col(timestamp_null(Farms::CreatedOfflineAt))
                     .col(
                         timestamp(Farms::CreatedAt)
@@ -36,6 +37,18 @@ impl MigrationTrait for Migration {
                     .name("idx_farms_phone")
                     .table(Farms::Table)
                     .col(Farms::Phone)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .name("idx_farms_phone_idempotency_key")
+                    .table(Farms::Table)
+                    .col(Farms::Phone)
+                    .col(Farms::IdempotencyKey)
+                    .unique()
                     .to_owned(),
             )
             .await?;
@@ -95,6 +108,7 @@ enum Farms {
     Name,
     Phone,
     Outline,
+    IdempotencyKey,
     CreatedOfflineAt,
     CreatedAt,
     UpdatedAt,
