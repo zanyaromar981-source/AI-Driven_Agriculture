@@ -103,6 +103,7 @@ void main() {
       await box.add(_req('Busy farm'), _summary);
       for (final (status, code) in [
         (429, 'rate_limited'),
+        (405, 'http_405'),
         (408, 'timeout'),
         (503, 'upstream_down'),
         (0, 'offline'),

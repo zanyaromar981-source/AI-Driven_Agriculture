@@ -145,9 +145,11 @@ class Outbox extends ChangeNotifier {
     // Keep and try later: no internet, not signed in, timeout, too many
     // requests (429) or a server error. Losing a walked farm because the
     // server was busy would be far worse than waiting.
+    // 405/501: the server does not have this call yet (e.g. editing a
+    // farm's border before the backend adds PUT /farms/{id}): keep it too.
     bool later(ApiException e) =>
         e.isOffline ||
-        const {401, 408, 429}.contains(e.status) ||
+        const {401, 405, 408, 429, 501}.contains(e.status) ||
         e.status >= 500;
     try {
       for (final id in List.of(_deletes)) {
