@@ -1,4 +1,4 @@
-"""Download the free (open-access) PDFs listed in library.sqlite into pdfs/, most relevant to SmartSuli first, then by citations.
+"""Download the free (open-access) PDFs listed in library.sqlite into pdfs/, most relevant to Jutyar first, then by citations.
 Downloaded files are untrusted data: they are only saved (checked to start with %PDF), never opened or run here.
 Resumable (skips files already saved; failures logged in pdfs/_failed.tsv). Usage: python3 -I download_pdfs.py [workers] [max]"""
 import os, sys, sqlite3, time, urllib.request

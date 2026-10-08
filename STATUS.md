@@ -1,4 +1,4 @@
-# SmartSuli AI Challenge: STATUS
+# Jutyar: STATUS (SmartSuli AI Challenge)
 
 ## Deadlines
 - [ ] **Apply before 2026-09-28** at foundation.krd/smartsuli
@@ -6,7 +6,7 @@
 - Pitch + judging: 2026-10-10
 
 ## Done
-- 2026-09-11: research finished. 10 ideas scored, top 3 deep-dived. See `SmartSuli_10_Ideas_Report.md`
+- 2026-09-11: research finished. 10 ideas scored, top 3 deep-dived. See `Jutyar_10_Ideas_Report.md`
   - Recommendation: **Dafter** (payday-aware Kurdish debt notebook). Backup: **Dosya** (patient-held health folder)
 
 - 2026-09-11: user said ideas must be SOCIETY problems (last winner = a bus system), so Dafter dropped
@@ -136,7 +136,7 @@
 - Are API keys / accounts / datasets allowed before the start?
 
 ## Files
-- `SmartSuli_10_Ideas_Report.md`: the main report
+- `Jutyar_10_Ideas_Report.md`: the main report
 - `Build_Plan_48h_Template.md`: team roles, hour plan, demo rules, pitch skeleton
 - `evidence/`: research with sources (organizers, Kurdish AI tech, economy, health/education, city/other)
 - 2026-10-08 (13:15): **"Best idea to help farmers" re-check (3 agents, ~150 searches; reports in session scratchpad, not yet in repo).** World adoption: farmers act on dated "do X this week" push alerts (CABI PRISE 59% changed practice; alerts+advice +45% yield vs +29% advice only); pull Q&A dies (Ama Krushi 6.9M users, 2% ever ask); satellite "field behind" to farmers = zero action evidence; outbreak maps none; photo diagnosis weak; chatbots are used mostly by extension officers. KRI pains 2024–26: #1 Baghdad quota/price/unpaid dues (6 Oct 2026 cabinet: 4 Mt 2026/27 plan "except the Kurdistan Region"), #2 input costs, #3 import dumping — AI can't touch these; AI CAN touch pests/disease + the 215-officer gap; 2026/27 strong El Niño = 2009/10 + 2024 yellow-rust setup (Sulaimani hot spot, first infections 10–15 Apr). Fresh eyes: add an **Officer Inbox** (farmer case → Claude draft → officer approves/sends; ~6h; AI-assisted responders RCT +15%/h, +34% novices). Weak spots in Farm Doctor plan: photo triage as centrepiece, empty outbreak map on demo day, live Sorani STT. UNVERIFIED: Talabani 30 Mar 2026 "roadmap" quote (one agent found PUKmedia 80948, another could not) → check before any slide. Verdict sent to user; no plan change made yet.
@@ -213,3 +213,4 @@
 - 2026-10-09 (02:10): **Control Room web: Jutyar style and motion** (user: same style as the app, the app logo for loading, named Jutyar, with a list of 16 load and interaction details). `web/admin_demo` now uses the app tokens (Manrope, Noto Sans Arabic, #F2F4EF, #1E7A5A, gold #B98A2B) and the Grain Sun logo. New `motion.js` and `motion.css`: preloader curtain with the logo drawing itself (SVG stroke), branded farm words, 00 to 100 counter that grows, Jutyar wordmark from weight 200 to 800, kinetic marquees, bento blinds; per page a skeleton shimmer, staggered cascade, title and number decrypt, mask reveal, typewriter greeting; blur-up satellite pictures (Esri tiles) and map tiles; custom cursor, card glow, satellite banner that turns sharp under the cursor, magnetic buttons; green loading line and gold scroll line. All off with prefers-reduced-motion. Fixed on the way: the preloader now follows real time with a 4 s limit (it stalled when timers were throttled), maps no longer show through the curtain, switches in tables keep their size. Test: real-time run in headless Edge over the DevTools protocol, every state captured and checked; 19 sections and the actions run with no script errors.
 - 2026-10-09 (02:15): **Control Room rebuilt in Pen, `design/web/jutyar_control_room.pen`** (user: rebuild the website in Pen with high precision). `dom2pen.js` converts the live page into .pen layers with the browser's measurements (boxes, text, Lucide icons, inputs, switches, borders, radius, shadows, gradients, z-order); maps, satellite pictures and the logo are images in `assets/`. `build_web_pen.py` drives headless Edge and writes 48 top-level frames: A0 motion spec (16 details, where, how, frames), A1 to A6 the opening sequence frozen at key moments with captions, B01 to B19 every section full page, C1 to C10 skeleton, decrypt, blur-up, cursor and magnetic button, scroll progress, drawer, phone reveal, role lock, search. Pen's own import worked once but timed out on large pages and its edits stay in memory, so the file is generated on disk instead. Test: opened in Pen and exported, compared with the browser: positions and styles match; fixed text spacing after bold words, paint order of fixed layers, variable font weight, scaled counter.
 - 2026-10-09 (02:16): **Dashboard design: wordmark SmartSuli renamed to Jutyar** (user: name it Jutyar as the app). 22 wordmarks in `design/dashboard/jutyar_dashboard.pen`; research documents and the older `web/index.html` keep the old working name for now.
+- 2026-10-09 (02:40): **SmartSuli renamed to Jutyar where it names our product** (user: rename everywhere; DECISION (user): our product only, the real hackathon and organizer keep their name, links kept). Renamed: README title, STATUS title, `SmartSuli_10_Ideas_Report.md` to `Jutyar_10_Ideas_Report.md` (and its references), app description and map user agent, the backtest and map-build user agents, research library notes. Kept on purpose: the SmartSuli AI Challenge and Hackathon'24, the Deputy PM's program, foundation.krd/smartsuli and smartsuli.krd links, the pitch deck event label, the event credit in web/index.html, folder paths on a teammate's Mac. Test: Control Room served at localhost:8080 and opened for the user; headless check over http: preloader to overview, all 19 sections open, no SmartSuli text on any page, own approval refused, DELETE refused, no script errors; map demo has no SmartSuli either.

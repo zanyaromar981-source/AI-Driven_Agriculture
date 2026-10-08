@@ -1,5 +1,5 @@
 """Turn metadata/papers.jsonl into a searchable SQLite library (library.sqlite, full-text search on title+abstract)
-and tag each paper with the topics that matter for the SmartSuli project.
+and tag each paper with the topics that matter for the Jutyar project.
 Usage: python3 -I build_library.py
 Search afterwards, e.g.:  sqlite3 library.sqlite "select year,citations,title from papers where rowid in
    (select rowid from fts where fts match 'wheat AND drought AND satellite') order by citations desc limit 20"

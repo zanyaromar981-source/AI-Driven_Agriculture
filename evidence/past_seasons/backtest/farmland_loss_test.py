@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Farmland-loss test (SmartSuli AI Challenge).
+"""Farmland-loss test (Jutyar).
 
 Question: can free satellite land-cover data show how much farmland the cities of
 Erbil, Slemani and Duhok built over, year by year?

@@ -24,7 +24,7 @@ PROVINCES = [(12, 'Duhok', 'Dihok'), (6, 'Erbil', 'Arbil'), (7, 'Sulaymaniyah', 
 def get(url, tries=5):
     for k in range(tries):
         try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'SmartSuli-backtest/1.0 (python urllib)'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'Jutyar-backtest/1.0 (python urllib)'})
             with urllib.request.urlopen(req, timeout=180) as r:
                 return r.read().decode('utf-8', 'replace')
         except Exception:
