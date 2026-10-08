@@ -249,4 +249,5 @@ class S {
   String get selectedArea => t('هەڵبژێردراو', 'Selected');
   String get oneSquare => t('یەک خانە', 'One square');
   String get insideFarm => t('لەناو کێڵگەکەدا', 'inside the farm');
+  String squares(int n) => t('$n خانە', n == 1 ? '1 square' : '$n squares');
 }

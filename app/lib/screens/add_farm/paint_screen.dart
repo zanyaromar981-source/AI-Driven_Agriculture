@@ -23,7 +23,6 @@ class PaintScreen extends StatefulWidget {
 }
 
 class _PaintScreenState extends State<PaintScreen> {
-  static const _brushPx = 12.0;
 
   late final List<LatLng> _outline = [
     for (final p in widget.points) LatLng(p.lat, p.lon),
@@ -43,14 +42,11 @@ class _PaintScreenState extends State<PaintScreen> {
   String? _lastCrop;
   Offset? _lastDrag;
 
+  /// Select the square under the finger, and only that one: a drag selects
+  /// exactly the squares the finger crosses (the drag is sampled every 4 px).
   void _brush(Offset o, MapCamera cam) {
-    for (var dx = -_brushPx; dx <= _brushPx; dx += 4) {
-      for (var dy = -_brushPx; dy <= _brushPx; dy += 4) {
-        if (dx * dx + dy * dy > _brushPx * _brushPx) continue;
-        final cell = Utm.cellOf(cam.screenOffsetToLatLng(o + Offset(dx, dy)));
-        if (_cellSet.contains(cell)) _selected.add(cell);
-      }
-    }
+    final cell = Utm.cellOf(cam.screenOffsetToLatLng(o));
+    if (_cellSet.contains(cell)) _selected.add(cell);
   }
 
   void _dragTo(Offset o, MapCamera cam) {
@@ -136,10 +132,15 @@ class _PaintScreenState extends State<PaintScreen> {
       summary = inside >= 99.5
           ? side
           : '$side · \u2066${fmtM2(inside)}\u2069 ${s.m2} ${s.insideFarm}';
+    } else if (_selected.isEmpty) {
+      summary = '${s.wholeFarm}: \u2066${fmtM2(m2)}\u2069 ${s.m2}';
     } else {
+      // Several squares: how many, their size, and the area inside the farm
+      // (edge squares count only the part inside the border).
+      final cut = _selected.any((c) => (_inside[c] ?? 100) < 99.5);
       summary =
-          '${_selected.isEmpty ? s.wholeFarm : s.selectedArea}: '
-          '\u2066${fmtM2(m2)}\u2069 ${s.m2}';
+          '${s.squares(_selected.length)} (\u206610 × 10\u2069 ${s.metres}) · '
+          '\u2066${fmtM2(m2)}\u2069 ${s.m2}${cut ? ' ${s.insideFarm}' : ''}';
     }
 
     return MapPage(
@@ -272,10 +273,11 @@ class _PaintScreenState extends State<PaintScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               decoration: BoxDecoration(
                 color: JColors.accentSoft,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Text(
                 summary,
+                textAlign: TextAlign.center,
                 style: jText(
                   ku,
                   size: 13,
