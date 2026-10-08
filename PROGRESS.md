@@ -14,6 +14,7 @@ Last update: 2026-10-08 19:49
 - Design in Pencil, one file `design/jutyar_app.pen`, 14 screens: Sign in (phone, code, my farms), Add farm (corners, paint the grid, farm ready), Farm (home with stacked farms, cell card, crop view, farm view, ask, reading, answer), More (report, alerts, settings); Grain Sun logo
 - Dashboard design in Pencil, `design/dashboard/jutyar_dashboard.pen`, 15 frames: Ministry dashboard by zone (30 zones, zoom into sub-districts), Water, The Doctor, Fire alerts, Compare years, Sorani version, farmer phone view, Alwa market (dashboard + phone). Sample numbers only
 - Flutter app `app/` (Jutyar): Sign in (phone, code, my farms) and Add farm (walk the corners with GPS, paint crops on the 10 m grid, farm ready, save; map styles Satellite with Kurdish place names, Map, Terrain; walk mode; exact area; works offline with upload later) working on a fake server with BACKEND.md shapes; 8 tests; runs on the user's phone
+- Pitch deck in Pencil, `design/pitch_deck.pen`, 8 slides (cover, problem, solution, farmer app, live demo, proof, honesty, closing), name Khor (خۆر), olive and ochre palette, photo-led; first draft, awaiting team review
 - Repo on GitHub with CLAUDE.md rules
 - Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
@@ -33,6 +34,7 @@ Last update: 2026-10-08 19:49
 ## Next
 - Flutter: Home screen for a farm, then Ask the Doctor, Report, Alerts, Settings
 - Flutter: set `kTestMode` to false before any release
+- Pitch deck: swap the AI satellite picture on slide 6 for a real Sentinel-2 capture, add team names, decide on a "who pays" slide
 - Wire the dashboard to `now.json`
 - Gemini API key (`GEMINI_API_KEY`) in `farm_doctor/.env` so the Doctor can answer
 
