@@ -39,6 +39,9 @@ class _FarmSectionState extends State<FarmSection> {
 
   /// When the copy on screen was saved (for the banner if fresh data fails).
   DateTime? _shownSavedAt;
+
+  /// True when the copy is shown because the server failed (not no internet).
+  bool _refreshFailed = false;
   String? _error;
   DateTime? _offlineSince;
   bool _told = false;
@@ -141,6 +144,7 @@ class _FarmSectionState extends State<FarmSection> {
       setState(() {
         _loading = false;
         _refreshing = false;
+        _refreshFailed = offlineSince == null;
         _offlineSince = offlineSince ?? _shownSavedAt;
       });
       if (!_told) {
@@ -152,6 +156,7 @@ class _FarmSectionState extends State<FarmSection> {
     setState(() {
       _loading = false;
       _refreshing = false;
+      _refreshFailed = false;
       _error = error;
       _farm = farm;
       _status = status;
@@ -295,7 +300,12 @@ class _FarmSectionState extends State<FarmSection> {
           ),
         ],
       ),
-      if (since != null) _Banner(text: s.offlineCopy(fmtWhen(since))),
+      if (since != null)
+        _Banner(
+          text: _refreshFailed
+              ? s.refreshFailedCopy(fmtWhen(since))
+              : s.offlineCopy(fmtWhen(since)),
+        ),
       _ViewToggle(view: _view, onChanged: _setView),
       FarmDrawing(
         shape: shape,

@@ -287,4 +287,8 @@ class S {
 
   // Each farm opens on its own screen (user, 2026-10-08); back to the list.
   String get backToFarms => 'My farms';
+
+  /// A copy is on screen because the server failed, not because of no internet.
+  String refreshFailedCopy(String when) =>
+      'Could not refresh. Showing the copy from $when';
 }
