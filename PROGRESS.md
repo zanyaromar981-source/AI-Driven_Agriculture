@@ -12,6 +12,7 @@ Last update: 2026-10-08 17:45
 - Field boundaries from space: SAM tested, good on plains (`farm_doctor/field_boundaries/`)
 - Web: time-machine app `web/index.html`; Ministry dashboard template `web/dashboard.html` (map-first, no data wired); sign-in mock `web/app_signin.html`; 50 logos `web/logos.html`
 - Design in Pencil, one file `design/jutyar_app.pen`, 14 screens: Sign in (phone, code, my farms), Add farm (corners, paint the grid, farm ready), Farm (home with stacked farms, cell card, crop view, farm view, ask, reading, answer), More (report, alerts, settings); Grain Sun logo
+- Dashboard design in Pencil, `design/dashboard/jutyar_dashboard.pen`, 15 frames: Ministry dashboard by zone (30 zones, zoom into sub-districts), Water, The Doctor, Fire alerts, Compare years, Sorani version, farmer phone view, Alwa market (dashboard + phone). Sample numbers only
 - Repo on GitHub with CLAUDE.md rules
 - Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
