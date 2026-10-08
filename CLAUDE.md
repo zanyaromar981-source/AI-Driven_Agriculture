@@ -14,3 +14,7 @@ Read `README.md` first, then the END of `STATUS.md` (newest entries are at the b
 7. Commit message = a short title line, then meaningful short bullet points saying what changed and why.
 8. No em dashes anywhere (commit messages, docs, code comments). Use a comma, a colon or a new sentence.
 9. No "Co-Authored-By: Claude" or any AI attribution line in commits or pull requests.
+
+## Progress tracker
+
+10. Keep `PROGRESS.md` (done, in progress, pending decisions, next) up to date with every change, and commit and push it together with that change.
