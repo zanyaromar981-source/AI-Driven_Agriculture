@@ -338,3 +338,14 @@ double metresBetween(LatLng a, LatLng b) {
   final (bx, by) = Utm.fromLatLng(b.latitude, b.longitude);
   return math.sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
 }
+
+/// 82500.4 -> "82,500" (whole square metres, comma every three digits).
+String fmtM2(double m2) {
+  final digits = m2.round().toString();
+  final b = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) b.write(',');
+    b.write(digits[i]);
+  }
+  return b.toString();
+}

@@ -61,10 +61,10 @@ class FarmShape {
   /// m² of each cell inside the outline (100 = whole cell; edge cells less).
   final Map<CellKey, double> inside;
 
-  /// Cells counted by area: an edge cell half inside counts as half, so the
-  /// total always matches the farm's dunams (25 cells = 1 dunam).
-  int cellCount(Iterable<CellKey> keys) =>
-      (keys.fold(0.0, (a, k) => a + (inside[k] ?? 100)) / 100).round();
+  /// m² of these cells inside the outline: an edge cell half inside adds 50,
+  /// so all cells together add up to the farm's exact area.
+  double areaM2(Iterable<CellKey> keys) =>
+      keys.fold(0.0, (a, k) => a + (inside[k] ?? 100));
   final Map<CellKey, CellReading> reading;
   late final double minX, maxX, minY, maxY;
   late final int eMin, nMax;

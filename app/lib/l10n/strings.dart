@@ -1,4 +1,5 @@
 import '../api/api.dart';
+import '../geo.dart' show fmtM2;
 
 /// All user-facing text. Sorani (ku) is the default, English second.
 /// Sorani copy still needs a native speaker's check.
@@ -84,8 +85,8 @@ class S {
     'The edge crosses itself. Add the corners in walking order.',
   );
   String get tooBig => t(
-    'کێڵگەکە لە ١٠٠٠ دۆنم گەورەترە. گۆشەکان بپشکنە',
-    'The field is over 1000 dunam. Check the corners.',
+    'کێڵگەکە لە 2,500,000 م² گەورەترە. گۆشەکان بپشکنە',
+    'The field is over 2,500,000 m². Check the corners.',
   );
   String corners(int n) => t('$n گۆشە', '$n corners');
 
@@ -207,9 +208,11 @@ class S {
     return '$where corner';
   }
 
-  String weakLine(int weak, int measured, String? where) => weak == 0
-      ? 'No weak cells · $measured measured'
-      : '$weak of $measured cells weak${where == null ? '' : ' · ${place(where)}'}';
+  /// Weak area of the measured area, in m² (user 2026-10-08: metres, not dunam or cells).
+  String weakLine(double weakM2, double measuredM2, String? where) =>
+      weakM2.round() == 0
+      ? 'No weak spots · ${fmtM2(measuredM2)} m² measured'
+      : '${fmtM2(weakM2)} of ${fmtM2(measuredM2)} m² weak${where == null ? '' : ' · ${place(where)}'}';
   String get notMeasured => 'Not measured yet';
   String get thisWeek => 'THIS WEEK';
   String pctOfNormal(int p) => '$p% of normal';
@@ -229,8 +232,7 @@ class S {
   String get askSpot => 'Ask about this spot';
   String get reportHere => 'Report here';
   String get noReading => 'No satellite reading for this cell yet';
-  String measuredOn(String part, String all) =>
-      'measured on $part of $all dunam';
+  String measuredOn(String part, String all) => 'measured on $part of $all m²';
   String offlineCopy(String when) => 'No internet. Showing the copy from $when';
   String get weatherDown => 'Weather forecast not available right now';
   String forecastSource(String src, String when) =>
@@ -240,6 +242,9 @@ class S {
   String get retry => 'Try again';
   String get notSownYet => 'not sown yet';
   String get wholeFarmLabel => 'Whole farm';
-  String get dunamEn => 'dunam';
   String get farmingAssistant => 'Farming assistant';
+
+  // Area in square metres (user, 2026-10-08: "use meters, don't use donum").
+  String get m2 => t('م²', 'm²');
+  String get selectedArea => t('هەڵبژێردراو', 'Selected');
 }

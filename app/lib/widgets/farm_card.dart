@@ -75,13 +75,13 @@ class FarmCard extends StatelessWidget {
                       TextSpan(
                         children: [
                           TextSpan(
-                            text: fmtDunam(farm.areaDunam),
+                            text: fmtM2(farm.areaDunam * 2500),
                             style: metaNum,
                           ),
                           TextSpan(
                             text: farm.mainCrop == null
-                                ? ' ${s.dunam}'
-                                : ' ${s.dunam} · ${s.crop(farm.mainCrop)}',
+                                ? ' ${s.m2}'
+                                : ' ${s.m2} · ${s.crop(farm.mainCrop)}',
                             style: meta,
                           ),
                         ],

@@ -61,6 +61,10 @@ void main() {
     expect(fmtDunam(2.0), '2');
     expect(fmtDunam(0.24), '0.24');
     expect(fmtDunam(0.5), '0.5');
+    expect(fmtM2(82500.4), '82,500');
+    expect(fmtM2(7185), '7,185');
+    expect(fmtM2(950), '950');
+    expect(fmtM2(2500000), '2,500,000');
   });
 
   test('cut cells add up to the exact outline area', () {

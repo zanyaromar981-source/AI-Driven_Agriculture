@@ -199,8 +199,8 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
         sub: Text.rich(
           TextSpan(
             children: [
-              TextSpan(text: fmtDunam(_totalM2 / 2500), style: mutedNum),
-              TextSpan(text: ' ${s.dunam} · ', style: muted),
+              TextSpan(text: fmtM2(_totalM2), style: mutedNum),
+              TextSpan(text: ' ${s.m2} · ', style: muted),
               TextSpan(text: '$_cropTypes', style: mutedNum),
               TextSpan(text: ' ${s.cropTypes}', style: muted),
             ],
@@ -309,7 +309,7 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
                         ),
                       ),
                       Text(
-                        fmtDunam(_m2(e.value) / 2500),
+                        fmtM2(_m2(e.value)),
                         style: latText(
                           size: 14,
                           weight: FontWeight.w700,
@@ -317,7 +317,7 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
                         ),
                       ),
                       Text(
-                        s.dunam,
+                        s.m2,
                         style: jText(
                           ku,
                           size: 14,

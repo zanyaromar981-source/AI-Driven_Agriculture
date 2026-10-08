@@ -198,10 +198,16 @@ class _FarmSectionState extends State<FarmSection> {
       for (final e in shape.reading.entries)
         if (e.value.greennessPct != null) e.key,
     ];
-    final weak = shape.cellCount(
+    final weakM2 = shape.areaM2(
       measured.where((k) => shape.levelAt(k) != FarmStatus.normal),
     );
-    final measuredCount = shape.cellCount(measured);
+    // Same number as the crop list and the Farm view: the server's crop areas.
+    final measuredCrops = (st?.crops ?? const <CropReading>[]).where(
+      (c) => c.greennessPctOfNormal != null,
+    );
+    final measuredM2 = measuredCrops.isEmpty
+        ? shape.areaM2(measured)
+        : measuredCrops.fold(0.0, (a, c) => a + c.dunam * 2500);
     final whole = st?.greennessPctOfNormal;
     final since = _offlineSince;
     return [
@@ -246,7 +252,7 @@ class _FarmSectionState extends State<FarmSection> {
         Text(
           measured.isEmpty
               ? s.notMeasured
-              : s.weakLine(weak, measuredCount, st?.weakWhere),
+              : s.weakLine(weakM2, measuredM2, st?.weakWhere),
           style: jText(false, size: 13.5, weight: FontWeight.w600),
         ),
       const Divider(height: 8, color: JColors.cardLine),
@@ -290,7 +296,7 @@ class _FarmSectionState extends State<FarmSection> {
               Text(
                 [
                   s.wholeFarmLabel,
-                  '${fmtDunam(sum.areaDunam)} ${s.dunamEn}',
+                  '${fmtM2(sum.areaDunam * 2500)} ${s.m2}',
                   if (whole != null) s.levelName(levelFromPct(whole)),
                 ].join(' · '),
                 style: jText(false, size: 12.5, color: JColors.muted),
@@ -298,8 +304,8 @@ class _FarmSectionState extends State<FarmSection> {
               if (whole != null && !all)
                 Text(
                   s.measuredOn(
-                    fmtDunam(measuredDunam),
-                    fmtDunam(sum.areaDunam),
+                    fmtM2(measuredDunam * 2500),
+                    fmtM2(sum.areaDunam * 2500),
                   ),
                   style: jText(false, size: 12, color: JColors.muted),
                 ),
@@ -336,7 +342,7 @@ class _FarmSectionState extends State<FarmSection> {
             .firstOrNull;
         return CellCard(
           title:
-              '${cropOf(c).emoji} ${s.crop(c)} · ${fmtDunam(r?.dunam ?? 0)} ${s.dunamEn}',
+              '${cropOf(c).emoji} ${s.crop(c)} · ${fmtM2((r?.dunam ?? 0) * 2500)} ${s.m2}',
           level: r?.level ?? FarmStatus.none,
           pct: r?.greennessPctOfNormal,
           lines: [
@@ -480,7 +486,7 @@ class _CropList extends StatelessWidget {
               Expanded(
                 child: Text(
                   [
-                    '${s.crop(c.crop)} ${fmtDunam(c.dunam)} ${s.dunamEn}',
+                    '${s.crop(c.crop)} ${fmtM2(c.dunam * 2500)} ${s.m2}',
                     c.greennessPctOfNormal == null
                         ? s.notSownYet
                         : s.pctOfNormal(c.greennessPctOfNormal!),

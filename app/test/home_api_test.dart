@@ -48,23 +48,35 @@ void main() {
     },
   );
 
-  test('cell count matches the area: 25 cells = 1 dunam', () async {
-    final api = await signedIn('+9647501234567');
-    final plot = FarmShape(
-      await api.getFarm('f_01HXTOMATOPLOT'),
-      await api.getFarmStatus('f_01HXTOMATOPLOT'),
-    );
-    expect(plot.crop.length, greaterThan(200)); // edge cells touch the outline
-    expect(plot.cellCount(plot.crop.keys), 200); // but count by area: 8 dunam
+  test(
+    'area adds up to the farm: edge cells count by their share inside',
+    () async {
+      final api = await signedIn('+9647501234567');
+      final plot = FarmShape(
+        await api.getFarm('f_01HXTOMATOPLOT'),
+        await api.getFarmStatus('f_01HXTOMATOPLOT'),
+      );
+      expect(
+        plot.crop.length,
+        greaterThan(200),
+      ); // edge cells touch the outline
+      expect(
+        plot.areaM2(plot.crop.keys),
+        closeTo(20000, 1),
+      ); // 8 dunam = 20,000 m²
 
-    final upper = FarmShape(
-      await api.getFarm('f_01HXUPPERFIELD'),
-      await api.getFarmStatus('f_01HXUPPERFIELD'),
-    );
-    expect(upper.cellCount(upper.crop.keys), 3000); // 120 dunam
-    final tomato = upper.crop.keys.where((k) => upper.crop[k] == 'tomato');
-    expect(upper.cellCount(tomato), closeTo(400, 3)); // 16 dunam
-  });
+      final upper = FarmShape(
+        await api.getFarm('f_01HXUPPERFIELD'),
+        await api.getFarmStatus('f_01HXUPPERFIELD'),
+      );
+      expect(upper.areaM2(upper.crop.keys), closeTo(300000, 1)); // 120 dunam
+      final tomato = upper.crop.keys.where((k) => upper.crop[k] == 'tomato');
+      expect(
+        upper.areaM2(tomato),
+        closeTo(40000, 300),
+      ); // 16 dunam, within a few cells
+    },
+  );
 
   test('another number cannot open these farms', () async {
     final api = await signedIn('+9647700000000');

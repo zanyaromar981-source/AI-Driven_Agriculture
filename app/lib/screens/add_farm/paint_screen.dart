@@ -121,13 +121,12 @@ class _PaintScreenState extends State<PaintScreen> {
     final scope = AppScope.of(context);
     final s = scope.s;
     final ku = scope.ku;
-    final count = _selected.isEmpty ? _cells.length : _selected.length;
     final m2 = _selected.isEmpty
         ? _totalM2
         : _selected.fold(0.0, (a, c) => a + (_inside[c] ?? 0));
     final summary =
-        '${_selected.isEmpty ? '${s.wholeFarm}: ' : ''}'
-        '$count ${s.cells} = ${fmtDunam(m2 / 2500)} ${s.dunam}';
+        '${_selected.isEmpty ? s.wholeFarm : s.selectedArea}: '
+        '\u2066${fmtM2(m2)}\u2069 ${s.m2}';
 
     return MapPage(
       step: 2,
