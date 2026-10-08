@@ -1,0 +1,15 @@
+services:
+  postgresql:
+    image: postgres
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: farm_doctor
+    ports:
+      - "5432:5432"
+
+  # jaeger:
+  #   image: cr.jaegertracing.io/jaegertracing/jaeger:2.8.0
+  #   ports:
+  #     - 16686:16686
+  #     - 4317:4317

@@ -1,0 +1,9 @@
+# .cargo/audit.toml
+[advisories]
+ignore = [
+  # RUSTSEC-2023-0071 (rsa / Marvin Attack)
+  # Pulled in via sea-orm -> sqlx -> sqlx-mysql. We only use Postgres
+  # (sqlx-postgres), so the MySQL RSA auth path is unused. No fixed
+  # rsa release exists; revisit when sqlx makes rsa optional or prob gets fixed (mysql-rsa).
+  "RUSTSEC-2023-0071",
+]
