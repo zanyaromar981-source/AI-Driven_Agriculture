@@ -111,22 +111,30 @@ class _TabBar extends StatelessWidget {
       child: InkWell(
         onTap: on ? null : () => later(label),
         child: Padding(
-          padding: const EdgeInsets.only(top: 10, bottom: 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 3,
-            children: [
-              Icon(icon, size: 22, color: on ? JColors.accent : JColors.muted),
-              Text(
-                label,
-                style: jText(
-                  false,
-                  size: 11,
-                  weight: on ? FontWeight.w700 : FontWeight.w500,
+          padding: const EdgeInsets.only(top: 8, bottom: 6),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 3,
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
                   color: on ? JColors.accent : JColors.muted,
                 ),
-              ),
-            ],
+                Text(
+                  label,
+                  style: jText(
+                    false,
+                    size: 11,
+                    weight: on ? FontWeight.w700 : FontWeight.w500,
+                    color: on ? JColors.accent : JColors.muted,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -139,7 +147,7 @@ class _TabBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 64,
+          height: 74,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -148,40 +156,44 @@ class _TabBar extends StatelessWidget {
               Expanded(
                 child: InkWell(
                   onTap: () => later(s.tabAsk),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    spacing: 3,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: JColors.accent,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: JColors.accentSoft,
-                            width: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 6),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.bottomCenter,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: 3,
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: JColors.accent,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: JColors.accentSoft,
+                                width: 3,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.medical_services_outlined,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        child: const Icon(
-                          Icons.medical_services_outlined,
-                          size: 20,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(
-                          s.tabAsk,
-                          style: jText(
-                            false,
-                            size: 11,
-                            weight: FontWeight.w600,
-                            color: JColors.accent,
+                          Text(
+                            s.tabAsk,
+                            style: jText(
+                              false,
+                              size: 11,
+                              weight: FontWeight.w600,
+                              color: JColors.accent,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
