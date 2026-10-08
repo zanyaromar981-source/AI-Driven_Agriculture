@@ -1,0 +1,45 @@
+name: jutyar
+description: "Jutyar, the farmer app of the SmartSuli Farm Doctor."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_map: ^8.3.2
+  geolocator: ^14.1.1
+  latlong2: ^0.10.1
+  path_provider: ^2.1.6
+  wakelock_plus: ^1.8.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  path_provider_platform_interface: ^2.1.3
+  plugin_platform_interface: ^2.1.8
+
+flutter:
+  uses-material-design: true
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope-500.ttf
+          weight: 500
+        - asset: assets/fonts/Manrope-600.ttf
+          weight: 600
+        - asset: assets/fonts/Manrope-700.ttf
+          weight: 700
+        - asset: assets/fonts/Manrope-800.ttf
+          weight: 800
+    - family: NotoSansArabic
+      fonts:
+        - asset: assets/fonts/NotoSansArabic-400.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansArabic-500.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSansArabic-700.ttf
+          weight: 700
