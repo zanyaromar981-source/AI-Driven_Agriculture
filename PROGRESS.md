@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 21:25
+Last update: 2026-10-08 21:45
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -12,7 +12,7 @@ Last update: 2026-10-08 21:25
 - Field boundaries from space: SAM tested, good on plains (`farm_doctor/field_boundaries/`)
 - Web: time-machine app `web/index.html`; Ministry dashboard template `web/dashboard.html` (map-first, no data wired); sign-in mock `web/app_signin.html`; 50 logos `web/logos.html`
 - Design in Pencil, one file `design/jutyar_app.pen`, 14 screens: Sign in (phone, code, my farms), Add farm (corners, paint the grid, farm ready), Farm (home with stacked farms, cell card, crop view, farm view, ask, reading, answer), More (report, alerts, settings); Grain Sun logo
-- Dashboard design in Pencil, `design/dashboard/jutyar_dashboard.pen`, 15 frames: Ministry dashboard by district (33 KRG districts on real borders, latitude / longitude rulers, zoom into Chamchamal's real sub-districts), Water, The Doctor, Fire alerts, Compare years, Sorani version, farmer phone view, Alwa market (dashboard + phone). Sample numbers only
+- Dashboard design in Pencil, `design/dashboard/jutyar_dashboard.pen`, 15 frames: Ministry dashboard by district (33 KRG districts on real borders, the map is one reusable component also saved as `kri_map_component.pen`, latitude / longitude rulers, zoom into Chamchamal's real sub-districts), Water, The Doctor, Fire alerts, Compare years, Sorani version, farmer phone view, Alwa market (dashboard + phone). Sample numbers only
 - Flutter app `app/` (Jutyar): Sign in (phone, code, my farms) and Add farm (walk the corners with GPS, paint crops on the 10 m grid, farm ready, save; map styles Satellite with Kurdish place names, Map, Terrain; walk mode; exact area; works offline with upload later) working on a fake server with BACKEND.md shapes; 8 tests; runs on the user's phone
 - Flutter Home (open a farm): a tap in My farms opens Home with all farms stacked, scrolled to that farm. Per farm: Cells / Crops / Farm views drawn from the outline (works offline), cell card on tap, weak-cell line counted by area, This week from the live Open-Meteo forecast with the Weather Planner rules, last copy kept on the phone. Tab bar in place (only Home works). English labels for now
 - App icon: Grain Sun on the cream tile, Android (adaptive) and iOS, replaces the default Flutter logo
