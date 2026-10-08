@@ -1,0 +1,94 @@
+# BACKEND.md: what the frontend needs from the backend
+
+This file is the contract between the farmer app / dashboards (frontend) and the backend. The frontend writes here what it sends and what it expects back. If the backend needs something from the frontend, it writes `FRONTEND.md`, and the frontend follows that file strictly. Both files live at the repo root and are committed with every change.
+
+Status: v1, proposed by the frontend on 2026-10-08. Backend: confirm or edit each section; mark changes with your date.
+
+## 1. Shared definitions (both sides must use exactly these)
+
+| Thing | Definition |
+|---|---|
+| Phone | E.164 string, Iraqi mobile: `"+9647501234567"` (no spaces). The phone is the account; there is no name or password. |
+| Farm | one outline (polygon) + a grid of cells + a name. One phone can own many farms. |
+| Point | GPS corner tapped by the farmer: `{"lat": 36.0312, "lon": 44.6021, "acc_m": 6, "t": "2026-10-08T14:03:11Z"}` (WGS84 decimal degrees, accuracy in metres, UTC time). |
+| Cell grid | 10 m squares aligned to the Sentinel-2 pixel grid: **UTM zone 38N (EPSG:32638)**, cell = `{"e": floor(easting/10), "n": floor(northing/10)}`. One cell = one satellite pixel. The frontend computes `e`,`n` from lat/lon with proj4 (EPSG:4326 → EPSG:32638); the backend validates and may correct. |
+| Crop codes | `wheat`, `barley`, `tomato`, `cucumber`, `potato`, `onion`, `watermelon`, `grape`, `olive`, `sunflower`, `chickpea`, `empty`. Lower-case ASCII; the app maps them to emojis and Sorani labels. New codes only by editing this list on both sides. |
+| Area | dunam (1 dunam = 2,500 m² = 25 cells). The backend computes areas; the app only displays them. |
+| Dates | ISO 8601, UTC for timestamps (`...Z`), plain `YYYY-MM-DD` for days. |
+| Language | every human-readable string the backend returns comes in both `"ku"` (Sorani, Arabic script) and `"en"`. The app shows `ku` by default. |
+| Condition levels | `normal`, `watch`, `alarm`, `none` (no data yet). Season labels: `too_early`, `normal`, `dry`, `drought`, `wet`. |
+| Confidence | `sure`, `likely`, `unsure`. |
+| Numbers | the backend never rounds away precision needed for display; the app rounds. Percentages are 0–100 integers unless stated. |
+
+## 2. Endpoints the app needs
+
+Base URL and auth: `Authorization: Bearer <token>` on everything after OTP verify. JSON in, JSON out, UTF-8.
+
+### 2.1 Sign in (OTP)
+- `POST /auth/otp/send` body `{"phone": "+9647501234567", "lang": "ku"}` → `200 {"sent": true, "retry_after_s": 59}`. Rate-limit per phone; same response whether the number is new or known.
+- `POST /auth/otp/verify` body `{"phone": "+9647501234567", "code": "123456"}` → `200 {"token": "...", "farms_count": 2}` or `401 {"error": "bad_code"}`. Codes expire in 10 minutes, 5 tries.
+
+### 2.2 My farms
+- `GET /farms` → `200 {"farms": [FarmSummary]}`
+  FarmSummary: `{"id": "f_01HX...", "name": "کێڵگەی سەرەوە", "area_dunam": 120, "crops": [{"crop":"wheat","dunam":96},{"crop":"tomato","dunam":16}], "status": "normal|watch|alarm|none", "last_picture": "2026-10-05", "centroid": {"lat":36.03,"lon":44.60}}`
+- `POST /farms` body:
+  ```json
+  {"name": "کێڵگەی سەرەوە",
+   "points": [Point, Point, Point, ...],            // 3 to 50 corners, in walking order, polygon closes itself
+   "cells": [{"e": 462337, "n": 398812, "crop": "wheat"}, ...],   // every painted cell; unpainted cells inside the outline = "empty"
+   "created_offline_at": "2026-10-08T14:10:00Z"}
+  ```
+  → `201 {"farm": Farm}`. Backend rules: snap points to the grid, reject if the polygon self-intersects (`422 {"error":"bad_polygon"}`), drop cells outside the outline and return them in `"dropped_cells"`.
+  Farm: FarmSummary + `{"outline": [{"lat","lon"}...], "cells": [{"e","n","crop","greenness_pct": 0–200|null, "level": "normal|watch|alarm|none"}], "picture_date": "2026-10-05"|null}`
+- `PUT /farms/{id}/cells` body `{"cells": [{"e","n","crop"}...]}` → `200 {"farm": Farm}` (repaint crops).
+- `DELETE /farms/{id}` → `204`.
+
+### 2.3 My field from space (Field Eye)
+- `GET /farms/{id}/status` → `200 {"picture_date": "2026-10-05", "cloud_pct": 0, "greenness_pct_of_normal": 101, "pct_of_neighbours": 85, "surface": "bare|sparse|growing|dense", "weak_share_pct": 0, "weak_where": "north-east"|null, "cells": [{"e","n","greenness_pct","level"}...], "history": [{"year": 2025, "greenness": 0.079}, ...], "next_picture_expected": "2026-10-10"}`
+  Rule: `greenness_pct` is the cell vs its own normal for this week (100 = normal). `null` when cloudy. The backend fetches Sentinel-2; the app never calls satellites.
+
+### 2.4 This week's plan (Weather Planner)
+- `GET /farms/{id}/plan` → `200 {"from": "2026-10-08", "days": 10, "rain_mm": [0,0,2.1,...], "tmin": [...], "tmax": [...], "alerts": [{"type": "frost|heat|heavy_rain|dry_spell|rust_weather|sunn_pest|dust|spray_window|sowing_rain|urea_rain", "day": "2026-10-12", "value": -2.1, "level": "watch|alarm", "ku": "...", "en": "..."}], "decisions": [{"code": "sow_wait|sow_go|urea_go|urea_hold|spray_ok|check_rust|count_sunn_pest|frost_check|heat_check|dust_delay", "ku": "...", "en": "..."}], "source": "Open-Meteo (ECMWF/GraphCast family)", "issued": "2026-10-08T06:00:00Z"}`
+  Rule: no forecasts beyond 10 days, ever. Thresholds come from `reports/Farm_Advice_Research.md`.
+
+### 2.5 Ask the Doctor
+- `POST /farms/{id}/ask` multipart: `question` (text, optional), `voice` (audio/m4a or ogg, optional, ≤ 60 s), `photos[]` (jpeg, 1–6, ≤ 4 MB each, optional), `cell` (optional `{"e","n"}` the farmer tapped), `lang` (`ku|en`).
+  → `200 {"likely": "...", "confidence": "sure|likely|unsure", "why": ["field_eye -> ...", "weather -> ..."], "actions_this_week": ["..."], "cannot_tell": ["..."], "refer_to_officer": true|false, "ku": "...", "en": "...", "transcript": "..." (if voice), "case_id": "c_..."}`
+  Rules (hard): no pesticide or fertilizer doses, no product names; only numbers from the AIs; `unsure` + `refer_to_officer: true` when inputs conflict. Response time target ≤ 25 s; the app shows "reading the field" meanwhile.
+
+### 2.6 Reports (Neighbour Watch)
+- `POST /reports` body `{"farm_id": "f_...", "cell": {"e","n"}|null, "type": "yellow_stripes|insects|wilting|flood|hail|fire|animal_disease|other", "note": "...", "photo_id": "..."|null, "lat", "lon", "t"}` → `201 {"report_id": "r_..."}`
+- `GET /reports/nearby?lat=&lon=&km=20&days=14` → `200 {"count": 3, "by_type": {"yellow_stripes": 2}, "closest": [{"type","km","days_ago"}]}`. Never return another farmer's phone or exact location; round to 1 km.
+
+### 2.7 Alerts (push)
+- `POST /devices` body `{"push_token": "...", "platform": "android|ios", "lang": "ku"}` → `204`.
+- The backend pushes `{"farm_id", "type", "day", "ku", "en"}` for alerts of level `alarm` and the weekly plan (Sunday 06:00 local).
+
+### 2.8 Dashboard (Ministry, no login)
+- `GET /region/now` → the structure of `web/now.json` (zones with field_eye, weather, season, neighbours; dams; summary; brief). Keep that shape; the dashboard already reads it.
+
+## 3. Offline rules (frontend side, so the backend knows what to expect)
+- The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
+- The app caches the last `status`, `plan` and farms list; it shows the cached copy with its date when offline. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
+- Idempotency: the app sends `Idempotency-Key` headers on POSTs; repeat keys must not create duplicates.
+
+## 4. Errors
+`400 bad_request`, `401 unauthorized`, `404 not_found`, `422 {error, field}` for validation, `429 rate_limited {retry_after_s}`, `503 upstream_down {source: "sentinel|weather|claude"}` when a feed is down (the app then shows the cached copy and the reason).
+
+## 5. What already exists on the backend side (today)
+| Endpoint | Module in `farm_doctor/` | State |
+|---|---|---|
+| 2.3 status | `field_eye.measure(lon, lat, date)` | works, ~16 s per field; needs the polygon/cell version |
+| 2.4 plan | `weather_planner.plan(lon, lat)` | works; decisions are English strings, need codes + ku |
+| season label | `season_check.check(lon, lat, date)` | works for the 16 zones; per-farm = nearest zone |
+| 2.6 nearby | `neighbour_watch.nearby(lon, lat, date)` | works on test data |
+| dams | `dam_watch.latest(date)` | works from the CSV |
+| 2.5 doctor | `doctor.ask(inputs, question, photos)` | works, needs `ANTHROPIC_API_KEY`; voice not yet |
+| 2.8 region | `build_now.py` → `web/now.json` | works, 61 s for 16 zones |
+| 2.1 OTP, 2.2 farms, 2.7 push | nothing yet | to build |
+
+## 6. Open points (answer here)
+1. Field edge shortcut: offer the satellite-detected edge (SAM) as a suggestion, always walk, or walk then tidy. (User decision pending.)
+2. OTP provider for Iraqi numbers (Twilio, local SMS gateway) and cost.
+3. Where the backend runs for the demo (laptop, DigitalOcean droplet) and the base URL.
+4. Voice: Google Chirp 2 `ckb-IQ` or type-only for the demo.

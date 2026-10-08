@@ -18,3 +18,7 @@ Read `README.md` first, then the END of `STATUS.md` (newest entries are at the b
 ## Progress tracker
 
 10. Keep `PROGRESS.md` (done, in progress, pending decisions, next) up to date with every change, and commit and push it together with that change.
+
+## Frontend and backend contract
+
+11. `BACKEND.md` (repo root) is what the frontend needs from the backend: payloads, endpoints, shared definitions. Keep it updated with every frontend change that touches data. After every `git pull`, check for `FRONTEND.md`: it is what the backend expects from the frontend, and the frontend follows it strictly. Disagreements are settled in the files, not in code.
