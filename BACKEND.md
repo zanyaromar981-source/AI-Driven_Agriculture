@@ -18,6 +18,7 @@ Checked 2026-10-08 20:48 against `backend/` at commit a0ade90 and `FRONTEND.md` 
 | 4 | Open a farm: `GET /v1/farms/{id}` (2.2) | built | `inside_pct` on cells, 0.2 (not blocking). |
 | 5 | Farm from space: `GET /v1/farms/{id}/status` (2.3) | not built | **This blocks Home.** Home loads a farm and its status together; today the `404` makes every farm show "Could not load this farm (not_found)". Fastest fix: the stub answer in 2.3 until the satellite job exists. |
 | 6 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built | Home still opens without it ("Weather forecast not available right now"). Then serve the stored plan (2.4). |
+| 7 | Edit a farm: `PUT /v1/farms/{id}` (2.2, added 21:10) | not built (only `PUT /v1/farms/{id}/cells`) | Needed to change a farm's border, crops and name (the app's edit screen is being built). Changing the border needs the outline, which `PUT .../cells` cannot take. |
 
 Not needed yet, because their screens are not built: Ask the Doctor (2.5), reports (2.6), alerts and devices (2.7), `DELETE /v1/account`.
 
@@ -32,7 +33,7 @@ The app's clipping code can be ported: `cellsTouching` in `app/lib/geo.dart` ret
 
 ### 0.3 Answers to FRONTEND.md section 7
 
-1. `PUT /v1/farms/{id}/cells` changing only the listed cells: fine. The app sends the whole painting on create, and a future repaint screen will send every cell.
+1. `PUT /v1/farms/{id}/cells` changing only the listed cells: fine, but the app will not use it. Editing a farm sends the whole farm (outline and every cell) through `PUT /v1/farms/{id}` (2.2).
 2. 50,000 cells (2,000 dunam) per farm: fine. The app refuses outlines over 1,000 dunam (2,500,000 m²) before sending.
 3. `GET`/`PUT /v1/me`: the Settings screen is not built yet. Its design shows the language, the phone number, the number of farms, two notification switches and "Delete my account and farms". So `phone` and `lang` are enough now. `name` can stay empty: the app never asks for a name ("No password, no name"). The switches belong to `POST /v1/devices` (2.7), the number of farms comes from `GET /v1/farms`, and delete is `DELETE /v1/account`.
 
@@ -115,6 +116,7 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
   - `422` with `bad_polygon`, `farm_too_large` or `too_many_farms` (FRONTEND.md section 5).
   - Example check (pyproj): `{"lat": 36.0312, "lon": 44.6021}` is easting 464152.26, northing 3987482.22, so cell `{"e": 46415, "n": 398748}`.
   - Edge cells with a small `inside_pct` are mixed pixels: the backend may skip them for greenness.
+- `PUT /v1/farms/{id}` (added 2026-10-08 21:10, for editing a farm): body as `POST /v1/farms` (`name`, `points`, `cells`, `created_offline_at`); replaces the outline, cells and name; same validation (`bad_polygon`, `farm_too_large`); `Idempotency-Key` honoured; `404` for another phone's farm. → `200 {"farm": Farm, "dropped_cells": [{"e", "n"}]}`.
 - `PUT /v1/farms/{id}/cells` and `DELETE /v1/farms/{id}`: as in FRONTEND.md; the app does not call them yet.
 
 ### 2.3 My field from space (Field Eye)
@@ -227,6 +229,8 @@ The only code the app branches on today is `bad_code`; the others are shown as t
 |---|---|---|
 | 2.1 sign in | `backend/` (Rust, axum, Postgres) | built; demo uses one fixed code; no SMS provider yet |
 | 2.2 farms: list, create, open, repaint, delete | `backend/` | built; cells and crop areas still by the centre rule (0.2) |
+| 2.2 edit a farm `PUT /v1/farms/{id}` | `backend/` | not built |
+| per-farm insights `GET /v1/farms/{id}/insights` | `backend/` (commit 81faa15) | built (topics such as water, soil, rain). Not the same as 2.3: Home calls `/status` and does not read `/insights` yet. |
 | profile `GET`/`PUT /v1/me` | `backend/` | built (not used by the app yet) |
 | 2.3 status | `farm_doctor/field_eye.py` `measure(lon, lat, date)` | Python only: one 1 km square around a point, about 16 s; needs the per-cell version and a stored daily job. Decided 2026-10-08 (user, Arya): the Python AIs push results into `backend/` through `/v1/ingest` (guarded by `X-Service-Key`) and `backend/` serves them. The app-facing `GET /v1/farms/{id}/status` is not built yet. |
 | 2.4 plan | `farm_doctor/weather_planner.py` `plan(lon, lat)` | Python only; decisions are English sentences, need the codes, `ku` and the alert list. Same route in through `/v1/ingest`; `GET /v1/farms/{id}/plan` not built yet. |

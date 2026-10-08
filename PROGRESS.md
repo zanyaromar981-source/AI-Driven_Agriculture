@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-08 21:25
+Last update: 2026-10-08 21:10
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -52,6 +52,7 @@ Last update: 2026-10-08 21:25
 - `GET /v1/farms/{id}/status`: blocks Home today (every farm shows "Could not load this farm"); the stub in BACKEND.md 2.3 is enough for now
 - `GET /v1/farms/{id}/plan` (Home opens without it)
 - Farm cells with `inside_pct` and crop areas from them, so sizes match the app (not blocking)
+- `PUT /v1/farms/{id}` to edit a farm's border, crops and name (needed by the edit screen in progress)
 
 ## Needs from the user
 - Gemini API key from Google AI Studio (decided: Gemini is the Doctor)
