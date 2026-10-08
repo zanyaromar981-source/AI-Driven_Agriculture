@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, ExprTrait, QueryFilter,
+    ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, ExprTrait,
+    QueryFilter,
     sea_query::{Expr, OnConflict},
 };
 
@@ -113,13 +114,22 @@ impl SignInChallengeRepository for SignInChallengePostgresRepository {
                             sign_in_challenges::Column::Attempts,
                             sign_in_challenges::Column::SentAt,
                             sign_in_challenges::Column::ExpiresAt,
+                            sign_in_challenges::Column::UsedAt,
                         ])
+                        // A code that was already used does not hold the
+                        // phone waiting; an unused one does until it is old
+                        // enough.
                         .action_and_where(
                             Expr::col((
                                 sign_in_challenges::Entity,
                                 sign_in_challenges::Column::SentAt,
                             ))
-                            .lte(sent_before.naive_utc()),
+                            .lte(sent_before.naive_utc())
+                            .or(Expr::col((
+                                sign_in_challenges::Entity,
+                                sign_in_challenges::Column::UsedAt,
+                            ))
+                            .is_not_null()),
                         )
                         .to_owned(),
                 )
@@ -158,10 +168,28 @@ impl SignInChallengeRepository for SignInChallengePostgresRepository {
             .transpose()
     }
 
-    async fn consume(&self, phone: &Phone, code_hash: &str) -> Result<bool, AppError> {
-        let result = sign_in_challenges::Entity::delete_many()
+    async fn consume(
+        &self,
+        phone: &Phone,
+        code_hash: &str,
+        now: DateTime<Utc>,
+        reusable_since: DateTime<Utc>,
+    ) -> Result<bool, AppError> {
+        // One statement decides: the first use stamps the time, a repeat
+        // inside the window leaves the stamp alone, anything later matches
+        // no row.
+        let result = sign_in_challenges::Entity::update_many()
+            .col_expr(
+                sign_in_challenges::Column::UsedAt,
+                Expr::cust_with_values("COALESCE(used_at, $1)", [now.naive_utc()]),
+            )
             .filter(sign_in_challenges::Column::Phone.eq(phone.as_str()))
             .filter(sign_in_challenges::Column::CodeHash.eq(code_hash))
+            .filter(
+                Condition::any()
+                    .add(sign_in_challenges::Column::UsedAt.is_null())
+                    .add(sign_in_challenges::Column::UsedAt.gt(reusable_since.naive_utc())),
+            )
             .exec(&self.conn)
             .await
             .map_err(database_error)?;

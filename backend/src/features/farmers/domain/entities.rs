@@ -71,6 +71,10 @@ pub struct SignInChallenge {
     attempts: u32,
     sent_at: DateTime<Utc>,
     expires_at: DateTime<Utc>,
+    /// When the code first signed someone in. For a short while after that
+    /// the same code is accepted again, because the app repeats a sign-in
+    /// whose answer was lost on the way back.
+    used_at: Option<DateTime<Utc>>,
 }
 
 impl SignInChallenge {
@@ -88,6 +92,7 @@ impl SignInChallenge {
             attempts: 0,
             sent_at: now,
             expires_at: now + valid_for,
+            used_at: None,
         }
     }
 
@@ -99,6 +104,7 @@ impl SignInChallenge {
         attempts: u32,
         sent_at: DateTime<Utc>,
         expires_at: DateTime<Utc>,
+        used_at: Option<DateTime<Utc>>,
     ) -> Self {
         Self {
             phone,
@@ -107,6 +113,7 @@ impl SignInChallenge {
             attempts,
             sent_at,
             expires_at,
+            used_at,
         }
     }
 
@@ -117,6 +124,12 @@ impl SignInChallenge {
         now: DateTime<Utc>,
         resend_after: Duration,
     ) -> Result<(), FarmerError> {
+        // A code that has done its job does not hold the phone waiting: a
+        // farmer who signs out can ask for the next one straight away.
+        if self.used_at.is_some() {
+            return Ok(());
+        }
+
         let wait = (self.sent_at + resend_after - now).num_seconds();
 
         if wait > 0 {
@@ -204,6 +217,25 @@ mod tests {
         assert!(
             challenge
                 .ensure_can_resend(now + Duration::seconds(60), Duration::seconds(60))
+                .is_ok()
+        );
+    }
+
+    #[test]
+    fn a_used_code_does_not_make_the_phone_wait_for_the_next_one() {
+        let now = Utc::now();
+        let used = SignInChallenge::rehydrate(
+            phone(),
+            "right".to_string(),
+            Language::Sorani,
+            1,
+            now,
+            now + Duration::minutes(10),
+            Some(now),
+        );
+
+        assert!(
+            used.ensure_can_resend(now + Duration::seconds(1), Duration::seconds(60))
                 .is_ok()
         );
     }

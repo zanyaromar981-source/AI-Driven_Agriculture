@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use chrono::Utc;
+use chrono::{Duration, Utc};
 
 use crate::{
     features::farmers::{
@@ -30,6 +30,7 @@ pub struct VerifySignInCodeUseCase {
     tokens: Arc<dyn TokenIssuer>,
     farms: Arc<dyn FarmCounter>,
     max_attempts: u32,
+    reuse_window: Duration,
 }
 
 impl VerifySignInCodeUseCase {
@@ -40,6 +41,7 @@ impl VerifySignInCodeUseCase {
         tokens: Arc<dyn TokenIssuer>,
         farms: Arc<dyn FarmCounter>,
         max_attempts: u32,
+        reuse_window: Duration,
     ) -> Self {
         Self {
             farmers,
@@ -48,6 +50,7 @@ impl VerifySignInCodeUseCase {
             tokens,
             farms,
             max_attempts,
+            reuse_window,
         }
     }
 
@@ -67,16 +70,23 @@ impl VerifySignInCodeUseCase {
 
         let presented = self.hasher.hash(&input.phone, &input.code);
 
-        if let Err(error) = challenge.check(&presented, Utc::now()) {
+        let now = Utc::now();
+
+        if let Err(error) = challenge.check(&presented, now) {
             tracing::info!(attempts = *challenge.attempts(), %error, "sign-in refused");
 
             return Err(error.into());
         }
 
-        // A code works once. If another request with the same code got here
-        // first, there is nothing left to consume and this one is refused.
-        if !self.challenges.consume(&input.phone, &presented).await? {
-            tracing::info!("sign-in refused: the code was already used");
+        // A code signs in once. The same code is accepted again only for a
+        // short while after that, so that a sign-in whose answer was lost
+        // can be repeated by the app; after the window it is refused.
+        if !self
+            .challenges
+            .consume(&input.phone, &presented, now, now - self.reuse_window)
+            .await?
+        {
+            tracing::info!("sign-in refused: the code was used a while ago");
 
             return Err(FarmerError::WrongCode.into());
         }
@@ -109,6 +119,7 @@ mod tests {
             Arc::new(fakes.clone()),
             Arc::new(fakes.clone()),
             MAX_ATTEMPTS,
+            Duration::minutes(2),
         )
     }
 
@@ -170,17 +181,30 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_code_works_only_once() {
+    async fn a_sign_in_repeated_straight_away_succeeds_again() {
         let fakes = Fakes::with_open_challenge("123456");
         let use_case = use_case(&fakes);
 
         use_case.execute(input("123456")).await.expect("first");
         let again = use_case.execute(input("123456")).await;
 
+        assert!(
+            again.is_ok(),
+            "the app repeats a sign-in whose answer was lost; it must not be locked out"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_code_used_a_while_ago_no_longer_works() {
+        let fakes = Fakes::with_open_challenge("123456").used(Duration::minutes(3));
+
+        let again = use_case(&fakes).execute(input("123456")).await;
+
         assert!(matches!(
             again,
             Err(AppError::Farmer(FarmerError::WrongCode))
         ));
+        assert!(!fakes.calls().contains(&Call::IssueToken));
     }
 
     #[tokio::test]

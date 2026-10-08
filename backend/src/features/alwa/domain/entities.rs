@@ -262,6 +262,25 @@ impl Listing {
         &self.seller_phone == phone
     }
 
+    /// True when this seller has already taken the listing down. A repeated
+    /// cancel then has nothing left to do and is not an error.
+    pub fn was_cancelled_by(&self, phone: &Phone) -> bool {
+        self.is_sold_by(phone) && self.status == ListingStatus::Cancelled
+    }
+
+    /// True when this seller has already made the deal on exactly this
+    /// offer. A repeated accept of the same offer then has nothing left to
+    /// do and is not an error; accepting a different offer still is.
+    pub fn was_sold_on(&self, by: &Phone, offer_id: i32, offers: &[Offer]) -> bool {
+        self.is_sold_by(by)
+            && self.status == ListingStatus::Sold
+            && offers.iter().any(|offer| {
+                offer.is_on(self)
+                    && offer.id == Some(offer_id)
+                    && offer.status == OfferStatus::Accepted
+            })
+    }
+
     /// The seller takes the listing down.
     pub fn cancel(&mut self, by: &Phone, now: DateTime<Utc>) -> Result<(), AlwaError> {
         if !self.is_sold_by(by) {

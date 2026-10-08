@@ -34,6 +34,7 @@ struct Script {
     owned_count: u64,
     existing: Option<Farm>,
     fail_with_database_error: bool,
+    nothing_to_delete: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -56,6 +57,13 @@ impl FakeFarmRepository {
     pub fn holding(existing: Farm) -> Self {
         let fake = Self::new();
         fake.script.lock().expect("script lock").existing = Some(existing);
+        fake
+    }
+
+    /// The farm a delete asks for is not there (or belongs to someone else).
+    pub fn holding_nothing_to_delete() -> Self {
+        let fake = Self::new();
+        fake.script.lock().expect("script lock").nothing_to_delete = true;
         fake
     }
 
@@ -178,6 +186,10 @@ impl FarmRepository for FakeFarmRepository {
             owner: String::from(owner),
         });
         self.guard()?;
+
+        if self.script.lock().expect("script lock").nothing_to_delete {
+            return Err(crate::app::AppError::NotFound.into());
+        }
 
         Ok(())
     }

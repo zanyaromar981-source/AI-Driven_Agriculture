@@ -196,6 +196,7 @@ pub async fn di_init(
             token_issuer,
             farm_counter,
             config.auth.sign_in_code.max_attempts,
+            Duration::seconds(config.auth.sign_in_code.reuse_window_seconds),
         )),
         view_profile_use_case: Arc::new(ViewProfileUseCase::new(farmer_repository.clone())),
         edit_profile_use_case: Arc::new(EditProfileUseCase::new(farmer_repository)),

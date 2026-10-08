@@ -23,6 +23,14 @@ impl CancelListingUseCase {
             return Err(GlobalAppError::NotFound.into());
         };
 
+        // The app repeats a cancel whose answer was lost. The listing being
+        // cancelled is what it asked for, so the repeat succeeds.
+        if listing.was_cancelled_by(auth_context.user().phone()) {
+            tracing::info!(listing_id = id, "listing already cancelled: nothing to do");
+
+            return Ok(());
+        }
+
         listing
             .cancel(auth_context.user().phone(), Utc::now())
             .inspect_err(|error| tracing::info!(listing_id = id, %error, "cancel refused"))?;
@@ -103,6 +111,34 @@ mod tests {
         }
 
         assert!(!repository.wrote());
+    }
+
+    #[tokio::test]
+    async fn cancelling_again_succeeds_and_writes_nothing_more() {
+        let repository = FakeAlwaRepository::new().with_listing(an_open_listing(7));
+        let use_case = CancelListingUseCase::new(Arc::new(repository.clone()));
+
+        use_case
+            .execute(&auth_context(SELLER), 7)
+            .await
+            .expect("first cancel");
+        let writes_after_first = repository.calls().len();
+
+        let repeat = use_case.execute(&auth_context(SELLER), 7).await;
+
+        assert!(
+            repeat.is_ok(),
+            "the app repeats a cancel whose answer was lost"
+        );
+        assert_eq!(
+            repository
+                .calls()
+                .iter()
+                .filter(|call| matches!(call, RepositoryCall::CancelListing { .. }))
+                .count(),
+            1,
+            "the repeat must not write again (calls after first: {writes_after_first})"
+        );
     }
 
     #[tokio::test]

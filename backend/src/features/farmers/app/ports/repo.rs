@@ -45,8 +45,16 @@ pub trait SignInChallengeRepository: Send + Sync + std::fmt::Debug {
         max_attempts: u32,
     ) -> Result<Option<SignInChallenge>, AppError>;
 
-    /// Removes the challenge if it still holds `code_hash`. Returns whether
-    /// this call removed it, so of two requests presenting the same right
-    /// code only one signs in, and a newer code is never removed by mistake.
-    async fn consume(&self, phone: &Phone, code_hash: &str) -> Result<bool, AppError>;
+    /// Marks the challenge as used if it holds `code_hash` and was not used
+    /// before, or was first used after `reusable_since`. Returns whether the
+    /// code may sign in. A code therefore signs in once, plus repeats of that
+    /// same sign-in for a short while (the app retries when an answer is
+    /// lost), and a newer code is never touched by mistake.
+    async fn consume(
+        &self,
+        phone: &Phone,
+        code_hash: &str,
+        now: DateTime<Utc>,
+        reusable_since: DateTime<Utc>,
+    ) -> Result<bool, AppError>;
 }

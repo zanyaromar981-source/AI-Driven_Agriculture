@@ -93,6 +93,26 @@ impl Fakes {
             .map(|farmer| *farmer.created_at())
     }
 
+    /// The open code already signed someone in, this long ago.
+    pub fn used(self, ago: chrono::Duration) -> Self {
+        let mut script = self.script.lock().expect("script lock");
+
+        if let Some(open) = script.challenge.clone() {
+            script.challenge = Some(SignInChallenge::rehydrate(
+                open.phone().clone(),
+                open.code_hash().clone(),
+                *open.language(),
+                *open.attempts(),
+                *open.sent_at(),
+                *open.expires_at(),
+                Some(chrono::Utc::now() - ago),
+            ));
+        }
+
+        drop(script);
+        self
+    }
+
     pub fn failing_to_send() -> Self {
         let fake = Self::new();
         fake.script.lock().expect("script lock").fail_to_send = true;
@@ -211,13 +231,20 @@ impl SignInChallengeRepository for Fakes {
             *open.attempts() + 1,
             *open.sent_at(),
             *open.expires_at(),
+            *open.used_at(),
         );
         script.challenge = Some(counted.clone());
 
         Ok(Some(counted))
     }
 
-    async fn consume(&self, phone: &Phone, code_hash: &str) -> Result<bool, AppError> {
+    async fn consume(
+        &self,
+        phone: &Phone,
+        code_hash: &str,
+        now: chrono::DateTime<chrono::Utc>,
+        reusable_since: chrono::DateTime<chrono::Utc>,
+    ) -> Result<bool, AppError> {
         self.record(Call::ConsumeChallenge {
             phone: String::from(phone),
         });
@@ -230,16 +257,28 @@ impl SignInChallengeRepository for Fakes {
             return Ok(false);
         }
 
-        let holds_the_code = script
-            .challenge
-            .as_ref()
-            .is_some_and(|open| open.code_hash() == code_hash);
+        let Some(open) = script.challenge.clone() else {
+            return Ok(false);
+        };
 
-        if holds_the_code {
-            script.challenge = None;
+        let usable = open.code_hash() == code_hash
+            && open
+                .used_at()
+                .is_none_or(|used_at| used_at > reusable_since);
+
+        if usable {
+            script.challenge = Some(SignInChallenge::rehydrate(
+                open.phone().clone(),
+                open.code_hash().clone(),
+                *open.language(),
+                *open.attempts(),
+                *open.sent_at(),
+                *open.expires_at(),
+                Some(open.used_at().unwrap_or(now)),
+            ));
         }
 
-        Ok(holds_the_code)
+        Ok(usable)
     }
 }
 

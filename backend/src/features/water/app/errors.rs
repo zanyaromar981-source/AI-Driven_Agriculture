@@ -30,9 +30,6 @@ pub enum AppError {
 
     #[error("No water plan has been made yet")]
     NoWaterPlan,
-
-    #[error("The water plan for season {season} has no entry for zone {zone_slug}")]
-    EntryNotFound { season: String, zone_slug: String },
 }
 
 impl ToErrorInfo for AppError {
@@ -41,9 +38,7 @@ impl ToErrorInfo for AppError {
             AppError::Water(err) => err.to_error_info(),
             AppError::Domain(err) => err.to_error_info(),
             AppError::GlobalAppError(err) => err.to_error_info(),
-            AppError::NoWaterPlan | AppError::EntryNotFound { .. } => {
-                ErrorInfo::new(ErrorKind::NotFound, self.to_string())
-            }
+            AppError::NoWaterPlan => ErrorInfo::new(ErrorKind::NotFound, self.to_string()),
         }
     }
 }
@@ -61,18 +56,10 @@ mod tests {
     }
 
     #[test]
-    fn a_missing_plan_or_entry_is_not_found() {
-        for error in [
-            AppError::NoWaterPlan,
-            AppError::EntryNotFound {
-                season: "2026-27".to_string(),
-                zone_slug: "makhmur".to_string(),
-            },
-        ] {
-            let info = error.to_error_info();
+    fn a_missing_plan_is_not_found() {
+        let info = AppError::NoWaterPlan.to_error_info();
 
-            assert_eq!(info.kind, ErrorKind::NotFound);
-            assert_eq!(info.code, "not_found");
-        }
+        assert_eq!(info.kind, ErrorKind::NotFound);
+        assert_eq!(info.code, "not_found");
     }
 }

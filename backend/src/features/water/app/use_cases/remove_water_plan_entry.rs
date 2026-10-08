@@ -15,21 +15,16 @@ impl RemoveWaterPlanEntryUseCase {
     }
 
     /// Takes one zone out of a season's plan. Removing an entry that is not
-    /// there is reported, so a job can tell a typo from a removal.
+    /// there succeeds: a job that runs again, or repeats a call whose answer
+    /// was lost, asked for the entry to be gone, and it is.
     pub async fn execute(&self, season: Season, zone_slug: ZoneSlug) -> Result<(), AppError> {
         let removed = self.repository.delete(&season, &zone_slug).await?;
-
-        if !removed {
-            return Err(AppError::EntryNotFound {
-                season: String::from(&season),
-                zone_slug: String::from(&zone_slug),
-            });
-        }
 
         tracing::info!(
             season = season.as_str(),
             zone = zone_slug.as_str(),
-            "water plan entry removed"
+            removed,
+            "water plan entry removed, or already gone"
         );
 
         Ok(())
@@ -66,35 +61,23 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn removing_an_entry_that_is_not_there_is_not_found() {
+    async fn removing_an_entry_that_is_already_gone_succeeds() {
         let repository = FakeWaterPlanRepository::holding(vec![an_entry(
             "2026-27", "makhmur", 90.0, None, None, false,
         )]);
         let use_case = RemoveWaterPlanEntryUseCase::new(Arc::new(repository));
 
-        let other_season = use_case
-            .execute(season("2025-26"), zone_slug("makhmur"))
+        let first = use_case
+            .execute(season("2026-27"), zone_slug("makhmur"))
             .await;
-        let other_zone = use_case.execute(season("2026-27"), zone_slug("koya")).await;
+        let repeat = use_case
+            .execute(season("2026-27"), zone_slug("makhmur"))
+            .await;
 
-        assert!(matches!(
-            other_season,
-            Err(AppError::EntryNotFound { season, zone_slug })
-                if season == "2025-26" && zone_slug == "makhmur"
-        ));
-        assert!(matches!(other_zone, Err(AppError::EntryNotFound { .. })));
-    }
-
-    #[tokio::test]
-    async fn a_repository_failure_surfaces() {
-        let use_case =
-            RemoveWaterPlanEntryUseCase::new(Arc::new(FakeWaterPlanRepository::failing()));
-
+        assert!(first.is_ok());
         assert!(
-            use_case
-                .execute(season("2026-27"), zone_slug("makhmur"))
-                .await
-                .is_err()
+            repeat.is_ok(),
+            "a job that runs twice must not fail on its second pass"
         );
     }
 }

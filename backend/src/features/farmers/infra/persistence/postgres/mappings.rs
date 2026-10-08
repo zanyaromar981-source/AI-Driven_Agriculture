@@ -51,6 +51,7 @@ impl TryFrom<sign_in_challenges::Model> for SignInChallenge {
             u32::try_from(model.attempts).unwrap_or(u32::MAX),
             model.sent_at.and_utc(),
             model.expires_at.and_utc(),
+            model.used_at.map(|at| at.and_utc()),
         ))
     }
 }
@@ -64,6 +65,7 @@ impl From<&SignInChallenge> for sign_in_challenges::ActiveModel {
             attempts: Set(i32::try_from(*challenge.attempts()).unwrap_or(i32::MAX)),
             sent_at: Set(challenge.sent_at().naive_utc()),
             expires_at: Set(challenge.expires_at().naive_utc()),
+            used_at: Set(challenge.used_at().map(|at| at.naive_utc())),
         }
     }
 }

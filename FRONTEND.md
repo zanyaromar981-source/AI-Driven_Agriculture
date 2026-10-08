@@ -45,7 +45,7 @@ The districts are the 33 of `web/map_demo/kri_map_data.js` (4 governorates, 72 s
 
 - `send` answers `200 {"sent": true, "retry_after_s": 60}`. Asking again before that time answers `429 {"error": "rate_limited", "retry_after_s": <seconds left>}`.
 - `verify` answers `200 {"token": "...", "farms_count": 2}` or `401 {"error": "bad_code"}`. A wrong code, an expired code, too many tries and a phone that never asked all give the same `bad_code`.
-- Codes are 6 digits, live 10 minutes, allow 5 tries and work once.
+- Codes are 6 digits, live 10 minutes and allow 5 tries. A code signs in once; if the answer is lost and the app sends the same `verify` again within 2 minutes, it succeeds again. After that the code is refused.
 - `lang` accepts `ku`, `kmr`, `ar`, `en`. It becomes the farmer's language on first sign-in.
 - **No SMS provider is wired yet** (open point 2 in `BACKEND.md` section 8). The server writes the code to its own log. For a demo, the server can be started with one fixed code for every phone (`AUTH__FIXED_SIGN_IN_CODE` in `backend/.env.example`). Neither is safe with real farmers.
 
@@ -60,6 +60,7 @@ Shapes are those of `BACKEND.md` 2.2. Notes on what the backend does with them:
 - `Idempotency-Key` on `POST /v1/farms` (and on `POST /v1/alwa/listings`) is honoured: a repeat with the same key and phone returns the farm created the first time, with status `201` and an empty `dropped_cells`.
 - `PUT /v1/farms/{id}/cells` changes only the cells listed. To clear a cell, send it with `"crop": "empty"`.
 - A farm of another phone answers `404`, the same as a farm that does not exist.
+- Retries are safe: `DELETE /v1/farms/{id}` answers `204` whether or not the farm was still there; cancelling an Alwa listing twice answers `204` both times; accepting the same offer twice answers `200` with the same listing both times.
 - Not sent yet, because there are no satellite readings in the database: `status`, `last_picture`, `picture_date`, and on cells `greenness_pct`, `level`, `inside_pct`. The app already treats them as optional.
 - Cells are still "centre inside the outline", and `crops[].dunam` still counts whole cells. BACKEND.md 0.2 asks for every touched cell with `inside_pct`; that is not done yet.
 - The outline is returned as the farmer walked it. It is not snapped to the grid.
