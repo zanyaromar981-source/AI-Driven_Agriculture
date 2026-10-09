@@ -1,8 +1,9 @@
 """The Doctor. Takes the AIs' numbers as one JSON plus a short rulebook, asks the model, returns advice in Sorani and English
 with provenance. Provider is swappable: Gemini (default, decided 2026-10-08) or Claude. Plain HTTPS, no SDK.
 Keys: GEMINI_API_KEY and/or ANTHROPIC_API_KEY in the environment or in farm_doctor/.env (git-ignored, never printed).
-Settings: FARM_DOCTOR_PROVIDER = gemini | claude; FARM_DOCTOR_MODEL = model name (default gemini-2.5-flash / claude-sonnet-5-5)."""
-import os, sys, json, base64, mimetypes, urllib.request
+Settings: FARM_DOCTOR_PROVIDER = gemini | claude | codex; FARM_DOCTOR_MODEL = model name (default gemini-2.5-flash / claude-sonnet-5-5).
+codex = the `codex exec` program already signed in on the machine (the test server): no key, photos go in as files."""
+import os, sys, json, base64, mimetypes, shutil, subprocess, tempfile, urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 RULEBOOK = """You are the Farm Doctor for the Kurdistan Region of Iraq. You get measured numbers from five AIs (field eye from Sentinel-2,
 weather planner from the 10-day forecast, plant doctor from photos, season check from 25 years of rain, neighbour watch from farmers' reports)
@@ -36,7 +37,7 @@ def _env(name):
 
 def _provider():
     p = (_env('FARM_DOCTOR_PROVIDER') or 'gemini').lower()
-    return p if p in ('gemini', 'claude') else 'gemini'
+    return p if p in ('gemini', 'claude', 'codex') else 'gemini'
 
 
 def _parse(text):
@@ -111,9 +112,44 @@ def ask_claude(inputs, question=None, photos=None):
     return j
 
 
+def ask_codex(inputs, question=None, photos=None):
+    """Asks the `codex exec` program that is signed in on this machine. Photos are written to a temp folder and attached as images.
+    The prompt goes in on stdin; the answer is read from the file Codex writes. FARM_DOCTOR_CODEX_TIMEOUT = seconds (default 75)."""
+    codex = _env('FARM_DOCTOR_CODEX') or 'codex'
+    if not shutil.which(codex):
+        return dict(error='codex: the program is not installed or not on the PATH')
+    tmp = tempfile.mkdtemp(prefix='doctor_')
+    try:
+        cmd = [codex, 'exec', '--skip-git-repo-check', '--ephemeral', '-s', 'read-only', '--cd', tmp, '-o', os.path.join(tmp, 'answer.txt')]
+        model = _env('FARM_DOCTOR_MODEL')
+        if model:
+            cmd += ['-m', model]
+        for i, (mt, b64) in enumerate(_images(photos), 1):
+            f = os.path.join(tmp, f'photo_{i}.' + ('png' if mt == 'image/png' else 'jpg'))
+            open(f, 'wb').write(base64.b64decode(b64))
+            cmd += ['--image', f]
+        cmd.append('-')                                   # read the prompt from stdin
+        try:
+            r = subprocess.run(cmd, input=RULEBOOK + '\n\n' + _user_text(inputs, question), text=True, capture_output=True,
+                               timeout=int(_env('FARM_DOCTOR_CODEX_TIMEOUT') or 75))
+        except subprocess.TimeoutExpired:
+            return dict(error='codex: no answer in time')
+        if r.returncode != 0:
+            return dict(error='codex: exit %d: %s' % (r.returncode, (r.stderr or r.stdout or '').strip()[-300:]))
+        try:
+            text = open(os.path.join(tmp, 'answer.txt'), encoding='utf-8').read()
+        except OSError:
+            return dict(error='codex: finished without writing an answer')
+        j = _parse(text)
+        j['_usage'] = dict(input_tokens=None, output_tokens=None, model=model or 'codex default', provider='codex')
+        return j
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def ask(inputs, question=None, photos=None):
     """inputs: dict of the AIs' outputs. photos: list of file paths. Returns the parsed JSON answer from the chosen provider."""
-    return ask_gemini(inputs, question, photos) if _provider() == 'gemini' else ask_claude(inputs, question, photos)
+    return dict(gemini=ask_gemini, claude=ask_claude, codex=ask_codex)[_provider()](inputs, question, photos)
 
 
 if __name__ == '__main__':

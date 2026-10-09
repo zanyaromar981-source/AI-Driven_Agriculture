@@ -1,0 +1,19 @@
+[Unit]
+Description=Farm Doctor: the Ask the Doctor service (gathers a farm's data and asks Codex)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/farm-doctor/farm_doctor
+# The backend runs in Docker and reaches this service on the Docker bridge
+# address of the host. Set DOCTOR_HOST in this file to that address.
+EnvironmentFile=-/opt/farm-doctor/doctor.env
+Environment=FARM_DOCTOR_PROVIDER=codex
+Environment=HOME=/root
+ExecStart=/usr/bin/python3 -I /opt/farm-doctor/farm_doctor/doctor_service.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
