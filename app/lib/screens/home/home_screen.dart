@@ -6,6 +6,7 @@ import '../../l10n/strings.dart';
 import '../../store/outbox.dart';
 import '../add_farm/farm_actions.dart';
 import '../history/field_history_screen.dart';
+import '../history/now_card.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/header.dart';
@@ -85,6 +86,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       spacing: 16,
                       children: [
+                        // The field's state from the latest clear picture.
+                        NowCard(
+                          key: ValueKey('now-${farm.id}#$_version'),
+                          farm: farm,
+                        ),
                         FarmSection(
                           key: ValueKey('${farm.id}#$_version'),
                           summary: farm,
