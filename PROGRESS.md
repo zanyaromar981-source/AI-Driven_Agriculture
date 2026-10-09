@@ -31,7 +31,7 @@ Last update: 2026-10-09 12:23
 
 ## In progress
 - Backend: hosted on a test server with a 12-hourly rain-against-normal job for the 33 districts; next are role-based dashboard routes, more data jobs (dams, fires, soil), touched cells with `inside_pct`, weekly plan
-- Flutter app: Ask the Doctor screens done (2026-10-09); backend route `POST /v1/farms/{id}/ask` and the Doctor service in the Codespace in progress; needs `GEMINI_API_KEY`
+- Ask the Doctor: app screens, backend route and Doctor service all live in the cloud (2026-10-09); real answers wait only on `GEMINI_API_KEY` in the Codespace (`server/team/farm_doctor/.env`)
 - Review of the full farmer app design in Pencil (all 4 jobs done)
 - Ministry dashboard: wire `web/now.json` into the template (paused until the template is settled)
 
