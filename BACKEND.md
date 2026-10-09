@@ -235,6 +235,12 @@ New tables: `officers (id, phone, name, role, areas, totp_secret, created_at, di
 
 - Edit until `PUT /v1/farms/{id}` exists (decided 2026-10-09, user option A): the app saves an edited farm as `POST /v1/farms` (new id, same name, new outline and crops) and then `DELETE /v1/farms/{old id}`. The new farm gets the full 20-year analysis again; the old id disappears. When the backend adds PUT, the app switches back to one call.
 
+### 2.12 Control Room website, `web/control_room/` (added 2026-10-09)
+
+The website replaces the Control Room plan of 2.11 where they differ (user brief 2026-10-09). Changes: one admin level (no viewer or district roles), sign-in with email and password (Supabase is the likely backend, with its forgot-password), **no second-officer approvals**, **no protected mode**: admins see and edit farmers (name, phone, gender, birth year, place, village) and farms (place, point, area, crops, irrigation, water source, ownership) because support letters need them. No audit log page. Alerts go to every farmer (no area). Alwa is read only: average asking and sold prices per crop come from the listings; the government sets no price. Data jobs: status only, no run button, no service keys on the web.
+
+Data the website needs: one table per record in `web/control_room/src/data/types.ts` (farmers, farms with crop rows, crops, admins, alerts, messages, news lines, listings, district readings with a `manual` flag, dams with monthly history, fires, rules with change history, Doctor questions with ratings, answer bank, app texts, jobs status, app config, site settings, site text overrides). Pages only call `src/data/api.ts` and `db`, so connecting a backend replaces `store.ts`, `db.ts` and `api.ts`.
+
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
 - The app keeps the last farms list and, per farm, the last farm, `status` and `plan`. On opening it shows that copy at once, asks the server, and swaps in the fresh answer; if the server fails or there is no internet, the copy stays on screen with its date (since 2026-10-08 21:44). So every open still makes the normal calls. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).

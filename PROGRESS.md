@@ -2,9 +2,10 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 12:28
+Last update: 2026-10-09 13:36
 
 ## Done
+- Control Room website `web/control_room/` (React + Vite): public View page and Admin behind a login, Kurdish (right to left) and English, phone to desktop; farmers and farms with create, edit, delete, support letter and government report; crop register and crop report; region data with hand corrections; alerts to everyone; inbox and news bar; the Doctor review, answer bank and problems map; Alwa read only with average prices; rules explained; app control; every text editable; data jobs status; settings. Sample data in the browser behind one data layer
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
 - Research: 96,941-paper library, 13,793 PDFs, analysis reports in `reports/`
 - Data feeds tested: 17 free keyless feeds (`reports/Data_Feeds_Tested.md`)
@@ -30,6 +31,7 @@ Last update: 2026-10-09 12:28
 - Backend: Ask the Doctor `POST /v1/farms/{id}/ask` (slice `doctor`): question, up to 6 photos, tapped cell, language; checks the farm is the farmer's, passes the farm, its insights and the question to the local Doctor service (`DOCTOR_URL`) and returns its checked answer; proven end to end with a fake Doctor (`FRONTEND.md` section 13)
 
 ## In progress
+- Control Room website `web/control_room/`: built on sample data; waiting for the Kurdish texts (Desktop spreadsheet) and the backend choice (Supabase or `backend/`)
 - Backend: hosted on a test server with a 12-hourly rain-against-normal job for the 33 districts; next are role-based dashboard routes, more data jobs (dams, fires, soil), touched cells with `inside_pct`, weekly plan
 - Ask the Doctor: app screens, backend route and Doctor service all live in the cloud (2026-10-09); real answers wait only on `GEMINI_API_KEY` in the Codespace (`server/team/farm_doctor/.env`)
 - Review of the full farmer app design in Pencil (all 4 jobs done)
@@ -39,11 +41,15 @@ Last update: 2026-10-09 12:28
 - Tab bar; Home = one farm per screen (changed 2026-10-08 evening, user); cell tap = small card + cells / crops / farm toggle; colours + numbers; Ask = text + photos; own reports only; field edge = always walk; logo 36 Grain Sun; English placeholders on new screens
 
 ## Decisions pending (user)
+- Backend for the website: Supabase or the Rust `backend/` (it already has dashboard staff and roles)
+- Admins now see farmers' full phone numbers and exact farms (needed for support letters): this replaces the 2026-10-08 protected mode. Confirm
+- `design/web/jutyar_control_room.pen` shows the old demo: rebuild it from the new site or leave it
 - App name under the icon: Jutyar (now) or Khor / خۆر (pitch deck)?
 - Farm size still not accurate on the phone: which number, and the real size?
 - Map source: user dislikes the current map (asked for Google, then Leaflet). Leaflet map demo built in `web/map_demo/` for review
 
 ## Next
+- Write the Kurdish in `Desktop/Jutyar_Translation/jutyar_texts.xlsx`, then `npm run texts:import` in `web/control_room`
 - Flutter: Report, Alerts, Settings (Home and Ask the Doctor done; the Report button says "not built yet")
 - Flutter: Home labels to Sorani after a native speaker check
 - Flutter: set `kTestMode` to false before any release
