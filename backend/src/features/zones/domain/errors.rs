@@ -8,6 +8,9 @@ pub enum ZoneError {
     #[error("A calendar month is a number from 1 to 12")]
     BadCalendarMonth,
 
+    #[error("The `from` month must not be after the `to` month")]
+    FromAfterTo,
+
     #[error("A year must be a number between {min} and {max}")]
     BadYear { min: i32, max: i32 },
 

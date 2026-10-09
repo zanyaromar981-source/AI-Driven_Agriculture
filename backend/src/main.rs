@@ -34,7 +34,10 @@ use farm_doctor_api::{
             },
         },
         water::web::{ingest_routes as water_ingest_routes, public_routes as water_public_routes},
-        zones::web::{ingest_routes as zone_ingest_routes, public_routes as zone_public_routes},
+        zones::web::{
+            dashboard_routes as zone_dashboard_routes, ingest_routes as zone_ingest_routes,
+            public_routes as zone_public_routes,
+        },
     },
     infra::{
         BootstrappedApp, Config, di_init,
@@ -124,6 +127,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(insight_dashboard_routes())
                         // Other slices add their dashboard routes here, above
                         // the layer: .merge(their_dashboard_routes())
+                        .merge(zone_dashboard_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), staff_auth))
                         .merge(staff_dashboard_public_routes()),
                 ),

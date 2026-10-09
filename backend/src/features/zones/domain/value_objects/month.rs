@@ -1,4 +1,4 @@
-use chrono::{Datelike, NaiveDate};
+use chrono::{Datelike, Months, NaiveDate};
 
 use crate::features::zones::domain::ZoneError;
 
@@ -59,6 +59,12 @@ impl Month {
     /// The same calendar month one year before.
     pub fn a_year_earlier(&self) -> Option<Self> {
         NaiveDate::from_ymd_opt(self.year() - 1, self.number(), 1).map(Self)
+    }
+
+    /// The month `count` months before this one. It is used as a bound of a
+    /// range, so it may fall before `MIN_YEAR`.
+    pub fn months_earlier(&self, count: u32) -> Option<Self> {
+        self.0.checked_sub_months(Months::new(count)).map(Self)
     }
 
     fn bad() -> ZoneError {
@@ -146,6 +152,17 @@ mod tests {
             month.a_year_earlier().map(String::from),
             Some("2025-03".to_string())
         );
+    }
+
+    #[test]
+    fn months_earlier_crosses_the_turn_of_the_year() {
+        let month = Month::parse("2026-03").expect("month");
+
+        assert_eq!(
+            month.months_earlier(23).map(String::from),
+            Some("2024-04".to_string())
+        );
+        assert_eq!(month.months_earlier(0), Some(month));
     }
 
     #[test]

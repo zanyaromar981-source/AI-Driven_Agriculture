@@ -41,7 +41,10 @@ use crate::{
             RemoveWaterPlanEntryUseCase, SetWaterPlanEntryUseCase, ViewWaterPlanUseCase,
         },
         zones::app::use_cases::{
-            CompareYearsUseCase, RecordSubZoneReadingUseCase, RecordZoneReadingUseCase,
+            CompareYearsUseCase, CreateSubZoneReadingUseCase, CreateZoneReadingUseCase,
+            DeleteSubZoneReadingUseCase, DeleteZoneReadingUseCase, ListSubZoneReadingsUseCase,
+            ListZoneReadingsUseCase, ListZonesUseCase, RecordSubZoneReadingUseCase,
+            RecordZoneReadingUseCase, UpdateSubZoneReadingUseCase, UpdateZoneReadingUseCase,
             ViewRegionOverviewUseCase, ViewZoneUseCase,
         },
     },
@@ -94,6 +97,15 @@ pub struct ZoneFeature {
     pub compare_years_use_case: Arc<CompareYearsUseCase>,
     pub record_zone_reading_use_case: Arc<RecordZoneReadingUseCase>,
     pub record_sub_zone_reading_use_case: Arc<RecordSubZoneReadingUseCase>,
+    pub list_zones_use_case: Arc<ListZonesUseCase>,
+    pub list_zone_readings_use_case: Arc<ListZoneReadingsUseCase>,
+    pub create_zone_reading_use_case: Arc<CreateZoneReadingUseCase>,
+    pub update_zone_reading_use_case: Arc<UpdateZoneReadingUseCase>,
+    pub delete_zone_reading_use_case: Arc<DeleteZoneReadingUseCase>,
+    pub list_sub_zone_readings_use_case: Arc<ListSubZoneReadingsUseCase>,
+    pub create_sub_zone_reading_use_case: Arc<CreateSubZoneReadingUseCase>,
+    pub update_sub_zone_reading_use_case: Arc<UpdateSubZoneReadingUseCase>,
+    pub delete_sub_zone_reading_use_case: Arc<DeleteSubZoneReadingUseCase>,
 }
 
 #[derive(Clone)]

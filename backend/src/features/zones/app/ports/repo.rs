@@ -1,8 +1,11 @@
 use async_trait::async_trait;
 
-use crate::features::zones::{
-    app::AppError,
-    domain::{Month, SubZone, SubZoneReading, Zone, ZoneReading, ZoneSlug},
+use crate::{
+    app::Pagination,
+    features::zones::{
+        app::AppError,
+        domain::{Month, MonthRange, SubZone, SubZoneReading, Zone, ZoneReading, ZoneSlug},
+    },
 };
 
 /// Every query is a plain lookup. Ranking, changes and averages are worked
@@ -51,4 +54,61 @@ pub trait ZoneRepository: Send + Sync + std::fmt::Debug {
         &self,
         entity: &SubZoneReading,
     ) -> Result<SubZoneReading, AppError>;
+
+    /// Returns the sub-zones of every zone in the order they were seeded.
+    async fn find_all_sub_zones(&self) -> Result<Vec<SubZone>, AppError>;
+
+    /// Returns one page of a zone's readings inside the range, newest month
+    /// first, and how many the range holds in all.
+    async fn find_readings_by_zone_in_range(
+        &self,
+        zone_id: i32,
+        range: MonthRange,
+        pagination: &Pagination,
+    ) -> Result<(Vec<ZoneReading>, u64), AppError>;
+
+    /// Stores the reading only when the zone has none for that month, in one
+    /// statement. Returns it as stored, or `None` when one was already there
+    /// and nothing was written.
+    async fn insert_reading(&self, entity: &ZoneReading) -> Result<Option<ZoneReading>, AppError>;
+
+    /// Replaces every measured field of the reading stored for that zone
+    /// and month, in one statement. Returns it as stored, or `None` when
+    /// there was none to replace.
+    async fn update_reading(&self, entity: &ZoneReading) -> Result<Option<ZoneReading>, AppError>;
+
+    /// Removes the zone's reading for that month. Returns whether there was
+    /// one.
+    async fn delete_reading(&self, zone_id: i32, month: Month) -> Result<bool, AppError>;
+
+    /// Returns one page of a sub-zone's readings inside the range, newest
+    /// month first, and how many the range holds in all.
+    async fn find_sub_zone_readings_in_range(
+        &self,
+        sub_zone_id: i32,
+        range: MonthRange,
+        pagination: &Pagination,
+    ) -> Result<(Vec<SubZoneReading>, u64), AppError>;
+
+    /// The create-only twin of `upsert_sub_zone_reading`: `None` when the
+    /// sub-zone already had a reading for that month.
+    async fn insert_sub_zone_reading(
+        &self,
+        entity: &SubZoneReading,
+    ) -> Result<Option<SubZoneReading>, AppError>;
+
+    /// The update-only twin of `upsert_sub_zone_reading`: `None` when the
+    /// sub-zone had no reading for that month.
+    async fn update_sub_zone_reading(
+        &self,
+        entity: &SubZoneReading,
+    ) -> Result<Option<SubZoneReading>, AppError>;
+
+    /// Removes the sub-zone's reading for that month. Returns whether there
+    /// was one.
+    async fn delete_sub_zone_reading(
+        &self,
+        sub_zone_id: i32,
+        month: Month,
+    ) -> Result<bool, AppError>;
 }

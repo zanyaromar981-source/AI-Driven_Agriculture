@@ -4,9 +4,12 @@ pub mod handlers;
 pub mod routes;
 
 pub use dtos::{
-    BestCrop, DrynessBand, RegionComparisonResponse, RegionOverviewResponse, RegionSummaryResponse,
+    BestCrop, CreateZoneDashboardReadingParams, CreateZoneDashboardSubZoneReadingParams,
+    DrynessBand, RegionComparisonResponse, RegionOverviewResponse, RegionSummaryResponse,
     SubZoneDrynessResponse, SubZoneReadingParams, SubZoneReadingResponse, YearAverageResponse,
-    YearDrynessResponse, ZoneComparisonResponse, ZoneDetailReadingResponse, ZoneDetailResponse,
+    YearDrynessResponse, ZoneComparisonResponse, ZoneDashboardReadingsResponse,
+    ZoneDashboardSubZoneReadingsResponse, ZoneDashboardSubZoneResponse, ZoneDashboardZoneResponse,
+    ZoneDashboardZonesResponse, ZoneDetailReadingResponse, ZoneDetailResponse,
     ZoneOverviewResponse, ZoneReadingParams, ZoneReadingResponse,
 };
-pub use routes::{ingest_routes, public_routes};
+pub use routes::{dashboard_routes, ingest_routes, public_routes};

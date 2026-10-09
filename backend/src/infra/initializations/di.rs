@@ -112,7 +112,11 @@ use crate::{
             app::{
                 ZoneRepository,
                 use_cases::{
-                    CompareYearsUseCase, RecordSubZoneReadingUseCase, RecordZoneReadingUseCase,
+                    CompareYearsUseCase, CreateSubZoneReadingUseCase, CreateZoneReadingUseCase,
+                    DeleteSubZoneReadingUseCase, DeleteZoneReadingUseCase,
+                    ListSubZoneReadingsUseCase, ListZoneReadingsUseCase, ListZonesUseCase,
+                    RecordSubZoneReadingUseCase, RecordZoneReadingUseCase,
+                    UpdateSubZoneReadingUseCase, UpdateZoneReadingUseCase,
                     ViewRegionOverviewUseCase, ViewZoneUseCase,
                 },
             },
@@ -253,6 +257,31 @@ pub async fn di_init(
             zone_repository.clone(),
         )),
         record_sub_zone_reading_use_case: Arc::new(RecordSubZoneReadingUseCase::new(
+            zone_repository.clone(),
+        )),
+        list_zones_use_case: Arc::new(ListZonesUseCase::new(zone_repository.clone())),
+        list_zone_readings_use_case: Arc::new(ListZoneReadingsUseCase::new(
+            zone_repository.clone(),
+        )),
+        create_zone_reading_use_case: Arc::new(CreateZoneReadingUseCase::new(
+            zone_repository.clone(),
+        )),
+        update_zone_reading_use_case: Arc::new(UpdateZoneReadingUseCase::new(
+            zone_repository.clone(),
+        )),
+        delete_zone_reading_use_case: Arc::new(DeleteZoneReadingUseCase::new(
+            zone_repository.clone(),
+        )),
+        list_sub_zone_readings_use_case: Arc::new(ListSubZoneReadingsUseCase::new(
+            zone_repository.clone(),
+        )),
+        create_sub_zone_reading_use_case: Arc::new(CreateSubZoneReadingUseCase::new(
+            zone_repository.clone(),
+        )),
+        update_sub_zone_reading_use_case: Arc::new(UpdateSubZoneReadingUseCase::new(
+            zone_repository.clone(),
+        )),
+        delete_sub_zone_reading_use_case: Arc::new(DeleteSubZoneReadingUseCase::new(
             zone_repository,
         )),
     };
