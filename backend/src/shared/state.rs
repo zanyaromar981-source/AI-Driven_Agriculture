@@ -362,6 +362,18 @@ pub struct AlertFeature {
 }
 
 #[derive(Clone)]
+pub struct WorkerFeature {
+    pub put_my_card_use_case: Arc<crate::features::workers::app::use_cases::PutMyCardUseCase>,
+    pub view_my_card_use_case: Arc<crate::features::workers::app::use_cases::ViewMyCardUseCase>,
+    pub remove_my_card_use_case: Arc<crate::features::workers::app::use_cases::RemoveMyCardUseCase>,
+    pub browse_workers_use_case:
+        Arc<crate::features::workers::app::use_cases::BrowseWorkersUseCase>,
+    pub list_all_workers_use_case:
+        Arc<crate::features::workers::app::use_cases::ListAllWorkersUseCase>,
+    pub delete_worker_use_case: Arc<crate::features::workers::app::use_cases::DeleteWorkerUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -384,6 +396,7 @@ pub struct Features {
     pub history: HistoryFeature,
     pub plan: PlanFeature,
     pub alert: AlertFeature,
+    pub worker: WorkerFeature,
 }
 
 #[derive(Clone)]

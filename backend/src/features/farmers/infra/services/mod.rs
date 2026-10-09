@@ -8,6 +8,7 @@ mod letter_issuers;
 mod log_code_sender;
 mod otpiq_code_sender;
 mod token_issuer;
+mod worker_card_remover;
 
 pub use code_generators::{FixedSignInCodeGenerator, RandomSignInCodeGenerator};
 pub use code_hasher::Sha256SignInCodeHasher;
@@ -19,3 +20,4 @@ pub use letter_issuers::StaffFeatureLetterIssuers;
 pub use log_code_sender::LogSignInCodeSender;
 pub use otpiq_code_sender::OtpiqSignInCodeSender;
 pub use token_issuer::JwtTokenIssuer;
+pub use worker_card_remover::WorkersFeatureFarmerDataRemover;

@@ -2,7 +2,7 @@
 
 Written by `tools/api_reference.py` from the server's own description of itself. Do not edit by hand; run the tool again after a route changes. `FRONTEND.md` at the repo root explains how to use all this; the live, clickable version is at `/api-docs` on any running server.
 
-183 operations. A `?` after a field name means it may be left out. Query parameters are listed with the route in `/api-docs`.
+189 operations. A `?` after a field name means it may be left out. Query parameters are listed with the route in `/api-docs`.
 
 Access: **none** = no login; **farmer token** = `Authorization: Bearer <token>` from `POST /v1/auth/otp/verify`; **staff** = a token from `POST /v1/dashboard/auth/login` whose roles hold the named permission; **service key** = the `X-Service-Key` header, for our data jobs only.
 
@@ -1171,6 +1171,23 @@ List the seasons that have a water plan entry, newest first.
 - Answers: **200** `seasons`: list of text
 - Can fail with: 401, 403, 500
 
+### `GET /v1/dashboard/workers`
+
+List every worker card, also the ones that are not available.
+
+- Access: staff
+- Query: `zone?`, `q?`, `lat?`, `lon?`, `max_cost_iqd?`, `cost_per?`, `available?`, `page?`, `rows_per_page?`
+- Answers: **200** `count`: number, `page`: number, `rows_per_page`: number, `workers`: list of DashboardWorkerResponse
+- Can fail with: 401, 403, 422, 500
+
+### `DELETE /v1/dashboard/workers/{id}`
+
+Delete a worker card.
+
+- Access: staff
+- Answers: **204**
+- Can fail with: 401, 403, 500
+
 ### `GET /v1/dashboard/zones`
 
 List every zone with its sub-zones, for the dashboard's pickers.
@@ -1580,6 +1597,40 @@ Versions of the public kinds of data.
 - Answers: **200** `api`: text, `server_time`: timestamp, `versions`: object
 - Can fail with: 500
 
+### `GET /v1/workers`
+
+List the workers a farmer can call.
+
+- Access: farmer token
+- Query: `zone?`, `q?`, `lat?`, `lon?`, `max_cost_iqd?`, `cost_per?`, `page?`, `rows_per_page?`
+- Answers: **200** `count`: number, `page`: number, `rows_per_page`: number, `workers`: list of WorkerCardResponse
+- Can fail with: 401, 422, 500
+
+### `GET /v1/workers/me`
+
+Get the caller's own worker card.
+
+- Access: farmer token
+- Answers: **200** `worker?`: WorkerResponse or null
+- Can fail with: 401, 500
+
+### `PUT /v1/workers/me`
+
+Put up or replace the caller's own worker card.
+
+- Access: farmer token
+- Body: `available?`: true/false or null, `cost_iqd`: number, `cost_per?`: `day` \| `hour` or null, `lat?`: number or null, `lon?`: number or null, `name`: text, `note?`: text or null, `zone_slug?`: text or null
+- Answers: **200** `worker`: WorkerResponse
+- Can fail with: 400, 401, 422, 500
+
+### `DELETE /v1/workers/me`
+
+Take down the caller's own worker card.
+
+- Access: farmer token
+- Answers: **204**
+- Can fail with: 401, 500
+
 ## Shapes
 
 Objects that the routes above refer to by name.
@@ -1689,6 +1740,8 @@ Objects that the routes above refer to by name.
 - **DashboardRenameFarmParams**: `name`: text
 - **DashboardSavedFarmResponse**: `dropped_cells`: list of GridCellResponse, `farm`: DashboardFarmResponse
 - **DashboardUpdateFarmerParams**: `birth_year?`: number or null, `blocked?`: true/false or null, `gender?`: `male` \| `female` or null, `governorate?`: text or null, `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `notes?`: text or null, `sub_zone_slug?`: text or null, `village?`: text or null, `zone_slug?`: text or null
+- **DashboardWorkerResponse**: `available`: true/false, `cost_iqd`: number, `cost_per`: `day` \| `hour`, `created_at`: timestamp, `distance_km?`: number or null, `id`: text, `lat?`: number or null, `lon?`: number or null, `name`: text, `note?`: text or null, `phone`: text, `updated_at`: timestamp, `zone_slug?`: text or null
+- **DashboardWorkersResponse**: `count`: number, `page`: number, `rows_per_page`: number, `workers`: list of DashboardWorkerResponse
 - **DoctorAnswerResponse**: `actions_this_week`: list of text, `cannot_tell`: list of text, `confidence`: `sure` \| `likely` \| `unsure`, `en`: text, `inputs_used`: list of text, `ku`: text, `likely`: text, `refer_to_officer`: true/false, `why`: list of text
 - **DoctorAskForm**: `cell?`: text or null, `lang?`: text or null, `photos?`: list of text, `question?`: text or null
 - **EditProfileParams**: `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null
@@ -1743,11 +1796,13 @@ Objects that the routes above refer to by name.
 - **MessageSendForm**: `farm_id?`: text or null, `kind?`: text or null, `photos?`: list of text, `text?`: text or null
 - **ModerateAlwaListingParams**: `note?`: text or null, `status`: `open` \| `sold` \| `closed` \| `cancelled`
 - **MyMessagesResponse**: `count`: number, `messages`: list of MessageResponse, `page`: number, `rows_per_page`: number
+- **MyWorkerResponse**: `worker?`: WorkerResponse or null
 - **OneBriefResponse**: `brief`: BriefResponse
 - **OneCropResponse**: `crop`: CropResponse
 - **OneFarmResponse**: `farm`: FarmResponse
 - **OneMessageResponse**: `message`: MessageResponse
 - **OneRuleResponse**: `changed`: true/false, `rule`: RuleResponse
+- **OneWorkerResponse**: `worker`: WorkerResponse
 - **OutlinePointResponse**: `lat`: number, `lon`: number
 - **OutlookCountsResponse**: `bad`: number, `good`: number, `normal`: number
 - **OutlookRunResponse**: `issued`: text, `method`: text, `season`: text, `seasons_right`: number, `seasons_tested`: number, `updated_at`: timestamp
@@ -1766,6 +1821,7 @@ Objects that the routes above refer to by name.
 - **PostAlwaListingParams**: `asking_price_iqd_per_kg`: number, `closes_at`: timestamp, `crop`: text, `grade?`: `a` \| `b` \| `c` or null, `lat?`: number or null, `lon?`: number or null, `market?`: text or null, `note?`: text or null, `pickup?`: `farm` \| `alwa` or null, `quantity_kg`: number, `seller_name?`: text or null, `zone_slug?`: text or null
 - **ProfileResponse**: `created_at`: timestamp, `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `phone`: text
 - **PublicFarmStatsResponse**: `as_of`: timestamp, `by_crop`: list of FarmStatsCropResponse, `by_governorate`: list of FarmStatsAreaResponse, `by_zone`: list of FarmStatsAreaResponse, `totals`: FarmStatsTotalsResponse
+- **PutWorkerParams**: `available?`: true/false or null, `cost_iqd`: number, `cost_per?`: `day` \| `hour` or null, `lat?`: number or null, `lon?`: number or null, `name`: text, `note?`: text or null, `zone_slug?`: text or null
 - **RankedEntryResponse**: `dam_slug?`: text or null, `need`: number, `note_en?`: text or null, `note_ku?`: text or null, `rank`: number, `send_million_m3?`: number or null, `urgent`: true/false, `zone_slug`: text
 - **RecordAlertParams**: `action_en`: text, `action_ku`: text, `confidence`: `sure` \| `likely` \| `unsure`, `day`: day, `en`: text, `ku`: text, `level`: `watch` \| `alarm`, `source`: text, `type`: `frost` \| `heat` \| `heavy_rain` \| `dry_spell` \| `rust_weather` \| `sunn_pest` \| `dust` \| `spray_window` \| `sowing_rain` \| `urea_rain` \| `fire` \| `brief`
 - **RecordAlwaPriceParams**: `fixed?`: true/false, `price_iqd_per_kg`: number, `source`: text
@@ -1835,6 +1891,9 @@ Objects that the routes above refer to by name.
 - **WaterPlanEntriesResponse**: `entries`: list of StoredWaterPlanEntryResponse
 - **WaterPlanResponse**: `entries`: list of RankedEntryResponse, `season`: text, `totals`: PlanTotalsResponse
 - **WaterSeasonsResponse**: `seasons`: list of text
+- **WorkerCardResponse**: `cost_iqd`: number, `cost_per`: `day` \| `hour`, `created_at`: timestamp, `distance_km?`: number or null, `id`: text, `lat?`: number or null, `lon?`: number or null, `name`: text, `note?`: text or null, `phone`: text, `updated_at`: timestamp, `zone_slug?`: text or null
+- **WorkerResponse**: `available`: true/false, `cost_iqd`: number, `cost_per`: `day` \| `hour`, `created_at`: timestamp, `id`: text, `lat?`: number or null, `lon?`: number or null, `name`: text, `note?`: text or null, `phone`: text, `updated_at`: timestamp, `zone_slug?`: text or null
+- **WorkersResponse**: `count`: number, `page`: number, `rows_per_page`: number, `workers`: list of WorkerCardResponse
 - **YearAgoReadingResponse**: `day`: day, `pct_full`: number
 - **YearAverageResponse**: `average_dryness`: number, `year`: number
 - **YearDrynessResponse**: `dryness`: number, `year`: number

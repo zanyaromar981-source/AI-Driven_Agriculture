@@ -2,15 +2,34 @@
 
 For everyone building the farmer app and the website (public View page and staff Admin). The backend in `backend/` is the one source of data: the app and the website read and write everything through it and keep no numbers of their own.
 
-Status: v6, 2026-10-09, API version 1.7.0. Three places describe the API, from short to complete:
+Status: v7, 2026-10-10, API version 1.7.0. Three places describe the API, from short to complete:
 
 1. **This file**: how things work, which screen calls what, the rules, what is empty today.
-2. **`backend/API.md`**: every route (183 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
+2. **`backend/API.md`**: every route (189 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
 3. **`/api-docs` on the server**: the same, clickable, with a "try it" button.
 
 `BACKEND.md` is where the frontend writes what it needs. Where the two files disagree, say so in the files and we fix one of them.
 
-Contents: 1 where it is, 2 who calls what, 3 rules for every route, 4 the farmer app, 5 Alwa market, 6 Ask the Doctor, 7 public data, 8 website sign-in and roles, 9 website data routes, 10 caching, 11 what has real data today, 12 things that trip you up, 13 error codes, 14 not built yet, 15 open questions.
+## 0. What changed, and what you need to do
+
+Newest first. Each line says what to change on your side. Details are in the sections named.
+
+| What is new | App team | Website team |
+|---|---|---|
+| **Workers for hire** (section 5B) | New screens: "Find workers" (`GET /v1/workers`, nearest first, tap to call) and "Offer my work" (`PUT /v1/workers/me` with name and cost; the phone is the signed-in one). | A staff list with remove: `GET /v1/dashboard/workers`, `DELETE /v1/dashboard/workers/{id}` (uses `farmers:read` and `farmers:delete`). |
+| **Simpler Alwa** (section 5) | Drop the workaround: stop fetching markets to pick one and stop sending `pickup: "farm"`; send only crop, kg, price, `lat`, `lon`, `closes_at`. Send the token on the listing reads to get `seller_phone`. Pass `lat` and `lon` to `GET /v1/alwa/listings` for nearest first and `distance_km`. Use `POST /v1/alwa/listings/{id}/sold`. | Listings may have `market`, `pickup` and `grade` null. Markets have `lat` and `lon` to edit. |
+| **Alerts and push** (section 4) | Alerts screen: `GET /v1/alerts`, `POST /v1/alerts/{id}/done`. Add Firebase messaging and call `POST /v1/devices` at every start. Settings: `DELETE /v1/account`. | Alerts of a farm: `GET /v1/dashboard/farms/{id}/alerts`. |
+| **10-day plan** (section 4) | Nothing to change: `GET /v1/farms/{id}/plan` now answers. Treat `404 plan_not_ready` and `plan_stale` as "coming soon". `ku` equals `en` for now: build the Sorani from `type` and `code`. | The Rules page now changes the next plans. Plan of a farm: `GET /v1/dashboard/farms/{id}/plan`. |
+| **Field history** (section 4) | Nothing to change: `/insights` is filled on the server for every farm. Read `fire_detections_7d` instead of `fire_detections`. Optional new chart data: `GET /v1/farms/{id}/history`. | Readings of a farm: `GET /v1/dashboard/farms/{id}/insights` and `/history`. |
+| **Ask the Doctor** (section 6) | Nothing to change: it answers through Codex on the test server (about 40 s). Keep the 90 s timeout. | Nothing. |
+| **Crops from the server** (section 4) | Read names and colours from `GET /v1/crops` instead of the built-in list. Handle `422 unknown_crop`. | Crops page: `/v1/dashboard/crops`. |
+| **App settings and update gate** (section 4) | Read `GET /v1/app/config` at start; send `X-App-Version` on every call; show the update screen on `426`. Show "blocked" on `403 blocked`. | App control page: `/v1/dashboard/app/config`, `/app/versions`. |
+| **Messages to the Ministry** (section 4) | `POST /v1/messages`, `GET /v1/messages/mine`. | Inbox: `/v1/dashboard/messages...`. |
+| **A place on every farm** | Farm answers carry `governorate`, `zone_slug`, `sub_zone_slug`: show them, nothing to send. | Farm filters and the totals routes (section 9). |
+| **Dams, district history, fire wind** (sections 7, 11) | Region screens now have data: dams since 2008, change against last year, wind at fires. | The same. Label dam `pct_full` as "lake area, % of full". |
+| **Being built:** the Marketplace of `BACKEND.md` 2.16 (products with units) | Keep selling crops by the kg until this table says it is in. | Nothing yet. |
+
+Contents: 0 what changed and what to do, 1 where it is, 2 who calls what, 3 rules for every route, 4 the farmer app, 5 Alwa market, 5B workers for hire, 6 Ask the Doctor, 7 public data, 8 website sign-in and roles, 9 website data routes, 10 caching, 11 what has real data today, 12 things that trip you up, 13 error codes, 14 not built yet, 15 open questions.
 
 ## 1. Where it is
 
@@ -28,7 +47,7 @@ There are four kinds of callers. Each has its own way in, and none works on anot
 
 | Caller | Gets in with | Routes |
 |---|---|---|
-| The farmer app | a farmer token: `POST /v1/auth/otp/send`, then `/verify` | `/v1/me`, `/v1/farms...`, `/v1/alerts...`, `/v1/devices`, `/v1/messages...`, `/v1/alwa...`, `/v1/account` |
+| The farmer app | a farmer token: `POST /v1/auth/otp/send`, then `/verify` | `/v1/me`, `/v1/farms...`, `/v1/alerts...`, `/v1/devices`, `/v1/messages...`, `/v1/alwa...`, `/v1/workers...`, `/v1/account` |
 | The website's Admin part | a staff token: `POST /v1/dashboard/auth/login` | everything under `/v1/dashboard` |
 | Anyone, no login (the View page, the app before sign-in) | nothing | read-only: `/v1/region...`, `/v1/zones...`, `/v1/dams...`, `/v1/fires`, `/v1/outlooks...`, `/v1/water/plan`, `/v1/briefs...`, `/v1/stats/farms`, `/v1/app/config`, `/v1/versions`, and the Alwa market's public pages |
 | Our data jobs | a service key | `/v1/ingest...`. Not for the app or the website. |
@@ -166,6 +185,17 @@ Sellers set their own price on each listing and buyers call them. There is no au
 - **Still there for the website, not used by the app:** `POST /v1/alwa/listings/{id}/offers`, `.../offers/{offer_id}/accept`, `GET /v1/alwa/offers/mine`, `GET /v1/alwa/deals`. Their rules: no offer on your own listing (`own_listing`), one open offer per buyer per listing, accepting sells the whole listing; codes `offer_not_open`, `offer_too_large`.
 - Known rough edge: staff cannot delete a listing that was marked sold (`listing_has_deal`).
 
+## 5B. Workers for hire
+
+People who do farm work put up a card with their name and their cost; farmers browse the cards and call. A worker signs in with their phone exactly like a farmer (the same sign-in, the same token). There is no booking, rating or chat.
+
+- **Offer my work:** `PUT /v1/workers/me` with `{"name", "cost_iqd", "cost_per": "day" | "hour", "note", "zone_slug", "lat", "lon", "available"}` creates or replaces the caller's one card and answers `{"worker": {...}}`. Only `name` (1 to 80 characters) and `cost_iqd` (1,000 to 10,000,000, a whole number) are required; `cost_per` defaults to `day`; `note` is up to 200 characters (what work they do); `lat` and `lon` go together and must be inside the region. **Do not send a phone:** the card always carries the signed-in phone, and a `phone` field in the body is refused (`400`).
+- `GET /v1/workers/me` answers `{"worker": {...} | null}`. `DELETE /v1/workers/me` answers `204`. To pause without deleting, put the card again with `"available": false`.
+- **Find workers:** `GET /v1/workers?lat=&lon=&zone=&q=&max_cost_iqd=&cost_per=&page=&rows_per_page=` answers `{"workers": [{"id", "name", "phone", "cost_iqd", "cost_per", "note", "zone_slug", "lat", "lon", "distance_km", "created_at", "updated_at"}], "count", "page", "rows_per_page"}`. With `lat` and `lon` the nearest come first with `distance_km` (not rounded; cards without a point come last); without them the most recently updated come first. `q` searches the name and the note. **This route needs the token** (`401` without): phone numbers are only shown to signed-in people. Show a "Call" button that opens the dialler with `phone`.
+- A blocked or deleted account's card disappears from the list.
+- Staff: `GET /v1/dashboard/workers` (all cards, also paused ones; same filters plus `available=`) and `DELETE /v1/dashboard/workers/{id}`, with the permissions `farmers:read` and `farmers:delete`.
+- Cache topic: `farmers`.
+
 ## 6. Ask the Doctor
 
 `POST /v1/farms/{id}/ask` with the farmer's token. The body is `multipart/form-data`:
@@ -191,7 +221,7 @@ Answer `200`, no outer wrapper:
 - `inputs_used` is extra to `BACKEND.md` 2.5: which sources the Doctor read.
 - Not in this version: `case_id` (nothing is stored yet) and `transcript` (voice is deferred).
 - The Doctor takes 10 to 25 s and the backend waits up to 90 s for it. Give this call its own answer timeout of at least 90 s.
-- **On the test server the Doctor service is not running yet** (checked 2026-10-09: nothing answers on its port and the server has no address for it), so every question there answers `502 doctor_failed`. It needs the Doctor code and its AI key put on that server.
+- **On the test server the Doctor answers through Codex** (the `codex exec` program signed in there; no AI key). A real question took 39 s. If it answers `502 doctor_failed`, Codex took over 75 s or answered outside the JSON: ask again.
 
 Errors, in the order they are checked:
 

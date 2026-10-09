@@ -313,6 +313,12 @@ impl Modify for BearerAuth {
         crate::features::alerts::web::handlers::mark_alert_pushed,
         crate::features::alerts::web::handlers::delete_dead_device,
         crate::features::alerts::web::handlers::get_dashboard_farm_alerts,
+        crate::features::workers::web::handlers::get_workers,
+        crate::features::workers::web::handlers::get_my_worker_card,
+        crate::features::workers::web::handlers::put_my_worker_card,
+        crate::features::workers::web::handlers::delete_my_worker_card,
+        crate::features::workers::web::handlers::dashboard_get_workers,
+        crate::features::workers::web::handlers::dashboard_delete_worker,
         crate::features::alerts::web::handlers::delete_dashboard_alert
     ),
     components(schemas(
@@ -621,6 +627,15 @@ impl Modify for BearerAuth {
         crate::features::alerts::web::AlertNotifyParams,
         crate::features::alerts::web::AlertDeviceResponse,
         crate::features::alerts::web::RegisterDeviceParams,
+        crate::features::workers::web::WorkerCostPer,
+        crate::features::workers::web::PutWorkerParams,
+        crate::features::workers::web::WorkerResponse,
+        crate::features::workers::web::OneWorkerResponse,
+        crate::features::workers::web::MyWorkerResponse,
+        crate::features::workers::web::WorkerCardResponse,
+        crate::features::workers::web::WorkersResponse,
+        crate::features::workers::web::DashboardWorkerResponse,
+        crate::features::workers::web::DashboardWorkersResponse,
         ErrorBody
     )),
     modifiers(&BearerAuth),
@@ -645,6 +660,7 @@ impl Modify for BearerAuth {
         (name = "crops", description = "The crop list staff keep: the codes farms, listings and prices may use, with names and colours"),
         (name = "history", description = "Ten years of monthly history per farm: rain, temperature, evapotranspiration, soil moisture, greenness and groundwater"),
         (name = "plans", description = "This week's plan: the next 10 days of weather turned into farm work, pushed per farm by the plan job"),
+        (name = "workers", description = "Workers for hire: people put up a card with their name, phone and cost, and farmers call them"),
         (name = "alerts", description = "Alerts for a farm: what the data jobs warn about, what the farmer ticked, and the phones registered for pushes")
     ),
     info(
