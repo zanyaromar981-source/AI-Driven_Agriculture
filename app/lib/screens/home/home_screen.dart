@@ -5,12 +5,11 @@ import '../../app_scope.dart';
 import '../../l10n/strings.dart';
 import '../../store/outbox.dart';
 import '../add_farm/farm_actions.dart';
-import '../doctor/ask_doctor_screen.dart';
 import '../history/field_history_screen.dart';
 import '../history/now_card.dart';
 import '../../theme.dart';
-import '../../widgets/common.dart';
 import '../../widgets/header.dart';
+import '../tabs.dart';
 import 'farm_section.dart';
 
 /// Home: one farm on its own screen (user, 2026-10-08: "every farm should be
@@ -114,13 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         bottomNavigationBar: english(
-          _TabBar(
-            onAsk: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => AskDoctorScreen(farm: _farm),
-              ),
-            ),
-          ),
+          JutyarTabBar(current: JTab.home, farm: _farm),
         ),
       ),
     );
@@ -184,126 +177,6 @@ class _BackBar extends StatelessWidget {
           ),
           trailing,
         ],
-      ),
-    );
-  }
-}
-
-/// Home, Alerts, Ask the Doctor (raised), Settings. Home goes back to My
-/// farms; Ask opens the Doctor for this farm. Alerts and Settings are not
-/// built yet.
-class _TabBar extends StatelessWidget {
-  const _TabBar({required this.onAsk});
-  final VoidCallback onAsk;
-
-  @override
-  Widget build(BuildContext context) {
-    final s = AppScope.of(context).s;
-    void later(String name) => showToast(context, '$name: ${s.notBuilt}');
-    Widget tab(
-      IconData icon,
-      String label, {
-      bool on = false,
-      VoidCallback? onTap,
-    }) => Expanded(
-      child: InkWell(
-        onTap: onTap ?? () => later(label),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 6),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 3,
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: on ? JColors.accent : JColors.muted,
-                ),
-                Text(
-                  label,
-                  style: jText(
-                    false,
-                    size: 11,
-                    weight: on ? FontWeight.w700 : FontWeight.w500,
-                    color: on ? JColors.accent : JColors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-    return Container(
-      decoration: const BoxDecoration(
-        color: JColors.card,
-        border: Border(top: BorderSide(color: JColors.cardLine)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 74,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              tab(
-                Icons.home_rounded,
-                s.tabHome,
-                on: true,
-                onTap: () => Navigator.of(context).maybePop(),
-              ),
-              tab(Icons.notifications_none_rounded, s.tabAlerts),
-              Expanded(
-                child: InkWell(
-                  onTap: onAsk,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 6),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.bottomCenter,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: 3,
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: JColors.accent,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: JColors.accentSoft,
-                                width: 3,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.medical_services_outlined,
-                              size: 20,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            s.tabAsk,
-                            style: jText(
-                              false,
-                              size: 11,
-                              weight: FontWeight.w600,
-                              color: JColors.accent,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              tab(Icons.settings_outlined, s.tabSettings),
-            ],
-          ),
-        ),
       ),
     );
   }

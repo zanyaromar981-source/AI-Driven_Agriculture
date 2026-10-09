@@ -231,6 +231,7 @@ class S {
   String get tabAlerts => 'Alerts';
   String get tabAsk => 'Ask the Doctor';
   String get tabSettings => 'Settings';
+  String get tabAlwa => 'Alwa';
   String get notBuilt => 'Not built yet';
   String get viewCells => 'Cells';
   String get viewCrops => 'Crops';

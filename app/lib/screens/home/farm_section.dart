@@ -6,9 +6,9 @@ import '../../crops.dart';
 import '../../geo.dart';
 import '../../store/local_store.dart';
 import '../../theme.dart';
-import '../../widgets/common.dart';
 import '../../widgets/farm_card.dart';
 import '../doctor/ask_doctor_screen.dart';
+import '../report/report_screen.dart';
 import 'cell_card.dart';
 import 'farm_drawing.dart';
 import 'week_strip.dart';
@@ -392,7 +392,12 @@ class _FarmSectionState extends State<FarmSection> {
               ),
             ),
           ),
-          onReport: () => showToast(context, '${s.reportHere}: ${s.notBuilt}'),
+          onReport: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ReportScreen(farm: widget.summary, shape: shape, cell: k),
+            ),
+          ),
         );
       case FarmView.crops:
         final c = _crop;

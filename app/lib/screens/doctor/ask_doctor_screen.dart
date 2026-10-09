@@ -185,7 +185,7 @@ class _AskDoctorScreenState extends State<AskDoctorScreen> {
           style: latText(size: 13, weight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
-        _PhotoRow(
+        PhotoRow(
           photos: _photos,
           enabled: !_sending,
           onCamera: () => _add(ImageSource.camera),
@@ -330,23 +330,29 @@ class _QuestionBox extends StatelessWidget {
   );
 }
 
-class _PhotoRow extends StatelessWidget {
-  const _PhotoRow({
+/// Camera (and gallery) tiles, then the chosen photos with a remove badge.
+class PhotoRow extends StatelessWidget {
+  const PhotoRow({
+    super.key,
     required this.photos,
     required this.enabled,
     required this.onCamera,
-    required this.onGallery,
     required this.onRemove,
+    this.onGallery,
+    this.max = kMaxPhotos,
   });
   final List<DoctorPhoto> photos;
   final bool enabled;
   final VoidCallback onCamera;
-  final VoidCallback onGallery;
+
+  /// No gallery tile when null (Report: camera only, as designed).
+  final VoidCallback? onGallery;
   final void Function(int) onRemove;
+  final int max;
 
   @override
   Widget build(BuildContext context) {
-    final full = photos.length >= kMaxPhotos;
+    final full = photos.length >= max;
     return SizedBox(
       height: 84,
       child: ListView(
@@ -358,12 +364,14 @@ class _PhotoRow extends StatelessWidget {
               label: 'Camera',
               onTap: enabled ? onCamera : null,
             ),
-            const SizedBox(width: 10),
-            _AddTile(
-              icon: Icons.photo_library_outlined,
-              label: 'Gallery',
-              onTap: enabled ? onGallery : null,
-            ),
+            if (onGallery != null) ...[
+              const SizedBox(width: 10),
+              _AddTile(
+                icon: Icons.photo_library_outlined,
+                label: 'Gallery',
+                onTap: enabled ? onGallery : null,
+              ),
+            ],
           ],
           for (final (i, p) in photos.indexed) ...[
             const SizedBox(width: 10),
