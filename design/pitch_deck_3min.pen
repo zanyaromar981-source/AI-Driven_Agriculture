@@ -3566,10 +3566,343 @@
     },
     {
       "type": "frame",
-      "id": "XxvPB",
+      "id": "HIPSy",
       "x": 10200,
       "y": 0,
-      "name": "06 Vision and scale",
+      "name": "06 Alwa marketplace",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$deep",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "hlumm",
+          "x": 0,
+          "y": 0,
+          "name": "Topo Texture",
+          "opacity": 0.5,
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-6.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "text",
+          "id": "YDbUs",
+          "x": 120,
+          "y": 110,
+          "name": "Brand",
+          "fill": "$gold",
+          "content": "JUTYAR · ALWA",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "J7egsd",
+          "x": 120,
+          "y": 0,
+          "name": "Title Block",
+          "width": 620,
+          "height": 1080,
+          "layout": "vertical",
+          "gap": 28,
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "TWp2k",
+              "name": "Headline",
+              "fill": "#FFFFFF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Sell at a fair price.",
+              "lineHeight": 1.02,
+              "fontFamily": "$font-lat",
+              "fontSize": 104,
+              "fontWeight": "800",
+              "letterSpacing": -3
+            },
+            {
+              "type": "text",
+              "id": "JthKg",
+              "name": "Secondary",
+              "fill": "$gold",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Alwa: the farmers' marketplace.",
+              "lineHeight": 1.2,
+              "fontFamily": "$font-lat",
+              "fontSize": 42,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "L4RWaE",
+          "x": 800,
+          "y": 0,
+          "name": "Phones",
+          "height": 1080,
+          "gap": 36,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "dP8zj",
+              "name": "Step 1",
+              "layout": "vertical",
+              "gap": 22,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "OymRq",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 330,
+                  "height": 558,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "pitch_assets/alwa_prices.png",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": 30,
+                  "stroke": "#FFFFFF33",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 14
+                    },
+                    "blur": 40
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "Y8Cw2l",
+                  "name": "Label",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "s3PVb",
+                      "name": "Number",
+                      "width": 44,
+                      "height": 44,
+                      "fill": "$gold",
+                      "cornerRadius": 22,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "HsOPo",
+                          "name": "N",
+                          "fill": "$soil",
+                          "content": "1",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 24,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "PHfGX",
+                      "name": "Step Text",
+                      "fill": "#FFFFFF",
+                      "content": "See today's price",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "m1y4R",
+              "name": "Step 2",
+              "layout": "vertical",
+              "gap": 22,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "GENz6",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 330,
+                  "height": 672,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "pitch_assets/alwa_sell.png",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": 30,
+                  "stroke": "#FFFFFF33",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 14
+                    },
+                    "blur": 40
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "QJlBo",
+                  "name": "Label",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "AxCrZ",
+                      "name": "Number",
+                      "width": 44,
+                      "height": 44,
+                      "fill": "$gold",
+                      "cornerRadius": 22,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "H9rbf",
+                          "name": "N",
+                          "fill": "$soil",
+                          "content": "2",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 24,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "B40IWo",
+                      "name": "Step Text",
+                      "fill": "#FFFFFF",
+                      "content": "Put your crop on sale",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "R1UIB",
+              "name": "Step 3",
+              "layout": "vertical",
+              "gap": 22,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "wsrKu",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 330,
+                  "height": 609,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "pitch_assets/alwa_offers.png",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": 30,
+                  "stroke": "#FFFFFF33",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 14
+                    },
+                    "blur": 40
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "zOqA4",
+                  "name": "Label",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "B3mlAA",
+                      "name": "Number",
+                      "width": 44,
+                      "height": 44,
+                      "fill": "$gold",
+                      "cornerRadius": 22,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "sLVri",
+                          "name": "N",
+                          "fill": "$soil",
+                          "content": "3",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 24,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "asq8I",
+                      "name": "Step Text",
+                      "fill": "#FFFFFF",
+                      "content": "Accept the best offer",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "XxvPB",
+      "x": 12240,
+      "y": 0,
+      "name": "07 Vision and scale",
       "clip": true,
       "width": 1920,
       "height": 1080,

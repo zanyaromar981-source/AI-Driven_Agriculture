@@ -39,23 +39,25 @@ Not in the demo unless it is tested on the morning of the pitch: Ask the Doctor.
 
 ## 3-minute version: the story deck
 
-For the 3-minute round use `design/pitch_deck_3min.pen` (6 slides, name Jutyar). The slides carry almost no text, so the numbers are spoken. About 3 minutes.
+For the 3-minute round use `design/pitch_deck_3min.pen` (7 slides, name Jutyar). The slides carry almost no text, so the numbers are spoken. About 3 minutes.
 
 | # | Slide | Time | Say |
 |---|---|---|---|
 | 1 | AI-Driven Agriculture (title, sun logo) | 25 s | "We are AI-Driven Agriculture, and this is Jutyar. A farmer knows his field better than anyone. He walks it every day. And he can still miss the first signs that part of it is failing. Jutyar makes that easier." |
-| 2 | Space sees more. | 30 s | "From space, weak areas appear early. A satellite passes every five days and sees every 10 metres of the field. Jutyar compares each square with its own normal and colours it: green, yellow, orange, red." |
-| 3 | Simple to use. | 30 s | "For the farmer it is simple. He signs in with his phone number, walks the border of his field once, and marks his crops. After that: one farm, one view." |
+| 2 | Space sees more. | 25 s | "From space, weak areas appear early. A satellite passes every five days and sees every 10 metres of the field. Jutyar compares each square with its own normal and colours it: green, yellow, orange, red." |
+| 3 | Simple to use. | 25 s | "For the farmer it is simple. He signs in with his phone number, walks the border of his field once, and marks his crops. After that: one farm, one view." |
 | 4 | One message. | 35 s | "And he receives one message, in Sorani, with five parts. The problem. How confident we are. Why, with the source of each reason. What to do this week. And the limits: what we cannot tell. It never gives a chemical dose. This is where the AI works. AI is not the sensor. It is the translator." |
-| 5 | Farmers and government, connected. | 30 s | "The farmer is one side. The government is the other. One website connects them. Farmers' fields and reports come in, alerts go out, and the Ministry sees the whole region on one dashboard: all 33 districts, the crops, the water in Dukan and Darbandikhan." |
-| 6 | From one farm to a smarter Kurdistan. | 30 s | "One farm is the start. The same view for every farm gives the region one picture. We checked the method on 26 past seasons: right 88 percent of the time. And we built the app, the server and the map in two days. Thank you." |
+| 5 | Farmers and government, connected. | 25 s | "The farmer is one side. The government is the other. One website connects them. Farmers' fields and reports come in, alerts go out, and the Ministry sees the whole region on one dashboard: all 33 districts, the crops, the water in Dukan and Darbandikhan." |
+| 6 | Sell at a fair price. | 20 s | "And when the crop is ready, Jutyar helps him sell it. This is Alwa, the farmers' marketplace. He sees today's price, puts his crop on sale, and accepts the best offer from the buyers." |
+| 7 | From one farm to a smarter Kurdistan. | 25 s | "One farm is the start. The same view for every farm gives the region one picture. We checked the method on 26 past seasons: right 88 percent of the time. And we built the app, the server and the map in two days. Thank you." |
 
 Notes for this version:
 
 - If there is time for a demo, do it on slide 3: hold up the phone and tap one coloured square. 20 seconds at most.
 - The coloured grid on slide 2 is an illustration drawn on a real Sentinel-2 picture, not a real result for that field. Say "this is how it looks", not "this is what we found".
-- The picture on slide 6 is AI-made. The glowing network is a vision, not a map of real farms.
+- The picture on slide 7 is AI-made. The glowing network is a vision, not a map of real farms.
 - The message on slide 4 is a sample in Sorani that a native speaker still has to check.
+- The Alwa screens on slide 6 are designs with sample prices and buyers. The server routes for Alwa are built; the phone screens are not in the app yet.
 - The website pictures on slide 5 are the team's Control Room and dashboard designs with sample data. The Control Room demo is not connected to the server yet, so say "this is the website we designed", not "this is live".
 
 ## Questions the judges may ask
