@@ -835,6 +835,31 @@ impl FarmRepository for FarmPostgresRepository {
 
         Ok(result.rows_affected)
     }
+
+    async fn find_summaries_by_ids(&self, ids: &[i32]) -> Result<Vec<FarmSummary>, AppError> {
+        let mut summaries = Vec::with_capacity(ids.len());
+
+        for ids in ids.chunks(IDS_PER_UPDATE) {
+            let models = farms::Entity::find()
+                .filter(farms::Column::Id.is_in(ids.to_vec()))
+                .order_by_asc(farms::Column::Id)
+                .all(&self.conn)
+                .await
+                .map_err(database_error)?;
+
+            let mut inside_per_crop = self
+                .inside_per_crop(models.iter().map(|model| model.id).collect())
+                .await?;
+
+            for model in models {
+                let cells = inside_per_crop.remove(&model.id).unwrap_or_default();
+
+                summaries.push(FarmSummary::try_from((model, cells))?);
+            }
+        }
+
+        Ok(summaries)
+    }
 }
 
 fn farm_id(farm: &Farm) -> Result<i32, AppError> {

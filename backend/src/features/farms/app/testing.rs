@@ -5,7 +5,10 @@ use async_trait::async_trait;
 use crate::{
     app::{Action, AuthContext, Pagination, Permission, Resource, StaffContext, User},
     features::farms::{
-        app::{AppError, AreaDirectory, FarmRepository, FarmerDirectory, PlaceLocator},
+        app::{
+            AppError, AreaDirectory, FarmRepository, FarmerDirectory, PlaceLocator,
+            PublicTotalsSwitch,
+        },
         domain::{
             AreaCount, AreaCropSum, AreaLevel, AreaNames, Cell, Crop, Farm, FarmFilter,
             FarmLocation, FarmName, FarmOrder, FarmPlace, FarmSummary, GovernorateName, GridCell,
@@ -78,6 +81,9 @@ pub enum RepositoryCall {
     },
     DeleteAllByOwner {
         owner: String,
+    },
+    FindSummariesByIds {
+        ids: Vec<i32>,
     },
 }
 
@@ -456,6 +462,20 @@ impl FarmRepository for FakeFarmRepository {
 
         Ok(self.script.lock().expect("script lock").owned_count)
     }
+
+    async fn find_summaries_by_ids(&self, ids: &[i32]) -> Result<Vec<FarmSummary>, AppError> {
+        self.record(RepositoryCall::FindSummariesByIds { ids: ids.to_vec() });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .existing
+            .iter()
+            .filter(|one| one.id().is_some_and(|id| ids.contains(&id)))
+            .map(summary_of)
+            .collect())
+    }
 }
 
 /// Stands in for the farmers feature: every phone is registered, or none is.
@@ -585,6 +605,17 @@ impl AreaDirectory for FakeAreaDirectory {
         }
 
         Ok(area_names())
+    }
+}
+
+/// Stands in for the app settings' public totals switch.
+#[derive(Debug, Clone, Copy)]
+pub struct FakeTotalsSwitch(pub bool);
+
+#[async_trait]
+impl PublicTotalsSwitch for FakeTotalsSwitch {
+    async fn is_on(&self) -> Result<bool, AppError> {
+        Ok(self.0)
     }
 }
 

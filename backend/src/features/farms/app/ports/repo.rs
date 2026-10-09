@@ -118,4 +118,9 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
     /// Deletes every farm of the owner, with their cells, in one statement.
     /// Returns how many farms were deleted.
     async fn delete_all_by_owner(&self, owner: &Phone) -> Result<u64, AppError>;
+
+    /// Returns the summary of each of the farms with one of these ids that
+    /// is still stored, whoever owns it, without the owners. For another
+    /// feature that keeps a farm's id and needs what the farm is called.
+    async fn find_summaries_by_ids(&self, ids: &[i32]) -> Result<Vec<FarmSummary>, AppError>;
 }

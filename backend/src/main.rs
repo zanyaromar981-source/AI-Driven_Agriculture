@@ -12,6 +12,10 @@ use farm_doctor_api::{
             dashboard_routes as alwa_dashboard_routes, ingest_routes as alwa_ingest_routes,
             public_routes as alwa_public_routes, routes as alwa_routes,
         },
+        app_config::web::{
+            dashboard_routes as app_config_dashboard_routes,
+            public_routes as app_config_public_routes,
+        },
         briefs::web::{
             dashboard_routes as brief_dashboard_routes, ingest_routes as brief_ingest_routes,
             public_routes as brief_public_routes, routes as brief_routes,
@@ -38,6 +42,7 @@ use farm_doctor_api::{
             routes as insight_routes,
         },
         jobs::web::{dashboard_routes as job_dashboard_routes, ingest_routes as job_ingest_routes},
+        messages::web::{dashboard_routes as message_dashboard_routes, routes as message_routes},
         outlooks::web::{
             dashboard_routes as outlook_dashboard_routes, ingest_routes as outlook_ingest_routes,
             public_routes as outlook_public_routes,
@@ -66,7 +71,9 @@ use farm_doctor_api::{
     },
     infra::{
         BootstrappedApp, Config, di_init,
-        http::{auth, cors_layer, etag, health_routes, service_key, staff_auth, swagger_ui},
+        http::{
+            app_version, auth, cors_layer, etag, health_routes, service_key, staff_auth, swagger_ui,
+        },
         postgres_init, telemetry,
     },
     shared::{AppState, Phone, issue_jwt},
@@ -133,8 +140,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(alwa_routes())
                 .merge(brief_routes())
                 .merge(doctor_routes())
+                .merge(message_routes())
+                // Inside `auth`, so it knows which farmer is asking.
+                .layer(middleware::from_fn_with_state(state.clone(), app_version))
                 .layer(middleware::from_fn_with_state(state.clone(), auth))
-                .merge(farmer_public_routes())
+                .merge(
+                    farmer_public_routes()
+                        .layer(middleware::from_fn_with_state(state.clone(), app_version)),
+                )
+                .merge(app_config_public_routes())
                 .merge(version_public_routes())
                 .merge(fire_public_routes())
                 .merge(zone_public_routes())
@@ -164,6 +178,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     Router::new()
                         .merge(staff_dashboard_routes())
                         .merge(alwa_dashboard_routes())
+                        .merge(app_config_dashboard_routes())
                         .merge(brief_dashboard_routes())
                         .merge(dam_dashboard_routes())
                         .merge(farm_dashboard_routes())
@@ -171,6 +186,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(fire_dashboard_routes())
                         .merge(insight_dashboard_routes())
                         .merge(job_dashboard_routes())
+                        .merge(message_dashboard_routes())
                         .merge(outlook_dashboard_routes())
                         .merge(rule_dashboard_routes())
                         .merge(version_dashboard_routes())

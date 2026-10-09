@@ -295,7 +295,20 @@ Answers to `BACKEND.md` 2.12 and 2.13, as built.
 
 **Totals (A4): built.**
 - `GET /v1/dashboard/stats/farms?governorate=&zone=&crop=` (`farms:read`) answers `{"as_of", "totals": {"farmers", "farms", "dunam"}, "by_governorate", "by_zone", "by_sub_zone", "by_crop"}` as requested. Only areas that have farms are listed. Farms with no place are in the totals and in a row with slug `unknown`. With `crop`, only farms growing it are counted and `dunam` stays the whole area of those farms.
-- `GET /v1/stats/farms` (no login) answers `totals`, `by_governorate`, `by_zone`, `by_crop` only: no names, no phones, nothing per sub-district. It answers `404` when the server setting `STATS__PUBLIC_FARM_TOTALS` is `false`.
+- `GET /v1/stats/farms` (no login) answers `totals`, `by_governorate`, `by_zone`, `by_crop` only: no names, no phones, nothing per sub-district. It answers `404` when staff have switched `public_farm_totals` off in the app settings (B4).
 - Both belong to the `farms` topic.
 
-**Still being built from 2.12:** B1 (crops), B3 (inbox), B4 (app control). This section will say when each is in.
+**Inbox (B3): built.**
+- Farmer app: `POST /v1/messages`, multipart with `kind` (`question`, `report`, `complaint`, `request`, `other`), `text` (1 to 2,000 characters), optional `farm_id` (one of the farmer's own farms), and 0 to 4 `photos` (JPEG or PNG, at most 4 MB each, checked against their real bytes). Send `Idempotency-Key`. Answers `201 {"message": {"id", "kind", "text", "farm_id", "state", "photos": [{"id", "url", "content_type", "size"}], "reply", "created_at"}}`. At most 20 messages per farmer in 24 hours (`429 rate_limited` with `retry_after_s`).
+- `GET /v1/messages/mine` answers `{"messages", "count", "page", "rows_per_page"}`, newest first; `reply` is `{"text_ku", "text_en", "replied_at"}` or null. `GET /v1/messages/{id}/photos/{photo_id}` returns the picture to its sender only.
+- Dashboard: `GET /v1/dashboard/messages?state=&kind=&governorate=&zone=&q=&page=&rows_per_page=`, `GET /v1/dashboard/messages/counts` (`{"new", "read", "replied", "closed"}`), `GET /v1/dashboard/messages/{id}`, `GET /v1/dashboard/messages/{id}/photos/{photo_id}` (all `messages:read`); `PUT /v1/dashboard/messages/{id}` with `{"state"}` and `POST /v1/dashboard/messages/{id}/reply` with `{"text_ku", "text_en?"}` (`messages:update`); `DELETE /v1/dashboard/messages/{id}` (`messages:delete`).
+- A message shows the farmer's name and phone, and the farm's name, governorate and district. The place filters work on messages that name a farm. A reply sets the state to `replied`; a second reply replaces the first; a closed message can still be replied to. Setting `replied` by hand without a reply is `422 no_reply`. Photo URLs are paths: put the server address in front and send the token.
+
+**App control (B4): built.**
+- `GET /v1/app/config` (no login), `GET` and `PUT /v1/dashboard/app/config` (`app:read`, `app:update`; `PUT` replaces everything), with the fields of your request; `features` and `limits` are objects. `min_version` may not be above `latest_version`. Maintenance and the announcement need their Sorani text while switched on (`422 missing_text`).
+- Starting values: versions `1.0.0`; `plan`, `reports` and `push` are off because the server does not have them yet; limits are what the server enforces today (20 farms, 3 to 50 corners, 2,000 dunam).
+- **The app must send `X-App-Version: 1.0.3` on every call.** Below `min_version` every farmer route and both sign-in routes answer `426 {"error": "update_required"}`; show the update screen. `GET /v1/app/config` is never refused. A call without the header is let through.
+- `GET /v1/dashboard/app/versions` (`app:read`) answers `{"versions": [{"version", "farmers", "share"}]}` for the last 30 days, each farmer counted under the version last seen. It belongs to no cache topic: fetch it fresh when the page opens.
+- Honest limit: the server does not yet enforce the `limits` or the feature switches from this page; they are what the app reads. The server's own farm and corner limits stay as they are until that is wired.
+
+**Still being built from 2.12:** B1 (crops). This section will say when each is in.

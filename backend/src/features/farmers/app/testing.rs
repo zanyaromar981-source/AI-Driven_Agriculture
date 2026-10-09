@@ -22,26 +22,69 @@ pub const PHONE: &str = "+9647501234567";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Call {
-    FindFarmer { phone: String },
-    CreateFarmerIfAbsent { phone: String },
+    FindFarmer {
+        phone: String,
+    },
+    CreateFarmerIfAbsent {
+        phone: String,
+    },
     UpdateFarmer,
-    FindChallenge { phone: String },
-    SaveChallenge { phone: String },
-    RecordAttempt { phone: String },
-    ConsumeChallenge { phone: String },
-    SendCode { phone: String, code: String },
+    FindChallenge {
+        phone: String,
+    },
+    SaveChallenge {
+        phone: String,
+    },
+    RecordAttempt {
+        phone: String,
+    },
+    ConsumeChallenge {
+        phone: String,
+    },
+    SendCode {
+        phone: String,
+        code: String,
+    },
     IssueToken,
-    CountFarms { phone: String },
-    FindFarmerById { id: i32 },
-    FindFarmersPage { phone: Option<String>, page: u64 },
-    CreateFarmer { phone: String },
-    UpdateFarmerById { id: i32 },
-    DeleteFarmerWithChallenge { id: i32 },
-    RemoveFarms { phone: String },
-    FarmHoldings { phone: String },
-    LetterIssuerName { staff_id: i32 },
-    IssueLetter { farmer_id: i32, staff_id: i32 },
-    FindLetter { number: String },
+    CountFarms {
+        phone: String,
+    },
+    FindFarmerById {
+        id: i32,
+    },
+    FindFarmersPage {
+        phone: Option<String>,
+        page: u64,
+    },
+    CreateFarmer {
+        phone: String,
+    },
+    UpdateFarmerById {
+        id: i32,
+    },
+    DeleteFarmerWithChallenge {
+        id: i32,
+    },
+    RemoveFarms {
+        phone: String,
+    },
+    FarmHoldings {
+        phone: String,
+    },
+    LetterIssuerName {
+        staff_id: i32,
+    },
+    IssueLetter {
+        farmer_id: i32,
+        staff_id: i32,
+    },
+    FindLetter {
+        number: String,
+    },
+    FindManyFarmers {
+        ids: Option<Vec<i32>>,
+        matching: Option<String>,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -348,6 +391,44 @@ impl FarmerRepository for Fakes {
         script.challenge = None;
 
         Ok(true)
+    }
+
+    async fn find_many(
+        &self,
+        ids: Option<&[i32]>,
+        matching: Option<&str>,
+        _limit: u64,
+    ) -> Result<Vec<Farmer>, AppError> {
+        self.record(Call::FindManyFarmers {
+            ids: ids.map(<[i32]>::to_vec),
+            matching: matching.map(str::to_string),
+        });
+
+        let script = self.script.lock().expect("script lock");
+
+        if script.fail_to_read_farmers {
+            return Err(
+                crate::app::AppError::DatabaseError("connection refused".to_string()).into(),
+            );
+        }
+
+        let contains = |farmer: &Farmer, text: &str| {
+            let text = text.to_lowercase();
+
+            farmer.phone().as_str().contains(&text)
+                || farmer
+                    .name()
+                    .as_ref()
+                    .is_some_and(|name| name.as_str().to_lowercase().contains(&text))
+        };
+
+        Ok(script
+            .farmer
+            .iter()
+            .filter(|farmer| ids.is_none_or(|ids| farmer.id().is_some_and(|id| ids.contains(&id))))
+            .filter(|farmer| matching.is_none_or(|text| contains(farmer, text)))
+            .cloned()
+            .collect())
     }
 }
 

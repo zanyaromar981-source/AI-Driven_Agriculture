@@ -1,4 +1,5 @@
 pub mod alwa;
+pub mod app_config;
 pub mod briefs;
 pub mod dams;
 pub mod doctor;
@@ -7,6 +8,7 @@ pub mod farms;
 pub mod fires;
 pub mod insights;
 pub mod jobs;
+pub mod messages;
 pub mod outlooks;
 pub mod rules;
 pub mod staff;

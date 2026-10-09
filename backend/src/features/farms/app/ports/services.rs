@@ -29,3 +29,10 @@ pub trait PlaceLocator: Send + Sync + std::fmt::Debug {
 pub trait AreaDirectory: Send + Sync + std::fmt::Debug {
     async fn names(&self) -> Result<AreaNames, AppError>;
 }
+
+/// Whether the farm totals may be shown to everyone. Owned by the app
+/// settings staff edit.
+#[async_trait]
+pub trait PublicTotalsSwitch: Send + Sync + std::fmt::Debug {
+    async fn is_on(&self) -> Result<bool, AppError>;
+}

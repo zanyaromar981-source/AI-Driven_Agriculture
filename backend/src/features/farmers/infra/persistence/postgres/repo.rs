@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, ExprTrait,
     Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, TransactionTrait, TryInsertResult,
-    sea_query::{Expr, NullOrdering, OnConflict},
+    sea_query::{Expr, NullOrdering, OnConflict, extension::postgres::PgExpr},
 };
 
 use crate::{
@@ -290,6 +290,57 @@ impl FarmerRepository for FarmerPostgresRepository {
 
         Ok(!deleted.is_empty())
     }
+
+    async fn find_many(
+        &self,
+        ids: Option<&[i32]>,
+        matching: Option<&str>,
+        limit: u64,
+    ) -> Result<Vec<Farmer>, AppError> {
+        let mut query = farmers::Entity::find();
+
+        if let Some(ids) = ids {
+            query = query.filter(farmers::Column::Id.is_in(ids.to_vec()));
+        }
+
+        if let Some(matching) = matching {
+            // The text is looked for as it is: `%` and `_` typed by a person
+            // are characters, not wildcards. The backslash is the escape
+            // character Postgres uses for `LIKE` when none is named.
+            let pattern = format!("%{}%", escape_like(matching));
+
+            query = query.filter(
+                Condition::any()
+                    .add(Expr::col((farmers::Entity, farmers::Column::Name)).ilike(pattern.clone()))
+                    .add(Expr::col((farmers::Entity, farmers::Column::Phone)).ilike(pattern)),
+            );
+        }
+
+        let models = query
+            .order_by_desc(farmers::Column::CreatedAt)
+            .order_by_desc(farmers::Column::Id)
+            .limit(limit)
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        models.into_iter().map(Farmer::try_from).collect()
+    }
+}
+
+/// Puts a backslash before everything `LIKE` reads as a wildcard.
+fn escape_like(text: &str) -> String {
+    let mut escaped = String::with_capacity(text.len());
+
+    for character in text.chars() {
+        if matches!(character, '%' | '_' | '\\') {
+            escaped.push('\\');
+        }
+
+        escaped.push(character);
+    }
+
+    escaped
 }
 
 #[derive(Debug)]

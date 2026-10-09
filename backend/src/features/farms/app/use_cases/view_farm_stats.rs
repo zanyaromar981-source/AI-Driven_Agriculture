@@ -5,7 +5,7 @@ use chrono::Utc;
 use crate::{
     app::AppError as GlobalAppError,
     features::farms::{
-        app::{AppError, AreaDirectory, FarmRepository},
+        app::{AppError, AreaDirectory, FarmRepository, PublicTotalsSwitch},
         domain::{AreaFilter, AreaLevel, FarmFilter, FarmStats, PlantedCrop},
     },
 };
@@ -55,24 +55,24 @@ pub struct ViewPublicFarmStatsUseCase {
     repository: Arc<dyn FarmRepository>,
     areas: Arc<dyn AreaDirectory>,
     /// Off: the totals are not public, and asking for them finds nothing.
-    enabled: bool,
+    switch: Arc<dyn PublicTotalsSwitch>,
 }
 
 impl ViewPublicFarmStatsUseCase {
     pub fn new(
         repository: Arc<dyn FarmRepository>,
         areas: Arc<dyn AreaDirectory>,
-        enabled: bool,
+        switch: Arc<dyn PublicTotalsSwitch>,
     ) -> Self {
         Self {
             repository,
             areas,
-            enabled,
+            switch,
         }
     }
 
     pub async fn execute(&self) -> Result<FarmStats, AppError> {
-        if !self.enabled {
+        if !self.switch.is_on().await? {
             return Err(GlobalAppError::NotFound.into());
         }
 
@@ -92,7 +92,7 @@ impl ViewPublicFarmStatsUseCase {
 mod tests {
     use super::*;
     use crate::features::farms::{
-        app::testing::{FakeAreaDirectory, FakeFarmRepository, RepositoryCall},
+        app::testing::{FakeAreaDirectory, FakeFarmRepository, FakeTotalsSwitch, RepositoryCall},
         domain::{AreaCount, AreaCropSum, AreaKey, Crop},
     };
 
@@ -205,7 +205,7 @@ mod tests {
         let use_case = ViewPublicFarmStatsUseCase::new(
             Arc::new(repository.clone()),
             Arc::new(FakeAreaDirectory::new()),
-            true,
+            Arc::new(FakeTotalsSwitch(true)),
         );
 
         let stats = use_case.execute().await.expect("stats");
@@ -227,7 +227,7 @@ mod tests {
         let use_case = ViewPublicFarmStatsUseCase::new(
             Arc::new(repository.clone()),
             Arc::new(areas.clone()),
-            false,
+            Arc::new(FakeTotalsSwitch(false)),
         );
 
         assert!(matches!(

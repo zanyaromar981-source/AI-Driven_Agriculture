@@ -14,6 +14,8 @@ pub enum ErrorKind {
     UpstreamInvalidResponse,
     UpstreamFailure,
     Internal,
+    /// The caller is a version of the app too old to be served.
+    UpgradeRequired,
 }
 
 impl ErrorKind {
@@ -29,6 +31,7 @@ impl ErrorKind {
             ErrorKind::RateLimited => "rate_limited",
             ErrorKind::UpstreamUnavailable => "upstream_down",
             ErrorKind::UpstreamRejected => "upstream_rejected",
+            ErrorKind::UpgradeRequired => "update_required",
             ErrorKind::Persistence
             | ErrorKind::UpstreamInvalidResponse
             | ErrorKind::UpstreamFailure
@@ -288,6 +291,7 @@ mod tests {
             ErrorKind::UpstreamInvalidResponse,
             ErrorKind::UpstreamFailure,
             ErrorKind::Internal,
+            ErrorKind::UpgradeRequired,
         ] {
             assert!(!kind.default_code().is_empty(), "{kind:?} has no code");
         }
@@ -302,5 +306,6 @@ mod tests {
             ErrorKind::UpstreamUnavailable.default_code(),
             "upstream_down"
         );
+        assert_eq!(ErrorKind::UpgradeRequired.default_code(), "update_required");
     }
 }

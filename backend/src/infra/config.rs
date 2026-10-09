@@ -8,14 +8,6 @@ pub struct Config {
     pub ingest: Ingest,
     pub doctor: Doctor,
     pub otpiq: Otpiq,
-    pub stats: Stats,
-}
-
-/// What the website's public View page may read without a login.
-#[derive(Clone, Debug)]
-pub struct Stats {
-    /// Whether `GET /v1/stats/farms` answers. Off, it is not found.
-    pub public_farm_totals: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -250,13 +242,6 @@ impl Config {
                     fetch_optional_env("OTPIQ__TIMEOUT_SECONDS")
                         .unwrap_or_else(|| "15".to_string()),
                 ),
-            },
-            stats: Stats {
-                public_farm_totals: fetch_env_with_default("STATS__PUBLIC_FARM_TOTALS", "true")
-                    .trim()
-                    .to_lowercase()
-                    .parse::<bool>()
-                    .expect("STATS__PUBLIC_FARM_TOTALS must be true or false"),
             },
         }
     }

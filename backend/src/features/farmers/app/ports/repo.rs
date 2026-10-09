@@ -58,6 +58,17 @@ pub trait FarmerRepository: Send + Sync + std::fmt::Debug {
     /// Deletes the farmer and the sign-in challenge their phone has open, in
     /// one transaction. Returns whether there was a farmer.
     async fn delete_with_challenge(&self, id: i32) -> Result<bool, AppError>;
+
+    /// Returns the farmers that have one of `ids`, when given, and whose
+    /// name or phone contains `matching`, when given, whatever the case,
+    /// newest first, `limit` at most. For another feature that keeps a
+    /// farmer's id and needs their name and phone, or searches by them.
+    async fn find_many(
+        &self,
+        ids: Option<&[i32]>,
+        matching: Option<&str>,
+        limit: u64,
+    ) -> Result<Vec<Farmer>, AppError>;
 }
 
 #[async_trait]

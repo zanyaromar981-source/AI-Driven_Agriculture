@@ -496,7 +496,7 @@ pub async fn dashboard_get_farm_stats(
 ///
 /// Counts and areas for the whole region, by governorate, by district and
 /// by crop. No farm, no name, no phone, and nothing per sub-district.
-/// Answers `404` when the setting `STATS__PUBLIC_FARM_TOTALS` is `false`.
+/// Answers `404` when staff have switched `public_farm_totals` off in the app settings.
 #[utoipa::path(
     get,
     path = "/v1/stats/farms",

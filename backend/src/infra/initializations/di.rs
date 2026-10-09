@@ -189,6 +189,12 @@ pub async fn di_init(
         Arc::new(ZonePostgresRepository::new(db_context.conn_clone())),
     ));
 
+    let app_config_repository: Arc<dyn crate::features::app_config::app::AppConfigRepository> =
+        Arc::new(
+            crate::features::app_config::infra::AppConfigPostgresRepository::new(
+                db_context.conn_clone(),
+            ),
+        );
     let farm = FarmFeature {
         register_farm_use_case: Arc::new(RegisterFarmUseCase::new(
             farm_repository.clone(),
@@ -229,7 +235,11 @@ pub async fn di_init(
         view_public_farm_stats_use_case: Arc::new(ViewPublicFarmStatsUseCase::new(
             farm_repository.clone(),
             area_directory,
-            config.stats.public_farm_totals,
+            Arc::new(
+                crate::features::farms::infra::AppConfigPublicTotalsSwitch::new(
+                    app_config_repository.clone(),
+                ),
+            ),
         )),
         backfill_farm_places_use_case: Arc::new(BackfillFarmPlacesUseCase::new(
             farm_repository.clone(),
@@ -260,6 +270,11 @@ pub async fn di_init(
         Arc::new(FarmsFeatureFarmBriefs::new(farm_repository.clone()));
     let farm_history: Arc<dyn FarmHistory> =
         Arc::new(InsightsFeatureFarmHistory::new(insight_repository.clone()));
+    let message_farms: Arc<dyn crate::features::messages::app::MessageFarmDirectory> = Arc::new(
+        crate::features::messages::infra::FarmsFeatureMessageFarmDirectory::new(
+            farm_repository.clone(),
+        ),
+    );
 
     let insight = InsightFeature {
         view_farm_insights_use_case: Arc::new(ViewFarmInsightsUseCase::new(
@@ -348,6 +363,16 @@ pub async fn di_init(
         }
     };
     let token_issuer: Arc<dyn TokenIssuer> = Arc::new(JwtTokenIssuer::new(config.auth.clone()));
+    let message_senders: Arc<dyn crate::features::messages::app::SenderDirectory> = Arc::new(
+        crate::features::messages::infra::FarmersFeatureSenderDirectory::new(
+            farmer_repository.clone(),
+        ),
+    );
+    let app_farmers: Arc<dyn crate::features::app_config::app::AppFarmers> = Arc::new(
+        crate::features::app_config::infra::FarmersFeatureAppFarmers::new(
+            farmer_repository.clone(),
+        ),
+    );
     let dashboard_farm_counter: Arc<dyn FarmCounter> =
         Arc::new(FarmsFeatureFarmCounter::new(farm_repository.clone()));
     let dashboard_farm_remover: Arc<dyn FarmRemover> =
@@ -685,6 +710,85 @@ pub async fn di_init(
         )),
     };
 
+    let message_repository: Arc<dyn crate::features::messages::app::MessageRepository> = Arc::new(
+        crate::features::messages::infra::MessagePostgresRepository::new(db_context.conn_clone()),
+    );
+
+    let message = {
+        use crate::features::messages::app::use_cases::*;
+
+        crate::shared::MessageFeature {
+            send_message_use_case: Arc::new(SendMessageUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+                message_farms.clone(),
+            )),
+            list_my_messages_use_case: Arc::new(ListMyMessagesUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+            )),
+            view_my_photo_use_case: Arc::new(ViewMyPhotoUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+            )),
+            list_messages_use_case: Arc::new(ListMessagesUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+                message_farms.clone(),
+            )),
+            view_message_use_case: Arc::new(ViewMessageUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+                message_farms.clone(),
+            )),
+            set_message_state_use_case: Arc::new(SetMessageStateUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+                message_farms.clone(),
+            )),
+            reply_to_message_use_case: Arc::new(ReplyToMessageUseCase::new(
+                message_repository.clone(),
+                message_senders,
+                message_farms,
+            )),
+            count_messages_use_case: Arc::new(CountMessagesUseCase::new(
+                message_repository.clone(),
+            )),
+            delete_message_use_case: Arc::new(DeleteMessageUseCase::new(
+                message_repository.clone(),
+            )),
+            view_photo_use_case: Arc::new(ViewPhotoUseCase::new(message_repository)),
+        }
+    };
+
+    // One per process: what the version check remembers between requests.
+    let version_gate = Arc::new(crate::features::app_config::app::VersionGate::new());
+
+    let app_config = {
+        use crate::features::app_config::app::use_cases::*;
+
+        crate::shared::AppConfigFeature {
+            view_app_config_use_case: Arc::new(ViewAppConfigUseCase::new(
+                app_config_repository.clone(),
+            )),
+            update_app_config_use_case: Arc::new(UpdateAppConfigUseCase::new(
+                app_config_repository.clone(),
+                version_gate.clone(),
+            )),
+            check_app_version_use_case: Arc::new(CheckAppVersionUseCase::new(
+                app_config_repository.clone(),
+                app_farmers,
+                version_gate,
+            )),
+            list_app_versions_use_case: Arc::new(ListAppVersionsUseCase::new(
+                app_config_repository.clone(),
+            )),
+            public_farm_totals_use_case: Arc::new(PublicFarmTotalsUseCase::new(
+                app_config_repository,
+            )),
+        }
+    };
+
     Ok(Features {
         farm,
         farmer,
@@ -701,5 +805,7 @@ pub async fn di_init(
         version,
         rule,
         job,
+        message,
+        app_config,
     })
 }

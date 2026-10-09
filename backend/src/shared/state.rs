@@ -274,6 +274,39 @@ pub struct JobFeature {
 }
 
 #[derive(Clone)]
+pub struct MessageFeature {
+    pub send_message_use_case: Arc<crate::features::messages::app::use_cases::SendMessageUseCase>,
+    pub list_my_messages_use_case:
+        Arc<crate::features::messages::app::use_cases::ListMyMessagesUseCase>,
+    pub view_my_photo_use_case: Arc<crate::features::messages::app::use_cases::ViewMyPhotoUseCase>,
+    pub list_messages_use_case: Arc<crate::features::messages::app::use_cases::ListMessagesUseCase>,
+    pub view_message_use_case: Arc<crate::features::messages::app::use_cases::ViewMessageUseCase>,
+    pub set_message_state_use_case:
+        Arc<crate::features::messages::app::use_cases::SetMessageStateUseCase>,
+    pub reply_to_message_use_case:
+        Arc<crate::features::messages::app::use_cases::ReplyToMessageUseCase>,
+    pub count_messages_use_case:
+        Arc<crate::features::messages::app::use_cases::CountMessagesUseCase>,
+    pub delete_message_use_case:
+        Arc<crate::features::messages::app::use_cases::DeleteMessageUseCase>,
+    pub view_photo_use_case: Arc<crate::features::messages::app::use_cases::ViewPhotoUseCase>,
+}
+
+#[derive(Clone)]
+pub struct AppConfigFeature {
+    pub view_app_config_use_case:
+        Arc<crate::features::app_config::app::use_cases::ViewAppConfigUseCase>,
+    pub update_app_config_use_case:
+        Arc<crate::features::app_config::app::use_cases::UpdateAppConfigUseCase>,
+    pub check_app_version_use_case:
+        Arc<crate::features::app_config::app::use_cases::CheckAppVersionUseCase>,
+    pub list_app_versions_use_case:
+        Arc<crate::features::app_config::app::use_cases::ListAppVersionsUseCase>,
+    pub public_farm_totals_use_case:
+        Arc<crate::features::app_config::app::use_cases::PublicFarmTotalsUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -290,6 +323,8 @@ pub struct Features {
     pub version: VersionFeature,
     pub rule: RuleFeature,
     pub job: JobFeature,
+    pub message: MessageFeature,
+    pub app_config: AppConfigFeature,
 }
 
 #[derive(Clone)]
