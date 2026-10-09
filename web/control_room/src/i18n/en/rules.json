@@ -27,7 +27,7 @@
   "reason_ph": "For example: farmers ignore the warning at this level",
   "reset": "Back to the start value",
   "reset_title": "Back to the start value: {name}",
-  "reset_text": "From {a} back to {d} {u}. The change is logged with your reason.",
+  "reset_text": "From {a} back to {d}. The change is logged with your reason.",
   "no_history": "No changes yet",
   "no_history_text": "This rule still has its starting value.",
   "by": "Staff member #{id}",

@@ -1,7 +1,7 @@
 // Rules (design 16): every number that decides a warning or a colour, where it is used, its allowed
 // range and its history. GET/PUT /dashboard/rules, /rules/{code}/history, /rules/{code}/reset
 // (FRONTEND.md 9 Rules). Honest limit: the jobs do not read these yet, and the page says so.
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { CloudSun, Sprout, Satellite, Lightbulb, Pencil, History, RotateCcw, TriangleAlert } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
@@ -21,12 +21,33 @@ interface Rule {
 interface Change { id: string; code: string; old_value: number; new_value: number; reason: string; staff_id: string; at: string }
 /** readable unit: the server sends codes like c, mm, ug_m3, pct */
 function useUnit() { const { t } = useI18n(); return (u: string) => { const k = 'rules.u_' + u; const s = t(k); return s === k ? u : s; }; }
+/**
+ * Rule name and meaning in the current language. The server has no Sorani for rules yet, so Kurdish
+ * comes from rules.json (n_<code>, m_<code>); English text shown inside Kurdish stays left to right.
+ */
+function useRuleText() {
+  const { t, lang } = useI18n();
+  const one = (ku: string | null | undefined, key: string, en: string): ReactNode => {
+    if (lang !== 'ku') return en;
+    if (ku) return ku;
+    const s = t(key);
+    return s !== key ? s : <bdi dir="ltr">{en}</bdi>;
+  };
+  return {
+    name: (r: Rule) => one(r.name_ku, 'rules.n_' + r.code, r.name_en),
+    nameText: (r: Rule) => { const v = one(r.name_ku, 'rules.n_' + r.code, r.name_en); return typeof v === 'string' ? v : r.name_en; },
+    meaning: (r: Rule) => one(r.meaning_ku, 'rules.m_' + r.code, r.meaning_en),
+  };
+}
+/** a signed number kept left to right inside text, so "-2" never shows as "2-" in Kurdish */
+const ltr = (s: string) => '\u2066' + s + '\u2069';
 const ORDER: UsedBy[] = ['weather_planner', 'dryness', 'field_eye'];
 const WHERE_ICON: Record<UsedBy, typeof CloudSun> = { weather_planner: CloudSun, dryness: Sprout, field_eye: Satellite };
 
 export default function Rules() {
-  const { t, num, pick } = useI18n();
+  const { t, num } = useI18n();
   const { can } = useAuth();
+  const rt = useRuleText();
   const q = useApi<{ rules: Rule[] }>('/dashboard/rules', ['rules'], { auth: true });
   const [edit, setEdit] = useState<Rule | null>(null);
   const [reset, setReset] = useState<Rule | null>(null);
@@ -39,6 +60,7 @@ export default function Rules() {
   const canEdit = can('rules', 'update');
   const unit = useUnit();
 
+  if (!can('rules') || (q.error?.status === 403 && !q.data)) return <div className="rules-page"><PageHead eyebrow={t('nav.g_app')} title={t('nav.rules')} /><div className="card"><StateBox kind="locked" /></div></div>;
   return (
     <div className="rules-page">
       <PageHead eyebrow={t('nav.g_app')} title={t('nav.rules')} sub={t('rules.sub')} />
@@ -62,10 +84,10 @@ export default function Rules() {
                       const changed = r.value !== r.default_value;
                       return (
                         <tr key={r.code}>
-                          <td data-label={t('rules.rule')}><b>{pick(r.name_ku, r.name_en)}</b><div className="mono small muted">{r.code}</div></td>
-                          <td data-label={t('rules.meaning')} className="ink2 small meaning">{pick(r.meaning_ku, r.meaning_en)}</td>
-                          <td data-label={t('rules.value')} className="num"><b className="val">{num(r.value, r.value % 1 ? 1 : 0)}</b> <span className="muted small">{unit(r.unit)}</span></td>
-                          <td data-label={t('rules.range')} className="small ink2 nowrap">{t('rules.range_v', { a: num(r.min_value), b: num(r.max_value), d: num(r.default_value) })}</td>
+                          <td data-label={t('rules.rule')}><b>{rt.name(r)}</b><div className="mono small muted">{r.code}</div></td>
+                          <td data-label={t('rules.meaning')} className="ink2 small meaning">{rt.meaning(r)}</td>
+                          <td data-label={t('rules.value')} className="num"><bdi dir="ltr"><b className="val">{num(r.value, r.value % 1 ? 1 : 0)}</b> <span className="muted small">{unit(r.unit)}</span></bdi></td>
+                          <td data-label={t('rules.range')} className="small ink2 nowrap">{t('rules.range_v', { a: ltr(num(r.min_value)), b: ltr(num(r.max_value)), d: ltr(num(r.default_value)) })}</td>
                           <td data-label={t('rules.last')} className="small">{changed ? <Pill tone="warn">{t('rules.changed')}</Pill> : <span className="muted">{t('rules.start_value')}</span>}</td>
                           <td className="act">
                             <button className="btn sm" onClick={() => setHist(r)} aria-label={t('rules.history')}><History /></button>{' '}
@@ -87,7 +109,8 @@ export default function Rules() {
 }
 
 function EditRule({ rule, onClose, onReset }: { rule: Rule; onClose: () => void; onReset: () => void }) {
-  const { t, num, pick } = useI18n();
+  const { t, num } = useI18n();
+  const rt = useRuleText();
   const unit = useUnit();
   const [value, setValue] = useState(String(rule.value));
   const [reason, setReason] = useState('');
@@ -102,17 +125,17 @@ function EditRule({ rule, onClose, onReset }: { rule: Rule; onClose: () => void;
     return r;
   }, t('common.saved'));
   return (
-    <Modal title={pick(rule.name_ku, rule.name_en)} onClose={onClose} foot={<>
+    <Modal title={rt.nameText(rule)} onClose={onClose} foot={<>
       <button className="btn" onClick={onReset} disabled={busy || rule.value === rule.default_value}><RotateCcw />{t('rules.reset')}</button>
       <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
       <button className="btn primary" disabled={busy || bad || badReason} onClick={save}>{t('common.save')}</button>
     </>}>
-      <p className="muted" style={{ marginTop: 0 }}>{pick(rule.meaning_ku, rule.meaning_en)}</p>
+      <p className="muted" style={{ marginTop: 0 }}>{rt.meaning(rule)}</p>
       <div className="form-grid">
-        <Field label={t('rules.new_value') + (rule.unit ? ' (' + unit(rule.unit) + ')' : '')} hint={t('rules.range_v', { a: num(rule.min_value), b: num(rule.max_value), d: num(rule.default_value) })} error={value && bad ? 'err.bad_range' : undefined}>
+        <Field label={t('rules.new_value') + (rule.unit ? ' (' + unit(rule.unit) + ')' : '')} hint={t('rules.range_v', { a: ltr(num(rule.min_value)), b: ltr(num(rule.max_value)), d: ltr(num(rule.default_value)) })} error={value && bad ? 'err.bad_range' : undefined}>
           <input type="number" dir="ltr" value={value} min={rule.min_value} max={rule.max_value} step="any" onChange={e => setValue(e.target.value)} />
         </Field>
-        <Field label={t('rules.now')}><input type="text" readOnly value={num(rule.value) + ' ' + unit(rule.unit)} /></Field>
+        <Field label={t('rules.now')}><input type="text" dir="ltr" readOnly value={num(rule.value) + ' ' + unit(rule.unit)} /></Field>
         <Field label={t('rules.reason')} hint={t('rules.reason_hint')} full error={reason && badReason ? 'err.bad_reason' : undefined}>
           <textarea rows={3} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('rules.reason_ph')} maxLength={500} />
         </Field>
@@ -123,18 +146,19 @@ function EditRule({ rule, onClose, onReset }: { rule: Rule; onClose: () => void;
 }
 
 function ResetRule({ rule, onClose }: { rule: Rule; onClose: () => void }) {
-  const { t, num, pick } = useI18n();
+  const { t, num } = useI18n();
+  const rt = useRuleText();
   const unit = useUnit();
   const [reason, setReason] = useState('');
   const { busy, run } = useAction();
   const ok = reason.trim().length >= 3 && reason.trim().length <= 500;
   const go = () => run(async () => { await api.post('/dashboard/rules/' + rule.code + '/reset', { reason: reason.trim() }); invalidate('rules'); onClose(); }, t('common.saved'));
   return (
-    <Modal title={t('rules.reset_title', { name: pick(rule.name_ku, rule.name_en) })} onClose={onClose} foot={<>
+    <Modal title={t('rules.reset_title', { name: rt.nameText(rule) })} onClose={onClose} foot={<>
       <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
       <button className="btn primary" disabled={busy || !ok} onClick={go}><RotateCcw />{t('rules.reset')}</button>
     </>}>
-      <p className="muted" style={{ marginTop: 0 }}>{t('rules.reset_text', { a: num(rule.value), d: num(rule.default_value), u: unit(rule.unit) })}</p>
+      <p className="muted" style={{ marginTop: 0 }}>{t('rules.reset_text', { a: ltr(num(rule.value) + ' ' + unit(rule.unit)), d: ltr(num(rule.default_value) + ' ' + unit(rule.unit)) })}</p>
       <Field label={t('rules.reason')} full error={reason && !ok ? 'err.bad_reason' : undefined}>
         <textarea rows={3} value={reason} onChange={e => setReason(e.target.value)} maxLength={500} />
       </Field>
@@ -143,14 +167,15 @@ function ResetRule({ rule, onClose }: { rule: Rule; onClose: () => void }) {
 }
 
 function HistoryDrawer({ rule, onClose }: { rule: Rule; onClose: () => void }) {
-  const { t, num, date, pick } = useI18n();
+  const { t, num, date } = useI18n();
+  const rt = useRuleText();
   const unit = useUnit();
   const [page, setPage] = useState(1);
   const q = useApi<{ changes: Change[]; count: number }>('/dashboard/rules/' + rule.code + '/history' + qs({ page, rows_per_page: 20 }), ['rules'], { auth: true });
   const rows = q.data?.changes ?? [];
   return (
-    <Drawer eyebrow={t('rules.history')} title={pick(rule.name_ku, rule.name_en)} onClose={onClose}>
-      {q.loading ? <div className="sk-rows">{Array.from({ length: 5 }, (_, i) => <i key={i} className="sk" />)}</div>
+    <Drawer eyebrow={t('rules.history')} title={rt.nameText(rule)} onClose={onClose}>
+      {q.error?.status === 403 && !q.data ? <StateBox kind="locked" /> : q.loading ? <div className="sk-rows">{Array.from({ length: 5 }, (_, i) => <i key={i} className="sk" />)}</div>
         : !rows.length ? <StateBox kind="empty" title={t('rules.no_history')} text={t('rules.no_history_text')} />
           : <ul className="rule-history">{rows.map(c => (
             <li key={c.id}>

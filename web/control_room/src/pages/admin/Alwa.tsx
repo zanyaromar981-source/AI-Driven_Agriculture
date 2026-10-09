@@ -1,7 +1,7 @@
 // Alwa market (design 14): what farmers put on sale in the app, in detail. The government sets no price:
 // averages are worked out from the listings. Staff may close or remove a listing (alwa:update/delete).
 // Routes: /dashboard/alwa/listings (moderation), public /alwa/markets and their price boards (FRONTEND.md 5, 9).
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Store, Package, Handshake, Wheat, RotateCcw, Ban, Trash2, Info } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
@@ -11,9 +11,10 @@ import type { Paged } from '../../api/types';
 import { PageHead, Kpi, Note, Pill, Tabs, Select, Drawer, Modal, Field, Confirm, useDebounced, type Tone } from '../../components/ui';
 import { DataTable, type Col } from '../../components/DataTable';
 import { HBars } from '../../components/charts';
-import { CropTag, Phone, StateBox, cropColor, cropName, usePlace } from '../../components/domain';
+import { CropTag, Phone, StateBox, cropColor, cropName, usePlace, useCrops } from '../../components/domain';
 import { CROPS } from '../../data/crops';
 import { useAction } from './inbox/useAction';
+import { Markets } from './alwa/Markets';
 import './alwa.css';
 
 type Status = 'open' | 'sold' | 'closed' | 'cancelled';
@@ -24,13 +25,23 @@ interface Listing {
 }
 interface Offer { id: string; buyer_kind: string; buyer_name: string; buyer_phone: string; price_iqd_per_kg: number; quantity_kg: number; status: 'open' | 'accepted' | 'declined' | 'withdrawn'; created_at: string }
 interface Market { slug: string; name_en: string; name_ku: string }
+/** wide screens (design: 1200px and up) show the listings and the average prices side by side */
+function useWide() {
+  const mq = '(min-width: 1200px)';
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia(mq).matches);
+  useEffect(() => { const m = window.matchMedia(mq); const f = () => setWide(m.matches); m.addEventListener('change', f); return () => m.removeEventListener('change', f); }, []);
+  return wide;
+}
 const STATUS_TONE: Record<Status, Tone> = { open: 'good', sold: 'water', closed: '', cancelled: 'warn' };
 const FAIR_TONE: Record<Listing['fair_price'], Tone> = { fair: 'good', high: 'warn', low: 'warn', unknown: '' };
 const PER = 25;
 
 export default function Alwa() {
   const { t, num } = useI18n();
-  const [tab, setTab] = useState<'listings' | 'prices'>('listings');
+  const { can } = useAuth();
+  const wide = useWide();
+  useCrops(); // the crop filter and price form use the server's crop list
+  const [tab, setTab] = useState<'listings' | 'prices' | 'markets'>('listings');
   const markets = useApi<{ markets: Market[] }>('/alwa/markets', ['alwa_prices']);
   const openQ = useApi<Paged>('/dashboard/alwa/listings' + qs({ status: 'open', rows_per_page: 1 }), ['alwa_listings'], { auth: true });
   const soldQ = useApi<Paged>('/dashboard/alwa/listings' + qs({ status: 'sold', rows_per_page: 1 }), ['alwa_listings'], { auth: true });
@@ -38,20 +49,45 @@ export default function Alwa() {
   const sample = useApi<Paged & { listings: Listing[] }>('/dashboard/alwa/listings' + qs({ rows_per_page: 100 }), ['alwa_listings'], { auth: true });
   const avg = useMemo(() => averages(sample.data?.listings ?? []), [sample.data]);
   const wheat = avg.find(a => a.crop === 'wheat');
-  const openKg = (sample.data?.listings ?? []).filter(l => l.status === 'open').reduce((s, l) => s + l.quantity_kg, 0);
+  // tonnes on sale: every open listing, read 100 at a time (the server's largest page)
+  const [openPage, setOpenPage] = useState(1);
+  const openRows = useApi<Paged & { listings: Listing[] }>('/dashboard/alwa/listings' + qs({ status: 'open', page: openPage, rows_per_page: 100 }), ['alwa_listings'], { auth: true });
+  const [openKgByPage, setOpenKgByPage] = useState<Record<number, number>>({});
+  useEffect(() => {
+    const d = openRows.data; if (!d) return;
+    setOpenKgByPage(x => ({ ...(openPage === 1 ? {} : x), [openPage]: d.listings.reduce((a, l) => a + l.quantity_kg, 0) }));
+    if (openPage * 100 < d.count && openPage < 20) setOpenPage(openPage + 1);
+  }, [openRows.data]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setOpenPage(1); }, [openQ.data?.count]);
+  const openKg = Object.values(openKgByPage).reduce((a, b) => a + b, 0);
+  const tonnes = (kg: number) => (kg ? num(kg / 1000, kg < 1000 ? 1 : 0) : num(0));
+  const fullCount = openRows.data ? openPage * 100 >= openRows.data.count : false;
+
+  if (!can('alwa') || (sample.error?.status === 403 && !sample.data)) return <div className="alwa-page"><PageHead eyebrow={t('nav.g_act')} title={t('nav.alwa')} /><div className="card"><StateBox kind="locked" /></div></div>;
+  const mk = markets.data?.markets ?? [];
+  const prices = <Prices avg={avg} sampleSize={sample.data?.listings.length ?? 0} loading={sample.loading} />;
 
   return (
     <div className="alwa-page">
       <PageHead eyebrow={t('nav.g_act')} title={t('nav.alwa')} sub={t('alwa.sub')} />
       <Note tone="info" icon={<Info />}>{t('alwa.not_live')}</Note>
       <div className="grid g4 mb">
-        <Kpi label={t('alwa.k_open')} value={openQ.data ? num(openQ.data.count) : '…'} note={t('alwa.k_open_note', { t: num(openKg / 1000, 1) })} icon={<Store />} />
+        <Kpi label={t('alwa.k_open')} value={openQ.data ? num(openQ.data.count) : '…'} note={t('alwa.k_open_note', { t: tonnes(openKg) })} icon={<Store />} />
         <Kpi label={t('alwa.k_sold')} value={soldQ.data ? num(soldQ.data.count) : '…'} note={t('alwa.k_sold_note')} icon={<Handshake />} />
-        <Kpi label={t('alwa.k_tonnes')} value={num(openKg / 1000, 1)} note={t('alwa.k_tonnes_note')} icon={<Package />} />
+        <Kpi label={t('alwa.k_tonnes')} value={openRows.data ? tonnes(openKg) : '…'} note={fullCount ? t('alwa.k_tonnes_note') : t('alwa.k_tonnes_counting')} icon={<Package />} />
         <Kpi label={t('alwa.k_wheat')} value={wheat?.ask ? num(Math.round(wheat.ask)) : '-'} note={wheat?.ask ? t('alwa.iqd_kg') : t('alwa.no_wheat')} tone="brand" icon={<Wheat />} />
       </div>
-      <Tabs value={tab} onChange={setTab} items={[['listings', t('alwa.tab_listings')], ['prices', t('alwa.tab_prices')]]} />
-      {tab === 'listings' ? <Listings markets={markets.data?.markets ?? []} /> : <Prices avg={avg} sampleSize={sample.data?.listings.length ?? 0} loading={sample.loading} markets={markets.data?.markets ?? []} />}
+      {wide ? (
+        <>
+          <div className="alwa-split"><Listings markets={mk} />{prices}</div>
+          <div style={{ marginTop: 14 }}><Markets /></div>
+        </>
+      ) : (
+        <>
+          <Tabs value={tab} onChange={setTab} items={[['listings', t('alwa.tab_listings')], ['prices', t('alwa.tab_prices')], ['markets', t('alwa.tab_markets')]]} />
+          {tab === 'listings' ? <Listings markets={mk} /> : tab === 'prices' ? prices : <Markets />}
+        </>
+      )}
     </div>
   );
 }
@@ -100,7 +136,8 @@ function Listings({ markets }: { markets: Market[] }) {
         <Select value={status} onChange={reset(setStatus)} options={[['', t('alwa.all_states')], ...(['open', 'sold', 'closed', 'cancelled'] as Status[]).map(s => [s, t('alwa.s_' + s)] as [string, string])]} />
         <Select value={market} onChange={reset(setMarket)} options={[['', t('alwa.all_markets')], ...markets.map(m => [m.slug, pick(m.name_ku, m.name_en)] as [string, string])]} />
       </div>
-      {q.error && !q.data ? <StateBox kind="error" action={<button className="btn sm" onClick={q.reload}><RotateCcw />{t('common.retry')}</button>} />
+      {q.error?.status === 403 && !q.data ? <StateBox kind="locked" />
+        : q.error && !q.data ? <StateBox kind="error" action={<button className="btn sm" onClick={q.reload}><RotateCcw />{t('common.retry')}</button>} />
         : !q.loading && !q.data?.listings.length && !crop && !status && !market && !dPhone ? <StateBox kind="empty" title={t('alwa.empty_title')} text={t('alwa.empty_text')} />
           : <DataTable id="alwa-listings" rows={q.data?.listings ?? []} cols={cols} per={PER} loading={q.loading} onRow={l => setSel(l.id)} selected={sel}
             server={{ total: q.data?.count ?? 0, page, onPage: setPage }} />}
@@ -172,7 +209,7 @@ function ListingDrawer({ id, mName, onClose }: { id: string; mName: (s: string) 
   );
 }
 
-function Prices({ avg, sampleSize, loading, markets }: { avg: Avg[]; sampleSize: number; loading: boolean; markets: Market[] }) {
+function Prices({ avg, sampleSize, loading }: { avg: Avg[]; sampleSize: number; loading: boolean }) {
   const { t, num, lang } = useI18n();
   const withAsk = avg.filter(a => a.ask != null);
   return (
@@ -191,7 +228,7 @@ function Prices({ avg, sampleSize, loading, markets }: { avg: Avg[]; sampleSize:
                       <td data-label={t('alwa.avg_ask')} className="num">{a.ask != null ? <b>{num(Math.round(a.ask))}</b> : '-'}</td>
                       <td data-label={t('alwa.avg_sold')} className="num">{a.sold != null ? num(Math.round(a.sold)) : '-'}</td>
                       <td data-label={t('alwa.k_open')} className="num">{num(a.askN)}</td>
-                      <td data-label={t('alwa.qty_open')} className="num">{num(a.kg / 1000, 1)} {t('common.tonnes')}</td>
+                      <td data-label={t('alwa.qty_open')} className="num">{a.kg ? num(a.kg / 1000, 1) : num(0)} {t('common.tonnes')}</td>
                     </tr>))}</tbody>
                 </table>
               </div>
@@ -200,24 +237,6 @@ function Prices({ avg, sampleSize, loading, markets }: { avg: Avg[]; sampleSize:
           )}
         <p className="muted small">{t('alwa.avg_note', { n: num(sampleSize) })}</p>
       </div>
-      <div className="card">
-        <div className="card-head"><span className="eyebrow">{t('alwa.boards')}</span></div>
-        <p className="muted small" style={{ marginTop: 0 }}>{t('alwa.boards_note')}</p>
-        {markets.map(m => <Board key={m.slug} market={m} />)}
-      </div>
-    </div>
-  );
-}
-
-function Board({ market }: { market: Market }) {
-  const { t, num, date, pick } = useI18n();
-  const q = useApi<{ day?: string | null; prices: { crop: string; price_iqd_per_kg: number; change_pct_7d?: number | null }[] }>('/alwa/markets/' + market.slug + '/prices', ['alwa_prices']);
-  return (
-    <div className="board">
-      <div className="spread"><b>{pick(market.name_ku, market.name_en)}</b><span className="small muted">{q.data?.day ? date(q.data.day, 'date') : t('common.no_data')}</span></div>
-      {q.data?.prices.length ? (
-        <div className="chips">{q.data.prices.map(p => <span key={p.crop} className="chip"><CropTag code={p.crop} /> <b className="tabular">{num(p.price_iqd_per_kg)}</b></span>)}</div>
-      ) : null}
     </div>
   );
 }

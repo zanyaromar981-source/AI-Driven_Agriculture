@@ -4,6 +4,7 @@
 import { Activity, CloudRain, Flame, Newspaper, Droplets, Waves, Sprout, RotateCcw } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useApi } from '../../api/cache';
+import { useAuth } from '../../auth/auth';
 import { PageHead, Kpi, Pill, type Tone } from '../../components/ui';
 import { StateBox } from '../../components/domain';
 import './jobs.css';
@@ -22,6 +23,8 @@ export default function Jobs() {
   const q = useApi<{ jobs: Job[] }>('/dashboard/jobs', ['jobs'], { auth: true, everyMs: 60_000 });
   const jobs = q.data?.jobs ?? [];
   const count = (s: Job['state']) => jobs.filter(j => j.state === s).length;
+  const { can } = useAuth();
+  if (!can('jobs') || (q.error?.status === 403 && !q.data)) return <div><PageHead eyebrow={t('nav.g_system')} title={t('nav.jobs')} /><div className="card"><StateBox kind="locked" /></div></div>;
   return (
     <div>
       <PageHead eyebrow={t('nav.g_system')} title={t('nav.jobs')} sub={t('jobs.sub')} />
@@ -44,13 +47,16 @@ export default function Jobs() {
                     <tbody>
                       {jobs.map(j => {
                         const Icon = ICON[j.job] ?? Activity;
+                        // the server's log line is English for engineers: it stays in the tooltip, the row shows a
+                        // short translated summary instead
                         const msg = j.last_run?.message ?? j.message;
+                        const summary = j.last_run?.ok === false ? t('jobs.run_failed') : j.last_run?.rows != null ? t('jobs.rows_n', { n: num(j.last_run.rows) }) : null;
                         return (
                           <tr key={j.job}>
                             <td data-label={t('jobs.job')}>
                               <div className="job-name">
                                 <span className={'ico ' + (j.state === 'ok' ? 'good' : j.state === 'never' ? '' : TONE[j.state])}><Icon /></span>
-                                <span><b>{pick(j.name_ku, j.name_en)}</b>{msg && <span className="small muted job-msg" dir="ltr">{msg}</span>}</span>
+                                <span title={msg ?? undefined}><b>{pick(j.name_ku, j.name_en)}</b>{summary && <span className="small muted job-msg">{summary}</span>}</span>
                               </div>
                             </td>
                             <td data-label={t('jobs.every')}>{j.every_hours ? t('jobs.every_h', { n: num(j.every_hours) }) : t('jobs.on_demand')}</td>

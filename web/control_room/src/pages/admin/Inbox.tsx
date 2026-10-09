@@ -40,12 +40,15 @@ export default function Inbox() {
   const opts = usePlaceOptions(gov);
 
   useEffect(() => { setPage(1); }, [state, kind, gov, dq]);
+  const canRead = can('messages');
   const counts = useApi<Record<State, number>>('/dashboard/messages/counts', ['messages'], { auth: true });
   const list = useApi<Paged & { messages: Msg[] }>('/dashboard/messages' + qs({ state, kind, governorate: gov, q: dq, page, rows_per_page: PER }), ['messages'], { auth: true });
   const rows = list.data?.messages ?? [];
   const pages = Math.max(1, Math.ceil((list.data?.count ?? 0) / PER));
   const open = (id: string | null) => setParams(id ? { m: id } : {}, { replace: false });
   const c = counts.data;
+
+  if (!canRead || (list.error?.status === 403 && !list.data)) return <div className="inbox-page"><PageHead eyebrow={t('nav.g_act')} title={t('nav.inbox')} /><div className="card"><StateBox kind="locked" /></div></div>;
 
   const chips: [State | '', string][] = [['new', t('inbox.s_new')], ['read', t('inbox.s_read')], ['replied', t('inbox.s_replied')], ['closed', t('inbox.s_closed')], ['', t('inbox.s_all')]];
   return (
@@ -82,7 +85,7 @@ export default function Inbox() {
           )}
         </section>
         <section className="inbox-detail">
-          {sel ? <Detail id={sel} canWrite={can('messages', 'update')} canDelete={can('messages', 'delete')} onClose={() => open(null)} />
+          {sel ? <Detail key={sel} id={sel} canWrite={can('messages', 'update')} canDelete={can('messages', 'delete')} onClose={() => open(null)} />
             : <div className="card"><StateBox kind="empty" title={t('inbox.pick_title')} text={t('inbox.pick_text')} /></div>}
         </section>
       </div>
@@ -118,17 +121,28 @@ function Detail({ id, canWrite, canDelete, onClose }: { id: string; canWrite: bo
   const [ku, setKu] = useState('');
   const [en, setEn] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
-  const marked = useRef(new Set<string>());
-
-  // a new message is marked read once when it is opened (guarded against repeats and re-renders)
+  const marked = useRef(false);
+  // The cached copy may be old (someone replied meanwhile): ask the server again when the message opens
+  // and decide on "mark read" only from that fresh answer, so a replied message is never set back to read.
+  const [fresh, setFresh] = useState(false);
+  const sawRefresh = useRef(false);
+  useEffect(() => { one.reload(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (!m || m.state !== 'new' || !canWrite || marked.current.has(m.id)) return;
-    marked.current.add(m.id);
-    api.put('/dashboard/messages/' + m.id, { state: 'read' }).then(() => invalidate('messages'), () => marked.current.delete(m.id));
-  }, [m, canWrite]);
-  useEffect(() => { setKu(m?.reply?.text_ku ?? ''); setEn(m?.reply?.text_en ?? ''); }, [m?.id, m?.reply?.replied_at]);
+    if (one.refreshing) sawRefresh.current = true;
+    else if (sawRefresh.current && !one.error) setFresh(true);
+  }, [one.refreshing, one.error]);
 
-  if (one.error && !m) return <div className="card"><StateBox kind={one.error.status === 404 ? 'empty' : 'error'} text={errText(one.error)} /></div>;
+  // a new message is marked read once, through the same queue as the buttons (one write at a time)
+  useEffect(() => {
+    if (!fresh || !m || m.state !== 'new' || !canWrite || marked.current) return;
+    marked.current = true;
+    run(() => api.put('/dashboard/messages/' + m.id, { state: 'read' }).then(() => invalidate('messages')));
+  }, [fresh, m, canWrite, run]);
+  // the reply draft starts from the saved reply of this message (Detail is keyed by message id, so a
+  // different message always starts with its own text)
+  useEffect(() => { setKu(m?.reply?.text_ku ?? ''); setEn(m?.reply?.text_en ?? ''); }, [m?.reply?.replied_at]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (one.error && !m) return <div className="card"><StateBox kind={one.error.status === 404 ? 'empty' : one.error.status === 403 ? 'locked' : 'error'} text={errText(one.error)} /></div>;
   if (!m) return <div className="card"><div className="sk-rows">{Array.from({ length: 8 }, (_, i) => <i key={i} className="sk" />)}</div></div>;
 
   const setStateTo = (s: State) => run(() => api.put('/dashboard/messages/' + m.id, { state: s }).then(() => invalidate('messages')), t('common.saved'));

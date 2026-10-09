@@ -20,5 +20,7 @@
   "d_late": "Late",
   "d_failed": "Failed",
   "d_none": "No run",
-  "note": "A job is late when nothing finished well within one and a half times its period. The page checks again every minute."
+  "note": "A job is late when nothing finished well within one and a half times its period. The page checks again every minute.",
+  "rows_n": "{n} rows in the last run",
+  "run_failed": "The last run failed"
 }

@@ -4,7 +4,11 @@
 // Each card saves on its own. Before saving it reads the config again: if someone else saved since this
 // page loaded, the form reloads and asks to look again (nobody's change is overwritten). The PUT then
 // sends the fresh server copy with only this card's fields replaced.
-import { useEffect, useState, type ReactNode } from 'react';
+//
+// Each card has its own busy flag, but saves from different cards run one after the other (a shared
+// queue), so two cards saved at once never send two full copies built from the same old config. After a
+// save only that card's fields take the server's answer; other cards keep their unsaved edits.
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { RotateCcw, Save, Smartphone } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
@@ -31,6 +35,22 @@ const LIMITS: (keyof Limits)[] = ['farms_per_phone', 'max_farm_dunam', 'min_corn
 const toLocal = (iso?: string | null) => { if (!iso) return ''; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 const toIso = (v: string) => (v ? new Date(v).toISOString() : null);
 const strip = (c: Config) => { const { updated_at: _a, updated_by: _b, ...rest } = c; return rest; };
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/**
+ * Take a new server copy into the form. Fields listed in `take` always take the server value; every
+ * other field keeps the user's edit if it differs from the old server copy (unsaved), else updates.
+ */
+function merge(form: Config | null, oldBase: Config | null, next: Config, take: (keyof Config)[] = []): Config {
+  if (!form || !oldBase) return next;
+  const out = { ...next } as Record<string, unknown>;
+  for (const k of Object.keys(form) as (keyof Config)[]) {
+    if (k === 'updated_at' || k === 'updated_by' || take.includes(k)) continue;
+    if (!same(form[k], oldBase[k])) out[k] = form[k];
+  }
+  return out as unknown as Config;
+}
+// saves of all cards run one after the other
+let saveChain: Promise<unknown> = Promise.resolve();
 
 export default function AppControl() {
   const { t, num, date } = useI18n();
@@ -38,18 +58,24 @@ export default function AppControl() {
   const cfg = useApi<Config>('/dashboard/app/config', ['app_config'], { auth: true });
   const vers = useApi<{ versions: { version: string; farmers: number; share: number }[] }>('/dashboard/app/versions', [], { auth: true });
   const [form, setForm] = useState<Config | null>(null);
-  const [loadedAt, setLoadedAt] = useState<string | undefined>();
+  // the server copy the form was built from (a ref, so a queued save sees the newest one)
+  const base = useRef<Config | null>(null);
   const canEdit = can('app', 'update');
+  const adopt = (next: Config, take: (keyof Config)[] = []) => {
+    setForm(f => merge(f, base.current, next, take));
+    base.current = next;
+  };
 
   // take the server copy into the form when it first arrives or when someone else changed it
-  useEffect(() => { if (cfg.data && cfg.data.updated_at !== loadedAt) { setForm(cfg.data); setLoadedAt(cfg.data.updated_at); } }, [cfg.data, loadedAt]);
+  useEffect(() => { if (cfg.data && cfg.data.updated_at !== base.current?.updated_at) adopt(cfg.data); }, [cfg.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (cfg.error?.status === 403 && !cfg.data) return <div><PageHead eyebrow={t('nav.g_app')} title={t('nav.app')} /><div className="card"><StateBox kind="locked" /></div></div>;
   if (cfg.error && !cfg.data) return <div><PageHead eyebrow={t('nav.g_app')} title={t('nav.app')} /><div className="card"><StateBox kind="error" action={<button className="btn sm" onClick={cfg.reload}><RotateCcw />{t('common.retry')}</button>} /></div></div>;
   if (!form) return <div><PageHead eyebrow={t('nav.g_app')} title={t('nav.app')} sub={t('appctl.sub')} /><div className="grid g2">{[0, 1, 2, 3].map(i => <div key={i} className="card"><div className="sk-rows">{Array.from({ length: 5 }, (_, j) => <i key={j} className="sk" />)}</div></div>)}</div></div>;
 
   const set = <K extends keyof Config>(k: K, v: Config[K]) => setForm(f => (f ? { ...f, [k]: v } : f));
   const versions = vers.data?.versions ?? [];
-  const p = { form, set, canEdit, loadedAt, onSaved: (c: Config) => { setForm(c); setLoadedAt(c.updated_at); }, onStale: (c: Config) => { setForm(c); setLoadedAt(c.updated_at); } };
+  const p = { form, set, canEdit, base, onSaved: adopt, onStale: adopt };
 
   return (
     <div className="appctl-page">
@@ -125,33 +151,40 @@ function Row({ title, sub, children }: { title: string; sub?: string; children: 
   return <div className="set"><div className="txt"><b>{title}</b>{sub && <small>{sub}</small>}</div><div className="ctl">{children}</div></div>;
 }
 
-function CardSave({ title, fields, form, canEdit, loadedAt, onSaved, onStale, check, children }: {
-  title: string; fields: (keyof Config)[]; form: Config; canEdit: boolean; loadedAt?: string;
-  onSaved: (c: Config) => void; onStale: (c: Config) => void; check?: (f: Config) => string | null; set?: unknown; children: ReactNode;
+function CardSave({ title, fields, form, canEdit, base, onSaved, onStale, check, children }: {
+  title: string; fields: (keyof Config)[]; form: Config; canEdit: boolean; base: { current: Config | null };
+  onSaved: (c: Config, take: (keyof Config)[]) => void; onStale: (c: Config, take: (keyof Config)[]) => void; check?: (f: Config) => string | null; set?: unknown; children: ReactNode;
 }) {
   const { t } = useI18n();
   const toast = useToast();
   const errText = useErrorText();
   const { busy, run } = useAction();
   const [err, setErr] = useState<string | null>(null);
-  const save = () => run(async () => {
+  const save = () => run(() => {
+    // the values to send are taken now; the request waits for saves of other cards to finish
+    const mine = Object.fromEntries(fields.map(f => [f, form[f]])) as Partial<Config>;
+    const job = saveChain.catch(() => undefined).then(() => doSave(mine));
+    saveChain = job;
+    return job;
+  });
+  const doSave = async (mine: Partial<Config>) => {
     setErr(null);
-    const problem = check?.(form);
+    const problem = check?.({ ...form, ...mine });
     if (problem) { setErr(problem); return; }
     const fresh = await api.get<Config>('/dashboard/app/config');
-    if (fresh.updated_at !== loadedAt) { onStale(fresh); invalidate('app_config'); toast(t('appctl.stale'), 'warn'); return; }
+    if (fresh.updated_at !== base.current?.updated_at) { onStale(fresh, fields); invalidate('app_config'); toast(t('appctl.stale'), 'warn'); return; }
     const body = strip(fresh) as Config;
-    for (const f of fields) (body as unknown as Record<string, unknown>)[f] = form[f];
+    for (const f of fields) (body as unknown as Record<string, unknown>)[f] = mine[f];
     try {
       const saved = await api.put<Config>('/dashboard/app/config', body);
       invalidate('app_config');
-      onSaved(saved);
+      onSaved(saved, fields);
       toast(t('common.saved'), 'good');
     } catch (e) {
       if (e instanceof ApiError) setErr(errText(e) + (e.field ? ' (' + e.field + ')' : ''));
       else throw e;
     }
-  });
+  };
   return (
     <section className="card">
       <div className="card-head"><span className="eyebrow">{title}</span>{canEdit && <button className="btn sm primary" disabled={busy} onClick={save}><Save />{t('common.save')}</button>}</div>
