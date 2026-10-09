@@ -6,27 +6,32 @@ Length: about 4 minutes 30 seconds, of which 60 seconds is the live demo. Every 
 
 ## Round 1 at the table: use this one (10 October)
 
-Rules from the organizers: 3 minutes to pitch, 2 minutes of questions, one judge group, ID asked on arrival. Time is recorded and breaks ties, so the target is **2 minutes 35 seconds**. One person speaks. Build and Demo and AI each count double, so they get most of the time.
+Rules from the organizers: 3 minutes to pitch, 2 minutes of questions, one judge group, ID asked on arrival. Time is recorded and breaks ties, so the target is **2 minutes 30 seconds**. One person speaks. Build and Demo and AI each count double, so they get most of the time.
 
 ### Before the judges arrive
 
-- IDs on the table.
-- Phone charged, app open, already signed in, one farm saved with crops painted.
+From the organizers' message: doors open at 7:00, be at the table by 7:30, test between 7:30 and 9:00, judges arrive at 9:00 and may start early. The judges will not wait while anything loads, and that time comes out of the 3 minutes.
+
+- Our SmartSuli ID printed or written large on the table, and memorised by the speaker.
+- Laptops and the phone fully charged, chargers in the bag.
+- A mobile hotspot switched on and tested, in case the hall's internet fails.
+- Phone: app open, already signed in, one farm saved with crops painted, the Alwa listing visible.
 - Ask the Doctor: one answer already open from a question asked a few minutes earlier. A live answer took 39 seconds on the server, which is too long to wait for inside 3 minutes.
-- Laptop next to the phone with `design/pitch_deck_3min.pen` on slide 1, and the website open in a second window.
+- Laptop next to the phone with `design/Jutyar_Pitch_Round1.pptx` on slide 1, and the website open in a second window.
 - The Mac that keeps the server awake stays on, lid open (`PROGRESS.md`).
 - One teammate runs a stopwatch and shows a hand at 2:15.
+- Everyone stays until the ceremony ends (1:00 to 1:30 p.m.).
 
 ### The script
 
-228 words in total. Spoken at a normal pace that is about 1 minute 45 seconds, which leaves about 50 seconds for handling the phone and for pauses. Slide 1 (the title) is on the screen while the judges arrive; nobody speaks over it.
+213 words in total, about 1 minute 45 seconds spoken, which leaves about 45 seconds for handling the phone. The organizers say: start as soon as the judges arrive and show what you built straight away, so the demo starts after one sentence. Slide 1 (the title) is on the screen before they arrive.
 
 | Time | Criterion | Show | Say | Words |
 |---|---|---|---|---|
-| 0:00 to 0:20 | Problem and local impact | Slide 2 | "Kurdistan has about 50,000 wheat farmers and about 215 agricultural advisers. Last drought winter, Slemani got 57 percent of its normal rain, and most farmers found out from their own fields. Jutyar puts an adviser in every farmer's pocket." | 39 |
-| 0:20 to 1:20 | Build and Demo (double) | Slide 3 on the laptop, the phone in your hand | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm. I walked its corners and marked my crops. Every square is 10 metres, checked from space. I asked a question with a photo, and this is the answer, in Sorani. And this is the Marketplace: my tomatoes are on sale, and other farmers see them on their phones." | 71 |
-| 1:20 to 1:55 | AI Integration and Use (double) | Slide 4 | "AI is the translator. The satellite, the forecast and the field's history are only numbers. An AI model turns them, with the farmer's photo, into advice in Sorani, and it says when it is unsure. Every night another AI agent writes a brief on all 33 districts. And we built all of this with AI: Claude, Codex and Pencil." | 59 |
-| 1:55 to 2:35 | Feasibility and scope, then close | Slide 5, the last slide | "Is it realistic? The data is free. The server is live, with about 2,000 tests. One AI answer costs half a cent. The Ministry gets its own website, with the farms, the alerts and the region on one map. We start with wheat farmers in Slemani. App, server and website, built in two days. This is Jutyar. Thank you." | 59 |
+| 0:00 to 0:10 | Problem and local impact | Slide 2 | "Kurdistan has about 50,000 wheat farmers and only about 215 advisers. Jutyar puts an adviser in every farmer's pocket. Let me show you." | 23 |
+| 0:10 to 1:15 | Build and Demo (double) | Slide 3, phone in your hand | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm. I walked its corners and marked my crops. Every square is 10 metres, checked from space. I asked a question with a photo, and this is the answer, in Sorani. And this is Alwa, the marketplace: my tomatoes are on sale, and other farmers see them on their phones." | 72 |
+| 1:15 to 1:50 | AI Integration and Use (double) | Slide 4 | "AI is the translator. The satellite, the forecast and the field's history are only numbers. An AI model turns them, with the farmer's photo, into advice in Sorani, and it says when it is unsure. Every night another AI agent writes a brief on all 33 districts. And we built all of this with AI: Claude, Codex and Pencil." | 59 |
+| 1:50 to 2:30 | Feasibility and scope, then close | Slide 5 | "Is it realistic? The data is free. The server is live, with about 2,000 tests. One AI answer costs half a cent. The Ministry gets its own website, with the farms, the alerts and the region on one map. We start with wheat farmers in Slemani. App, server and website, built in two days. This is Jutyar. Thank you." | 59 |
 
 If the phone or the network fails: say "the network is against us" once, stay on slide 3 (the five screens), point at them, and keep going. Do not debug in front of the judges.
 
@@ -81,6 +86,40 @@ If the phone or the network fails: say "the network is against us" once, stay on
 If the phone fails: stay on slide 4 and walk through the example message shown there.
 
 Not in the demo unless it is tested on the morning of the pitch: Ask the Doctor. The screens are built, but on 9 October the server route and the Gemini key were still in progress (`PROGRESS.md`).
+
+## Round 2 on stage: if we reach the final
+
+Six finalists pitch on stage: 5 minutes, then questions. Round 2 is scored fresh on five criteria of equal weight: Public Value and Impact, Innovation and Differentiation, Scalability and Adoption, Business Model and Investment Readiness, Trust and Responsible Use. Use `design/Jutyar_Pitch_Round2.pptx` (10 slides; the design is `design/pitch_deck_round2.pen`). The lines below are 441 words, about 3 minutes 45 seconds spoken, with a target finish of 4:50.
+
+| Time | Criterion | Slide | Say |
+|---|---|---|---|
+| 0:00 to 0:10 |  | 1 | "We are AI-Driven Agriculture, and this is Jutyar." |
+| 0:10 to 0:45 | Public Value and Impact | 2 | "Kurdistan has about 50,000 wheat farmers and about 215 advisers: one for every 230 farmers. In the 2025 drought the region lost about 800,000 tonnes of wheat. That winter Slemani got 57 percent of its normal rain, and most farmers learned it from their own fields. Jutyar gives every farmer advice for his own field, every week, in his own language, and gives the Ministry the same picture for the whole region." |
+| 0:45 to 1:30 | (demo) | 3 | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm. I walked its corners and marked my crops. Every square is 10 metres, checked from space. I asked a question with a photo, and this is the answer, in Sorani. And this is Alwa, the marketplace: my tomatoes are on sale, and other farmers see them on their phones." |
+| 1:30 to 2:05 | Innovation and Differentiation | 4 | "What is new? Our research found no farm AI in Kurdish anywhere. Jutyar checks every 10 metre square of a field from space and answers in Sorani, in one message of five parts, including what it cannot tell. And the farmer and the Ministry work on the same data." |
+| 2:05 to 2:35 | Innovation (AI) | 5 | "AI is the translator. The satellite, the forecast and the field's history are only numbers. An AI model turns them, with the farmer's photo, into advice in Sorani, and it says when it is unsure. Every night another AI agent writes a brief on all 33 districts. And we built all of this with AI: Claude, Codex and Pencil." |
+| 2:35 to 3:05 | Scalability and Adoption | 6 | "Can it grow? It already covers all 33 districts in four governorates, because the satellite and weather data are free everywhere. A government office adopts it through this website: the farms, the alerts, the reports and the region on one map." |
+| 3:05 to 3:25 | Scalability and Adoption | 7 | "And farmers have a reason to open it every day: Alwa, the marketplace, where they sell directly to buyers." |
+| 3:25 to 4:05 | Business Model and Investment Readiness | 8 | "Who pays? Not the farmer. Jutyar is free for farmers. Our plan is a yearly licence for the Ministry's website. Running costs are small: the data is free and one AI answer costs half a cent. What we need now is one pilot district with an extension office." |
+| 4:05 to 4:40 | Trust and Responsible Use | 9 | "Is it safe? We keep very little: a phone number, no name, no password. A farmer can delete his account and his farms from Settings. Staff see only what their role allows. And the advice is careful: it never gives a chemical dose, it says when it is unsure, and it sends the farmer to an officer." |
+| 4:40 to 4:50 | Close | 10 | "Built in two days, running today. Jutyar: from one farm to a smarter Kurdistan. Thank you." |
+
+### Round 2 questions
+
+| Criterion | Likely question | Answer |
+|---|---|---|
+| Public value | "How many people does this reach?" | About 50,000 wheat farmers in the Kurdistan Region and the Ministry offices that serve them. The 2025 drought cost about 800,000 tonnes of wheat (Peregraf), so even a small share saved is large. |
+| Innovation | "FAO and others already do satellite monitoring. What is different?" | Those tools are for experts and are not in Kurdish. Our research found no farm AI in Kurdish at all. Jutyar goes down to one farmer's field and answers in Sorani. |
+| Scalability | "Can it work outside Slemani?" | It already holds all 33 districts in four governorates. The satellite and weather data cover the whole of Iraq, so a new area needs district borders and local crop rules, not new sensors. |
+| Business model | "Who pays, and can it keep running?" | The plan is a yearly licence for the Ministry's website, free for farmers. Running cost is small: free data, a small server, about half a cent per AI answer. No contract exists yet. We need one pilot district. |
+| Trust | "What personal data do you hold?" | A phone number and the farm outline. No name and no password. The farmer can delete the account and the farms from Settings. Staff see farms through roles and permissions. |
+| Trust | "What if the AI is wrong?" | It answers only from the measured data and our rulebook, never gives a chemical dose, shows how sure it is and sends the farmer to an officer when unsure. Photo diagnosis is not yet tested in Kurdistan, and we say so. |
+
+To settle before the final:
+
+- The business model on slide 8 (free for farmers, yearly Ministry licence, one pilot district) is a proposal written for the deck. The team must agree on it, or change the slide.
+- Masked phone numbers for staff ("protected mode") are designed but not built, so do not claim them. The slide says only that staff see what their role allows.
+- The Sorani message on the AI slide still needs a native speaker's check.
 
 ## The Round 1 deck, slide by slide
 
