@@ -195,7 +195,7 @@ No login. These are what the public View page and the app's region screens use; 
 | `GET /v1/region/overview?month=` | all 33 districts with `dryness`, `band`, `rank`, change against last year; a region summary |
 | `GET /v1/zones/{slug}?month=` | one district: its reading, its sub-districts, the same month in earlier years |
 | `GET /v1/region/compare?year=&with=&month=` | two years side by side per district |
-| `GET /v1/dams`, `GET /v1/dams/{slug}/history` | Dukan and Darbandikhan: latest level, a year ago, history |
+| `GET /v1/dams`, `GET /v1/dams/{slug}/history` | Dukan and Darbandikhan: latest lake area and its share of the full area, the same a year ago, history since 2008 (see section 11 for what `pct_full` means) |
 | `GET /v1/fires?hours=24` | fire detections and a summary |
 | `GET /v1/outlooks`, `/v1/outlooks/zones/{zone_slug}` | next-season outlook per district, with the method's track record (`404` while none has been issued) |
 | `GET /v1/water/plan` | districts ranked by water need (`404` while no plan has been made) |
@@ -314,7 +314,7 @@ The same rules everywhere:
 - `GET /v1/dashboard/jobs` answers `{"jobs": [{"job", "name_en", "name_ku", "every_hours", "last_run": {"started_at", "finished_at", "ok", "rows", "message"} or null, "last_ok", "next_due", "state", "last_14_days": [14 entries, oldest first, "ok" | "late" | "failed" | null], "message"}]}`.
 - `state`: `never` (no run), `failed` (the run that finished last was not ok), `late` (nothing finished ok within 1.5 times `every_hours`), else `ok`.
 - A job becomes `late` by time alone, which raises no cache topic: refetch this page on a timer.
-- Jobs: `dryness` (12 h), `fires` (3 h), `groundwater` (24 h), `briefs` (24 h) report every run. `dams` and `farm_analysis` have no job on the server yet and show `never`.
+- Jobs: `dryness` (12 h), `fires` (3 h), `groundwater` (24 h), `briefs` (24 h) report every run. `dams` (24 h) reports too. `farm_analysis` has no job on the server yet and shows `never`.
 
 ## 10. Caching (for the website)
 
@@ -336,7 +336,7 @@ Be honest on screen about this.
 | Nightly brief | **live** for the region and for districts that have farms | an AI agent reads our stored numbers and searches the web; show its sources |
 | Groundwater per farm | **live**, daily | section 4; the wider area, not a well |
 | Farmers and farms | the few test accounts people have made | the app |
-| Dams | **empty** (the two dams are listed, no readings) | the satellite job is not on the server yet |
+| Dams | **live**: 116 readings from 2008 to now, refreshed daily | lake area measured from Sentinel-2 and Landsat with the team's tested method. **`pct_full` is the lake's AREA as a share of its full area (Dukan 270 km2, Darbandikhan 113 km2), not stored volume**: a lake loses volume faster than area, so label it "lake area, % of full". `volume_bn_m3` and `farm_supply_bn_m3` are null: no trustworthy area-to-volume curve exists for these dams. |
 | Season outlook, water plan | **empty** (`404`) | no job; they can be typed in through the Admin part |
 | Alwa prices | **empty** until staff type them in | by hand |
 | Rules | 15 seeded rules | section 9; changing them has no effect yet |

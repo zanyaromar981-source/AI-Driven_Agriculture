@@ -80,3 +80,26 @@ python3 report_run.py dryness /usr/bin/python3 region_runner.py
 ```
 
 Job names: `dryness` (region runner), `fires`, `groundwater`, `briefs`, `dams`, `farm_analysis`. If the backend cannot be reached the job still runs and keeps its own exit code. A job run by hand without the wrapper is not shown on the status page.
+
+## dams_runner.py
+
+Once a day: the water area of Dukan and Darbandikhan lakes, measured on Sentinel-2 images. It is the method tested in `evidence/past_seasons/backtest/dam_water_test.py`, ported without changing a threshold: Sentinel-2 L2A through Microsoft Planetary Computer (free, no key; its statistics service counts the pixels, no image is downloaded), one rectangle per lake read at 20 m, water where NDWI `(B03-B08)/(B03+B08)` is above 0.
+
+- **Which passes:** the last 30 days, Dukan from relative orbit 135 only and Darbandikhan from orbit 92 only, when every tile reports under 20% cloud. A pass is pushed only when it is clear: cloud and cloud shadow under 0.5% of the rectangle and every piece at least 99.5% inside the swath. Every pass that is not clear is logged with its numbers.
+- **Measured:** `lake_area_km2`.
+- **Derived, and not what its name says:** `pct_full` is the lake area as a share of the full lake area (Dukan 270 km2, Darbandikhan 113 km2, the official full areas quoted in `evidence/past_seasons/BACKTEST_RESULTS.md` section 6d; an area just above them is sent as 100). It is **not** the stored volume as a share of capacity. A lake loses volume faster than area, so the figure reads too high when the lake is low: in June 2025 Dukan was reported at 24% of its volume while its area was 42% of full. Every reading's `source` says "pct_full = lake AREA / full N km2, not volume".
+- **Not computed:** `volume_bn_m3` and `farm_supply_bn_m3` stay empty. No tested area-to-volume curve exists for these lakes: Global Water Watch and DAHITI hold none (`research_notes/Data_Sources_Reservoirs.md`), the Dukan curve tried in the backtest was off by 0.3 to 1 billion m3 and is not kept in the repo, and nothing was tried for Darbandikhan.
+- **A stored day is left alone,** so a run repeats safely and a correction made by staff on the dashboard is not written over. The job reads the stored days from `GET /v1/dams/{slug}/history`.
+- **Limits:** a lake is passed every 2 to 5 days and winter passes are often cloudy, so readings can be weeks apart. A pass reaches Planetary Computer hours to two days after it was flown. Haze moves a reading by a few km2.
+- **When the satellite service does not answer:** each request is tried 4 times; a lake is left after 2 passes that could not be read. Nothing is pushed for what could not be measured, the last line counts the failures, the job exits 1, and the next day's run tries the same passes again.
+
+`--backfill` pushes the tested history in `dam_history.csv`: the 111 clear rows of `dam_water_areas.csv` (2008 to 2026; Landsat 5 and 8 at 30 m for 2008, 2013 and 2019, Sentinel-2 from 2017), 110 readings because one day was measured by both satellites and the Sentinel-2 one is kept. It measures nothing new. Unlike the daily run it replaces what is stored for those days. Run it once on a new server:
+
+```sh
+INGEST__SERVICE_KEY=... FARM_DOCTOR_API=http://localhost:8790/v1 python3 dams_runner.py --backfill
+python3 dams_runner.py --dry-run     # measures for real, pushes nothing
+```
+
+First run, 9 Oct 2026: 110 readings backfilled, then 13 passes found, 6 new clear ones pushed, 6 already in the history (the new measurements equal the backtest's to the last digit), 1 not clear. It took 83 seconds; a run with nothing new takes about 10. Newest: Dukan 249 km2 on 27 Sep 2026 (83 km2 a year before), Darbandikhan 68 km2 on 4 Oct 2026 (47 km2 a year before).
+
+On the server it runs from `farm-doctor-dams-runner.timer` at 13:20 UTC. See its last run with `journalctl -u farm-doctor-dams-runner -n 50`.
