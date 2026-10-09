@@ -34,6 +34,12 @@ use crate::{
         AlwaRecordedPriceResponse, MakeAlwaOfferParams, PostAlwaListingParams,
         RecordAlwaPriceParams, handlers as alwa_handlers,
     },
+    features::briefs::web::{
+        BriefFarmZoneParams, BriefFarmZonesRecordedResponse, BriefPointLevel, BriefPointParams,
+        BriefPointResponse, BriefResponse, BriefSourceParams, BriefSourceResponse,
+        BriefsPageResponse, BriefsResponse, FarmBriefResponse, OneBriefResponse,
+        RecordBriefFarmZonesParams, RecordBriefParams, handlers as brief_handlers,
+    },
     features::dams::web::{
         CreateDamDashboardReadingParams, DamHistoryResponse, DamReadingResponse,
         DamReadingsPageResponse, DamReferenceResponse, DamReferencesResponse, DamResponse,
@@ -232,7 +238,16 @@ impl Modify for BearerAuth {
         alwa_dashboard_handlers::get_listings,
         alwa_dashboard_handlers::get_listing,
         alwa_dashboard_handlers::moderate_listing,
-        alwa_dashboard_handlers::delete_listing
+        alwa_dashboard_handlers::delete_listing,
+        brief_handlers::get_latest_brief,
+        brief_handlers::get_briefs,
+        brief_handlers::get_farm_brief,
+        brief_handlers::put_brief,
+        brief_handlers::put_farm_zones,
+        brief_handlers::delete_brief,
+        brief_handlers::get_dashboard_briefs,
+        brief_handlers::update_dashboard_brief,
+        brief_handlers::delete_dashboard_brief
     ),
     components(schemas(
         CreateFarmParams,
@@ -419,6 +434,20 @@ impl Modify for BearerAuth {
         AlwaModeratedListingDetailResponse,
         AlwaOneModeratedListingResponse,
         ModerateAlwaListingParams,
+        RecordBriefParams,
+        BriefPointParams,
+        BriefSourceParams,
+        BriefPointLevel,
+        RecordBriefFarmZonesParams,
+        BriefFarmZoneParams,
+        BriefResponse,
+        BriefPointResponse,
+        BriefSourceResponse,
+        OneBriefResponse,
+        BriefsResponse,
+        FarmBriefResponse,
+        BriefFarmZonesRecordedResponse,
+        BriefsPageResponse,
         ErrorBody
     )),
     modifiers(&BearerAuth),
@@ -433,7 +462,8 @@ impl Modify for BearerAuth {
         (name = "outlooks", description = "The Doctor: the outlook for the next growing season, zone by zone"),
         (name = "water", description = "The plan for which zones should receive water first"),
         (name = "alwa", description = "The wholesale produce markets: prices, crops on sale, offers and deals"),
-        (name = "staff", description = "The dashboard's staff accounts, custom roles and sign-in")
+        (name = "staff", description = "The dashboard's staff accounts, custom roles and sign-in"),
+        (name = "briefs", description = "The daily brief the nightly job writes for the region and for each zone")
     ),
     info(
         title = "farm-doctor-api",

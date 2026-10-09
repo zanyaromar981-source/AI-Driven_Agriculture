@@ -35,6 +35,7 @@ pub enum StaffResource {
     Insights,
     Staff,
     Roles,
+    Briefs,
 }
 
 impl From<StaffResource> for Resource {
@@ -51,6 +52,7 @@ impl From<StaffResource> for Resource {
             StaffResource::Insights => Resource::Insights,
             StaffResource::Staff => Resource::Staff,
             StaffResource::Roles => Resource::Roles,
+            StaffResource::Briefs => Resource::Briefs,
         }
     }
 }
@@ -69,6 +71,7 @@ impl From<Resource> for StaffResource {
             Resource::Insights => StaffResource::Insights,
             Resource::Staff => StaffResource::Staff,
             Resource::Roles => StaffResource::Roles,
+            Resource::Briefs => StaffResource::Briefs,
         }
     }
 }

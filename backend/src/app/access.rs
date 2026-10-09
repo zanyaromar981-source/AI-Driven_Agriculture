@@ -23,10 +23,11 @@ pub enum Resource {
     Insights,
     Staff,
     Roles,
+    Briefs,
 }
 
 impl Resource {
-    pub const ALL: [Resource; 11] = [
+    pub const ALL: [Resource; 12] = [
         Resource::Zones,
         Resource::Dams,
         Resource::Outlooks,
@@ -38,6 +39,7 @@ impl Resource {
         Resource::Insights,
         Resource::Staff,
         Resource::Roles,
+        Resource::Briefs,
     ];
 }
 
@@ -55,6 +57,7 @@ impl From<Resource> for String {
             Resource::Insights => "insights".to_string(),
             Resource::Staff => "staff".to_string(),
             Resource::Roles => "roles".to_string(),
+            Resource::Briefs => "briefs".to_string(),
         }
     }
 }
@@ -75,6 +78,7 @@ impl TryFrom<&str> for Resource {
             "insights" => Ok(Resource::Insights),
             "staff" => Ok(Resource::Staff),
             "roles" => Ok(Resource::Roles),
+            "briefs" => Ok(Resource::Briefs),
             _ => Err(DomainError::InvalidValue(format!(
                 "Invalid resource: {value}"
             ))),
@@ -210,6 +214,16 @@ mod tests {
 
             assert_eq!(Action::try_from(stored.as_str()).expect("action"), action);
         }
+    }
+
+    #[test]
+    fn briefs_is_a_resource_stored_under_its_own_name() {
+        assert!(Resource::ALL.contains(&Resource::Briefs));
+        assert_eq!(String::from(Resource::Briefs), "briefs");
+        assert_eq!(
+            Resource::try_from("briefs").expect("resource"),
+            Resource::Briefs
+        );
     }
 
     #[test]

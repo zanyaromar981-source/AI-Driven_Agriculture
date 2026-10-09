@@ -22,6 +22,17 @@ use crate::{
             domain::MAX_OPEN_LISTINGS_PER_SELLER,
             infra::AlwaPostgresRepository,
         },
+        briefs::{
+            app::{
+                BriefFarmOwnership, BriefRepository,
+                use_cases::{
+                    CorrectBriefUseCase, DeleteBriefUseCase, ListBriefsUseCase,
+                    ListStoredBriefsUseCase, RecordBriefUseCase, RecordFarmZonesUseCase,
+                    RemoveBriefUseCase, ViewFarmBriefUseCase, ViewLatestBriefUseCase,
+                },
+            },
+            infra::{BriefPostgresRepository, FarmsFeatureBriefFarmOwnership},
+        },
         dams::{
             app::{
                 DamRepository,
@@ -143,8 +154,8 @@ use crate::{
     },
     infra::{Config, DBConnector},
     shared::{
-        AlwaFeature, DamFeature, FarmFeature, FarmerFeature, Features, FireFeature, InsightFeature,
-        OutlookFeature, StaffFeature, WaterFeature, ZoneFeature,
+        AlwaFeature, BriefFeature, DamFeature, FarmFeature, FarmerFeature, Features, FireFeature,
+        InsightFeature, OutlookFeature, StaffFeature, WaterFeature, ZoneFeature,
     },
 };
 
@@ -227,6 +238,28 @@ pub async fn di_init(
             insight_repository.clone(),
         )),
         remove_farm_insight_use_case: Arc::new(RemoveFarmInsightUseCase::new(insight_repository)),
+    };
+
+    let brief_repository: Arc<dyn BriefRepository> =
+        Arc::new(BriefPostgresRepository::new(db_context.conn_clone()));
+    let brief_farm_ownership: Arc<dyn BriefFarmOwnership> =
+        Arc::new(FarmsFeatureBriefFarmOwnership::new(farm_repository.clone()));
+
+    let brief = BriefFeature {
+        view_latest_brief_use_case: Arc::new(ViewLatestBriefUseCase::new(brief_repository.clone())),
+        list_briefs_use_case: Arc::new(ListBriefsUseCase::new(brief_repository.clone())),
+        view_farm_brief_use_case: Arc::new(ViewFarmBriefUseCase::new(
+            brief_repository.clone(),
+            brief_farm_ownership,
+        )),
+        record_brief_use_case: Arc::new(RecordBriefUseCase::new(brief_repository.clone())),
+        record_farm_zones_use_case: Arc::new(RecordFarmZonesUseCase::new(brief_repository.clone())),
+        delete_brief_use_case: Arc::new(DeleteBriefUseCase::new(brief_repository.clone())),
+        list_stored_briefs_use_case: Arc::new(ListStoredBriefsUseCase::new(
+            brief_repository.clone(),
+        )),
+        correct_brief_use_case: Arc::new(CorrectBriefUseCase::new(brief_repository.clone())),
+        remove_brief_use_case: Arc::new(RemoveBriefUseCase::new(brief_repository)),
     };
 
     let farmer_repository: Arc<dyn FarmerRepository> =
@@ -512,5 +545,6 @@ pub async fn di_init(
         water,
         alwa,
         staff,
+        brief,
     })
 }
