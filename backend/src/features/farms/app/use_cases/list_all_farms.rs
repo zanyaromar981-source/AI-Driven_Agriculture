@@ -4,14 +4,14 @@ use crate::{
     app::Pagination,
     features::farms::{
         app::{AppError, FarmRepository},
-        domain::OwnedFarmSummary,
+        domain::{FarmFilter, FarmOrder, OwnedFarmSummary},
     },
-    shared::Phone,
 };
 
 pub struct ListAllFarmsInput {
-    /// Only this farmer's farms, when given.
-    pub owner: Option<Phone>,
+    /// Which farms to list. The default lists every farmer's.
+    pub filter: FarmFilter,
+    pub order: FarmOrder,
     pub pagination: Pagination,
 }
 
@@ -33,7 +33,7 @@ impl ListAllFarmsUseCase {
     ) -> Result<(Vec<OwnedFarmSummary>, u64), AppError> {
         let (farms, count) = self
             .repository
-            .find_page(input.owner.as_ref(), &input.pagination)
+            .find_page(&input.filter, input.order, &input.pagination)
             .await?;
 
         tracing::debug!(returned = farms.len(), count, "farms listed for staff");
@@ -45,11 +45,21 @@ impl ListAllFarmsUseCase {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::farms::app::testing::{FakeFarmRepository, OWNER, RepositoryCall, a_farm};
+    use crate::{
+        features::farms::{
+            app::testing::{FakeFarmRepository, OWNER, RepositoryCall, a_farm},
+            domain::{AreaFilter, Crop, FarmSearch, FarmSortKey, PlantedCrop, SortDirection},
+        },
+        shared::Phone,
+    };
 
     fn input(owner: Option<&str>) -> ListAllFarmsInput {
         ListAllFarmsInput {
-            owner: owner.map(|phone| Phone::new(phone.to_string()).expect("phone")),
+            filter: FarmFilter {
+                owner: owner.map(|phone| Phone::new(phone.to_string()).expect("phone")),
+                ..FarmFilter::default()
+            },
+            order: FarmOrder::default(),
             pagination: Pagination::new(2, 20),
         }
     }
@@ -66,7 +76,8 @@ mod tests {
         assert_eq!(
             repository.calls(),
             vec![RepositoryCall::FindPage {
-                owner: None,
+                filter: FarmFilter::default(),
+                order: FarmOrder::default(),
                 page: 2,
             }]
         );
@@ -83,11 +94,46 @@ mod tests {
             .expect("listing");
 
         assert!(farms.is_empty());
+        assert!(matches!(
+            repository.calls().as_slice(),
+            [RepositoryCall::FindPage { filter, page: 2, .. }]
+                if filter.owner.as_ref().map(Phone::as_str) == Some("+9647509999999")
+        ));
+    }
+
+    #[tokio::test]
+    async fn every_filter_and_the_order_reach_the_repository_as_given() {
+        let repository = FakeFarmRepository::holding(a_farm());
+        let use_case = ListAllFarmsUseCase::new(Arc::new(repository.clone()));
+
+        let filter = FarmFilter {
+            owner: None,
+            governorate: Some(AreaFilter::new("Sulaymaniyah".to_string()).expect("filter")),
+            zone: Some(AreaFilter::new("chamchamal".to_string()).expect("filter")),
+            sub_zone: Some(AreaFilter::Unknown),
+            crop: Some(PlantedCrop::new(Crop::Wheat).expect("crop")),
+            search: Some(FarmSearch::new("upper".to_string()).expect("search")),
+        };
+        let order = FarmOrder {
+            key: FarmSortKey::AreaDunam,
+            direction: SortDirection::Ascending,
+        };
+
+        use_case
+            .execute(ListAllFarmsInput {
+                filter: filter.clone(),
+                order,
+                pagination: Pagination::new(1, 20),
+            })
+            .await
+            .expect("listing");
+
         assert_eq!(
             repository.calls(),
             vec![RepositoryCall::FindPage {
-                owner: Some("+9647509999999".to_string()),
-                page: 2,
+                filter,
+                order,
+                page: 1,
             }]
         );
     }

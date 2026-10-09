@@ -43,6 +43,7 @@ services:
       INGEST__SERVICE_KEY: ${INGEST__SERVICE_KEY:?set INGEST__SERVICE_KEY in .env}
       DOCTOR_URL: ${DOCTOR_URL:-}
       HTTP__CORS_ORIGINS: ${HTTP__CORS_ORIGINS:-}
+      STATS__PUBLIC_FARM_TOTALS: ${STATS__PUBLIC_FARM_TOTALS:-true}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       PORT: "3000"
     ports:

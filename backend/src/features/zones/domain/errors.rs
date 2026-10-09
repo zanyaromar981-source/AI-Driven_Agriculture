@@ -35,6 +35,9 @@ pub enum ZoneError {
     #[error("A crop can be listed only once in the best crops: {0}")]
     RepeatedCrop(String),
 
+    #[error("A shape needs at least one ring, and a ring at least three corners that are numbers")]
+    BadShape,
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

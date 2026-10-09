@@ -9,7 +9,7 @@ use sha2::{Digest, Sha256};
 
 /// Changes whenever the shape of any answer changes. A website that caches
 /// answers throws its cache away when it sees a new value.
-pub const API_VERSION: &str = "1.5.0";
+pub const API_VERSION: &str = "1.6.0";
 
 const API_VERSION_HEADER: &str = "x-api-version";
 

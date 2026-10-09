@@ -9,9 +9,9 @@ use super::{
     dtos::{
         CreateFarmParams, DashboardCreateFarmParams, DashboardFarmSummaryResponse,
         DashboardFarmsQuery, DashboardFarmsResponse, DashboardOneFarmResponse,
-        DashboardRenameFarmParams, DashboardSavedFarmResponse, FarmStatusResponse,
-        FarmSummaryResponse, FarmsResponse, OneFarmResponse, RepaintFarmCellsParams,
-        SavedFarmResponse,
+        DashboardRenameFarmParams, DashboardSavedFarmResponse, FarmStatsQuery, FarmStatsResponse,
+        FarmStatusResponse, FarmSummaryResponse, FarmsResponse, OneFarmResponse,
+        PublicFarmStatsResponse, RepaintFarmCellsParams, SavedFarmResponse,
     },
     errors::WebError,
 };
@@ -275,7 +275,10 @@ pub async fn delete_farm(
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// List every farmer's farms, newest first
+/// List every farmer's farms, filtered and sorted
+///
+/// Newest first unless `sort` and `order` say otherwise. Every filter that
+/// is given must hold.
 #[utoipa::path(
     get,
     path = "/v1/dashboard/farms",
@@ -451,4 +454,68 @@ pub async fn dashboard_delete_farm(
         .await?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// Farms, farmers and land added up, for reports and charts
+///
+/// The adding is done by the database, so the dashboard never downloads
+/// every farm. A farmer is counted once in the totals and once in each area
+/// where they have a farm. Farms with no place are in the totals and in one
+/// extra row with the slug `unknown` in each list of areas.
+#[utoipa::path(
+    get,
+    path = "/v1/dashboard/stats/farms",
+    tag = "farms",
+    params(FarmStatsQuery),
+    responses(
+        (status = 200, description = "Totals retrieved successfully", body = FarmStatsResponse),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs farms:read", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_get_farm_stats(
+    State(state): State<AppState>,
+    WithRejection(Query(query), _): WithRejection<Query<FarmStatsQuery>, WebError>,
+) -> Result<ApiResponse<FarmStatsResponse>, WebError> {
+    let input = query.into_input()?;
+
+    let stats = state
+        .features
+        .farm
+        .view_farm_stats_use_case
+        .execute(input)
+        .await?;
+
+    Ok(ApiResponse::ok(FarmStatsResponse::from(&stats)))
+}
+
+/// Farm totals anyone may read
+///
+/// Counts and areas for the whole region, by governorate, by district and
+/// by crop. No farm, no name, no phone, and nothing per sub-district.
+/// Answers `404` when the setting `STATS__PUBLIC_FARM_TOTALS` is `false`.
+#[utoipa::path(
+    get,
+    path = "/v1/stats/farms",
+    tag = "farms",
+    responses(
+        (status = 200, description = "Totals retrieved successfully", body = PublicFarmStatsResponse),
+        (status = 404, description = "Public farm totals are switched off", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    )
+)]
+pub async fn get_public_farm_stats(
+    State(state): State<AppState>,
+) -> Result<ApiResponse<PublicFarmStatsResponse>, WebError> {
+    let stats = state
+        .features
+        .farm
+        .view_public_farm_stats_use_case
+        .execute()
+        .await?;
+
+    Ok(ApiResponse::ok(PublicFarmStatsResponse::from(&stats)))
 }

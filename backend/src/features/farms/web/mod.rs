@@ -7,8 +7,10 @@ pub use dtos::{
     CellParams, CellResponse, CellStatusResponse, CentroidResponse, CreateFarmParams, Crop,
     CropAreaResponse, CropStatusResponse, DashboardCreateFarmParams, DashboardFarmResponse,
     DashboardFarmSummaryResponse, DashboardFarmsResponse, DashboardOneFarmResponse,
-    DashboardRenameFarmParams, DashboardSavedFarmResponse, FarmResponse, FarmStatusResponse,
-    FarmSummaryResponse, FarmsResponse, GridCellResponse, Level, OneFarmResponse,
-    OutlinePointResponse, PointParams, RepaintFarmCellsParams, SavedFarmResponse,
+    DashboardRenameFarmParams, DashboardSavedFarmResponse, FarmResponse, FarmStatsAreaCropResponse,
+    FarmStatsAreaResponse, FarmStatsCropResponse, FarmStatsResponse, FarmStatsTotalsResponse,
+    FarmStatusResponse, FarmSummaryResponse, FarmsResponse, GridCellResponse, Level,
+    OneFarmResponse, OutlinePointResponse, PointParams, PublicFarmStatsResponse,
+    RepaintFarmCellsParams, SavedFarmResponse,
 };
-pub use routes::{dashboard_routes, routes};
+pub use routes::{dashboard_routes, public_routes, routes};

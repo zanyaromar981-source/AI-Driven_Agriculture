@@ -5,7 +5,10 @@ use crate::{
     app::Pagination,
     features::farms::{
         app::AppError,
-        domain::{Farm, FarmLocation, FarmName, FarmSummary, IdempotencyKey, OwnedFarmSummary},
+        domain::{
+            AreaCount, AreaCropSum, AreaLevel, Farm, FarmFilter, FarmLocation, FarmName, FarmOrder,
+            FarmPlace, FarmSummary, IdempotencyKey, OwnedFarmSummary, UnplacedFarm,
+        },
     },
     shared::Phone,
 };
@@ -35,8 +38,9 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
     /// owners.
     async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError>;
 
-    /// Creates a new entity with its cells. `entity.id()` must be `None`; the
-    /// database assigns the ids.
+    /// Creates a new entity with its cells, its place and the area inside
+    /// its outline. `entity.id()` must be `None`; the database assigns the
+    /// ids.
     async fn create(&self, entity: &Farm) -> Result<Farm, AppError>;
 
     /// Stores a repaint: the crop on the cells it changed, and nothing else
@@ -46,8 +50,8 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
     /// farm as it is stored afterwards.
     async fn update(&self, entity: &Farm) -> Result<Farm, AppError>;
 
-    /// Stores an edit: replaces the name, the outline and the whole set of
-    /// cells of the owner's farm in one transaction, holding the farm's row
+    /// Stores an edit: replaces the name, the outline, the place, the area
+    /// and the whole set of cells of the owner's farm in one transaction, holding the farm's row
     /// so that a repaint or a second edit of the same farm waits its turn.
     /// `entity.id()` must be `Some`; the farm keeps that id. Fails with
     /// `NotFound` when the owner has no such farm any more.
@@ -58,13 +62,43 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
     // The methods below are not scoped to an owner. They are for Ministry
     // staff on the dashboard; nothing a farmer's token reaches may call them.
 
-    /// Returns one page of every owner's farms, newest first, or of one
-    /// owner's when `owner` is given, with how many there are in all.
+    /// Returns one page of the farms the filter keeps, in the given order,
+    /// with how many it keeps in all. Farms that are equal in the order
+    /// follow their ids, so a farm is never on two pages. A farm whose area
+    /// is not stored yet sorts last by area in either direction.
     async fn find_page(
         &self,
-        owner: Option<&Phone>,
+        filter: &FarmFilter,
+        order: FarmOrder,
         pagination: &Pagination,
     ) -> Result<(Vec<OwnedFarmSummary>, u64), AppError>;
+
+    /// Adds the farms the filter keeps up in the database: for the region
+    /// and for each area down to `deepest`, the farms, their different
+    /// owners and their land, and the same per crop. Both lists are read
+    /// from one snapshot, so they agree. Farms with no place form one area
+    /// of their own at each level. A farm whose area is not stored yet
+    /// counts as a farm and adds no land.
+    async fn sum_by_area(
+        &self,
+        filter: &FarmFilter,
+        deepest: AreaLevel,
+    ) -> Result<(Vec<AreaCount>, Vec<AreaCropSum>), AppError>;
+
+    /// Returns up to `limit` farms that have no place or no area stored,
+    /// with an id above `after_id`, lowest id first.
+    async fn find_unplaced(&self, after_id: i32, limit: u64)
+    -> Result<Vec<UnplacedFarm>, AppError>;
+
+    /// Stores the place and the area of the farm's outline in one statement,
+    /// only if the farm has not been written since `farm` was read. Returns
+    /// whether it was stored. The time of the farm's last write is left as
+    /// it is: nothing the farmer drew has changed.
+    async fn fill_place(
+        &self,
+        farm: &UnplacedFarm,
+        place: Option<&FarmPlace>,
+    ) -> Result<bool, AppError>;
 
     /// Returns the farm with all of its cells, whoever owns it.
     async fn find_by_id(&self, id: i32) -> Result<Option<Farm>, AppError>;

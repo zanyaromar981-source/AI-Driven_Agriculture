@@ -25,7 +25,10 @@ use farm_doctor_api::{
             dashboard_routes as farmer_dashboard_routes, public_routes as farmer_public_routes,
             routes as farmer_routes,
         },
-        farms::web::{dashboard_routes as farm_dashboard_routes, routes as farm_routes},
+        farms::web::{
+            dashboard_routes as farm_dashboard_routes, public_routes as farm_public_routes,
+            routes as farm_routes,
+        },
         fires::web::{
             dashboard_routes as fire_dashboard_routes, ingest_routes as fire_ingest_routes,
             public_routes as fire_public_routes,
@@ -99,6 +102,10 @@ enum Commands {
         /// The name other staff see.
         name: String,
     },
+    /// Give every farm that has none its place (governorate, zone and
+    /// sub-zone) and the area of its outline. Run it once after deploying
+    /// the migration that added those columns; running it again is harmless.
+    BackfillFarmPlaces,
 }
 
 #[tokio::main]
@@ -109,6 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         Some(Commands::Migrate) => return run_migrations().await,
         Some(Commands::Token { phone }) => return print_token(phone).await,
         Some(Commands::CreateOwner { email, name }) => return create_owner(email, name).await,
+        Some(Commands::BackfillFarmPlaces) => return backfill_farm_places().await,
         Some(Commands::Serve) | None => {}
     }
 
@@ -135,6 +143,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(water_public_routes())
                 .merge(alwa_public_routes())
                 .merge(brief_public_routes())
+                .merge(farm_public_routes())
                 .nest(
                     "/ingest",
                     Router::new()
@@ -253,6 +262,26 @@ async fn create_owner(
     } else {
         println!("An account with the email {email} already exists: nothing was changed");
     }
+
+    Ok(())
+}
+
+async fn backfill_farm_places() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let config = Config::from_env();
+    let db_context = postgres_init(&config).await?;
+    let features = di_init(&config, db_context).await?;
+
+    let report = features
+        .farm
+        .backfill_farm_places_use_case
+        .execute()
+        .await?;
+
+    println!(
+        "Farms without a place or an area: {}. Placed: {}. Outside every sub-zone: {}. \
+         Changed meanwhile and left for the next run: {}.",
+        report.examined, report.placed, report.outside, report.skipped
+    );
 
     Ok(())
 }

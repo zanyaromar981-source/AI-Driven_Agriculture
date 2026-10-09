@@ -27,6 +27,8 @@ impl MigratorTrait for Migrator {
             Box::new(m20261009_202000_add_staff_details::Migration),
             Box::new(m20261009_210000_create_rules::Migration),
             Box::new(m20261009_211000_create_jobs::Migration),
+            Box::new(m20261009_190000_add_sub_zone_shapes::Migration),
+            Box::new(m20261009_191000_add_farm_place::Migration),
         ]
     }
 }
@@ -52,3 +54,6 @@ mod m20261009_201000_create_letters;
 mod m20261009_202000_add_staff_details;
 mod m20261009_210000_create_rules;
 mod m20261009_211000_create_jobs;
+mod m20261009_190000_add_sub_zone_shapes;
+mod m20261009_191000_add_farm_place;
+mod sub_zone_shapes;

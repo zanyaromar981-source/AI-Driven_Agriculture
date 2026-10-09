@@ -1,3 +1,4 @@
+pub mod backfill_farm_places;
 pub mod edit_farm;
 pub mod list_all_farms;
 pub mod list_farms;
@@ -9,7 +10,9 @@ pub mod rename_farm;
 pub mod repaint_farm_cells;
 pub mod view_any_farm;
 pub mod view_farm;
+pub mod view_farm_stats;
 
+pub use backfill_farm_places::*;
 pub use edit_farm::*;
 pub use list_all_farms::*;
 pub use list_farms::*;
@@ -21,3 +24,4 @@ pub use rename_farm::*;
 pub use repaint_farm_cells::*;
 pub use view_any_farm::*;
 pub use view_farm::*;
+pub use view_farm_stats::*;

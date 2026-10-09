@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::{
     app::{AppError as GlobalAppError, AuthContext},
     features::farms::{
-        app::{AppError, FarmRepository},
+        app::{AppError, FarmRepository, PlaceLocator},
         domain::{Farm, FarmName, GridCell, Outline, PaintedCell},
     },
 };
@@ -18,13 +18,19 @@ pub struct EditFarmInput {
 /// name in one request that carries the whole farm. The farm keeps its id.
 pub struct EditFarmUseCase {
     repository: Arc<dyn FarmRepository>,
+    places: Arc<dyn PlaceLocator>,
     max_cells_per_farm: usize,
 }
 
 impl EditFarmUseCase {
-    pub fn new(repository: Arc<dyn FarmRepository>, max_cells_per_farm: usize) -> Self {
+    pub fn new(
+        repository: Arc<dyn FarmRepository>,
+        places: Arc<dyn PlaceLocator>,
+        max_cells_per_farm: usize,
+    ) -> Self {
         Self {
             repository,
+            places,
             max_cells_per_farm,
         }
     }
@@ -64,6 +70,12 @@ impl EditFarmUseCase {
             return Ok((farm, redraw.dropped_cells));
         }
 
+        // The place follows the outline. It is looked up on every edit that
+        // changes anything, so a farm stored before places were kept gets
+        // one the first time it is edited, even if only its name changed.
+        let (lat, lon) = farm.outline().centroid();
+        farm.place_at(self.places.locate(lat, lon).await?);
+
         // The lookup above only chose the answer for a missing farm. The
         // write decides for itself, under a lock on the farm's row, whether
         // the farm is still there and still this owner's.
@@ -73,6 +85,7 @@ impl EditFarmUseCase {
             farm_id = id,
             cells = edited.cells().len(),
             dropped_cells = redraw.dropped_cells.len(),
+            placed = edited.place().is_some(),
             "farm edited"
         );
 
@@ -85,8 +98,8 @@ mod tests {
     use super::*;
     use crate::features::farms::{
         app::testing::{
-            FakeFarmRepository, MAX_CELLS, OWNER, RepositoryCall, a_cell_inside, a_farm,
-            an_outline, another_outline, auth_context,
+            FakeFarmRepository, FakePlaceLocator, MAX_CELLS, OWNER, RepositoryCall, a_cell_inside,
+            a_farm, an_outline, an_outline_outside, another_outline, auth_context, the_place,
         },
         domain::{Crop, FarmError},
     };
@@ -107,7 +120,94 @@ mod tests {
     }
 
     fn use_case(repository: &FakeFarmRepository) -> EditFarmUseCase {
-        EditFarmUseCase::new(Arc::new(repository.clone()), MAX_CELLS)
+        EditFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            MAX_CELLS,
+        )
+    }
+
+    #[tokio::test]
+    async fn an_edit_gives_the_farm_the_place_of_its_new_outline() {
+        let repository = FakeFarmRepository::holding(a_farm());
+        let places = FakePlaceLocator::new();
+        let use_case = EditFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(places.clone()),
+            MAX_CELLS,
+        );
+
+        let (farm, _) = use_case
+            .execute(&auth_context(), 7, an_edit())
+            .await
+            .expect("edit");
+
+        assert_eq!(farm.place(), &Some(the_place()));
+        assert_eq!(places.asked(), vec![another_outline().centroid()]);
+    }
+
+    #[tokio::test]
+    async fn an_edit_that_moves_the_farm_outside_every_place_clears_its_place() {
+        let mut placed = a_farm();
+        placed.place_at(Some(the_place()));
+        let repository = FakeFarmRepository::holding(placed);
+
+        let (farm, _) = use_case(&repository)
+            .execute(
+                &auth_context(),
+                7,
+                EditFarmInput {
+                    name: name("Upper field"),
+                    outline: an_outline_outside(),
+                    painted: vec![],
+                },
+            )
+            .await
+            .expect("edit");
+
+        assert_eq!(farm.place(), &None);
+    }
+
+    #[tokio::test]
+    async fn a_repeated_edit_looks_no_place_up_and_an_unplaceable_one_is_not_written() {
+        let repository = FakeFarmRepository::holding(a_farm());
+        let places = FakePlaceLocator::new();
+        let use_case = EditFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(places.clone()),
+            MAX_CELLS,
+        );
+
+        let same = EditFarmInput {
+            name: name("Upper field"),
+            outline: an_outline(),
+            painted: vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)],
+        };
+        use_case
+            .execute(&auth_context(), 7, same)
+            .await
+            .expect("edit");
+
+        assert!(places.asked().is_empty());
+
+        let failing = EditFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::failing()),
+            MAX_CELLS,
+        );
+
+        assert!(
+            failing
+                .execute(&auth_context(), 7, an_edit())
+                .await
+                .is_err()
+        );
+        assert!(
+            !repository
+                .calls()
+                .iter()
+                .any(|call| matches!(call, RepositoryCall::Replace { .. }))
+        );
     }
 
     #[tokio::test]
@@ -246,9 +346,13 @@ mod tests {
     async fn an_outline_over_the_cell_limit_is_refused_and_nothing_is_written() {
         let repository = FakeFarmRepository::holding(a_farm());
 
-        let result = EditFarmUseCase::new(Arc::new(repository.clone()), 10)
-            .execute(&auth_context(), 7, an_edit())
-            .await;
+        let result = EditFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            10,
+        )
+        .execute(&auth_context(), 7, an_edit())
+        .await;
 
         assert!(matches!(
             result,

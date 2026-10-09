@@ -2,7 +2,7 @@
 
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "farms")]
 pub struct Model {
     #[sea_orm(primary_key)]
@@ -17,6 +17,11 @@ pub struct Model {
     pub created_offline_at: Option<DateTime>,
     pub created_at: DateTime,
     pub updated_at: DateTime,
+    pub governorate: Option<String>,
+    pub zone_slug: Option<String>,
+    pub sub_zone_slug: Option<String>,
+    #[sea_orm(column_type = "Double", nullable)]
+    pub area_m2: Option<f64>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

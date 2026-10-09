@@ -269,7 +269,9 @@ impl Modify for BearerAuth {
         crate::features::rules::web::handlers::dashboard_get_rule_history,
         crate::features::rules::web::handlers::dashboard_reset_rule,
         crate::features::jobs::web::handlers::put_job_run,
-        crate::features::jobs::web::handlers::dashboard_get_jobs
+        crate::features::jobs::web::handlers::dashboard_get_jobs,
+        farm_handlers::dashboard_get_farm_stats,
+        farm_handlers::get_public_farm_stats
     ),
     components(schemas(
         CreateFarmParams,
@@ -506,6 +508,12 @@ impl Modify for BearerAuth {
         crate::features::jobs::web::SavedJobRunResponse,
         crate::features::jobs::web::JobStatusResponse,
         crate::features::jobs::web::JobsResponse,
+        crate::features::farms::web::FarmStatsResponse,
+        crate::features::farms::web::PublicFarmStatsResponse,
+        crate::features::farms::web::FarmStatsTotalsResponse,
+        crate::features::farms::web::FarmStatsAreaResponse,
+        crate::features::farms::web::FarmStatsAreaCropResponse,
+        crate::features::farms::web::FarmStatsCropResponse,
         ErrorBody
     )),
     modifiers(&BearerAuth),

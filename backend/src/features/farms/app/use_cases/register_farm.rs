@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use crate::{
     app::AuthContext,
     features::farms::{
-        app::{AppError, FarmRepository},
+        app::{AppError, FarmRepository, PlaceLocator},
         domain::{Farm, FarmName, GridCell, IdempotencyKey, Outline, PaintedCell},
     },
     shared::Phone,
@@ -21,6 +21,7 @@ pub struct RegisterFarmInput {
 
 pub struct RegisterFarmUseCase {
     repository: Arc<dyn FarmRepository>,
+    places: Arc<dyn PlaceLocator>,
     max_farms_per_user: u64,
     max_cells_per_farm: usize,
 }
@@ -28,11 +29,13 @@ pub struct RegisterFarmUseCase {
 impl RegisterFarmUseCase {
     pub fn new(
         repository: Arc<dyn FarmRepository>,
+        places: Arc<dyn PlaceLocator>,
         max_farms_per_user: u64,
         max_cells_per_farm: usize,
     ) -> Self {
         Self {
             repository,
+            places,
             max_farms_per_user,
             max_cells_per_farm,
         }
@@ -85,7 +88,7 @@ impl RegisterFarmUseCase {
             return Err(AppError::MaxFarmsPerUserReached(self.max_farms_per_user));
         }
 
-        let (farm, dropped_cells) = Farm::new(
+        let (mut farm, dropped_cells) = Farm::new(
             input.name,
             owner.clone(),
             input.outline,
@@ -94,6 +97,12 @@ impl RegisterFarmUseCase {
             input.created_offline_at,
             self.max_cells_per_farm,
         )?;
+
+        // A farm is stored with its place or not at all: one saved without
+        // it because the lookup failed would be missing from every report
+        // by district until someone noticed.
+        let (lat, lon) = farm.outline().centroid();
+        farm.place_at(self.places.locate(lat, lon).await?);
 
         let registered = match self.repository.create(&farm).await {
             Ok(registered) => registered,
@@ -123,6 +132,7 @@ impl RegisterFarmUseCase {
             farm_id = registered.id().unwrap_or_default(),
             cells = registered.cells().len(),
             dropped_cells = dropped_cells.len(),
+            placed = registered.place().is_some(),
             owned_after = owned + 1,
             "farm registered"
         );
@@ -136,8 +146,8 @@ mod tests {
     use super::*;
     use crate::features::farms::{
         app::testing::{
-            FakeFarmRepository, MAX_CELLS, OWNER, RepositoryCall, a_cell_inside, a_cell_outside,
-            an_outline, auth_context,
+            FakeFarmRepository, FakePlaceLocator, MAX_CELLS, OWNER, RepositoryCall, a_cell_inside,
+            a_cell_outside, an_outline, an_outline_outside, auth_context, the_place,
         },
         domain::{Crop, FarmError},
     };
@@ -163,10 +173,108 @@ mod tests {
         max_cells: usize,
         painted: Vec<PaintedCell>,
     ) -> (Result<(Farm, Vec<GridCell>), AppError>, FakeFarmRepository) {
-        let use_case = RegisterFarmUseCase::new(Arc::new(repository.clone()), MAX, max_cells);
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            MAX,
+            max_cells,
+        );
         let result = use_case.execute(&auth_context(), input(painted)).await;
 
         (result, repository)
+    }
+
+    #[tokio::test]
+    async fn the_farm_is_stored_with_the_place_its_centre_lies_in() {
+        let places = FakePlaceLocator::new();
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(FakeFarmRepository::new()),
+            Arc::new(places.clone()),
+            MAX,
+            MAX_CELLS,
+        );
+
+        let (farm, _) = use_case
+            .execute(&auth_context(), input(vec![]))
+            .await
+            .expect("farm");
+
+        assert_eq!(farm.place(), &Some(the_place()));
+        assert_eq!(
+            places.asked(),
+            vec![an_outline().centroid()],
+            "the centre of the outline is what is looked up, as (lat, lon)"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_farm_outside_every_place_is_stored_with_none() {
+        let repository = FakeFarmRepository::new();
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            MAX,
+            MAX_CELLS,
+        );
+
+        let (farm, _) = use_case
+            .execute(
+                &auth_context(),
+                RegisterFarmInput {
+                    outline: an_outline_outside(),
+                    ..input(vec![])
+                },
+            )
+            .await
+            .expect("farm");
+
+        assert_eq!(farm.place(), &None);
+        assert!(repository.calls().contains(&RepositoryCall::Create));
+    }
+
+    #[tokio::test]
+    async fn a_farm_whose_place_cannot_be_looked_up_is_not_written() {
+        let repository = FakeFarmRepository::new();
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::failing()),
+            MAX,
+            MAX_CELLS,
+        );
+
+        let result = use_case.execute(&auth_context(), input(vec![])).await;
+
+        assert!(result.is_err());
+        assert!(!repository.calls().contains(&RepositoryCall::Create));
+    }
+
+    #[tokio::test]
+    async fn a_refused_or_repeated_upload_looks_no_place_up() {
+        let places = FakePlaceLocator::new();
+
+        let full = RegisterFarmUseCase::new(
+            Arc::new(FakeFarmRepository::owning(MAX)),
+            Arc::new(places.clone()),
+            MAX,
+            MAX_CELLS,
+        );
+        assert!(full.execute(&auth_context(), input(vec![])).await.is_err());
+
+        let repeated = RegisterFarmUseCase::new(
+            Arc::new(FakeFarmRepository::holding(
+                crate::features::farms::app::testing::a_farm(),
+            )),
+            Arc::new(places.clone()),
+            MAX,
+            MAX_CELLS,
+        );
+        let again = RegisterFarmInput {
+            idempotency_key: Some(a_key()),
+            ..input(vec![])
+        };
+        assert!(repeated.execute(&auth_context(), again).await.is_ok());
+
+        assert!(places.asked().is_empty());
     }
 
     #[tokio::test]
@@ -252,7 +360,12 @@ mod tests {
     async fn a_repeated_upload_returns_the_farm_already_created() {
         let repository =
             FakeFarmRepository::holding(crate::features::farms::app::testing::a_farm());
-        let use_case = RegisterFarmUseCase::new(Arc::new(repository.clone()), MAX, MAX_CELLS);
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            MAX,
+            MAX_CELLS,
+        );
 
         let (farm, dropped) = use_case
             .execute(
@@ -280,7 +393,12 @@ mod tests {
     #[tokio::test]
     async fn a_first_upload_with_a_key_is_registered() {
         let repository = FakeFarmRepository::new();
-        let use_case = RegisterFarmUseCase::new(Arc::new(repository.clone()), MAX, MAX_CELLS);
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            MAX,
+            MAX_CELLS,
+        );
 
         let result = use_case
             .execute(

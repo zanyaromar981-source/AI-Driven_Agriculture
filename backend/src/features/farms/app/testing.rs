@@ -5,10 +5,12 @@ use async_trait::async_trait;
 use crate::{
     app::{Action, AuthContext, Pagination, Permission, Resource, StaffContext, User},
     features::farms::{
-        app::{AppError, FarmRepository, FarmerDirectory},
+        app::{AppError, AreaDirectory, FarmRepository, FarmerDirectory, PlaceLocator},
         domain::{
-            Cell, Crop, Farm, FarmLocation, FarmName, FarmSummary, GridCell, IdempotencyKey,
-            Outline, OwnedFarmSummary, PaintedCell, Point,
+            AreaCount, AreaCropSum, AreaLevel, AreaNames, Cell, Crop, Farm, FarmFilter,
+            FarmLocation, FarmName, FarmOrder, FarmPlace, FarmSummary, GovernorateName, GridCell,
+            IdempotencyKey, Outline, OwnedFarmSummary, PaintedCell, Point, SubZoneName,
+            UnplacedFarm, ZoneName,
         },
     },
     shared::Phone,
@@ -19,21 +21,64 @@ pub const MAX_CELLS: usize = 1_000;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RepositoryCall {
-    FindAllByOwner { owner: String },
-    FindByIdempotencyKeyAndOwner { key: String, owner: String },
-    FindByIdAndOwner { id: i32, owner: String },
-    CountByOwner { owner: String },
+    FindAllByOwner {
+        owner: String,
+    },
+    FindByIdempotencyKeyAndOwner {
+        key: String,
+        owner: String,
+    },
+    FindByIdAndOwner {
+        id: i32,
+        owner: String,
+    },
+    CountByOwner {
+        owner: String,
+    },
     FindAllLocations,
-    Exists { id: i32 },
+    Exists {
+        id: i32,
+    },
     Create,
     Update,
-    Replace { id: i32, owner: String },
-    Delete { id: i32, owner: String },
-    FindPage { owner: Option<String>, page: u64 },
-    FindById { id: i32 },
-    Rename { id: i32, name: String },
-    DeleteById { id: i32 },
-    DeleteAllByOwner { owner: String },
+    Replace {
+        id: i32,
+        owner: String,
+    },
+    Delete {
+        id: i32,
+        owner: String,
+    },
+    FindPage {
+        filter: FarmFilter,
+        order: FarmOrder,
+        page: u64,
+    },
+    SumByArea {
+        filter: FarmFilter,
+        deepest: AreaLevel,
+    },
+    FindUnplaced {
+        after_id: i32,
+        limit: u64,
+    },
+    FillPlace {
+        id: i32,
+        place: Option<FarmPlace>,
+    },
+    FindById {
+        id: i32,
+    },
+    Rename {
+        id: i32,
+        name: String,
+    },
+    DeleteById {
+        id: i32,
+    },
+    DeleteAllByOwner {
+        owner: String,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -43,6 +88,10 @@ struct Script {
     fail_with_database_error: bool,
     nothing_to_delete: bool,
     gone_before_the_write: bool,
+    unplaced: Vec<UnplacedFarm>,
+    written_while_filling: Vec<i32>,
+    counts: Vec<AreaCount>,
+    crop_sums: Vec<AreaCropSum>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -82,6 +131,36 @@ impl FakeFarmRepository {
             .lock()
             .expect("script lock")
             .gone_before_the_write = true;
+        fake
+    }
+
+    /// Holds these farms with no place and no area stored.
+    pub fn holding_unplaced(unplaced: Vec<UnplacedFarm>) -> Self {
+        let fake = Self::new();
+        fake.script.lock().expect("script lock").unplaced = unplaced;
+        fake
+    }
+
+    /// These farms are written by someone else between being read and
+    /// being given their place.
+    pub fn written_while_filling(self, ids: Vec<i32>) -> Self {
+        self.script
+            .lock()
+            .expect("script lock")
+            .written_while_filling = ids;
+        self
+    }
+
+    /// What `sum_by_area` answers.
+    pub fn summing(counts: Vec<AreaCount>, crop_sums: Vec<AreaCropSum>) -> Self {
+        let fake = Self::new();
+
+        {
+            let mut script = fake.script.lock().expect("script lock");
+            script.counts = counts;
+            script.crop_sums = crop_sums;
+        }
+
         fake
     }
 
@@ -247,16 +326,19 @@ impl FarmRepository for FakeFarmRepository {
 
     async fn find_page(
         &self,
-        owner: Option<&Phone>,
+        filter: &FarmFilter,
+        order: FarmOrder,
         pagination: &Pagination,
     ) -> Result<(Vec<OwnedFarmSummary>, u64), AppError> {
         self.record(RepositoryCall::FindPage {
-            owner: owner.map(String::from),
+            filter: filter.clone(),
+            order,
             page: *pagination.page(),
         });
         self.guard()?;
 
         let script = self.script.lock().expect("script lock");
+        let owner = filter.owner.as_ref();
 
         let farms: Vec<OwnedFarmSummary> = script
             .existing
@@ -267,6 +349,57 @@ impl FarmRepository for FakeFarmRepository {
         let count = farms.len() as u64;
 
         Ok((farms, count))
+    }
+
+    async fn sum_by_area(
+        &self,
+        filter: &FarmFilter,
+        deepest: AreaLevel,
+    ) -> Result<(Vec<AreaCount>, Vec<AreaCropSum>), AppError> {
+        self.record(RepositoryCall::SumByArea {
+            filter: filter.clone(),
+            deepest,
+        });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok((script.counts.clone(), script.crop_sums.clone()))
+    }
+
+    async fn find_unplaced(
+        &self,
+        after_id: i32,
+        limit: u64,
+    ) -> Result<Vec<UnplacedFarm>, AppError> {
+        self.record(RepositoryCall::FindUnplaced { after_id, limit });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .unplaced
+            .iter()
+            .filter(|farm| *farm.id() > after_id)
+            .take(limit as usize)
+            .cloned()
+            .collect())
+    }
+
+    async fn fill_place(
+        &self,
+        farm: &UnplacedFarm,
+        place: Option<&FarmPlace>,
+    ) -> Result<bool, AppError> {
+        self.record(RepositoryCall::FillPlace {
+            id: *farm.id(),
+            place: place.cloned(),
+        });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(!script.written_while_filling.contains(farm.id()))
     }
 
     async fn find_by_id(&self, id: i32) -> Result<Option<Farm>, AppError> {
@@ -291,7 +424,7 @@ impl FarmRepository for FakeFarmRepository {
         let script = self.script.lock().expect("script lock");
 
         Ok(script.existing.as_ref().map(|one| {
-            Farm::rehydrate(
+            let mut renamed = Farm::rehydrate(
                 id,
                 name.clone(),
                 one.owner().clone(),
@@ -301,7 +434,10 @@ impl FarmRepository for FakeFarmRepository {
                 *one.created_offline_at(),
                 *one.created_at(),
                 now,
-            )
+            );
+            renamed.place_at(one.place().clone());
+
+            renamed
         }))
     }
 
@@ -362,6 +498,117 @@ impl FarmerDirectory for FakeFarmerDirectory {
     }
 }
 
+/// Stands in for the zones feature's map. Every point north of latitude
+/// 36.025 is in `the_place()` and every point south of it is in no place,
+/// so `an_outline()` and `another_outline()` are inside and
+/// `an_outline_outside()` is not.
+#[derive(Debug, Clone, Default)]
+pub struct FakePlaceLocator {
+    failing: bool,
+    asked: Arc<Mutex<Vec<(f64, f64)>>>,
+}
+
+pub const PLACE_SOUTH_EDGE: f64 = 36.025;
+
+impl FakePlaceLocator {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn failing() -> Self {
+        Self {
+            failing: true,
+            asked: Arc::default(),
+        }
+    }
+
+    /// The points it was asked about as `(lat, lon)`, in order.
+    pub fn asked(&self) -> Vec<(f64, f64)> {
+        self.asked.lock().expect("asked lock").clone()
+    }
+}
+
+#[async_trait]
+impl PlaceLocator for FakePlaceLocator {
+    async fn locate(&self, lat: f64, lon: f64) -> Result<Option<FarmPlace>, AppError> {
+        self.asked.lock().expect("asked lock").push((lat, lon));
+
+        if self.failing {
+            return Err(crate::app::AppError::InternalServerError.into());
+        }
+
+        Ok((lat > PLACE_SOUTH_EDGE).then(the_place))
+    }
+}
+
+pub fn the_place() -> FarmPlace {
+    FarmPlace::new(
+        "Sulaymaniyah".to_string(),
+        "chamchamal".to_string(),
+        "sangaw".to_string(),
+    )
+    .expect("place")
+}
+
+/// Stands in for the zones feature's names.
+#[derive(Debug, Clone, Default)]
+pub struct FakeAreaDirectory {
+    failing: bool,
+    asked: Arc<Mutex<u32>>,
+}
+
+impl FakeAreaDirectory {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn failing() -> Self {
+        Self {
+            failing: true,
+            asked: Arc::default(),
+        }
+    }
+
+    /// How many times the names were asked for.
+    pub fn asked(&self) -> u32 {
+        *self.asked.lock().expect("asked lock")
+    }
+}
+
+#[async_trait]
+impl AreaDirectory for FakeAreaDirectory {
+    async fn names(&self) -> Result<AreaNames, AppError> {
+        *self.asked.lock().expect("asked lock") += 1;
+
+        if self.failing {
+            return Err(crate::app::AppError::InternalServerError.into());
+        }
+
+        Ok(area_names())
+    }
+}
+
+/// Sulaymaniyah with Chamchamal and its sub-zone Sangaw.
+pub fn area_names() -> AreaNames {
+    AreaNames {
+        governorates: vec![GovernorateName {
+            name_en: "Sulaymaniyah".to_string(),
+            name_ku: "سلێمانی".to_string(),
+        }],
+        zones: vec![ZoneName {
+            slug: "chamchamal".to_string(),
+            name_en: "Chamchamal".to_string(),
+            name_ku: "چەمچەماڵ".to_string(),
+        }],
+        sub_zones: vec![SubZoneName {
+            zone_slug: "chamchamal".to_string(),
+            slug: "sangaw".to_string(),
+            name_en: "Sangaw".to_string(),
+            name_ku: "سەنگاو".to_string(),
+        }],
+    }
+}
+
 pub const STAFF_ID: i32 = 3;
 
 /// A staff member holding every permission on farms.
@@ -386,7 +633,7 @@ fn persisted(entity: &Farm, id: i32) -> Farm {
         })
         .collect();
 
-    Farm::rehydrate(
+    let mut stored = Farm::rehydrate(
         id,
         entity.name().clone(),
         entity.owner().clone(),
@@ -396,7 +643,10 @@ fn persisted(entity: &Farm, id: i32) -> Farm {
         *entity.created_offline_at(),
         *entity.created_at(),
         *entity.updated_at(),
-    )
+    );
+    stored.place_at(entity.place().clone());
+
+    stored
 }
 
 fn summary_of(farm: &Farm) -> FarmSummary {
@@ -413,6 +663,7 @@ fn summary_of(farm: &Farm) -> FarmSummary {
         farm.id().unwrap_or_default(),
         farm.name().clone(),
         farm.outline(),
+        farm.place().clone(),
         inside_per_crop,
         *farm.created_at(),
     )
@@ -447,6 +698,17 @@ pub fn another_outline() -> Outline {
         Point::new(36.0302, 44.6008, None, None).expect("point"),
         Point::new(36.0307, 44.6008, None, None).expect("point"),
         Point::new(36.0307, 44.6002, None, None).expect("point"),
+    ])
+    .expect("outline")
+}
+
+/// A field south of `an_outline`, where `FakePlaceLocator` knows no place.
+pub fn an_outline_outside() -> Outline {
+    Outline::new(vec![
+        Point::new(36.0200, 44.6000, None, None).expect("point"),
+        Point::new(36.0200, 44.6010, None, None).expect("point"),
+        Point::new(36.0210, 44.6010, None, None).expect("point"),
+        Point::new(36.0210, 44.6000, None, None).expect("point"),
     ])
     .expect("outline")
 }

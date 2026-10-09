@@ -41,13 +41,15 @@ impl FarmHoldings for FarmsFeatureFarmHoldings {
             .map(|farm| FarmHolding {
                 id: *farm.id(),
                 name: farm.name().as_str().to_string(),
-                // The farms feature does not say where a farm is yet. Until
-                // its summary carries a governorate, zone and sub-zone the
-                // letter states none, which is the truth; this is the one
-                // place to read them from once it does.
-                governorate: None,
-                zone_slug: None,
-                sub_zone_slug: None,
+                governorate: farm
+                    .place()
+                    .as_ref()
+                    .map(|place| place.governorate().clone()),
+                zone_slug: farm.place().as_ref().map(|place| place.zone_slug().clone()),
+                sub_zone_slug: farm
+                    .place()
+                    .as_ref()
+                    .map(|place| place.sub_zone_slug().clone()),
                 area_dunam: *farm.area_dunam(),
                 crops: farm
                     .crops()

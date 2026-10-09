@@ -27,6 +27,11 @@ pub fn routes() -> Router<AppState> {
     )
 }
 
+/// What anyone may read, with no login: totals only, never a farm.
+pub fn public_routes() -> Router<AppState> {
+    Router::new().route("/stats/farms", get(handlers::get_public_farm_stats))
+}
+
 /// Routes behind the `staff_auth` layer, for Ministry staff. Each method
 /// carries the one permission it needs. They reach every farmer's farms, so
 /// none of them may ever be merged into `routes()`.
@@ -53,5 +58,10 @@ pub fn dashboard_routes() -> Router<AppState> {
                     delete(handlers::dashboard_delete_farm)
                         .route_layer(require!(Resource::Farms, Action::Delete)),
                 ),
+        )
+        .route(
+            "/stats/farms",
+            get(handlers::dashboard_get_farm_stats)
+                .route_layer(require!(Resource::Farms, Action::Read)),
         )
 }

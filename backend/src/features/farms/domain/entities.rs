@@ -5,7 +5,8 @@ use getset::{CopyGetters, Getters};
 
 use crate::{
     features::farms::domain::{
-        Crop, FarmError, FarmName, GridCell, IdempotencyKey, Outline, PaintedCell, TouchedCell,
+        Crop, FarmError, FarmName, FarmPlace, GridCell, IdempotencyKey, Outline, PaintedCell,
+        TouchedCell,
     },
     shared::Phone,
 };
@@ -84,6 +85,9 @@ pub struct Farm {
     name: FarmName,
     owner: Phone,
     outline: Outline,
+    /// Where the centre of the outline lies. `None` when it is outside every
+    /// sub-district, and for a farm stored before places were kept.
+    place: Option<FarmPlace>,
     cells: Vec<Cell>,
     /// Set when the app sent one with the upload; see `IdempotencyKey`.
     idempotency_key: Option<IdempotencyKey>,
@@ -120,6 +124,7 @@ impl Farm {
             name,
             owner,
             outline,
+            place: None,
             cells,
             idempotency_key,
             created_offline_at,
@@ -150,12 +155,20 @@ impl Farm {
             name,
             owner,
             outline,
+            place: None,
             cells,
             idempotency_key,
             created_offline_at,
             created_at,
             updated_at,
         }
+    }
+
+    /// Says where the farm lies. The place follows the outline, so whoever
+    /// draws or redraws a farm looks its centre up and tells the farm; a
+    /// farm rebuilt from storage is told the place stored with it.
+    pub fn place_at(&mut self, place: Option<FarmPlace>) {
+        self.place = place;
     }
 
     /// Changes the crop on the given cells and leaves every other cell as it
@@ -219,6 +232,10 @@ impl Farm {
     /// up to it, because each cell counts only for its share inside.
     pub fn area_dunam(&self) -> f64 {
         self.outline.area_dunam()
+    }
+
+    pub fn area_m2(&self) -> f64 {
+        self.outline.area_m2()
     }
 
     pub fn crop_areas(&self) -> Vec<CropArea> {
@@ -293,6 +310,7 @@ pub struct FarmSummary {
     crops: Vec<CropArea>,
     /// `(lat, lon)`
     centroid: (f64, f64),
+    place: Option<FarmPlace>,
     created_at: DateTime<Utc>,
 }
 
@@ -303,6 +321,7 @@ impl FarmSummary {
         id: i32,
         name: FarmName,
         outline: &Outline,
+        place: Option<FarmPlace>,
         inside_per_crop: Vec<(Crop, f64)>,
         created_at: DateTime<Utc>,
     ) -> Self {
@@ -312,6 +331,7 @@ impl FarmSummary {
             area_dunam: outline.area_dunam(),
             crops: crop_areas(inside_per_crop),
             centroid: outline.centroid(),
+            place,
             created_at,
         }
     }
@@ -329,6 +349,37 @@ pub struct OwnedFarmSummary {
 impl OwnedFarmSummary {
     pub fn new(owner: Phone, summary: FarmSummary) -> Self {
         Self { owner, summary }
+    }
+}
+
+/// A farm whose place or area is not stored yet: what is needed to work
+/// them out, and the time of its last write, which tells whether the farm
+/// changed while that was being done.
+#[derive(Clone, Debug, Getters)]
+#[getset(get = "pub")]
+pub struct UnplacedFarm {
+    id: i32,
+    outline: Outline,
+    /// True when only the place is missing. Such a farm was looked up
+    /// before and found outside every sub-district.
+    area_stored: bool,
+    updated_at: DateTime<Utc>,
+}
+
+impl UnplacedFarm {
+    /// Reconstruct from persisted state.
+    pub fn rehydrate(
+        id: i32,
+        outline: Outline,
+        area_stored: bool,
+        updated_at: DateTime<Utc>,
+    ) -> Self {
+        Self {
+            id,
+            outline,
+            area_stored,
+            updated_at,
+        }
     }
 }
 
@@ -795,6 +846,7 @@ mod tests {
             7,
             FarmName::new("Upper field".to_string()).expect("name"),
             &outline(),
+            None,
             vec![
                 (Crop::Tomato, 40_000.0),
                 (Crop::Empty, 20_000.0),
@@ -812,5 +864,56 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec![(Crop::Wheat, 96.0), (Crop::Tomato, 16.0)]
         );
+    }
+
+    fn a_place() -> FarmPlace {
+        FarmPlace::new(
+            "Sulaymaniyah".to_string(),
+            "chamchamal".to_string(),
+            "sangaw".to_string(),
+        )
+        .expect("place")
+    }
+
+    #[test]
+    fn a_new_farm_has_no_place_until_it_is_told_one() {
+        let (mut farm, _) = farm(vec![]);
+
+        assert_eq!(farm.place(), &None);
+
+        farm.place_at(Some(a_place()));
+
+        assert_eq!(farm.place(), &Some(a_place()));
+    }
+
+    #[test]
+    fn a_farm_moved_outside_every_place_loses_the_place_it_had() {
+        let (mut farm, _) = farm(vec![]);
+        farm.place_at(Some(a_place()));
+
+        farm.place_at(None);
+
+        assert_eq!(farm.place(), &None);
+    }
+
+    #[test]
+    fn the_area_in_square_metres_is_2500_times_the_area_in_dunams() {
+        let (farm, _) = farm(vec![]);
+
+        assert!((farm.area_m2() - farm.area_dunam() * 2_500.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn the_summary_carries_the_farms_place() {
+        let summary = FarmSummary::rehydrate(
+            7,
+            FarmName::new("Upper field".to_string()).expect("name"),
+            &outline(),
+            Some(a_place()),
+            vec![],
+            Utc::now(),
+        );
+
+        assert_eq!(summary.place(), &Some(a_place()));
     }
 }

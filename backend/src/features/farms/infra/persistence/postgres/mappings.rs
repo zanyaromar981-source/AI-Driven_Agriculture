@@ -7,8 +7,8 @@ use crate::{
     features::farms::{
         app::AppError,
         domain::{
-            Cell, Crop, Farm, FarmLocation, FarmName, FarmSummary, GridCell, IdempotencyKey,
-            Outline, Point,
+            Cell, Crop, Farm, FarmLocation, FarmName, FarmPlace, FarmSummary, GridCell,
+            IdempotencyKey, Outline, Point, UnplacedFarm,
         },
         infra::persistence::postgres::entities::{farm_cells, farms},
     },
@@ -39,6 +39,19 @@ pub fn stored_outline(outline: &Outline) -> serde_json::Value {
     let points: Vec<StoredPoint> = outline.points().iter().map(StoredPoint::from).collect();
 
     serde_json::json!(points)
+}
+
+/// The place kept in the farm's three place columns. They are written
+/// together, so a row holding only some of them is read as having none.
+fn place_from(model: &farms::Model) -> Result<Option<FarmPlace>, AppError> {
+    match (&model.governorate, &model.zone_slug, &model.sub_zone_slug) {
+        (Some(governorate), Some(zone_slug), Some(sub_zone_slug)) => Ok(Some(FarmPlace::new(
+            governorate.clone(),
+            zone_slug.clone(),
+            sub_zone_slug.clone(),
+        )?)),
+        _ => Ok(None),
+    }
 }
 
 fn outline_from(stored: serde_json::Value) -> Result<Outline, AppError> {
@@ -73,7 +86,9 @@ impl TryFrom<(farms::Model, Vec<farm_cells::Model>)> for Farm {
     fn try_from(
         (model, cells): (farms::Model, Vec<farm_cells::Model>),
     ) -> Result<Self, Self::Error> {
-        Ok(Farm::rehydrate(
+        let place = place_from(&model)?;
+
+        let mut farm = Farm::rehydrate(
             model.id,
             FarmName::new(model.name)?,
             Phone::new(model.phone)?,
@@ -86,7 +101,10 @@ impl TryFrom<(farms::Model, Vec<farm_cells::Model>)> for Farm {
             model.created_offline_at.map(|at| at.and_utc()),
             model.created_at.and_utc(),
             model.updated_at.and_utc(),
-        ))
+        );
+        farm.place_at(place);
+
+        Ok(farm)
     }
 }
 
@@ -101,10 +119,13 @@ impl TryFrom<(farms::Model, Vec<(String, f64)>)> for FarmSummary {
             .map(|(crop, inside_pct)| Ok((Crop::try_from(crop.as_str())?, inside_pct)))
             .collect::<Result<Vec<_>, AppError>>()?;
 
+        let place = place_from(&model)?;
+
         Ok(FarmSummary::rehydrate(
             model.id,
             FarmName::new(model.name)?,
             &outline_from(model.outline)?,
+            place,
             inside_per_crop,
             model.created_at.and_utc(),
         ))
@@ -118,6 +139,19 @@ impl TryFrom<farms::Model> for FarmLocation {
         Ok(FarmLocation::rehydrate(
             model.id,
             &outline_from(model.outline)?,
+        ))
+    }
+}
+
+impl TryFrom<farms::Model> for UnplacedFarm {
+    type Error = AppError;
+
+    fn try_from(model: farms::Model) -> Result<Self, Self::Error> {
+        Ok(UnplacedFarm::rehydrate(
+            model.id,
+            outline_from(model.outline)?,
+            model.area_m2.is_some(),
+            model.updated_at.and_utc(),
         ))
     }
 }
@@ -136,6 +170,16 @@ impl From<&Farm> for farms::ActiveModel {
             created_offline_at: Set(farm.created_offline_at().map(|at| at.naive_utc())),
             created_at: Set(farm.created_at().naive_utc()),
             updated_at: Set(farm.updated_at().naive_utc()),
+            governorate: Set(farm
+                .place()
+                .as_ref()
+                .map(|place| place.governorate().clone())),
+            zone_slug: Set(farm.place().as_ref().map(|place| place.zone_slug().clone())),
+            sub_zone_slug: Set(farm
+                .place()
+                .as_ref()
+                .map(|place| place.sub_zone_slug().clone())),
+            area_m2: Set(Some(farm.area_m2())),
         }
     }
 }

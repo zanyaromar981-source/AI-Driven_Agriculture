@@ -33,9 +33,10 @@ use crate::{
             ViewLetterUseCase, ViewProfileUseCase,
         },
         farms::app::use_cases::{
-            EditFarmUseCase, ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
-            RegisterFarmUseCase, RemoveAnyFarmUseCase, RemoveFarmUseCase, RenameFarmUseCase,
-            RepaintFarmCellsUseCase, ViewAnyFarmUseCase, ViewFarmUseCase,
+            BackfillFarmPlacesUseCase, EditFarmUseCase, ListAllFarmsUseCase, ListFarmsUseCase,
+            RegisterFarmForFarmerUseCase, RegisterFarmUseCase, RemoveAnyFarmUseCase,
+            RemoveFarmUseCase, RenameFarmUseCase, RepaintFarmCellsUseCase, ViewAnyFarmUseCase,
+            ViewFarmStatsUseCase, ViewFarmUseCase, ViewPublicFarmStatsUseCase,
         },
         fires::app::use_cases::{
             CorrectFireUseCase, CreateFireUseCase, ListFiresUseCase, ListStoredFiresUseCase,
@@ -66,9 +67,9 @@ use crate::{
         zones::app::use_cases::{
             CompareYearsUseCase, CreateSubZoneReadingUseCase, CreateZoneReadingUseCase,
             DeleteSubZoneReadingUseCase, DeleteZoneReadingUseCase, ListSubZoneReadingsUseCase,
-            ListZoneReadingsUseCase, ListZonesUseCase, RecordSubZoneReadingUseCase,
-            RecordZoneReadingUseCase, UpdateSubZoneReadingUseCase, UpdateZoneReadingUseCase,
-            ViewRegionOverviewUseCase, ViewZoneUseCase,
+            ListZoneReadingsUseCase, ListZonesUseCase, LocatePlaceUseCase,
+            RecordSubZoneReadingUseCase, RecordZoneReadingUseCase, UpdateSubZoneReadingUseCase,
+            UpdateZoneReadingUseCase, ViewRegionOverviewUseCase, ViewZoneUseCase,
         },
     },
     infra::Config,
@@ -87,6 +88,9 @@ pub struct FarmFeature {
     pub register_farm_for_farmer_use_case: Arc<RegisterFarmForFarmerUseCase>,
     pub rename_farm_use_case: Arc<RenameFarmUseCase>,
     pub remove_any_farm_use_case: Arc<RemoveAnyFarmUseCase>,
+    pub view_farm_stats_use_case: Arc<ViewFarmStatsUseCase>,
+    pub view_public_farm_stats_use_case: Arc<ViewPublicFarmStatsUseCase>,
+    pub backfill_farm_places_use_case: Arc<BackfillFarmPlacesUseCase>,
 }
 
 #[derive(Clone)]
@@ -144,6 +148,7 @@ pub struct ZoneFeature {
     pub create_sub_zone_reading_use_case: Arc<CreateSubZoneReadingUseCase>,
     pub update_sub_zone_reading_use_case: Arc<UpdateSubZoneReadingUseCase>,
     pub delete_sub_zone_reading_use_case: Arc<DeleteSubZoneReadingUseCase>,
+    pub locate_place_use_case: Arc<LocatePlaceUseCase>,
 }
 
 #[derive(Clone)]

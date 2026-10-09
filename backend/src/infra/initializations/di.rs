@@ -72,15 +72,19 @@ use crate::{
         },
         farms::{
             app::{
-                FarmRepository, FarmerDirectory,
+                AreaDirectory, FarmRepository, FarmerDirectory, PlaceLocator,
                 use_cases::{
-                    EditFarmUseCase, ListAllFarmsUseCase, ListFarmsUseCase,
-                    RegisterFarmForFarmerUseCase, RegisterFarmUseCase, RemoveAnyFarmUseCase,
-                    RemoveFarmUseCase, RenameFarmUseCase, RepaintFarmCellsUseCase,
-                    ViewAnyFarmUseCase, ViewFarmUseCase,
+                    BackfillFarmPlacesUseCase, EditFarmUseCase, ListAllFarmsUseCase,
+                    ListFarmsUseCase, RegisterFarmForFarmerUseCase, RegisterFarmUseCase,
+                    RemoveAnyFarmUseCase, RemoveFarmUseCase, RenameFarmUseCase,
+                    RepaintFarmCellsUseCase, ViewAnyFarmUseCase, ViewFarmStatsUseCase,
+                    ViewFarmUseCase, ViewPublicFarmStatsUseCase,
                 },
             },
-            infra::{FarmPostgresRepository, FarmersFeatureFarmerDirectory},
+            infra::{
+                FarmPostgresRepository, FarmersFeatureFarmerDirectory, ZonesFeatureAreaDirectory,
+                ZonesFeaturePlaceLocator,
+            },
         },
         fires::{
             app::{
@@ -152,7 +156,7 @@ use crate::{
                     CompareYearsUseCase, CreateSubZoneReadingUseCase, CreateZoneReadingUseCase,
                     DeleteSubZoneReadingUseCase, DeleteZoneReadingUseCase,
                     ListSubZoneReadingsUseCase, ListZoneReadingsUseCase, ListZonesUseCase,
-                    RecordSubZoneReadingUseCase, RecordZoneReadingUseCase,
+                    LocatePlaceUseCase, RecordSubZoneReadingUseCase, RecordZoneReadingUseCase,
                     UpdateSubZoneReadingUseCase, UpdateZoneReadingUseCase,
                     ViewRegionOverviewUseCase, ViewZoneUseCase,
                 },
@@ -174,9 +178,21 @@ pub async fn di_init(
     let farm_repository: Arc<dyn FarmRepository> =
         Arc::new(FarmPostgresRepository::new(db_context.conn_clone()));
 
+    // One instance for the whole server: it holds the sub-zone shapes once
+    // it has read them, and every farm write asks it.
+    let locate_place_use_case = Arc::new(LocatePlaceUseCase::new(Arc::new(
+        ZonePostgresRepository::new(db_context.conn_clone()),
+    )));
+    let place_locator: Arc<dyn PlaceLocator> =
+        Arc::new(ZonesFeaturePlaceLocator::new(locate_place_use_case.clone()));
+    let area_directory: Arc<dyn AreaDirectory> = Arc::new(ZonesFeatureAreaDirectory::new(
+        Arc::new(ZonePostgresRepository::new(db_context.conn_clone())),
+    ));
+
     let farm = FarmFeature {
         register_farm_use_case: Arc::new(RegisterFarmUseCase::new(
             farm_repository.clone(),
+            place_locator.clone(),
             config.farm.max_farms_per_user,
             config.farm.max_cells_per_farm,
         )),
@@ -187,6 +203,7 @@ pub async fn di_init(
         )),
         edit_farm_use_case: Arc::new(EditFarmUseCase::new(
             farm_repository.clone(),
+            place_locator.clone(),
             config.farm.max_cells_per_farm,
         )),
         remove_farm_use_case: Arc::new(RemoveFarmUseCase::new(farm_repository.clone())),
@@ -198,12 +215,26 @@ pub async fn di_init(
             ))) as Arc<dyn FarmerDirectory>,
             Arc::new(RegisterFarmUseCase::new(
                 farm_repository.clone(),
+                place_locator.clone(),
                 config.farm.max_farms_per_user,
                 config.farm.max_cells_per_farm,
             )),
         )),
         rename_farm_use_case: Arc::new(RenameFarmUseCase::new(farm_repository.clone())),
         remove_any_farm_use_case: Arc::new(RemoveAnyFarmUseCase::new(farm_repository.clone())),
+        view_farm_stats_use_case: Arc::new(ViewFarmStatsUseCase::new(
+            farm_repository.clone(),
+            area_directory.clone(),
+        )),
+        view_public_farm_stats_use_case: Arc::new(ViewPublicFarmStatsUseCase::new(
+            farm_repository.clone(),
+            area_directory,
+            config.stats.public_farm_totals,
+        )),
+        backfill_farm_places_use_case: Arc::new(BackfillFarmPlacesUseCase::new(
+            farm_repository.clone(),
+            place_locator,
+        )),
     };
 
     let fire_repository: Arc<dyn FireRepository> =
@@ -437,6 +468,7 @@ pub async fn di_init(
         delete_sub_zone_reading_use_case: Arc::new(DeleteSubZoneReadingUseCase::new(
             zone_repository,
         )),
+        locate_place_use_case,
     };
 
     let dam_repository: Arc<dyn DamRepository> =
