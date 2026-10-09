@@ -94,7 +94,7 @@ Not in the demo unless it is tested on the morning of the pitch: Ask the Doctor.
 | 4 | AI is the translator. | AI | The Sorani answer with its five parts, the nightly AI brief, built with Claude, Codex and Pencil AI |
 | 5 | Ready to grow. | Feasibility and scope | Free data, live server, half a cent per AI answer, the Ministry through our website. The pitch ends here |
 | Backup | Farmers and government, connected. | Questions | The website: Control Room and region dashboard |
-| Backup | Sell at a fair price. | Questions | The Marketplace in three screens |
+| Backup | Sell at a fair price. | Questions | Alwa, the Marketplace, in three screens |
 | Backup | From one farm to a smarter Kurdistan. | Questions | Vision picture |
 
 Notes:
