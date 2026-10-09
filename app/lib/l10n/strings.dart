@@ -289,6 +289,9 @@ class S {
   String measuredOn(String part, String all) => 'measured on $part of $all m²';
   String offlineCopy(String when) => 'No internet. Showing the copy from $when';
   String get weatherDown => 'Weather forecast not available right now';
+
+  /// GET /farms/{id}/plan is not built on the server yet (404).
+  String get planSoon => '10-day plan coming soon';
   String forecastSource(String src, String when) =>
       'Forecast: $src · issued $when';
   String get nothingToDo => 'Nothing to act on in the next 10 days';

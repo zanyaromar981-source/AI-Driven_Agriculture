@@ -33,6 +33,10 @@ class _FarmSectionState extends State<FarmSection> {
   FarmStatusReport? _status;
   FarmPlan? _plan;
   bool _planDown = false;
+
+  /// The server has no 10-day plan yet (404, FRONTEND.md 4): a calm note,
+  /// not an error.
+  bool _planSoon = false;
   bool _loading = true;
 
   /// True while fresh data loads over the copy already on screen.
@@ -67,6 +71,7 @@ class _FarmSectionState extends State<FarmSection> {
     FarmStatusReport? status;
     FarmPlan? plan;
     var planDown = false;
+    var planSoon = false;
     DateTime? offlineSince;
     // Show the copy saved on the phone at once; fresh data replaces it below.
     if (_farm == null) {
@@ -85,6 +90,7 @@ class _FarmSectionState extends State<FarmSection> {
             _status = cst;
             _shape = cfarm.outline.length < 3 ? null : FarmShape(cfarm, cst);
             _plan = cp is Map<String, dynamic> ? FarmPlan.fromJson(cp) : null;
+            _planSoon = c['plan_soon'] == true;
             _shownSavedAt = DateTime.tryParse(
               c['saved_at'] as String? ?? '',
             )?.toLocal();
@@ -107,17 +113,22 @@ class _FarmSectionState extends State<FarmSection> {
       status = got[1] as FarmStatusReport;
       try {
         plan = await api.getPlan(id);
-      } on ApiException {
-        planDown = true;
-        final old = await LocalStore.read(_cacheName);
-        final p = old?['plan'] as Map<String, dynamic>?;
-        if (p != null) plan = FarmPlan.fromJson(p);
+      } on ApiException catch (e) {
+        if (e.status == 404) {
+          planSoon = true;
+        } else {
+          planDown = true;
+          final old = await LocalStore.read(_cacheName);
+          final p = old?['plan'] as Map<String, dynamic>?;
+          if (p != null) plan = FarmPlan.fromJson(p);
+        }
       }
       await LocalStore.write(_cacheName, {
         'saved_at': DateTime.now().toUtc().toIso8601String(),
         'farm': farm.toJson(),
         'status': status.json,
         'plan': plan?.json,
+        'plan_soon': planSoon,
       });
     } on ApiException catch (e) {
       if (e.isOffline) {
@@ -131,6 +142,7 @@ class _FarmSectionState extends State<FarmSection> {
           );
           final p = j['plan'] as Map<String, dynamic>?;
           plan = p == null ? null : FarmPlan.fromJson(p);
+          planSoon = j['plan_soon'] == true;
           offlineSince = DateTime.parse(j['saved_at'] as String);
         }
       } else {
@@ -166,6 +178,7 @@ class _FarmSectionState extends State<FarmSection> {
           : FarmShape(farm, status);
       _plan = plan;
       _planDown = planDown;
+      _planSoon = planSoon;
       _offlineSince = offlineSince;
     });
     if (!_told) {
@@ -335,6 +348,8 @@ class _FarmSectionState extends State<FarmSection> {
         style: latText(size: 11, weight: FontWeight.w800, color: JColors.faint),
       ),
       if (_plan != null) WeekStrip(plan: _plan!),
+      if (_plan == null && _planSoon)
+        Text(s.planSoon, style: jText(false, size: 13.5, color: JColors.muted)),
       if (_planDown)
         Text(
           s.weatherDown,
