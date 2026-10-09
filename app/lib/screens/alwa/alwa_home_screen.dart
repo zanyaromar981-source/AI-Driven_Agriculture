@@ -594,7 +594,7 @@ class _ListingCard extends StatelessWidget {
                   button: true,
                   label: 'Call the seller',
                   child: InkWell(
-                    onTap: () => copyPhone(context, phone),
+                    onTap: () => callPhone(context, phone),
                     customBorder: const CircleBorder(),
                     child: Container(
                       width: 44,

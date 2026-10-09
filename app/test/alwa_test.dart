@@ -144,7 +144,7 @@ void main() {
     expect(find.text('Closes'), findsOneWidget);
     expect(rich('9 days left'), findsOneWidget);
     expect(find.text('+964 771 987 6543'), findsOneWidget);
-    expect(find.text('Copy the number to call'), findsOneWidget);
+    expect(find.text('Call the seller'), findsOneWidget);
     expect(find.text('open'), findsOneWidget);
   });
 

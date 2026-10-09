@@ -128,6 +128,36 @@ void main() {
     api = HttpApi(server.url)..useToken('tok123');
   });
 
+  test(
+    'the seller phone rides in seller_name until seller_phone exists',
+    () async {
+      await api.createAlwaListing(
+        const NewAlwaListing(
+          crop: 'tomato',
+          quantityKg: 200,
+          priceIqdPerKg: 500,
+          lat: 35.56,
+          lon: 45.43,
+          sellerPhone: '+9647501234567',
+        ),
+      );
+      final sent =
+          jsonDecode(server.seen.lastWhere((r) => r.method == 'POST').body)
+              as Map<String, dynamic>;
+      expect(sent['seller_name'], '+9647501234567');
+      final back = AlwaListing.fromJson({
+        ..._Server.row,
+        'seller_name': '+9647501234567',
+      });
+      expect(back.sellerPhone, '+9647501234567');
+      final named = AlwaListing.fromJson({
+        ..._Server.row,
+        'seller_name': 'Kak Aram',
+      });
+      expect(named.sellerPhone, isNull, reason: 'a real name is not a phone');
+    },
+  );
+
   test('a list row without created_at is shown, not dropped', () async {
     final all = await api.alwaListings();
     final r = all.firstWhere((l) => l.id == '1');

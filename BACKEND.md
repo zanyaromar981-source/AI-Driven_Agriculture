@@ -348,6 +348,8 @@ What the app needs changed or added:
 
 Not used by the app: the offer and accept routes, `/v1/alwa/offers/mine`, `/v1/alwa/deals`, `grade`, `pickup`, `buyer_kind`. They can stay for the website.
 
+- What the app does now (2026-10-09 18:00), until rows 1 to 3 are built: it sends `market` (the first market) and `pickup: "farm"` so the post is not refused, sends `quantity_kg` and the price as whole numbers, and puts the seller's sign-in phone in `seller_name` (any text up to 60 characters, already shown to buyers). It reads `seller_phone` first, else a phone-shaped `seller_name`. List rows have no `created_at` today, so the posted date is left out there. "Call the seller" opens the phone app with the number typed in. When `seller_phone` exists, the app stops writing the phone into `seller_name`.
+
 ### 2.15 Ask the Doctor on the test server: Codex reads the photos and the farm's data (user decision, 2026-10-09)
 
 The app's centre button (Ask the Doctor) already sends `POST /v1/farms/{id}/ask` exactly as FRONTEND.md 6 says and already shows the `200` answer. On the test server every question answers `502 doctor_failed` because nothing runs behind the route. To make the button work, the server must do this for every question:

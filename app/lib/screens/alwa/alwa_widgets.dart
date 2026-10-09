@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart' show LatLng;
@@ -739,14 +740,18 @@ String fmtPhone(String raw) {
   return isValidIraqiMobile(d) ? prettyPhone(d) : raw;
 }
 
-/// No phone app link in the app yet (no url_launcher): the number is copied
-/// so the farmer can paste it in the phone app.
-Future<void> copyPhone(BuildContext context, String phone) async {
-  await Clipboard.setData(
-    ClipboardData(
-      text: digitsOnly(phone).isEmpty ? phone : '+${digitsOnly(phone)}',
-    ),
-  );
+/// Opens the phone app with the seller's number typed in, ready to call
+/// (user, 2026-10-09). If no phone app opens, the number is copied instead.
+Future<void> callPhone(BuildContext context, String phone) async {
+  final number = digitsOnly(phone).isEmpty ? phone : '+${digitsOnly(phone)}';
+  var opened = false;
+  try {
+    opened = await launchUrl(Uri(scheme: 'tel', path: number));
+  } catch (_) {
+    opened = false;
+  }
+  if (opened || !context.mounted) return;
+  await Clipboard.setData(ClipboardData(text: number));
   if (!context.mounted) return;
   showToast(
     context,

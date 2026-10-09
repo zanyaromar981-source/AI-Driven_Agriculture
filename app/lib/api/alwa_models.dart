@@ -132,12 +132,22 @@ class AlwaListing {
     closesAt: DateTime.parse(j['closes_at'] as String).toLocal(),
     lat: _d(j['lat']),
     lon: _d(j['lon']),
-    sellerPhone: (j['seller_phone'] as String?)?.trim().isEmpty ?? true
-        ? null
-        : (j['seller_phone'] as String).trim(),
+    sellerPhone: _phoneOf(j),
     distanceKm: _d(j['distance_km']),
     soldAt: DateTime.tryParse(j['sold_at'] as String? ?? '')?.toLocal(),
   );
+}
+
+/// The seller's phone: `seller_phone` once the server sends it (BACKEND.md
+/// 2.14 #3); until then the app carries it in `seller_name`, which the test
+/// server already shows to buyers, so only a phone-shaped name counts.
+String? _phoneOf(Map<String, dynamic> j) {
+  for (final k in ['seller_phone', 'seller_name']) {
+    final v = (j[k] as String?)?.trim() ?? '';
+    if (k == 'seller_phone' && v.isNotEmpty) return v;
+    if (RegExp(r'^\+?[0-9 ]{10,16}$').hasMatch(v)) return v;
+  }
+  return null;
 }
 
 /// What the Sell screen sends (POST /alwa/listings, BACKEND.md 2.14 #1).
@@ -149,7 +159,11 @@ class NewAlwaListing {
     required this.lat,
     required this.lon,
     this.days = kAlwaMaxDays,
+    this.sellerPhone,
   });
+
+  /// The seller's sign-in phone, shown to buyers so they can call.
+  final String? sellerPhone;
   final String crop;
   final double quantityKg;
   final double priceIqdPerKg;

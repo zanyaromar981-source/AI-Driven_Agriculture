@@ -373,6 +373,10 @@ class HttpApi implements Api {
     final market = AlwaMarket.pick(markets, listing.lat, listing.lon);
     if (market != null) body['market'] = market.slug;
     body['pickup'] = 'farm';
+    // Server: not built yet (BACKEND.md 2.14 #3): no seller_phone, so the
+    // phone goes in seller_name, which buyers already see. Drop when built.
+    final phone = listing.sellerPhone;
+    if (phone != null && phone.isNotEmpty) body['seller_name'] = phone;
     final j = await _call(
       'POST',
       'alwa/listings',

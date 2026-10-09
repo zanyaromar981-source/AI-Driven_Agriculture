@@ -153,6 +153,7 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
           lat: fix.lat,
           lon: fix.lon,
           days: _days,
+          sellerPhone: _phone,
         ),
         idempotencyKey: _key,
       );

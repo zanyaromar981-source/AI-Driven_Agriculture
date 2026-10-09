@@ -244,12 +244,11 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
                         weight: FontWeight.w800,
                       ).copyWith(letterSpacing: 0.3),
                     ),
-                    // No url_launcher in the app yet: copy the number instead
-                    // of opening the phone app.
+                    // Opens the phone app with the number typed in.
                     AlwaButton(
-                      label: 'Copy the number to call',
-                      icon: Icons.copy_rounded,
-                      onPressed: () => copyPhone(context, l.sellerPhone!),
+                      label: 'Call the seller',
+                      icon: Icons.phone_rounded,
+                      onPressed: () => callPhone(context, l.sellerPhone!),
                     ),
                   ] else
                     Text(
