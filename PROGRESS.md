@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 16:08
+Last update: 2026-10-09 16:53
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -20,7 +20,7 @@ Last update: 2026-10-09 16:08
 - App icon: Grain Sun on the cream tile, Android (adaptive) and iOS, replaces the default Flutter logo
 - Pitch deck in Pencil, `design/pitch_deck.pen`, 8 slides, v2 after user review (cover, problem and gap, app design, app features, calculations, water map of Dukan and Darbandikhan on the team zone map with real numbers, live demo, summary), name Khor (خۆر), olive and ochre palette, photo-led
 - Pitch script `Pitch_Script.md`: speaker lines for the 8-slide deck and a 3-minute version for the story deck, live demo steps, judge questions, number checklist
-- 3-minute story deck in Pencil, `design/pitch_deck_3min.pen`, 6 cinematic slides named Jutyar (he knows his field, space sees more, simple to use, one message in Sorani, built for Kurdistan, from one farm to a smarter Kurdistan); dark green, teal and gold with contour lines
+- 3-minute story deck in Pencil, `design/pitch_deck_3min.pen`, 6 cinematic slides named Jutyar (title AI-Driven Agriculture with the sun logo, space sees more, simple to use, one message in Sorani, the website that connects farmers and government, from one farm to a smarter Kurdistan); dark green, teal and gold with contour lines
 - Control Room web demo `web/admin_demo/` (not connected, sample data), in the Jutyar app style with the Grain Sun preloader and 16 load and interaction animations: 19 sections to run the whole app and database from the web (overview, approvals, farmers and farms, officers, crop register, region data, alerts, inbox, the Doctor, Alwa, rules, app control, notifications and SMS, texts, data jobs, database, security and privacy, history, system settings); roles, two-officer rule and protected mode work in the page
 - Map demo `web/map_demo/` (Leaflet, real map tiles): 4 governorates, 33 KRG districts, 78 sub-districts from the CSO 2019 KML regrouped by the KRG maps of Duhok, Erbil and Halabja; 66 towns at exact OSM points; live lat/lon to 6 decimals, DMS, UTM 38S; click to pin with elevation and an Open in Google Maps link; latitude / longitude rulers and grid down to 1 second; search in English, Sorani, coordinates or OpenStreetMap; GPS locate
 - Flutter app is ready for the real server: build with `--dart-define=API_URL=https://...` and it uses the server (BACKEND.md 2.0); without it, the demo server. Refused token signs out; no answer = offline (saved copies, upload queue keeps farms). Tested against a local test server
