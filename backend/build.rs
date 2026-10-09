@@ -85,6 +85,10 @@ fn main() {
                     "src/features/water/infra/persistence/postgres/entities",
                 ),
                 (
+                    "alerts,devices",
+                    "src/features/alerts/infra/persistence/postgres/entities",
+                ),
+                (
                     "alwa_markets,alwa_prices,alwa_listings,alwa_offers",
                     "src/features/alwa/infra/persistence/postgres/entities",
                 ),

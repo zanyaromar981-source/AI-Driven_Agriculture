@@ -28,7 +28,7 @@ There are four kinds of callers. Each has its own way in, and none works on anot
 
 | Caller | Gets in with | Routes |
 |---|---|---|
-| The farmer app | a farmer token: `POST /v1/auth/otp/send`, then `/verify` | `/v1/me`, `/v1/farms...`, `/v1/messages...`, `/v1/alwa...` |
+| The farmer app | a farmer token: `POST /v1/auth/otp/send`, then `/verify` | `/v1/me`, `/v1/farms...`, `/v1/alerts...`, `/v1/devices`, `/v1/messages...`, `/v1/alwa...`, `/v1/account` |
 | The website's Admin part | a staff token: `POST /v1/dashboard/auth/login` | everything under `/v1/dashboard` |
 | Anyone, no login (the View page, the app before sign-in) | nothing | read-only: `/v1/region...`, `/v1/zones...`, `/v1/dams...`, `/v1/fires`, `/v1/outlooks...`, `/v1/water/plan`, `/v1/briefs...`, `/v1/stats/farms`, `/v1/app/config`, `/v1/versions`, and the Alwa market's public pages |
 | Our data jobs | a service key | `/v1/ingest...`. Not for the app or the website. |
@@ -79,7 +79,7 @@ Send a token as `Authorization: Bearer <token>`. JSON in and out, UTF-8, field n
               "max_corners": 50, "gps_meters": 10},
    "help_phone": null, "public_farm_totals": true, "updated_at": "..."}
   ```
-- Hide a part of the app whose switch in `features` is `false`. `plan`, `reports` and `push` are off because the server does not have them yet.
+- Hide a part of the app whose switch in `features` is `false`. `plan`, `reports` and `push` start switched off; the plan and alerts now exist on the server, so staff can switch `plan` on, and `push` once Firebase is set up.
 - Show the maintenance screen while `maintenance` is `true`, and the announcement while `announcement_on` is `true`.
 - **Send `X-App-Version` on every call.** When it is below `min_version`, every farmer route and both sign-in routes answer `426 {"error": "update_required"}`: show the update screen with `update_message_*`. `GET /v1/app/config` is never refused, so an old app can still learn it must update. A call without the header is let through.
 - Honest limit: the server does not yet enforce `limits` or `features` from these settings; they are what the app reads. The server's own limits are the same numbers today.
@@ -113,11 +113,13 @@ What to know:
 | `GET /v1/farms/{id}/status` | the farm from space: picture date, greenness, per-cell levels | a placeholder: every measured field is `null`, `cells` is empty, `crops` lists the real crop plots with `level: "none"`. There is no store for satellite readings yet. |
 | `GET /v1/farms/{id}/plan` | **the 10-day plan**: the JSON of `BACKEND.md` 2.4 exactly (`from`, `days`, `rain_mm`, `tmin`, `tmax`, `alerts`, `decisions`, `source`, `issued`) | built; a job makes a plan for every farm every 6 hours, and for a new farm within about 10 minutes. `404 plan_not_ready` until the first one, `404 plan_stale` if the newest is over 2 days old: show "10-day plan coming soon" for both. Days already past are left out. |
 | `GET /v1/farms/{id}/history?metrics=&from=&to=` | **ten years, month by month**: rain, highest and lowest temperature, evaporation, soil moisture, greenness | built; see "History" below |
-| `GET /v1/farms/{id}/insights` | what is known about the farm, topic by topic | groundwater is filled daily; other topics wait for the per-farm analysis job |
+| `GET /v1/farms/{id}/insights` | **Field history**: what is known about the farm, topic by topic | all topics are filled by a job on the server, within minutes of a farm being saved: rain and weather since 1981, soil, greenness, dryness, and groundwater |
 | `GET /v1/farms/{id}/brief` | the nightly brief for the farm's district | filled each night; `brief` is `null` for a district with none yet |
 | `POST /v1/farms/{id}/ask` | Ask the Doctor | section 6 |
 
 **Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
+
+The topics `rain`, `weather`, `soil`, `greenness` and `dryness` carry the measure codes of the app's fixture (`app/test/fixtures/insights_farm2_measures.json`), with three differences: fires are `fire_detections_7d` (the server keeps 7 days of detections, so a long count would be wrong), and `summer_surface_c_normal` and `trend_peak_ndvi_per_decade` are not produced. Greenness is measured on a square of the farm's area at its centre, from Sentinel-2 (2016 on) and Landsat (1984 to 2015).
 
 The `groundwater` topic is **not** a well depth. It is a percentile (50 is normal for the time of year; 10 means only 10% of past years were this dry) from a NASA model for a square of about 25 km, so every farm in that square gets the same number, and it cannot see local pumping. It comes with `confidence: "unsure"`. Say "the wider area", never "your well". Its measure codes are `groundwater_percentile`, `root_zone_moisture_percentile` and `surface_moisture_percentile`.
 
@@ -126,6 +128,16 @@ The `groundwater` topic is **not** a well depth. It is a percentile (50 is norma
 **Plan.** The forecast is Open-Meteo at the farm's centre; the rules are those of `farm_doctor/weather_planner.py`, with their thresholds read from the website's Rules page (so changing `frost_c`, `heat_c`, `sowing_rain_mm`, `dust_pm10` and the others there changes the next plan). Honest limits: **`ku` is the same text as `en` for now**, because the repo has no Sorani for these sentences (build the Sorani in the app from `type` and `code`, or give us the sentences); wheat is assumed for every farm; the alert types `heavy_rain`, `dry_spell`, `spray_window` and `sunn_pest` are never raised because the reference rules never raise them.
 
 **History.** `GET /v1/farms/{id}/history` answers `{"farm_id", "series": [{"metric", "unit", "source", "as_of", "months": [{"month": "2016-10", "value": 13.4}], "years": [{"year": 2025, "value": 558.1, "months": 12}], "normal": [12 numbers, January first]}]}`. Metrics: `rain_mm`, `temp_max_c`, `temp_min_c`, `et0_mm`, `soil_moisture`, `greenness` (NDVI 0 to 1). Default: every metric, the last 120 months; `metrics` is a comma list, `from` and `to` are `YYYY-MM`, a window over 120 months is `422 bad_window`. A metric with nothing stored yet is simply absent: show "collecting". A new farm has the weather metrics within about 10 minutes; greenness takes up to half an hour. Always show `source`: rain comes from a 25 km grid and temperature from a 9 km grid, far larger than a farm.
+
+### Alerts and push
+
+- `GET /v1/alerts?days=30` (all the farmer's farms, each alert with `farm_id`) and `GET /v1/farms/{id}/alerts?days=30` answer `{"alerts": [{"alert_id", "type", "day", "level": "watch|alarm", "confidence": "sure|likely|unsure", "ku", "en", "action_ku", "action_en", "pushed", "done"}]}`, newest day first; `days` is 1 to 90.
+- `POST /v1/alerts/{id}/done` answers `204`, also when it was already done.
+- Where alerts come from, every 30 minutes: a **satellite fire detection within 5 km** of a farm (type `fire`; `alarm` within 2 km, else `watch`; always `confidence: "unsure"`, because nobody has checked it and it may be a gas flare or a controlled burn), and the **alerts of the farm's 10-day plan** (types `frost`, `heat`, `dust` and the others of the plan; confidence `likely`).
+- **Register the phone:** `POST /v1/devices` with `{"push_token", "platform": "android|ios", "lang", "notify": {"red_alerts": true, "weekly_plan": true}}` answers `204`; call it at every app start and when the token changes. `DELETE /v1/devices/{push_token}` on sign-out.
+- **Push:** only `alarm` alerts are pushed, at most one per farm per day, through Firebase. The notification has a title and text in the phone's language, and the data fields `farm_id`, `alert_id`, `type`, `day`, `level`, `confidence`, `ku`, `en`, `action_ku`, `action_en`. The sender is built; it starts sending once the Firebase service account file is on the server. The app needs the Firebase messaging library and the project's `google-services.json`.
+- Honest limits: the fire alert sentences have no Sorani yet (`ku` repeats the English); the weekly plan message on Sunday morning is not sent yet.
+- **`DELETE /v1/account`** answers `204`: removes the farmer, their farms, alerts and phones, and signs them out at once. Their Alwa listings and messages stay, as with a delete by staff.
 
 ### Messages to the Ministry (inbox)
 
@@ -351,6 +363,8 @@ Be honest on screen about this.
 | Farm status from space | placeholder | no store yet |
 | 10-day plan per farm | filled for every farm every 6 hours | Open-Meteo forecast and the weather planner rules |
 | Per-farm history (ten years, monthly) | filled for every farm | ERA5 through Open-Meteo, MODIS greenness |
+| Field history topics (`/insights`) | **live** for every farm | ERA5 since 1981, SoilGrids, Sentinel-2 and Landsat |
+| Alerts | **live**: fires near a farm and plan alerts, every 30 minutes | our stored fires and plans; push waits for the Firebase file |
 
 ## 12. Things that will trip you up
 
@@ -390,7 +404,7 @@ These answer `404` today. Build the screens so that a `404` or an empty answer s
 |---|---|
 | The simpler Alwa of `BACKEND.md` 2.14 (GPS point, phones shown, nearest first, mark as sold) | next |
 | Real data in `GET /v1/farms/{id}/status` | not started; needs a satellite job and a store |
-| `DELETE /v1/account`, alerts, `POST /v1/devices` (push), reports | not started |
+| Reports (`BACKEND.md` 2.6); the Sunday weekly-plan push | not started |
 | Protected mode for phones and farm positions (`BACKEND.md` 2.11) | not started; the website team said it is not needed for now |
 | Dryness and Field Eye rules read by their jobs; limits and feature switches enforced by the server | not started |
 

@@ -142,7 +142,12 @@ fn make_http_span(request: &Request<Body>) -> Span {
         format!("{method} {route_for_name}")
     };
 
-    let path = request.uri().path();
+    // A push token in the path is a secret: such a request is logged with
+    // its route template instead of the path.
+    let path = match matched_route {
+        Some(route) if route.contains("{push_token}") => route,
+        _ => request.uri().path(),
+    };
     let scheme = request.uri().scheme_str().unwrap_or("http").to_string();
     let host = request
         .headers()

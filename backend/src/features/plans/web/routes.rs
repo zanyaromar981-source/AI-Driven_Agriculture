@@ -19,7 +19,10 @@ pub fn routes() -> Router<AppState> {
 pub fn ingest_routes() -> Router<AppState> {
     Router::new()
         .route("/farms/plans/coverage", get(handlers::get_plan_coverage))
-        .route("/farms/{id}/plan", put(handlers::put_farm_plan))
+        .route(
+            "/farms/{id}/plan",
+            put(handlers::put_farm_plan).get(handlers::get_ingest_farm_plan),
+        )
 }
 
 /// Used by staff to see the stored plan of any farm. Mounted under

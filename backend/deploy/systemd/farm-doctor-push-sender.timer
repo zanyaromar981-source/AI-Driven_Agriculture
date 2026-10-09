@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the Farm Doctor push sender every 5 minutes
+
+[Timer]
+OnCalendar=*-*-* *:02/5:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -49,6 +49,16 @@ pub trait FarmRemover: Send + Sync + std::fmt::Debug {
     async fn remove_all_for(&self, phone: &Phone) -> Result<u64, AppError>;
 }
 
+/// Removes what other features keep for a farmer beyond the farms
+/// themselves: the alerts of their farms and the phones registered for
+/// pushes. Owned by the alerts feature.
+#[async_trait]
+pub trait FarmerDataRemover: Send + Sync + std::fmt::Debug {
+    /// Must run while the farms are still there: the alerts are found
+    /// through them. Safe to repeat.
+    async fn remove_all_for(&self, phone: &Phone) -> Result<(), AppError>;
+}
+
 /// Every farm a phone has, with its area and crops, for the support letter.
 /// Owned by the farms feature.
 #[async_trait]

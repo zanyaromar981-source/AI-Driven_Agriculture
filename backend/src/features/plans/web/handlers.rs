@@ -120,6 +120,40 @@ pub async fn put_farm_plan(
     Ok(ApiResponse::ok(FarmPlanResponse::from(&plan)))
 }
 
+/// Read a farm's stored plan as a data job (the alerts job turns its alerts into farm alerts)
+#[utoipa::path(
+    get,
+    path = "/v1/ingest/farms/{id}/plan",
+    tag = "plans",
+    params(("id" = String, Path, description = "Farm ID")),
+    responses(
+        (status = 200, description = "The stored plan", body = FarmPlanResponse),
+        (status = 401, description = "Missing or wrong service key", body = ErrorBody),
+        (status = 404, description = "Farm not found, or it has no plan that is still current", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("service_key" = []))
+)]
+pub async fn get_ingest_farm_plan(
+    State(state): State<AppState>,
+    WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
+) -> Result<ApiResponse<FarmPlanResponse>, WebError> {
+    let farm_id = farm_id(&id)?;
+
+    let plan = state
+        .features
+        .plan
+        .view_stored_farm_plan_use_case
+        .execute(farm_id)
+        .await?
+        // A stale plan's days are past: alerts made from it would be about
+        // weather that has already happened.
+        .filter(|plan| !plan.is_stale(Utc::now()))
+        .ok_or_else(WebError::not_found)?;
+
+    Ok(ApiResponse::ok(FarmPlanResponse::from(&plan)))
+}
+
 /// Show the stored plan of any farmer's farm, as the job pushed it
 #[utoipa::path(
     get,

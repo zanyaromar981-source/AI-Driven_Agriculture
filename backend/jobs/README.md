@@ -246,3 +246,19 @@ python3 farm_analysis.py --farm 12 --force                # one farm again, igno
 First run, 9 Oct 2026, a 3.2 ha rain-fed field in the Sharazur plain (35.360 N, 45.700 E, 545 m): rain and weather after 2 s, soil after 5 s, the newest picture after 13 s, the 39 seasons after 106 s (446 pictures read, 14 searches), dryness right after. Normal rain 786 mm, 10 droughts since 1981/82; 34 frost nights; clay 36%, pH 7.4; spring peak 0.79, bare in every one of 41 summers; newest picture 4 Oct, NDVI 0.12 against 0.12 usual. A daily refresh took 2 s (1 archive call, 1 search), 7 s when a new picture had come (11 searches, 11 pictures); a quiet run is one backend call.
 
 On the server it runs from `farm-doctor-farm-analysis.timer` every 10 minutes. See its last runs with `journalctl -u farm-doctor-farm-analysis -n 50`.
+
+## farm_alerts.py
+
+Alerts for each farm, every 30 minutes, made only from what the backend already stores. It writes through `PUT /v1/ingest/farms/{id}/alerts/{key}`; the app reads them at `GET /v1/farms/{id}/alerts` and `GET /v1/alerts`.
+
+- **Fire near a farm:** each fire of the last 24 hours (`GET /v1/fires?hours=24`, fires marked out are skipped) within 5 km of a farm's centre (`GET /v1/ingest/farms`) gives that farm one alert, key `fire:<fire id>`: `alarm` within 2 km, `watch` beyond, always confidence `unsure`. The text says "satellite fire detection" with the distance, the direction and the time, and that it is unchecked. It never says there is a fire.
+- **Plan alerts:** `alerts_from_plan` turns the `alerts` of a farm's weekly plan into alerts with key `<type>:<day>`, confidence `likely`, the plan's own Sorani and English, and the plan's matching decision as the action (the alert's own text when there is none). **Not live yet:** `fetch_plan` reads `GET /v1/ingest/farms/{id}/plan`, which does not exist yet; a 404 means "no plan", so this part starts by itself when the route does.
+- **Running again** replaces the wording of an alert and never adds a second one, unticks one the farmer ticked, or marks one as not pushed. A lock file (`FARM_ALERTS_LOCK`) keeps two runs from overlapping.
+- **Limits:** the distance is from the centre of the farm, so a large farm can be nearer the fire than the text says. A satellite detection can be a gas flare or a controlled burn. Fire alerts carry the English text in the Sorani fields until a native speaker has translated the two sentences in `fire_alert`.
+- **No pushes yet:** nothing sends these to a phone. `GET /v1/ingest/alerts/unpushed` and `POST /v1/ingest/alerts/{id}/pushed` are there for a push sender, which needs a Firebase key the team does not have yet.
+- It is not started through `report_run.py`: the status table has no such job.
+
+```sh
+python3 farm_alerts.py --dry-run
+python3 -m unittest test_farm_alerts -v
+```

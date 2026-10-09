@@ -6,9 +6,10 @@ use crate::{
     app::{Action, AuthContext, Pagination, Permission, Resource, StaffContext, User},
     features::farmers::{
         app::{
-            AppError, FarmCounter, FarmHoldings, FarmRemover, FarmerFilter, FarmerRepository,
-            LetterIssuers, LetterRecord, LetterRepository, SignInChallengeRepository,
-            SignInCodeGenerator, SignInCodeHasher, SignInCodeSender, TokenIssuer,
+            AppError, FarmCounter, FarmHoldings, FarmRemover, FarmerDataRemover, FarmerFilter,
+            FarmerRepository, LetterIssuers, LetterRecord, LetterRepository,
+            SignInChallengeRepository, SignInCodeGenerator, SignInCodeHasher, SignInCodeSender,
+            TokenIssuer,
         },
         domain::{
             CropHolding, FarmHolding, Farmer, FarmerChange, FarmerDetails, Language, Letter,
@@ -66,6 +67,9 @@ pub enum Call {
         id: i32,
     },
     RemoveFarms {
+        phone: String,
+    },
+    RemoveFarmerData {
         phone: String,
     },
     FarmHoldings {
@@ -554,6 +558,17 @@ impl FarmRemover for Fakes {
         });
 
         Ok(2)
+    }
+}
+
+#[async_trait]
+impl FarmerDataRemover for Fakes {
+    async fn remove_all_for(&self, phone: &Phone) -> Result<(), AppError> {
+        self.record(Call::RemoveFarmerData {
+            phone: String::from(phone),
+        });
+
+        Ok(())
     }
 }
 

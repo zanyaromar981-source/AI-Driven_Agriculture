@@ -22,10 +22,12 @@ pub fn public_routes() -> Router<AppState> {
 }
 
 pub fn routes() -> Router<AppState> {
-    Router::new().route(
-        "/me",
-        get(handlers::get_profile).put(handlers::update_profile),
-    )
+    Router::new()
+        .route(
+            "/me",
+            get(handlers::get_profile).put(handlers::update_profile),
+        )
+        .route("/account", delete(handlers::delete_account))
 }
 
 /// Routes behind the `staff_auth` layer, for Ministry staff. Each method

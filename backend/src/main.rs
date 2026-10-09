@@ -153,6 +153,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(brief_routes())
                 .merge(doctor_routes())
                 .merge(message_routes())
+                .merge(farm_doctor_api::features::alerts::web::routes())
                 // Inside `auth`, so it knows which farmer is asking.
                 .layer(middleware::from_fn_with_state(state.clone(), app_version))
                 .merge(history_routes())
@@ -187,12 +188,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(rule_ingest_routes())
                         .merge(job_ingest_routes())
                         .merge(history_ingest_routes())
+                        .merge(farm_doctor_api::features::alerts::web::ingest_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), service_key)),
                 )
                 .nest(
                     "/dashboard",
                     Router::new()
                         .merge(staff_dashboard_routes())
+                        .merge(farm_doctor_api::features::alerts::web::dashboard_routes())
                         .merge(alwa_dashboard_routes())
                         .merge(app_config_dashboard_routes())
                         .merge(brief_dashboard_routes())

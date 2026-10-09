@@ -339,6 +339,28 @@ pub struct PlanFeature {
 }
 
 #[derive(Clone)]
+pub struct AlertFeature {
+    pub list_farm_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ListFarmAlertsUseCase>,
+    pub list_my_alerts_use_case: Arc<crate::features::alerts::app::use_cases::ListMyAlertsUseCase>,
+    pub mark_alert_done_use_case:
+        Arc<crate::features::alerts::app::use_cases::MarkAlertDoneUseCase>,
+    pub record_alert_use_case: Arc<crate::features::alerts::app::use_cases::RecordAlertUseCase>,
+    pub list_unpushed_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ListUnpushedAlertsUseCase>,
+    pub mark_alert_pushed_use_case:
+        Arc<crate::features::alerts::app::use_cases::MarkAlertPushedUseCase>,
+    pub view_stored_farm_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ViewStoredFarmAlertsUseCase>,
+    pub remove_alert_use_case: Arc<crate::features::alerts::app::use_cases::RemoveAlertUseCase>,
+    pub register_device_use_case:
+        Arc<crate::features::alerts::app::use_cases::RegisterDeviceUseCase>,
+    pub remove_device_use_case: Arc<crate::features::alerts::app::use_cases::RemoveDeviceUseCase>,
+    pub remove_dead_device_use_case:
+        Arc<crate::features::alerts::app::use_cases::RemoveDeadDeviceUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -360,6 +382,7 @@ pub struct Features {
     pub crop: CropFeature,
     pub history: HistoryFeature,
     pub plan: PlanFeature,
+    pub alert: AlertFeature,
 }
 
 #[derive(Clone)]

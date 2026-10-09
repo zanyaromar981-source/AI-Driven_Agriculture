@@ -119,6 +119,37 @@ pub async fn get_profile(
     Ok(ApiResponse::ok(ProfileResponse::from(&farmer)))
 }
 
+/// Delete the authenticated farmer's account
+///
+/// Removes the farmer, their farms, the alerts of those farms and the
+/// phones registered for pushes, exactly as a delete by staff does. The
+/// token stops working at once, so a repeat of this call is a 401.
+#[utoipa::path(
+    delete,
+    path = "/v1/account",
+    tag = "farmers",
+    responses(
+        (status = 204, description = "The account is gone"),
+        (status = 401, description = "Unauthorized, also after the account was deleted", body = ErrorBody),
+        (status = 403, description = "Staff have blocked the farmer (`blocked`)", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn delete_account(
+    State(state): State<AppState>,
+    Extension(auth_context): Extension<AuthContext>,
+) -> Result<StatusCode, WebError> {
+    state
+        .features
+        .farmer
+        .remove_farmer_use_case
+        .execute_for_self(&auth_context)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
 /// Update the authenticated farmer's profile
 #[utoipa::path(
     put,

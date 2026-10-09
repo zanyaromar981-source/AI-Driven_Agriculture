@@ -1,3 +1,4 @@
+pub mod alerts;
 pub mod alwa;
 pub mod app_config;
 pub mod briefs;

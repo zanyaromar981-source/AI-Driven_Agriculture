@@ -12,7 +12,7 @@ pub use farmer_filter::{FarmerFilter, FarmerSort};
 pub use farmer_record::FarmerRecord;
 pub use letter_record::{IssuedLetter, LetterRecord};
 pub use ports::{
-    FarmCounter, FarmHoldings, FarmRemover, FarmerRepository, LetterIssuers, LetterRepository,
-    SignInChallengeRepository, SignInCodeGenerator, SignInCodeHasher, SignInCodeSender,
-    TokenIssuer,
+    FarmCounter, FarmHoldings, FarmRemover, FarmerDataRemover, FarmerRepository, LetterIssuers,
+    LetterRepository, SignInChallengeRepository, SignInCodeGenerator, SignInCodeHasher,
+    SignInCodeSender, TokenIssuer,
 };
