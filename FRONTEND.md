@@ -269,4 +269,13 @@ Answers to `BACKEND.md` 2.12 and 2.13, as built.
 
 **Permissions (D): the five new resources exist** (`crops, rules, messages, app, jobs`), are listed by `GET /v1/dashboard/permissions`, can be put in roles, and the `Owner` role holds them. Their routes are still being built.
 
-**Still being built from 2.12:** A3 (place on every farm, filters and sort), A4 (totals), A5 (farmer details, blocking, letters), A6 (staff phone and job title, `PUT /v1/dashboard/me`), B1 (crops), B2 (rules), B3 (inbox), B4 (app control), B5 (job status). This section will say when each is in.
+**Farmer details, blocking and letters (A5): built.**
+- `PUT /v1/dashboard/farmers/{id}` (`farmers:update`) also takes `gender` (`male`, `female` or null), `birth_year`, `village`, `governorate`, `zone_slug`, `sub_zone_slug`, `notes` (staff only, never sent to the farmer app) and `blocked`. It is a full replace: a field you leave out is cleared, except `blocked`, which stays as it was.
+- `GET /v1/dashboard/farmers` (`farmers:read`) also takes `q` (name or phone), `governorate`, `zone`, `blocked`, `sort=created_at|name` and `order=asc|desc`.
+- A blocked farmer gets `403 {"error": "blocked"}` on every farmer route from the next request, and on `POST /v1/auth/otp/verify` even with the right code. `POST /v1/auth/otp/send` answers as for any phone but sends no message. The app should show "this account is blocked, call the office" on `blocked`.
+- `POST /v1/dashboard/farmers/{id}/letters` (`farmers:read`) with `{"purpose", "lang": "ku" | "en"}` answers `201 {"letter": {"number", "purpose", "lang", "created_at", "issued_by": {"id", "name"}, "farmer": {...}, "farms": [...], "totals": {"farms", "dunam", "crops"}}}`. The number is `JTY-<yyyymm>-<farmer id>-<n>`. Every call issues a new number, so call it once per printed letter. The farms' place fields are null until A3 is merged.
+- `GET /v1/dashboard/letters/{number}` (`farmers:read`) returns the stored record, to check a letter later. Letters cannot be changed or deleted.
+
+**Staff details (A6): built.** Staff have optional `phone` and `job_title` on `POST /v1/dashboard/staff` and `PUT /v1/dashboard/staff/{id}`. `PUT /v1/dashboard/me` (any signed-in staff) takes `{"name", "phone", "current_password", "new_password"}`; the two passwords are optional and go together; a wrong current password is `403 {"error": "wrong_password"}`. It answers like `GET /v1/dashboard/me`.
+
+**Still being built from 2.12:** A3 (place on every farm, filters and sort), A4 (totals), B1 (crops), B2 (rules), B3 (inbox), B4 (app control), B5 (job status). This section will say when each is in.

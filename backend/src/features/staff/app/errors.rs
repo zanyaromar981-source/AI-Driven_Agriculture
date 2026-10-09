@@ -40,6 +40,11 @@ impl ToErrorInfo for StaffError {
             StaffError::CannotGrant => {
                 ErrorInfo::with_code(ErrorKind::Authorization, "cannot_grant", self.to_string())
             }
+            // Only someone already signed in can get this answer, about
+            // their own account, so it may say what was wrong.
+            StaffError::WrongPassword => {
+                ErrorInfo::with_code(ErrorKind::Authorization, "wrong_password", self.to_string())
+            }
             StaffError::DomainError(err) => err.to_error_info(),
         }
     }
@@ -102,6 +107,14 @@ mod tests {
 
         assert_eq!(info.kind, ErrorKind::Authorization);
         assert_eq!(info.code, "cannot_grant");
+    }
+
+    #[test]
+    fn a_wrong_current_password_is_forbidden_with_its_own_code() {
+        let info = StaffError::WrongPassword.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Authorization);
+        assert_eq!(info.code, "wrong_password");
     }
 
     #[test]

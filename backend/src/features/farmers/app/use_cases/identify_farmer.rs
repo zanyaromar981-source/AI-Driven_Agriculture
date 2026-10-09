@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Answers, on every request with a farmer's token, whether the farmer the
-/// token names is still there.
+/// token names is still there and still let in.
 pub struct IdentifyFarmerUseCase {
     farmers: Arc<dyn FarmerRepository>,
 }
@@ -20,14 +20,22 @@ impl IdentifyFarmerUseCase {
         Self { farmers }
     }
 
-    /// A token outlives a farmer staff have removed, so the farmer is read
-    /// again each time: without one the token is useless at once.
+    /// A token outlives a farmer staff have removed or blocked, so the
+    /// farmer is read again each time: without one the token is useless at
+    /// once, and a blocked one is told so.
     pub async fn execute(&self, phone: &Phone) -> Result<Farmer, AppError> {
         let Some(farmer) = self.farmers.find_by_phone(phone).await? else {
             tracing::info!("farmer token refused: the farmer is gone");
 
             return Err(GlobalAppError::Unauthorized("The farmer is gone".to_string()).into());
         };
+
+        farmer.ensure_not_blocked().inspect_err(|_| {
+            tracing::info!(
+                farmer_id = farmer.id().unwrap_or_default(),
+                "farmer token refused: the farmer is blocked"
+            )
+        })?;
 
         Ok(farmer)
     }
@@ -74,6 +82,21 @@ mod tests {
             AppError::GlobalAppError(GlobalAppError::Unauthorized(_))
         ));
         assert_eq!(error.to_error_info().code, "unauthorized");
+    }
+
+    #[tokio::test]
+    async fn a_token_whose_farmer_is_blocked_is_forbidden_with_the_blocked_code() {
+        let fakes = Fakes::new().with_blocked_farmer();
+
+        let error = use_case(&fakes)
+            .execute(&phone())
+            .await
+            .expect_err("refused");
+
+        let info = error.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Authorization);
+        assert_eq!(info.code, "blocked");
     }
 
     #[tokio::test]

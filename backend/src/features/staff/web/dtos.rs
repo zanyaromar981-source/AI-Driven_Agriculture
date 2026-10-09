@@ -9,15 +9,16 @@ use crate::{
         app::{
             AppError,
             use_cases::{
-                AddStaffInput, CreateRoleInput, EditRoleInput, EditStaffInput, SignInInput,
-                SignedInStaff,
+                AddStaffInput, CreateRoleInput, EditOwnProfileInput, EditRoleInput, EditStaffInput,
+                OwnPasswordInput, SignInInput, SignedInStaff,
             },
         },
         domain::{
-            Password, Role, RoleDescription, RoleName, RoleRef, RoleSelection, Staff, StaffEmail,
-            StaffError, StaffName,
+            JobTitle, Password, Role, RoleDescription, RoleName, RoleRef, RoleSelection, Staff,
+            StaffEmail, StaffError, StaffName,
         },
     },
+    shared::{DomainError, Phone},
 };
 
 /// A kind of data the dashboard manages.
@@ -172,6 +173,15 @@ fn role_selection(role_ids: Vec<String>) -> Result<RoleSelection, AppError> {
     Ok(RoleSelection::new(role_ids)?)
 }
 
+/// A form sends an untouched phone as an empty text, which means the same
+/// as none. Anything else must be an Iraqi mobile number.
+fn optional_phone(phone: Option<String>) -> Result<Option<Phone>, AppError> {
+    Ok(phone
+        .filter(|phone| !phone.trim().is_empty())
+        .map(Phone::new)
+        .transpose()?)
+}
+
 // The params that carry a password derive neither `Debug` nor `Serialize`,
 // so a password cannot be printed or echoed by accident.
 
@@ -217,6 +227,8 @@ pub struct StaffResponse {
     pub roles: Vec<StaffRoleRefResponse>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub phone: Option<String>,
+    pub job_title: Option<String>,
 }
 
 impl From<&Staff> for StaffResponse {
@@ -229,6 +241,8 @@ impl From<&Staff> for StaffResponse {
             roles: staff.roles().iter().map(Into::into).collect(),
             created_at: *staff.created_at(),
             updated_at: *staff.updated_at(),
+            phone: staff.phone().as_ref().map(Into::into),
+            job_title: staff.job_title().as_ref().map(Into::into),
         }
     }
 }
@@ -358,6 +372,10 @@ pub struct CreateStaffParams {
     /// Role ids, as strings.
     #[serde(default)]
     pub role_ids: Vec<String>,
+    /// An Iraqi mobile number, for example `+9647501234567`. Optional.
+    pub phone: Option<String>,
+    /// Up to 80 characters. Optional.
+    pub job_title: Option<String>,
 }
 
 impl CreateStaffParams {
@@ -365,6 +383,8 @@ impl CreateStaffParams {
         Ok(AddStaffInput {
             email: StaffEmail::new(self.email)?,
             name: StaffName::new(self.name)?,
+            phone: optional_phone(self.phone)?,
+            job_title: JobTitle::optional(self.job_title)?,
             password: Password::new(self.password)?,
             roles: role_selection(self.role_ids)?,
         })
@@ -379,12 +399,18 @@ pub struct UpdateStaffParams {
     pub role_ids: Vec<String>,
     /// Leave it out to keep the password the account has.
     pub password: Option<String>,
+    /// An Iraqi mobile number. `null`, empty or left out clears it.
+    pub phone: Option<String>,
+    /// Up to 80 characters. `null`, empty or left out clears it.
+    pub job_title: Option<String>,
 }
 
 impl UpdateStaffParams {
     pub fn into_input(self) -> Result<EditStaffInput, AppError> {
         Ok(EditStaffInput {
             name: StaffName::new(self.name)?,
+            phone: optional_phone(self.phone)?,
+            job_title: JobTitle::optional(self.job_title)?,
             active: self.active,
             roles: role_selection(self.role_ids)?,
             password: self.password.map(Password::new).transpose()?,
@@ -392,9 +418,152 @@ impl UpdateStaffParams {
     }
 }
 
+/// What a staff member changes on their own account. Anything else in the
+/// body (`email`, `active`, `role_ids`, ...) is refused, not ignored, so
+/// that nothing looks changed that was not.
+#[derive(Deserialize, Validate, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct UpdateOwnStaffProfileParams {
+    pub name: String,
+    /// An Iraqi mobile number. `null`, empty or left out clears it.
+    pub phone: Option<String>,
+    /// The password the account has now. Needed with `new_password`.
+    pub current_password: Option<String>,
+    /// 10 to 200 characters. Needed with `current_password`. Leave both
+    /// out to keep the password.
+    pub new_password: Option<String>,
+}
+
+impl UpdateOwnStaffProfileParams {
+    pub fn into_input(self) -> Result<EditOwnProfileInput, AppError> {
+        let password = match (self.current_password, self.new_password) {
+            (None, None) => None,
+            (Some(current), Some(new)) => Some(OwnPasswordInput {
+                // A current password too long to be anyone's is a wrong
+                // one, not a hint about how a password must look.
+                current: Password::presented(current).map_err(|_| StaffError::WrongPassword)?,
+                new: Password::new(new)?,
+            }),
+            _ => {
+                return Err(DomainError::InvalidValue(
+                    "current_password and new_password must be sent together".to_string(),
+                )
+                .into());
+            }
+        };
+
+        Ok(EditOwnProfileInput {
+            name: StaffName::new(self.name)?,
+            phone: optional_phone(self.phone)?,
+            password,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn own_profile(body: serde_json::Value) -> Result<EditOwnProfileInput, AppError> {
+        serde_json::from_value::<UpdateOwnStaffProfileParams>(body)
+            .expect("shape")
+            .into_input()
+    }
+
+    #[test]
+    fn the_two_passwords_of_an_own_profile_change_go_together() {
+        assert!(
+            own_profile(serde_json::json!({"name": "Hiwa"}))
+                .expect("valid")
+                .password
+                .is_none()
+        );
+        assert!(
+            own_profile(serde_json::json!({
+                "name": "Hiwa", "current_password": "whatever", "new_password": "long enough new"
+            }))
+            .expect("valid")
+            .password
+            .is_some()
+        );
+        assert!(
+            own_profile(serde_json::json!({"name": "Hiwa", "new_password": "long enough new"}))
+                .is_err(),
+            "a new password without the current one proves nothing"
+        );
+        assert!(
+            own_profile(serde_json::json!({"name": "Hiwa", "current_password": "whatever"}))
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn a_new_own_password_follows_the_password_rules_and_the_phone_must_be_a_mobile() {
+        assert!(
+            own_profile(serde_json::json!({
+                "name": "Hiwa", "current_password": "whatever", "new_password": "short"
+            }))
+            .is_err()
+        );
+        assert!(own_profile(serde_json::json!({"name": "Hiwa", "phone": "0750"})).is_err());
+        assert!(
+            own_profile(serde_json::json!({"name": "Hiwa", "phone": ""}))
+                .expect("valid")
+                .phone
+                .is_none()
+        );
+        assert!(matches!(
+            own_profile(serde_json::json!({
+                "name": "Hiwa", "current_password": "a".repeat(201), "new_password": "long enough new"
+            })),
+            Err(AppError::Staff(StaffError::WrongPassword))
+        ));
+    }
+
+    #[test]
+    fn an_own_profile_change_cannot_carry_roles_the_active_state_or_an_email() {
+        for extra in ["email", "active", "role_ids", "job_title"] {
+            let mut body = serde_json::json!({"name": "Hiwa"});
+            body[extra] = serde_json::json!("x");
+
+            assert!(
+                serde_json::from_value::<UpdateOwnStaffProfileParams>(body).is_err(),
+                "{extra}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_staff_member_is_created_and_edited_with_an_optional_phone_and_job_title() {
+        let created = serde_json::from_value::<CreateStaffParams>(serde_json::json!({
+            "email": "dilan@example.org", "name": "Dilan", "password": "long enough password",
+            "phone": "+9647501234567", "job_title": " Dam engineer "
+        }))
+        .expect("shape")
+        .into_input()
+        .expect("valid");
+
+        assert_eq!(created.phone.expect("phone").as_str(), "+9647501234567");
+        assert_eq!(created.job_title.expect("title").as_str(), "Dam engineer");
+
+        let edit = |extra: (&str, serde_json::Value)| {
+            let mut body = serde_json::json!({"name": "Dilan", "active": true, "role_ids": []});
+            body[extra.0] = extra.1;
+
+            serde_json::from_value::<UpdateStaffParams>(body)
+                .expect("shape")
+                .into_input()
+        };
+
+        assert!(edit(("phone", serde_json::json!("+9645301234567"))).is_err());
+        assert!(edit(("job_title", serde_json::json!("x".repeat(81)))).is_err());
+        assert!(
+            edit(("phone", serde_json::Value::Null))
+                .expect("valid")
+                .phone
+                .is_none()
+        );
+    }
 
     #[test]
     fn every_resource_and_action_survives_the_trip_through_its_dto() {

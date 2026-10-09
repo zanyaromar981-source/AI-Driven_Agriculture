@@ -2,9 +2,38 @@ use chrono::{DateTime, Duration, Utc};
 use getset::Getters;
 
 use crate::{
-    features::farmers::domain::{FarmerError, FarmerName, Language},
+    features::farmers::domain::{
+        BirthYear, FarmerError, FarmerName, FarmerNotes, Gender, Language, PlaceSlug, Village,
+    },
     shared::Phone,
 };
+
+/// What Ministry staff record about a farmer for the support letter. All of
+/// it is optional and none of it is the farmer's to edit. The home place is
+/// held by slug only: the places themselves belong to another feature.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct FarmerDetails {
+    pub gender: Option<Gender>,
+    pub birth_year: Option<BirthYear>,
+    pub village: Option<Village>,
+    pub governorate: Option<PlaceSlug>,
+    pub zone_slug: Option<PlaceSlug>,
+    pub sub_zone_slug: Option<PlaceSlug>,
+    /// Staff only. Never part of an answer to the farmer app.
+    pub notes: Option<FarmerNotes>,
+}
+
+/// What an edit by staff sets on a farmer. There is no phone here: the
+/// phone is the account and cannot change.
+#[derive(Clone, Debug)]
+pub struct FarmerChange {
+    pub name: Option<FarmerName>,
+    pub language: Language,
+    pub details: FarmerDetails,
+    /// `None` leaves the farmer blocked or not, as they are: an edit of a
+    /// name must never let a blocked farmer back in by accident.
+    pub blocked: Option<bool>,
+}
 
 #[derive(Clone, Debug, Getters)]
 #[getset(get = "pub")]
@@ -14,6 +43,9 @@ pub struct Farmer {
     phone: Phone,
     name: Option<FarmerName>,
     language: Language,
+    details: FarmerDetails,
+    /// A blocked farmer cannot sign in and is refused on every request.
+    blocked: bool,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
@@ -28,6 +60,8 @@ impl Farmer {
             phone,
             name: None,
             language,
+            details: FarmerDetails::default(),
+            blocked: false,
             created_at: now,
             updated_at: now,
         }
@@ -43,11 +77,14 @@ impl Farmer {
     }
 
     /// Reconstruct from persisted state.
+    #[allow(clippy::too_many_arguments)]
     pub fn rehydrate(
         id: i32,
         phone: Phone,
         name: Option<FarmerName>,
         language: Language,
+        details: FarmerDetails,
+        blocked: bool,
         created_at: DateTime<Utc>,
         updated_at: DateTime<Utc>,
     ) -> Self {
@@ -56,6 +93,8 @@ impl Farmer {
             phone,
             name,
             language,
+            details,
+            blocked,
             created_at,
             updated_at,
         }
@@ -65,6 +104,16 @@ impl Farmer {
         self.name = name;
         self.language = language;
         self.updated_at = Utc::now();
+    }
+
+    /// Staff block a farmer to shut the account at once: the token they
+    /// hold and any code they are sent stop working.
+    pub fn ensure_not_blocked(&self) -> Result<(), FarmerError> {
+        if self.blocked {
+            return Err(FarmerError::Blocked);
+        }
+
+        Ok(())
     }
 }
 
@@ -247,6 +296,33 @@ mod tests {
             used.ensure_can_resend(now + Duration::seconds(1), Duration::seconds(60))
                 .is_ok()
         );
+    }
+
+    #[test]
+    fn a_new_farmer_is_not_blocked_and_has_no_details() {
+        let farmer = Farmer::new(phone(), Language::Sorani);
+
+        assert!(farmer.ensure_not_blocked().is_ok());
+        assert_eq!(*farmer.details(), FarmerDetails::default());
+    }
+
+    #[test]
+    fn a_blocked_farmer_is_refused() {
+        let farmer = Farmer::rehydrate(
+            1,
+            phone(),
+            None,
+            Language::Sorani,
+            FarmerDetails::default(),
+            true,
+            Utc::now(),
+            Utc::now(),
+        );
+
+        assert!(matches!(
+            farmer.ensure_not_blocked(),
+            Err(FarmerError::Blocked)
+        ));
     }
 
     #[test]

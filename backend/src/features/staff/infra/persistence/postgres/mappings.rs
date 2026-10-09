@@ -5,10 +5,12 @@ use crate::{
     features::staff::{
         app::AppError,
         domain::{
-            PasswordHash, Role, RoleDescription, RoleName, RoleRef, Staff, StaffEmail, StaffName,
+            JobTitle, PasswordHash, Role, RoleDescription, RoleName, RoleRef, Staff, StaffEmail,
+            StaffName,
         },
         infra::persistence::postgres::entities::{role_permissions, roles, staff, staff_roles},
     },
+    shared::Phone,
 };
 
 pub fn permission_from(model: &role_permissions::Model) -> Result<Permission, AppError> {
@@ -92,6 +94,8 @@ impl TryFrom<(staff::Model, Vec<RoleRef>)> for Staff {
             model.id,
             StaffEmail::new(model.email)?,
             StaffName::new(model.name)?,
+            model.phone.map(Phone::new).transpose()?,
+            model.job_title.map(JobTitle::new).transpose()?,
             PasswordHash::new(model.password_hash)?,
             model.active,
             roles,
@@ -114,6 +118,8 @@ impl From<&Staff> for staff::ActiveModel {
             active: Set(*entity.active()),
             created_at: Set(entity.created_at().naive_utc()),
             updated_at: Set(entity.updated_at().naive_utc()),
+            phone: Set(entity.phone().as_ref().map(String::from)),
+            job_title: Set(entity.job_title().as_ref().map(String::from)),
         }
     }
 }

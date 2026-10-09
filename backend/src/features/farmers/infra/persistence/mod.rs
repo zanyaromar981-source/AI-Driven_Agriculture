@@ -1,3 +1,5 @@
 mod postgres;
 
-pub use postgres::repo::{FarmerPostgresRepository, SignInChallengePostgresRepository};
+pub use postgres::repo::{
+    FarmerPostgresRepository, LetterPostgresRepository, SignInChallengePostgresRepository,
+};

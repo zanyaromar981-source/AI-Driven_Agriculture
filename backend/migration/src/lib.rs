@@ -22,6 +22,9 @@ impl MigratorTrait for Migrator {
             Box::new(m20261009_160000_create_briefs::Migration),
             Box::new(m20261009_170000_add_farm_cell_inside_pct::Migration),
             Box::new(m20261009_180000_create_data_versions::Migration),
+            Box::new(m20261009_200000_add_farmer_details::Migration),
+            Box::new(m20261009_201000_create_letters::Migration),
+            Box::new(m20261009_202000_add_staff_details::Migration),
         ]
     }
 }
@@ -42,3 +45,6 @@ mod m20261009_140000_alwa_dashboard;
 mod m20261009_160000_create_briefs;
 mod m20261009_170000_add_farm_cell_inside_pct;
 mod m20261009_180000_create_data_versions;
+mod m20261009_200000_add_farmer_details;
+mod m20261009_201000_create_letters;
+mod m20261009_202000_add_staff_details;

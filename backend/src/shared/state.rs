@@ -28,9 +28,9 @@ use crate::{
         doctor::app::use_cases::AskDoctorUseCase,
         farmers::app::use_cases::{
             EditFarmerUseCase, EditProfileUseCase, EnsureFarmerUseCase, IdentifyFarmerUseCase,
-            ListFarmersUseCase, RegisterFarmerUseCase, RemoveFarmerUseCase,
+            IssueLetterUseCase, ListFarmersUseCase, RegisterFarmerUseCase, RemoveFarmerUseCase,
             RequestSignInCodeUseCase, VerifySignInCodeUseCase, ViewFarmerUseCase,
-            ViewProfileUseCase,
+            ViewLetterUseCase, ViewProfileUseCase,
         },
         farms::app::use_cases::{
             EditFarmUseCase, ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
@@ -54,8 +54,9 @@ use crate::{
         },
         staff::app::use_cases::{
             AddStaffUseCase, CreateOwnerUseCase, CreateRoleUseCase, DeleteRoleUseCase,
-            EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase, ListRolesUseCase,
-            ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase, ViewStaffUseCase,
+            EditOwnProfileUseCase, EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase,
+            ListRolesUseCase, ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase,
+            ViewStaffUseCase,
         },
         water::app::use_cases::{
             CreateWaterPlanEntryUseCase, DeleteWaterPlanEntryUseCase, ListWaterPlanEntriesUseCase,
@@ -101,6 +102,8 @@ pub struct FarmerFeature {
     pub register_farmer_use_case: Arc<RegisterFarmerUseCase>,
     pub edit_farmer_use_case: Arc<EditFarmerUseCase>,
     pub remove_farmer_use_case: Arc<RemoveFarmerUseCase>,
+    pub issue_letter_use_case: Arc<IssueLetterUseCase>,
+    pub view_letter_use_case: Arc<ViewLetterUseCase>,
 }
 
 #[derive(Clone)]
@@ -230,6 +233,7 @@ pub struct StaffFeature {
     pub edit_staff_use_case: Arc<EditStaffUseCase>,
     pub remove_staff_use_case: Arc<RemoveStaffUseCase>,
     pub create_owner_use_case: Arc<CreateOwnerUseCase>,
+    pub edit_own_profile_use_case: Arc<EditOwnProfileUseCase>,
 }
 
 #[derive(Clone)]

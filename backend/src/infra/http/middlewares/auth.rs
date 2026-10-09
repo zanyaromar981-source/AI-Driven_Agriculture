@@ -1,7 +1,7 @@
 use axum::{
     extract::{FromRequestParts, Request, State},
     middleware::Next,
-    response::Response,
+    response::{IntoResponse, Response},
 };
 use axum_extra::{
     TypedHeader,
@@ -10,6 +10,7 @@ use axum_extra::{
 
 use crate::{
     app::{AppError, AuthContext, ErrorKind, ToErrorInfo, User},
+    infra::http::HttpErrorResponse,
     shared::{AppState, JwtClaims, JwtError, Phone},
 };
 
@@ -24,9 +25,9 @@ impl TryFrom<JwtClaims> for User {
 }
 
 /// Guards the farmer routes. It accepts only a token issued for the app,
-/// then asks the farmers feature whether that farmer still exists, on every
-/// request, so the token of a farmer staff have removed stops working at
-/// once.
+/// then asks the farmers feature whether that farmer still exists and is
+/// still let in, on every request, so the token of a farmer staff have
+/// removed or blocked stops working at once.
 pub async fn auth(
     State(state): State<AppState>,
     req: Request,
@@ -56,24 +57,29 @@ pub async fn auth(
         Ok(claims) => {
             let user = User::try_from(claims).map_err(|e| AppError::Unauthorized(e.to_string()))?;
 
-            state
+            if let Err(error) = state
                 .features
                 .farmer
                 .identify_farmer_use_case
                 .execute(user.phone())
                 .await
-                .map_err(|error| {
-                    let info = error.to_error_info();
+            {
+                let info = error.to_error_info();
 
+                return match info.kind {
                     // A fault of ours (the database is down) stays a server
-                    // error: the app signs the farmer out on 401. Everything
-                    // else, whatever the reason, is the same 401.
-                    if matches!(info.kind, ErrorKind::Persistence | ErrorKind::Internal) {
-                        AppError::InternalServerError
-                    } else {
-                        AppError::Unauthorized(info.detail)
+                    // error: the app signs the farmer out on 401.
+                    ErrorKind::Persistence | ErrorKind::Internal => {
+                        Err(AppError::InternalServerError)
                     }
-                })?;
+                    // A farmer staff have blocked is told so, with the code
+                    // the farmers feature gave (`blocked`), so the app can
+                    // say why instead of asking for a new sign-in code.
+                    ErrorKind::Authorization => Ok(HttpErrorResponse::from(info).into_response()),
+                    // Everything else, whatever the reason, is the same 401.
+                    _ => Err(AppError::Unauthorized(info.detail)),
+                };
+            }
 
             // Reconstruct the request with the claims in extensions
             let mut req = Request::from_parts(parts, body);

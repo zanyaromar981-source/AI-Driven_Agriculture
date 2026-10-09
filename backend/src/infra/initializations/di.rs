@@ -50,21 +50,24 @@ use crate::{
         },
         farmers::{
             app::{
-                FarmCounter, FarmRemover, FarmerRepository, SignInChallengeRepository,
-                SignInCodeGenerator, SignInCodeHasher, SignInCodeSender, TokenIssuer,
+                FarmCounter, FarmHoldings, FarmRemover, FarmerRepository, LetterIssuers,
+                LetterRepository, SignInChallengeRepository, SignInCodeGenerator, SignInCodeHasher,
+                SignInCodeSender, TokenIssuer,
                 use_cases::{
                     EditFarmerUseCase, EditProfileUseCase, EnsureFarmerUseCase,
-                    IdentifyFarmerUseCase, ListFarmersUseCase, RegisterFarmerUseCase,
-                    RemoveFarmerUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
-                    ViewFarmerUseCase, ViewProfileUseCase,
+                    IdentifyFarmerUseCase, IssueLetterUseCase, ListFarmersUseCase,
+                    RegisterFarmerUseCase, RemoveFarmerUseCase, RequestSignInCodeUseCase,
+                    VerifySignInCodeUseCase, ViewFarmerUseCase, ViewLetterUseCase,
+                    ViewProfileUseCase,
                 },
             },
             domain::SignInCode,
             infra::{
-                FarmerPostgresRepository, FarmsFeatureFarmCounter, FarmsFeatureFarmRemover,
-                FixedSignInCodeGenerator, JwtTokenIssuer, LogSignInCodeSender,
-                OtpiqSignInCodeSender, RandomSignInCodeGenerator, Sha256SignInCodeHasher,
-                SignInChallengePostgresRepository,
+                FarmerPostgresRepository, FarmsFeatureFarmCounter, FarmsFeatureFarmHoldings,
+                FarmsFeatureFarmRemover, FixedSignInCodeGenerator, JwtTokenIssuer,
+                LetterPostgresRepository, LogSignInCodeSender, OtpiqSignInCodeSender,
+                RandomSignInCodeGenerator, Sha256SignInCodeHasher,
+                SignInChallengePostgresRepository, StaffFeatureLetterIssuers,
             },
         },
         farms::{
@@ -120,9 +123,9 @@ use crate::{
                 PasswordHasher, RoleRepository, StaffRepository, StaffTokenIssuer,
                 use_cases::{
                     AddStaffUseCase, CreateOwnerUseCase, CreateRoleUseCase, DeleteRoleUseCase,
-                    EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase, ListRolesUseCase,
-                    ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase,
-                    ViewStaffUseCase,
+                    EditOwnProfileUseCase, EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase,
+                    ListRolesUseCase, ListStaffUseCase, RemoveStaffUseCase, SignInUseCase,
+                    ViewRoleUseCase, ViewStaffUseCase,
                 },
             },
             infra::{
@@ -319,6 +322,13 @@ pub async fn di_init(
     let dashboard_farm_remover: Arc<dyn FarmRemover> =
         Arc::new(FarmsFeatureFarmRemover::new(farm_repository.clone()));
     let dashboard_farmer_repository = farmer_repository.clone();
+    let letter_repository: Arc<dyn LetterRepository> =
+        Arc::new(LetterPostgresRepository::new(db_context.conn_clone()));
+    let letter_farm_holdings: Arc<dyn FarmHoldings> =
+        Arc::new(FarmsFeatureFarmHoldings::new(farm_repository.clone()));
+    let letter_issuers: Arc<dyn LetterIssuers> = Arc::new(StaffFeatureLetterIssuers::new(
+        Arc::new(StaffPostgresRepository::new(db_context.conn_clone())),
+    ));
     let farm_counter: Arc<dyn FarmCounter> =
         Arc::new(FarmsFeatureFarmCounter::new(farm_repository));
 
@@ -337,6 +347,7 @@ pub async fn di_init(
 
     let farmer = FarmerFeature {
         request_sign_in_code_use_case: Arc::new(RequestSignInCodeUseCase::new(
+            farmer_repository.clone(),
             challenge_repository.clone(),
             code_generator,
             code_hasher.clone(),
@@ -374,9 +385,16 @@ pub async fn di_init(
             dashboard_farm_counter,
         )),
         remove_farmer_use_case: Arc::new(RemoveFarmerUseCase::new(
-            dashboard_farmer_repository,
+            dashboard_farmer_repository.clone(),
             dashboard_farm_remover,
         )),
+        issue_letter_use_case: Arc::new(IssueLetterUseCase::new(
+            dashboard_farmer_repository,
+            letter_repository.clone(),
+            letter_farm_holdings,
+            letter_issuers,
+        )),
+        view_letter_use_case: Arc::new(ViewLetterUseCase::new(letter_repository)),
     };
 
     let zone_repository: Arc<dyn ZoneRepository> =
@@ -586,7 +604,14 @@ pub async fn di_init(
             password_hasher.clone(),
         )),
         remove_staff_use_case: Arc::new(RemoveStaffUseCase::new(staff_repository.clone())),
-        create_owner_use_case: Arc::new(CreateOwnerUseCase::new(staff_repository, password_hasher)),
+        create_owner_use_case: Arc::new(CreateOwnerUseCase::new(
+            staff_repository.clone(),
+            password_hasher.clone(),
+        )),
+        edit_own_profile_use_case: Arc::new(EditOwnProfileUseCase::new(
+            staff_repository,
+            password_hasher,
+        )),
     };
 
     let version_repository: Arc<dyn crate::features::versions::app::VersionRepository> = Arc::new(

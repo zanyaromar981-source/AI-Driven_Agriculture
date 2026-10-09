@@ -4,7 +4,7 @@ use crate::{
     app::Permission,
     features::staff::{
         app::AppError,
-        domain::{Role, RoleSelection, Staff, StaffChange, StaffEmail},
+        domain::{OwnProfileChange, Role, RoleSelection, Staff, StaffChange, StaffEmail},
     },
 };
 
@@ -69,6 +69,19 @@ pub trait StaffRepository: Send + Sync + std::fmt::Debug {
     /// actor holds inside the same transaction.
     async fn update(&self, id: i32, change: &StaffChange, actor_id: i32)
     -> Result<Staff, AppError>;
+
+    /// Sets the name and the phone of the staff member's own account in
+    /// one statement and returns the account, or `None` when nothing was
+    /// written. When the change carries a new password, the statement also
+    /// requires that the stored hash is still the one the current password
+    /// was checked against, so `None` then also means the password was
+    /// changed in between. Roles, the active state, the email and the job
+    /// title are never written.
+    async fn update_own_profile(
+        &self,
+        id: i32,
+        change: &OwnProfileChange,
+    ) -> Result<Option<Staff>, AppError>;
 
     /// Deletes the staff member in one transaction. Fails with `LastOwner`
     /// when they are the last active owner, checked with the rows locked.

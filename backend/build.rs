@@ -57,7 +57,7 @@ fn main() {
                     "src/features/farms/infra/persistence/postgres/entities",
                 ),
                 (
-                    "farmers,sign_in_challenges",
+                    "farmers,sign_in_challenges,letters",
                     "src/features/farmers/infra/persistence/postgres/entities",
                 ),
                 (

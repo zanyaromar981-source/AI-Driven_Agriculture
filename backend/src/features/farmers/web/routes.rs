@@ -55,4 +55,17 @@ pub fn dashboard_routes() -> Router<AppState> {
                         .route_layer(require!(Resource::Farmers, Action::Delete)),
                 ),
         )
+        // Issuing a letter stores a record but changes nothing about the
+        // farmer, and anyone who may read a farmer may print their letter:
+        // it needs `read`, not `create`.
+        .route(
+            "/farmers/{id}/letters",
+            post(handlers::dashboard_issue_letter)
+                .route_layer(require!(Resource::Farmers, Action::Read)),
+        )
+        .route(
+            "/letters/{number}",
+            get(handlers::dashboard_get_letter)
+                .route_layer(require!(Resource::Farmers, Action::Read)),
+        )
 }

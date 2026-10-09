@@ -5,8 +5,8 @@ use chrono::{Duration, Utc};
 use crate::{
     features::farmers::{
         app::{
-            AppError, SignInChallengeRepository, SignInCodeGenerator, SignInCodeHasher,
-            SignInCodeSender,
+            AppError, FarmerRepository, SignInChallengeRepository, SignInCodeGenerator,
+            SignInCodeHasher, SignInCodeSender,
         },
         domain::{FarmerError, Language, SignInChallenge},
     },
@@ -24,6 +24,7 @@ pub struct SignInCodeRequested {
 }
 
 pub struct RequestSignInCodeUseCase {
+    farmers: Arc<dyn FarmerRepository>,
     challenges: Arc<dyn SignInChallengeRepository>,
     generator: Arc<dyn SignInCodeGenerator>,
     hasher: Arc<dyn SignInCodeHasher>,
@@ -34,6 +35,7 @@ pub struct RequestSignInCodeUseCase {
 
 impl RequestSignInCodeUseCase {
     pub fn new(
+        farmers: Arc<dyn FarmerRepository>,
         challenges: Arc<dyn SignInChallengeRepository>,
         generator: Arc<dyn SignInCodeGenerator>,
         hasher: Arc<dyn SignInCodeHasher>,
@@ -42,6 +44,7 @@ impl RequestSignInCodeUseCase {
         resend_after: Duration,
     ) -> Self {
         Self {
+            farmers,
             challenges,
             generator,
             hasher,
@@ -52,7 +55,8 @@ impl RequestSignInCodeUseCase {
     }
 
     /// The answer is the same whether the phone already has an account or
-    /// not, so the endpoint cannot be used to find out who is registered.
+    /// not, and whether that account is blocked or not, so the endpoint
+    /// cannot be used to find out who is registered or who is blocked.
     pub async fn execute(
         &self,
         input: RequestSignInCodeInput,
@@ -89,6 +93,24 @@ impl RequestSignInCodeUseCase {
             .into());
         }
 
+        // A blocked farmer could not sign in with a code, so none is sent
+        // and no message is paid for. Everything an outsider can see stays
+        // as for any other phone: the challenge above is stored, so the
+        // answer and the waiting time before the next request are the same.
+        // The code itself reached nobody.
+        if self
+            .farmers
+            .find_by_phone(&input.phone)
+            .await?
+            .is_some_and(|farmer| *farmer.blocked())
+        {
+            tracing::info!("sign-in code not sent: the farmer is blocked");
+
+            return Ok(SignInCodeRequested {
+                retry_after_s: self.resend_after.num_seconds().max(0) as u64,
+            });
+        }
+
         if let Err(error) = self.sender.send(&input.phone, &code, input.language).await {
             // A code that never left must not hold the phone in its waiting
             // time, or the farmer could not ask again.
@@ -114,6 +136,7 @@ mod tests {
 
     fn use_case(fakes: &Fakes) -> RequestSignInCodeUseCase {
         RequestSignInCodeUseCase::new(
+            Arc::new(fakes.clone()),
             Arc::new(fakes.clone()),
             Arc::new(fakes.clone()),
             Arc::new(fakes.clone()),
@@ -196,6 +219,30 @@ mod tests {
                 .filter(|call| matches!(call, Call::SendCode { .. }))
                 .count(),
             1
+        );
+    }
+
+    #[tokio::test]
+    async fn a_blocked_phone_gets_the_same_answer_but_no_code_is_sent() {
+        let fakes = Fakes::new().with_blocked_farmer();
+        let use_case = use_case(&fakes);
+
+        let requested = use_case.execute(input()).await.expect("requested");
+
+        assert_eq!(requested.retry_after_s, 60);
+        assert!(
+            !fakes
+                .calls()
+                .iter()
+                .any(|call| matches!(call, Call::SendCode { .. })),
+            "a message to a blocked farmer is money spent on a code that cannot sign in"
+        );
+        assert!(
+            matches!(
+                use_case.execute(input()).await,
+                Err(AppError::Farmer(FarmerError::CodeRequestedTooSoon(_)))
+            ),
+            "asking again must look as it does for any other phone"
         );
     }
 

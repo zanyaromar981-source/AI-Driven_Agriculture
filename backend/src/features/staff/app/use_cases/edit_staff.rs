@@ -4,12 +4,17 @@ use crate::{
     app::StaffContext,
     features::staff::{
         app::{AppError, PasswordHasher, StaffRepository},
-        domain::{Password, RoleSelection, Staff, StaffChange, StaffName},
+        domain::{JobTitle, Password, RoleSelection, Staff, StaffChange, StaffName},
     },
+    shared::Phone,
 };
 
 pub struct EditStaffInput {
     pub name: StaffName,
+    /// `None` clears it.
+    pub phone: Option<Phone>,
+    /// `None` clears it.
+    pub job_title: Option<JobTitle>,
     pub active: bool,
     pub roles: RoleSelection,
     /// `None` keeps the password the account has.
@@ -40,7 +45,8 @@ impl EditStaffUseCase {
             None => None,
         };
 
-        let change = StaffChange::new(input.name, input.active, input.roles, password_hash);
+        let change = StaffChange::new(input.name, input.active, input.roles, password_hash)
+            .with_details(input.phone, input.job_title);
 
         change
             .ensure_not_deactivating_own_account(*actor.staff_id(), id)
@@ -88,6 +94,8 @@ mod tests {
     fn input(active: bool, role_ids: Vec<i32>) -> EditStaffInput {
         EditStaffInput {
             name: StaffName::new("Renamed".to_string()).expect("name"),
+            phone: None,
+            job_title: None,
             active,
             roles: RoleSelection::new(role_ids).expect("roles"),
             password: None,
@@ -135,6 +143,45 @@ mod tests {
             }],
             "no password was sent, so nothing may be hashed or overwritten"
         );
+    }
+
+    #[tokio::test]
+    async fn sets_the_phone_and_the_job_title_and_clears_them_when_left_out() {
+        let fakes = with_a_dam_officer();
+        let use_case = use_case(&fakes);
+
+        let staff = use_case
+            .execute(
+                &actor(OWNER_ID),
+                OTHER_ID,
+                EditStaffInput {
+                    phone: Some(Phone::new("+9647501234567".to_string()).expect("phone")),
+                    job_title: Some(JobTitle::new("Dam engineer".to_string()).expect("title")),
+                    ..input(true, vec![DAM_OFFICER_ROLE_ID])
+                },
+            )
+            .await
+            .expect("staff");
+
+        assert_eq!(
+            staff.phone().as_ref().map(Phone::as_str),
+            Some("+9647501234567")
+        );
+        assert_eq!(
+            staff.job_title().as_ref().map(JobTitle::as_str),
+            Some("Dam engineer")
+        );
+
+        let cleared = use_case
+            .execute(
+                &actor(OWNER_ID),
+                OTHER_ID,
+                input(true, vec![DAM_OFFICER_ROLE_ID]),
+            )
+            .await
+            .expect("staff");
+
+        assert!(cleared.phone().is_none() && cleared.job_title().is_none());
     }
 
     #[tokio::test]

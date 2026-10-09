@@ -8,8 +8,8 @@ use crate::{
     features::staff::{
         app::{AppError, PasswordHasher, RoleRepository, StaffRepository, StaffTokenIssuer},
         domain::{
-            Grantor, OwnerStanding, Password, PasswordHash, Role, RoleName, RoleRef, RoleSelection,
-            Staff, StaffChange, StaffEmail, StaffError, StaffName,
+            Grantor, OwnProfileChange, OwnerStanding, Password, PasswordHash, Role, RoleName,
+            RoleRef, RoleSelection, Staff, StaffChange, StaffEmail, StaffError, StaffName,
         },
     },
 };
@@ -55,6 +55,10 @@ pub enum Call {
         role_ids: Vec<i32>,
         sets_password: bool,
     },
+    UpdateOwnProfile {
+        id: i32,
+        sets_password: bool,
+    },
     DeleteStaff {
         id: i32,
     },
@@ -75,6 +79,7 @@ struct Script {
     roles: Vec<Role>,
     staff: Vec<Staff>,
     fail_with_database_error: bool,
+    password_changes_before_the_write: bool,
 }
 
 /// One fake standing in for every port of the feature, so a test can read
@@ -109,6 +114,16 @@ impl Fakes {
 
     pub fn with_staff(self, staff: Staff) -> Self {
         self.script.lock().expect("script lock").staff.push(staff);
+        self
+    }
+
+    /// Someone else sets the account's password between the check of the
+    /// current one and the write.
+    pub fn with_the_password_changed_before_the_write(self) -> Self {
+        self.script
+            .lock()
+            .expect("script lock")
+            .password_changes_before_the_write = true;
         self
     }
 
@@ -416,6 +431,8 @@ impl StaffRepository for Fakes {
             script.staff.len() as i32 + 1,
             entity.email().clone(),
             entity.name().clone(),
+            entity.phone().clone(),
+            entity.job_title().clone(),
             entity.password_hash().clone(),
             *entity.active(),
             script.role_refs(roles)?,
@@ -469,6 +486,8 @@ impl StaffRepository for Fakes {
             id,
             stored.email().clone(),
             change.name().clone(),
+            change.phone().clone(),
+            change.job_title().clone(),
             change
                 .password_hash()
                 .clone()
@@ -483,6 +502,65 @@ impl StaffRepository for Fakes {
         script.staff.push(updated.clone());
 
         Ok(updated)
+    }
+
+    async fn update_own_profile(
+        &self,
+        id: i32,
+        change: &OwnProfileChange,
+    ) -> Result<Option<Staff>, AppError> {
+        self.record(Call::UpdateOwnProfile {
+            id,
+            sets_password: change.password.is_some(),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(mut stored) = script
+            .staff
+            .iter()
+            .find(|staff| *staff.id() == Some(id))
+            .cloned()
+        else {
+            return Ok(None);
+        };
+
+        if script.password_changes_before_the_write {
+            stored = with_password(&stored, hash_of("set by someone else"));
+            script.staff.retain(|staff| *staff.id() != Some(id));
+            script.staff.push(stored.clone());
+        }
+
+        if change
+            .password
+            .as_ref()
+            .is_some_and(|password| password.verified_against != *stored.password_hash())
+        {
+            return Ok(None);
+        }
+
+        let updated = Staff::rehydrate(
+            id,
+            stored.email().clone(),
+            change.name.clone(),
+            change.phone.clone(),
+            stored.job_title().clone(),
+            change
+                .password
+                .as_ref()
+                .map(|password| password.new_hash.clone())
+                .unwrap_or_else(|| stored.password_hash().clone()),
+            *stored.active(),
+            stored.roles().clone(),
+            *stored.created_at(),
+            Utc::now(),
+        );
+
+        script.staff.retain(|staff| *staff.id() != Some(id));
+        script.staff.push(updated.clone());
+
+        Ok(Some(updated))
     }
 
     async fn delete(&self, id: i32) -> Result<(), AppError> {
@@ -526,6 +604,8 @@ impl StaffRepository for Fakes {
             script.staff.len() as i32 + 1,
             entity.email().clone(),
             entity.name().clone(),
+            entity.phone().clone(),
+            entity.job_title().clone(),
             entity.password_hash().clone(),
             true,
             vec![RoleRef::new(OWNER_ROLE_ID, "Owner".to_string(), true)],
@@ -614,11 +694,29 @@ pub fn a_staff_member(id: i32, email: &str, active: bool, role_ids: &[i32]) -> S
         id,
         StaffEmail::new(email.to_string()).expect("email"),
         StaffName::new("Hiwa K.".to_string()).expect("name"),
+        None,
+        None,
         hash_of(PASSWORD),
         active,
         roles,
         Utc::now(),
         Utc::now(),
+    )
+}
+
+/// The same staff member with another stored password.
+fn with_password(staff: &Staff, password_hash: PasswordHash) -> Staff {
+    Staff::rehydrate(
+        staff.id().unwrap_or_default(),
+        staff.email().clone(),
+        staff.name().clone(),
+        staff.phone().clone(),
+        staff.job_title().clone(),
+        password_hash,
+        *staff.active(),
+        staff.roles().clone(),
+        *staff.created_at(),
+        *staff.updated_at(),
     )
 }
 

@@ -13,6 +13,14 @@ pub struct Model {
     pub language: String,
     pub created_at: DateTime,
     pub updated_at: DateTime,
+    pub gender: Option<String>,
+    pub birth_year: Option<i32>,
+    pub village: Option<String>,
+    pub governorate: Option<String>,
+    pub zone_slug: Option<String>,
+    pub sub_zone_slug: Option<String>,
+    pub notes: Option<String>,
+    pub blocked: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -8,15 +8,18 @@ use axum_extra::extract::WithRejection;
 use super::{
     dtos::{
         DashboardCreateFarmerParams, DashboardFarmerResponse, DashboardFarmersQuery,
-        DashboardFarmersResponse, DashboardOneFarmerResponse, DashboardUpdateFarmerParams,
-        EditProfileParams, ProfileResponse, SendSignInCodeParams, SignInCodeSentResponse,
-        SignedInResponse, VerifySignInCodeParams,
+        DashboardFarmersResponse, DashboardIssueLetterParams, DashboardIssuedLetterResponse,
+        DashboardLetterRecordResponse, DashboardOneFarmerResponse,
+        DashboardOneIssuedLetterResponse, DashboardOneLetterRecordResponse,
+        DashboardUpdateFarmerParams, EditProfileParams, ProfileResponse, SendSignInCodeParams,
+        SignInCodeSentResponse, SignedInResponse, VerifySignInCodeParams,
     },
     errors::WebError,
 };
 
 use crate::{
     app::{AuthContext, Pagination, StaffContext},
+    features::farmers::domain::LetterNumber,
     infra::http::{ApiResponse, ErrorBody, PaginationQueryDto, ValidatedJson},
     shared::AppState,
 };
@@ -34,7 +37,7 @@ fn farmer_id(raw: &str) -> Result<i32, WebError> {
     tag = "farmers",
     request_body = SendSignInCodeParams,
     responses(
-        (status = 200, description = "Code sent", body = SignInCodeSentResponse),
+        (status = 200, description = "Code sent. The answer is the same for a phone that is not registered and for one that is blocked (no message is sent to a blocked one)", body = SignInCodeSentResponse),
         (status = 400, description = "Invalid request body", body = ErrorBody),
         (status = 422, description = "Validation error", body = ErrorBody),
         (status = 429, description = "A code was sent a moment ago", body = ErrorBody),
@@ -67,6 +70,7 @@ pub async fn send_sign_in_code(
         (status = 200, description = "Signed in", body = SignedInResponse),
         (status = 400, description = "Invalid request body", body = ErrorBody),
         (status = 401, description = "Wrong or expired code", body = ErrorBody),
+        (status = 403, description = "The code is right but staff have blocked the farmer (`blocked`)", body = ErrorBody),
         (status = 422, description = "Validation error", body = ErrorBody),
         (status = 500, description = "Internal server error", body = ErrorBody)
     )
@@ -95,6 +99,7 @@ pub async fn verify_sign_in_code(
     responses(
         (status = 200, description = "Profile retrieved successfully", body = ProfileResponse),
         (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Staff have blocked the farmer (`blocked`)", body = ErrorBody),
         (status = 404, description = "Farmer not found", body = ErrorBody),
         (status = 500, description = "Internal server error", body = ErrorBody)
     ),
@@ -147,7 +152,7 @@ pub async fn update_profile(
     Ok(ApiResponse::ok(ProfileResponse::from(&farmer)))
 }
 
-/// List farmers, newest first
+/// List farmers, filtered and sorted
 #[utoipa::path(
     get,
     path = "/v1/dashboard/farmers",
@@ -255,7 +260,7 @@ pub async fn dashboard_get_farmer(
     )?))
 }
 
-/// Change a farmer's name and language
+/// Change a farmer's name, language and details, or block them
 #[utoipa::path(
     put,
     path = "/v1/dashboard/farmers/{id}",
@@ -320,4 +325,81 @@ pub async fn dashboard_delete_farmer(
         .await?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// Issue a support letter for a farmer
+///
+/// Each call stores a new letter with the farmer's next number and answers
+/// everything the printed letter shows. A letter is a record: it cannot be
+/// changed or deleted.
+#[utoipa::path(
+    post,
+    path = "/v1/dashboard/farmers/{id}/letters",
+    tag = "farmers",
+    params(("id" = String, Path, description = "Farmer ID")),
+    request_body = DashboardIssueLetterParams,
+    responses(
+        (status = 201, description = "Letter issued", body = DashboardOneIssuedLetterResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs farmers:read", body = ErrorBody),
+        (status = 404, description = "Farmer not found", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_issue_letter(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
+    ValidatedJson(params): ValidatedJson<DashboardIssueLetterParams>,
+) -> Result<ApiResponse<DashboardOneIssuedLetterResponse>, WebError> {
+    let input = params.into_input()?;
+
+    let issued = state
+        .features
+        .farmer
+        .issue_letter_use_case
+        .execute(&staff_context, farmer_id(&id)?, input)
+        .await?;
+
+    Ok(ApiResponse::created(DashboardOneIssuedLetterResponse {
+        letter: DashboardIssuedLetterResponse::try_from(&issued)?,
+    }))
+}
+
+/// Check a support letter by the number printed on it
+#[utoipa::path(
+    get,
+    path = "/v1/dashboard/letters/{number}",
+    tag = "farmers",
+    params(("number" = String, Path, description = "Letter number, for example JTY-202610-12-1")),
+    responses(
+        (status = 200, description = "Letter retrieved successfully", body = DashboardOneLetterRecordResponse),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs farmers:read", body = ErrorBody),
+        (status = 404, description = "No letter has this number", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_get_letter(
+    State(state): State<AppState>,
+    WithRejection(Path(number), _): WithRejection<Path<String>, WebError>,
+) -> Result<ApiResponse<DashboardOneLetterRecordResponse>, WebError> {
+    // Something that is not shaped like a letter number cannot name a
+    // letter, so it is not found rather than a bad request.
+    let number = LetterNumber::new(number).map_err(|_| WebError::not_found())?;
+
+    let record = state
+        .features
+        .farmer
+        .view_letter_use_case
+        .execute(&number)
+        .await?;
+
+    Ok(ApiResponse::ok(DashboardOneLetterRecordResponse {
+        letter: DashboardLetterRecordResponse::from(&record),
+    }))
 }

@@ -6,10 +6,14 @@ use crate::{
     app::{Action, AuthContext, Pagination, Permission, Resource, StaffContext, User},
     features::farmers::{
         app::{
-            AppError, FarmCounter, FarmRemover, FarmerRepository, SignInChallengeRepository,
+            AppError, FarmCounter, FarmHoldings, FarmRemover, FarmerFilter, FarmerRepository,
+            LetterIssuers, LetterRecord, LetterRepository, SignInChallengeRepository,
             SignInCodeGenerator, SignInCodeHasher, SignInCodeSender, TokenIssuer,
         },
-        domain::{Farmer, FarmerName, Language, SignInChallenge, SignInCode},
+        domain::{
+            CropHolding, FarmHolding, Farmer, FarmerChange, FarmerDetails, Language, Letter,
+            LetterLanguage, LetterNumber, LetterPurpose, SignInChallenge, SignInCode,
+        },
     },
     shared::Phone,
 };
@@ -34,6 +38,10 @@ pub enum Call {
     UpdateFarmerById { id: i32 },
     DeleteFarmerWithChallenge { id: i32 },
     RemoveFarms { phone: String },
+    FarmHoldings { phone: String },
+    LetterIssuerName { staff_id: i32 },
+    IssueLetter { farmer_id: i32, staff_id: i32 },
+    FindLetter { number: String },
 }
 
 #[derive(Debug, Default)]
@@ -44,6 +52,8 @@ struct Script {
     lose_the_race_to_consume: bool,
     fail_to_remove_farms: bool,
     fail_to_read_farmers: bool,
+    fail_to_read_farms: bool,
+    letters: Vec<Letter>,
 }
 
 /// One fake standing in for every port of the feature, so a test can read
@@ -77,6 +87,22 @@ impl Fakes {
     pub fn with_farmer(self) -> Self {
         self.script.lock().expect("script lock").farmer = Some(a_farmer());
         self
+    }
+
+    /// The phone's farmer has been blocked by staff.
+    pub fn with_blocked_farmer(self) -> Self {
+        self.script.lock().expect("script lock").farmer = Some(with_state(&a_farmer(), None, true));
+        self
+    }
+
+    /// The farms feature cannot list the farmer's farms.
+    pub fn failing_to_read_farms(self) -> Self {
+        self.script.lock().expect("script lock").fail_to_read_farms = true;
+        self
+    }
+
+    pub fn stored_letters(&self) -> Vec<Letter> {
+        self.script.lock().expect("script lock").letters.clone()
     }
 
     /// Another request with the same code consumes the challenge first.
@@ -189,6 +215,8 @@ impl FarmerRepository for Fakes {
                 entity.phone().clone(),
                 entity.name().clone(),
                 *entity.language(),
+                entity.details().clone(),
+                *entity.blocked(),
                 *entity.created_at(),
                 *entity.updated_at(),
             ));
@@ -216,9 +244,11 @@ impl FarmerRepository for Fakes {
 
     async fn find_page(
         &self,
-        phone: Option<&Phone>,
+        filter: &FarmerFilter,
         pagination: &Pagination,
     ) -> Result<(Vec<Farmer>, u64), AppError> {
+        let phone = filter.phone.as_ref();
+
         self.record(Call::FindFarmersPage {
             phone: phone.map(String::from),
             page: *pagination.page(),
@@ -230,6 +260,11 @@ impl FarmerRepository for Fakes {
             .farmer
             .iter()
             .filter(|farmer| phone.is_none_or(|phone| farmer.phone() == phone))
+            .filter(|farmer| {
+                filter
+                    .blocked
+                    .is_none_or(|blocked| *farmer.blocked() == blocked)
+            })
             .cloned()
             .collect();
         let count = farmers.len() as u64;
@@ -253,6 +288,8 @@ impl FarmerRepository for Fakes {
             entity.phone().clone(),
             entity.name().clone(),
             *entity.language(),
+            entity.details().clone(),
+            *entity.blocked(),
             *entity.created_at(),
             *entity.updated_at(),
         );
@@ -264,8 +301,7 @@ impl FarmerRepository for Fakes {
     async fn update_by_id(
         &self,
         id: i32,
-        name: Option<&FarmerName>,
-        language: Language,
+        change: &FarmerChange,
         now: chrono::DateTime<chrono::Utc>,
     ) -> Result<Option<Farmer>, AppError> {
         self.record(Call::UpdateFarmerById { id });
@@ -283,8 +319,10 @@ impl FarmerRepository for Fakes {
         let updated = Farmer::rehydrate(
             id,
             stored.phone().clone(),
-            name.cloned(),
-            language,
+            change.name.clone(),
+            change.language,
+            change.details.clone(),
+            change.blocked.unwrap_or(*stored.blocked()),
             *stored.created_at(),
             now,
         );
@@ -310,6 +348,111 @@ impl FarmerRepository for Fakes {
         script.challenge = None;
 
         Ok(true)
+    }
+}
+
+#[async_trait]
+impl LetterRepository for Fakes {
+    async fn issue(
+        &self,
+        farmer_id: i32,
+        staff_id: i32,
+        purpose: &LetterPurpose,
+        language: LetterLanguage,
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Option<(Letter, Farmer)>, AppError> {
+        self.record(Call::IssueLetter {
+            farmer_id,
+            staff_id,
+        });
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(farmer) = script
+            .farmer
+            .clone()
+            .filter(|farmer| *farmer.id() == Some(farmer_id))
+        else {
+            return Ok(None);
+        };
+
+        let earlier = script
+            .letters
+            .iter()
+            .filter(|letter| *letter.farmer_id() == farmer_id)
+            .count() as u64;
+
+        let issued = Letter::issue(
+            farmer_id,
+            earlier + 1,
+            staff_id,
+            purpose.clone(),
+            language,
+            now,
+        );
+        let stored = Letter::rehydrate(
+            script.letters.len() as i32 + 1,
+            issued.number().clone(),
+            farmer_id,
+            staff_id,
+            purpose.clone(),
+            language,
+            now,
+        );
+        script.letters.push(stored.clone());
+
+        Ok(Some((stored, farmer)))
+    }
+
+    async fn find_by_number(
+        &self,
+        number: &LetterNumber,
+    ) -> Result<Option<LetterRecord>, AppError> {
+        self.record(Call::FindLetter {
+            number: number.as_str().to_string(),
+        });
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .letters
+            .iter()
+            .find(|letter| letter.number() == number)
+            .map(|letter| LetterRecord {
+                letter: letter.clone(),
+                farmer_name: script
+                    .farmer
+                    .as_ref()
+                    .filter(|farmer| farmer.id() == &Some(*letter.farmer_id()))
+                    .and_then(|farmer| farmer.name().clone()),
+            }))
+    }
+}
+
+#[async_trait]
+impl FarmHoldings for Fakes {
+    async fn of(&self, phone: &Phone) -> Result<Vec<FarmHolding>, AppError> {
+        self.record(Call::FarmHoldings {
+            phone: String::from(phone),
+        });
+
+        if self.script.lock().expect("script lock").fail_to_read_farms {
+            return Err(crate::app::AppError::InternalServerError.into());
+        }
+
+        Ok(vec![
+            a_holding(1, 10.0, &[("wheat", 6.0)]),
+            a_holding(2, 5.0, &[("wheat", 1.0), ("barley", 4.0)]),
+        ])
+    }
+}
+
+#[async_trait]
+impl LetterIssuers for Fakes {
+    async fn name_of(&self, staff_id: i32) -> Result<Option<String>, AppError> {
+        self.record(Call::LetterIssuerName { staff_id });
+
+        Ok((staff_id == STAFF_ID).then(|| STAFF_NAME.to_string()))
     }
 }
 
@@ -513,12 +656,47 @@ pub fn a_farmer() -> Farmer {
         phone(),
         None,
         Language::Sorani,
+        FarmerDetails::default(),
+        false,
         chrono::Utc::now(),
         chrono::Utc::now(),
     )
 }
 
+/// The same farmer with other details or another blocked state.
+pub fn with_state(farmer: &Farmer, details: Option<FarmerDetails>, blocked: bool) -> Farmer {
+    Farmer::rehydrate(
+        farmer.id().unwrap_or_default(),
+        farmer.phone().clone(),
+        farmer.name().clone(),
+        *farmer.language(),
+        details.unwrap_or_else(|| farmer.details().clone()),
+        blocked,
+        *farmer.created_at(),
+        *farmer.updated_at(),
+    )
+}
+
+pub fn a_holding(id: i32, area_dunam: f64, crops: &[(&str, f64)]) -> FarmHolding {
+    FarmHolding {
+        id,
+        name: format!("Farm {id}"),
+        governorate: None,
+        zone_slug: None,
+        sub_zone_slug: None,
+        area_dunam,
+        crops: crops
+            .iter()
+            .map(|(crop, dunam)| CropHolding {
+                crop: crop.to_string(),
+                dunam: *dunam,
+            })
+            .collect(),
+    }
+}
+
 pub const STAFF_ID: i32 = 3;
+pub const STAFF_NAME: &str = "Dilan A.";
 
 /// A staff member holding every permission on farmers.
 pub fn staff_context() -> StaffContext {

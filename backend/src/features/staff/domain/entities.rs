@@ -4,8 +4,10 @@ use getset::Getters;
 use crate::{
     app::Permission,
     features::staff::domain::{
-        PasswordHash, RoleDescription, RoleName, RoleSelection, StaffEmail, StaffError, StaffName,
+        JobTitle, PasswordHash, RoleDescription, RoleName, RoleSelection, StaffEmail, StaffError,
+        StaffName,
     },
+    shared::Phone,
 };
 
 /// Each permission once, in the order the role editor shows them.
@@ -128,6 +130,9 @@ pub struct Staff {
     id: Option<i32>,
     email: StaffEmail,
     name: StaffName,
+    /// A number colleagues can reach the staff member on. Optional.
+    phone: Option<Phone>,
+    job_title: Option<JobTitle>,
     password_hash: PasswordHash,
     active: bool,
     roles: Vec<RoleRef>,
@@ -147,6 +152,8 @@ impl Staff {
             id: None,
             email,
             name,
+            phone: None,
+            job_title: None,
             password_hash,
             active: true,
             roles: Vec::new(),
@@ -155,12 +162,21 @@ impl Staff {
         }
     }
 
+    /// The same account with a phone and a job title.
+    pub fn with_details(mut self, phone: Option<Phone>, job_title: Option<JobTitle>) -> Self {
+        self.phone = phone;
+        self.job_title = job_title;
+        self
+    }
+
     /// Reconstruct from persisted state.
     #[allow(clippy::too_many_arguments)]
     pub fn rehydrate(
         id: i32,
         email: StaffEmail,
         name: StaffName,
+        phone: Option<Phone>,
+        job_title: Option<JobTitle>,
         password_hash: PasswordHash,
         active: bool,
         roles: Vec<RoleRef>,
@@ -171,6 +187,8 @@ impl Staff {
             id: Some(id),
             email,
             name,
+            phone,
+            job_title,
             password_hash,
             active,
             roles,
@@ -191,6 +209,8 @@ impl Staff {
 #[getset(get = "pub")]
 pub struct StaffChange {
     name: StaffName,
+    phone: Option<Phone>,
+    job_title: Option<JobTitle>,
     active: bool,
     roles: RoleSelection,
     password_hash: Option<PasswordHash>,
@@ -205,10 +225,20 @@ impl StaffChange {
     ) -> Self {
         Self {
             name,
+            phone: None,
+            job_title: None,
             active,
             roles,
             password_hash,
         }
+    }
+
+    /// The same change, also setting the phone and the job title. Without
+    /// it an edit clears both.
+    pub fn with_details(mut self, phone: Option<Phone>, job_title: Option<JobTitle>) -> Self {
+        self.phone = phone;
+        self.job_title = job_title;
+        self
     }
 
     /// Nobody can lock themselves out by switching their own account off.
@@ -231,6 +261,27 @@ impl StaffChange {
                 .iter()
                 .any(|role_id| self.roles.contains(*role_id))
     }
+}
+
+/// A new password for one's own account, with the stored hash the current
+/// password was checked against. The write goes through only while that
+/// hash is still the stored one, so a check made a moment ago cannot let a
+/// change through after the password was changed elsewhere.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct OwnPasswordChange {
+    pub verified_against: PasswordHash,
+    pub new_hash: PasswordHash,
+}
+
+/// What a staff member sets on their own account. Roles, the active state,
+/// the email and the job title are not theirs to change, so they are not
+/// here.
+#[derive(Clone, Debug)]
+pub struct OwnProfileChange {
+    pub name: StaffName,
+    pub phone: Option<Phone>,
+    /// `None` keeps the password the account has.
+    pub password: Option<OwnPasswordChange>,
 }
 
 /// Nobody can delete the account they are signed in with.
@@ -320,6 +371,8 @@ mod tests {
             7,
             StaffEmail::new("hiwa@example.org".to_string()).expect("email"),
             StaffName::new("Hiwa K.".to_string()).expect("name"),
+            None,
+            None,
             PasswordHash::new("stored-hash".to_string()).expect("hash"),
             active,
             roles,
@@ -430,6 +483,34 @@ mod tests {
 
         assert!(staff.active());
         assert!(staff.roles().is_empty());
+        assert!(staff.phone().is_none());
+        assert!(staff.job_title().is_none());
+    }
+
+    #[test]
+    fn a_phone_and_a_job_title_can_be_given_to_an_account_and_to_an_edit() {
+        let phone = Phone::new("+9647501234567".to_string()).expect("phone");
+        let title = JobTitle::new("Dam engineer".to_string()).expect("title");
+
+        let staff = Staff::new(
+            StaffEmail::new("hiwa@example.org".to_string()).expect("email"),
+            StaffName::new("Hiwa K.".to_string()).expect("name"),
+            PasswordHash::new("stored-hash".to_string()).expect("hash"),
+            Utc::now(),
+        )
+        .with_details(Some(phone.clone()), Some(title.clone()));
+
+        assert_eq!(staff.phone().as_ref(), Some(&phone));
+        assert_eq!(staff.job_title().as_ref(), Some(&title));
+
+        let change = a_change(true, Vec::new());
+        assert!(
+            change.phone().is_none() && change.job_title().is_none(),
+            "an edit replaces: what it does not carry is cleared"
+        );
+
+        let change = change.with_details(Some(phone.clone()), Some(title));
+        assert_eq!(change.phone().as_ref(), Some(&phone));
     }
 
     #[test]

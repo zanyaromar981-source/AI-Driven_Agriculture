@@ -6,13 +6,16 @@ use crate::{
     app::StaffContext,
     features::staff::{
         app::{AppError, PasswordHasher, StaffRepository},
-        domain::{Password, RoleSelection, Staff, StaffEmail, StaffName},
+        domain::{JobTitle, Password, RoleSelection, Staff, StaffEmail, StaffName},
     },
+    shared::Phone,
 };
 
 pub struct AddStaffInput {
     pub email: StaffEmail,
     pub name: StaffName,
+    pub phone: Option<Phone>,
+    pub job_title: Option<JobTitle>,
     pub password: Password,
     pub roles: RoleSelection,
 }
@@ -36,7 +39,8 @@ impl AddStaffUseCase {
     ) -> Result<Staff, AppError> {
         let password_hash = self.hasher.hash(&input.password).await?;
 
-        let staff = Staff::new(input.email, input.name, password_hash, Utc::now());
+        let staff = Staff::new(input.email, input.name, password_hash, Utc::now())
+            .with_details(input.phone, input.job_title);
 
         let created = self
             .staff
@@ -74,6 +78,8 @@ mod tests {
         AddStaffInput {
             email: StaffEmail::new(email.to_string()).expect("email"),
             name: StaffName::new("Dilan A.".to_string()).expect("name"),
+            phone: None,
+            job_title: None,
             password: Password::new(PASSWORD.to_string()).expect("password"),
             roles: RoleSelection::new(role_ids).expect("roles"),
         }
@@ -102,6 +108,32 @@ mod tests {
                     role_ids: vec![DAM_OFFICER_ROLE_ID],
                 }
             ]
+        );
+    }
+
+    #[tokio::test]
+    async fn stores_the_phone_and_the_job_title_when_given() {
+        let fakes = Fakes::new();
+
+        let staff = use_case(&fakes)
+            .execute(
+                &actor(OWNER_ID),
+                AddStaffInput {
+                    phone: Some(Phone::new("+9647501234567".to_string()).expect("phone")),
+                    job_title: Some(JobTitle::new("Dam engineer".to_string()).expect("title")),
+                    ..input("dilan@example.org", Vec::new())
+                },
+            )
+            .await
+            .expect("staff");
+
+        assert_eq!(
+            staff.phone().as_ref().map(Phone::as_str),
+            Some("+9647501234567")
+        );
+        assert_eq!(
+            staff.job_title().as_ref().map(JobTitle::as_str),
+            Some("Dam engineer")
         );
     }
 
