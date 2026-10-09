@@ -6,7 +6,7 @@ use crate::{
         domain::{
             BuyerKind, Crop, DisplayName, GeoPoint, Grade, Listing, ListingStatus, Market,
             MarketSlug, Moderation, Note, Offer, OfferStatus, Pickup, Price, PricePerKg,
-            PriceSource, QuantityKg, ZoneSlug,
+            PriceSource, ProductGroup, QuantityKg, Unit, ZoneSlug,
         },
         infra::persistence::postgres::entities::{
             alwa_listings, alwa_markets, alwa_offers, alwa_prices,
@@ -44,7 +44,8 @@ impl TryFrom<alwa_prices::Model> for Price {
             model.fixed,
             PriceSource::new(model.source)?,
             model.updated_at.and_utc(),
-        ))
+        )
+        .per(Unit::try_from(model.unit.as_str())?))
     }
 }
 
@@ -62,6 +63,7 @@ impl From<&Price> for alwa_prices::ActiveModel {
             fixed: Set(*price.fixed()),
             source: Set(price.source().into()),
             updated_at: Set(price.updated_at().naive_utc()),
+            unit: Set((*price.unit()).into()),
         }
     }
 }
@@ -101,7 +103,11 @@ impl TryFrom<(alwa_listings::Model, Option<MarketSlug>)> for Listing {
             model.created_at.and_utc(),
             model.updated_at.and_utc(),
         )
-        .placed_at(point);
+        .placed_at(point)
+        .sold_as(
+            ProductGroup::try_from(model.grp.as_str())?,
+            Unit::try_from(model.unit.as_str())?,
+        );
 
         Ok(match moderation {
             Some(moderation) => listing.moderated(moderation),
@@ -143,6 +149,8 @@ impl From<&Listing> for alwa_listings::ActiveModel {
                 .and_then(|moderation| moderation.note().as_ref().map(Into::into))),
             lat: Set(listing.point().map(|point| point.lat())),
             lon: Set(listing.point().map(|point| point.lon())),
+            grp: Set((*listing.group()).into()),
+            unit: Set((*listing.unit()).into()),
         }
     }
 }

@@ -38,7 +38,9 @@ pub trait PublicTotalsSwitch: Send + Sync + std::fmt::Debug {
 }
 
 /// Which crops may be painted on new data. Owned by the crops feature,
-/// where staff keep the list.
+/// where staff keep the list. That list also holds the other products of
+/// the Marketplace (eggs, honey, sheep): they are not crops and are never
+/// among the ones returned here.
 #[async_trait]
 pub trait CropDirectory: Send + Sync + std::fmt::Debug {
     /// The crops switched on right now. A use case asks once per request,

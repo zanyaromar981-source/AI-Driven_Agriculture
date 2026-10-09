@@ -14,7 +14,9 @@ use super::handlers;
 /// What the app and the public page read without a login: the crops that
 /// are switched on, with their names and colours.
 pub fn public_routes() -> Router<AppState> {
-    Router::new().route("/crops", get(handlers::get_crops))
+    Router::new()
+        .route("/crops", get(handlers::get_crops))
+        .route("/products", get(handlers::get_products))
 }
 
 /// What Ministry staff do on the dashboard. Mounted under `/v1/dashboard`,

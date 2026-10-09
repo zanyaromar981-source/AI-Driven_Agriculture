@@ -2,16 +2,20 @@ use crate::{features::alwa::domain::AlwaError, shared::DomainError};
 
 const MAX_KG: i64 = 1_000_000;
 
-/// A weight of crop in whole kilograms, from 1 kg to 1,000 tonnes.
+/// How much is on sale or asked for: a whole number of the product's unit.
+/// It began as kilograms of a crop and keeps that name; 1 to 1,000 tonnes
+/// is the widest range any unit has, and a listing narrows it to its own
+/// unit's ([`Unit::max_quantity`](crate::features::alwa::domain::Unit::max_quantity)).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct QuantityKg(i32);
 
 impl QuantityKg {
     pub fn new(value: i64) -> Result<Self, AlwaError> {
         if !(1..=MAX_KG).contains(&value) {
-            return Err(
-                DomainError::InvalidValue(format!("Quantity must be 1 to {MAX_KG} kg")).into(),
-            );
+            return Err(DomainError::InvalidValue(format!(
+                "Quantity must be a whole number, 1 to {MAX_KG}"
+            ))
+            .into());
         }
 
         Ok(Self(value as i32))

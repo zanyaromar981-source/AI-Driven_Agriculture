@@ -5,7 +5,7 @@ For everyone building the farmer app and the website (public View page and staff
 Status: v7, 2026-10-10, API version 1.7.0. Three places describe the API, from short to complete:
 
 1. **This file**: how things work, which screen calls what, the rules, what is empty today.
-2. **`backend/API.md`**: every route (189 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
+2. **`backend/API.md`**: every route (190 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
 3. **`/api-docs` on the server**: the same, clickable, with a "try it" button.
 
 `BACKEND.md` is where the frontend writes what it needs. Where the two files disagree, say so in the files and we fix one of them.
@@ -27,7 +27,7 @@ Newest first. Each line says what to change on your side. Details are in the sec
 | **Messages to the Ministry** (section 4) | `POST /v1/messages`, `GET /v1/messages/mine`. | Inbox: `/v1/dashboard/messages...`. |
 | **A place on every farm** | Farm answers carry `governorate`, `zone_slug`, `sub_zone_slug`: show them, nothing to send. | Farm filters and the totals routes (section 9). |
 | **Dams, district history, fire wind** (sections 7, 11) | Region screens now have data: dams since 2008, change against last year, wind at fires. | The same. Label dam `pct_full` as "lake area, % of full". |
-| **Being built:** the Marketplace of `BACKEND.md` 2.16 (products with units) | Keep selling crops by the kg until this table says it is in. | Nothing yet. |
+| **Marketplace: products with units** (section 5, `BACKEND.md` 2.16) | It is in. Read `GET /v1/products` for the groups, products and units. Post with `product`, `quantity`, `asking_price_iqd`; read `product`, `group`, `unit`, `quantity`, `asking_price_iqd` on every listing; filter with `group=` and `product=`. **Move over soon:** an app that still reads only `crop` and `quantity_kg` shows a listing of eggs as an empty crop with 0 kg. | Crops page now edits all products (`group`, `unit`). Listing and price rows carry `product` and `unit`; the kg fields are null for non-kg products. |
 
 Contents: 0 what changed and what to do, 1 where it is, 2 who calls what, 3 rules for every route, 4 the farmer app, 5 Alwa market, 5B workers for hire, 6 Ask the Doctor, 7 public data, 8 website sign-in and roles, 9 website data routes, 10 caching, 11 what has real data today, 12 things that trip you up, 13 error codes, 14 not built yet, 15 open questions.
 
@@ -182,6 +182,14 @@ Sellers set their own price on each listing and buyers call them. There is no au
 - **Rules:** at most 20 open listings per phone (`too_many_listings`); a listing closes at `closes_at`, at most 14 days ahead (`bad_closes_at`).
 - **`fair_price`** on a listing is `fair`, `high`, `low` or `unknown`. It is `unknown` unless staff have entered a price for that crop at that market in the last 7 days.
 - Crop codes: the crops table, `GET /v1/crops` (16 seeded: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple).
+- **Marketplace: more than crops.** `GET /v1/products` (no login) answers `{"products": [{"code", "group", "unit", "name_en", "name_ku"}]}`: 30 products in the groups `crops`, `fish_meat_eggs`, `honey_dairy`, `animals`, `nuts_dried`, with the units `kg`, `tray_30` (a tray of 30 eggs), `litre`, `head` (one animal). `GET /v1/crops` still lists only the 16 crops, for painting farms.
+  - Post with `{"product", "quantity", "asking_price_iqd", "lat", "lon", "closes_at"}`: `quantity` is a whole number in the product's unit, the price is for one unit, and the server fills `unit` and `group`. The old `crop`, `quantity_kg`, `asking_price_iqd_per_kg` still work for kg products only; a kg field on a non-kg product, or the two forms disagreeing, is `422 invalid` with `field`.
+  - Limits: `kg` 1 to 1,000,000; `tray_30` 1 to 10,000; `litre` 1 to 100,000; `head` 1 to 1,000.
+  - Every listing answer carries `product`, `group`, `unit`, `quantity`, `asking_price_iqd`. The old `crop`, `quantity_kg`, `asking_price_iqd_per_kg` stay filled for kg products and are `null` for the others.
+  - Filters: `group=`, `product=` (`crop=` is the same as `product=`).
+  - Price board rows carry `product` and `unit`; for a non-kg product the field still named `price_iqd_per_kg` holds the price per unit (per tray, per head). `fair_price` compares the same product and unit.
+  - Offers work on kg listings only; an offer on another unit is `422 offers_kg_only`.
+  - Farms can be painted only with products of group `crops`.
 - **Still there for the website, not used by the app:** `POST /v1/alwa/listings/{id}/offers`, `.../offers/{offer_id}/accept`, `GET /v1/alwa/offers/mine`, `GET /v1/alwa/deals`. Their rules: no offer on your own listing (`own_listing`), one open offer per buyer per listing, accepting sells the whole listing; codes `offer_not_open`, `offer_too_large`.
 - Known rough edge: staff cannot delete a listing that was marked sold (`listing_has_deal`).
 

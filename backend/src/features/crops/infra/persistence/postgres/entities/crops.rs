@@ -18,6 +18,8 @@ pub struct Model {
     pub sort_order: i32,
     pub created_at: DateTime,
     pub updated_at: DateTime,
+    pub grp: String,
+    pub unit: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

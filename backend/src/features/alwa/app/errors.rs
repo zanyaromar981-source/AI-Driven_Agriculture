@@ -38,6 +38,13 @@ impl ToErrorInfo for AlwaError {
                 "status_not_allowed",
                 self.to_string(),
             ),
+            // The web layer adds the `field` to this answer.
+            AlwaError::InvalidField { .. } => {
+                ErrorInfo::new(ErrorKind::InvalidInput, self.to_string())
+            }
+            AlwaError::OffersOnlyByKg(_) => {
+                ErrorInfo::with_code(ErrorKind::InvalidInput, "offers_kg_only", self.to_string())
+            }
             AlwaError::UnknownCrop(_) => {
                 ErrorInfo::with_code(ErrorKind::InvalidInput, "unknown_crop", self.to_string())
             }
@@ -84,6 +91,24 @@ impl ToErrorInfo for AppError {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_bad_value_is_invalid_and_an_offer_on_trays_has_its_own_code() {
+        let info = AlwaError::InvalidField {
+            field: "quantity",
+            detail: "Quantity must be 1 to 1000 head".to_string(),
+        }
+        .to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::InvalidInput);
+        assert_eq!(info.code, "invalid");
+        assert_eq!(info.detail, "Quantity must be 1 to 1000 head");
+
+        let info = AlwaError::OffersOnlyByKg("head".to_string()).to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::InvalidInput);
+        assert_eq!(info.code, "offers_kg_only");
+    }
 
     #[test]
     fn a_broken_rule_carries_the_code_the_app_acts_on() {

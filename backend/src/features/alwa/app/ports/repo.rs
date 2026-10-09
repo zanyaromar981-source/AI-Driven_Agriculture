@@ -7,7 +7,7 @@ use crate::{
         app::AppError,
         domain::{
             Crop, Deal, GeoPoint, IdempotencyKey, Listing, ListingStatus, Market, MarketNames,
-            MarketSlug, Offer, Price,
+            MarketSlug, Offer, Price, ProductGroup,
         },
     },
     shared::Phone,
@@ -17,7 +17,9 @@ use crate::{
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ListingFilter {
     pub market_id: Option<i32>,
+    /// A product code: a crop or anything else that is sold.
     pub crop: Option<Crop>,
+    pub group: Option<ProductGroup>,
     /// The status a reader sees, see `Listing::status_at`.
     pub status: ListingStatus,
 }

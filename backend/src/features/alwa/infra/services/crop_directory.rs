@@ -7,7 +7,7 @@ use crate::{
     features::{
         alwa::{
             app::{AppError, CropDirectory},
-            domain::{ActiveCrops, Crop},
+            domain::{ActiveCrops, AlwaError, Crop, Product, ProductGroup, Unit},
         },
         crops::app::CropRepository,
     },
@@ -43,13 +43,23 @@ impl CropDirectory for CropsFeatureCropDirectory {
             .await
             .map_err(|error| failed(&error))?;
 
-        let codes = crops
+        // The two features name groups and units with the same words; the
+        // word is what crosses, so neither depends on the other's enum.
+        let products = crops
             .iter()
-            .map(|crop| Crop::new(crop.code().as_str()))
+            .map(|crop| {
+                let details = crop.details();
+
+                Ok::<_, AlwaError>(Product::new(
+                    Crop::new(crop.code().as_str())?,
+                    ProductGroup::try_from(String::from(details.group).as_str())?,
+                    Unit::try_from(String::from(details.unit).as_str())?,
+                ))
+            })
             .collect::<Result<Vec<_>, _>>()
             .map_err(|error| failed(&error))?;
 
-        Ok(ActiveCrops::new(codes))
+        Ok(ActiveCrops::new(products))
     }
 }
 
@@ -76,6 +86,56 @@ mod tests {
             repository.calls(),
             vec![RepositoryCall::FindAll { only_active: true }]
         );
+    }
+
+    #[tokio::test]
+    async fn a_product_that_is_not_a_crop_is_allowed_and_keeps_its_group_and_unit() {
+        use crate::features::crops::{app::testing::a_product, domain};
+
+        let directory =
+            CropsFeatureCropDirectory::new(Arc::new(FakeCropRepository::holding(vec![
+                a_crop("wheat", 10, true),
+                a_product(
+                    "eggs",
+                    230,
+                    domain::ProductGroup::FishMeatEggs,
+                    domain::ProductUnit::Tray30,
+                ),
+                a_product(
+                    "cow",
+                    300,
+                    domain::ProductGroup::Animals,
+                    domain::ProductUnit::Head,
+                ),
+            ])));
+
+        let active = directory.active().await.expect("active crops");
+
+        assert_eq!(
+            active.allow(Crop::of("wheat")).expect("wheat"),
+            Product::crop("wheat")
+        );
+        assert_eq!(
+            active.allow(Crop::of("eggs")).expect("eggs"),
+            Product::of("eggs", ProductGroup::FishMeatEggs, Unit::Tray30)
+        );
+        assert_eq!(
+            active.allow(Crop::of("cow")).expect("cow"),
+            Product::of("cow", ProductGroup::Animals, Unit::Head)
+        );
+    }
+
+    #[test]
+    fn every_group_and_unit_of_the_crops_feature_has_its_word_here() {
+        use crate::features::crops::domain;
+
+        for group in domain::ProductGroup::ALL {
+            assert!(ProductGroup::try_from(String::from(group).as_str()).is_ok());
+        }
+
+        for unit in domain::ProductUnit::ALL {
+            assert!(Unit::try_from(String::from(unit).as_str()).is_ok());
+        }
     }
 
     #[tokio::test]

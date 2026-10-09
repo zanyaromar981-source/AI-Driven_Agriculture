@@ -768,6 +768,10 @@ pub async fn di_init(
         delete_listing_use_case: Arc::new(DeleteListingUseCase::new(alwa_repository.clone())),
     };
 
+    let alwa_crop_usage: Arc<dyn crate::features::crops::app::CropUsage> = Arc::new(
+        crate::features::crops::infra::AlwaFeatureCropUsage::new(alwa_repository),
+    );
+
     let crop = crate::shared::CropFeature {
         list_crops_use_case: Arc::new(
             crate::features::crops::app::use_cases::ListCropsUseCase::new(crop_repository.clone()),
@@ -776,17 +780,15 @@ pub async fn di_init(
             crate::features::crops::app::use_cases::CreateCropUseCase::new(crop_repository.clone()),
         ),
         update_crop_use_case: Arc::new(
-            crate::features::crops::app::use_cases::UpdateCropUseCase::new(crop_repository.clone()),
+            crate::features::crops::app::use_cases::UpdateCropUseCase::new(
+                crop_repository.clone(),
+                alwa_crop_usage.clone(),
+            ),
         ),
         delete_crop_use_case: Arc::new(
             crate::features::crops::app::use_cases::DeleteCropUseCase::new(
                 crop_repository,
-                vec![
-                    farm_crop_usage,
-                    Arc::new(crate::features::crops::infra::AlwaFeatureCropUsage::new(
-                        alwa_repository,
-                    )),
-                ],
+                vec![farm_crop_usage, alwa_crop_usage],
             ),
         ),
     };

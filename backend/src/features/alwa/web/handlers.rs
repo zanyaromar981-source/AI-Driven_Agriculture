@@ -118,6 +118,7 @@ pub async fn get_price_history(
 
     Ok(ApiResponse::ok(AlwaPriceHistoryResponse {
         market: market.slug().into(),
+        product: crop.into(),
         crop: crop.into(),
         history: history.iter().map(Into::into).collect(),
     }))

@@ -27,11 +27,10 @@ impl CreatePriceUseCase {
         input: RecordPriceInput,
     ) -> Result<(Market, Price), AppError> {
         // A new price must name a crop staff have switched on.
-        self.crops
-            .active()
-            .await?
-            .allow(input.crop)
-            .inspect_err(|error| tracing::info!(%error, "price refused: the crop is not in use"))?;
+        let product =
+            self.crops.active().await?.allow(input.crop).inspect_err(
+                |error| tracing::info!(%error, "price refused: the crop is not in use"),
+            )?;
 
         let Some(market) = self.repository.find_market_by_slug(&input.market).await? else {
             tracing::info!(
@@ -43,9 +42,10 @@ impl CreatePriceUseCase {
             return Err(GlobalAppError::NotFound.into());
         };
 
+        // The price is for one of the product's unit as it is today.
         let price = Price::new(
             &market,
-            input.crop,
+            product,
             input.day,
             input.price,
             input.fixed,
@@ -103,6 +103,34 @@ mod tests {
             fixed: true,
             source: PriceSource::new("ministry desk".to_string()).expect("source"),
         }
+    }
+
+    #[tokio::test]
+    async fn a_price_for_a_product_that_is_not_a_crop_is_stored_in_that_products_unit() {
+        use crate::features::alwa::domain::{Product, ProductGroup, Unit};
+
+        let repository = FakeAlwaRepository::new();
+        let use_case = CreatePriceUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded().and(Product::of(
+                "eggs",
+                ProductGroup::FishMeatEggs,
+                Unit::Tray30,
+            ))),
+        );
+        let eggs = RecordPriceInput {
+            crop: Crop::of("eggs"),
+            ..input(6_000)
+        };
+
+        let (_, price) = use_case.execute(9, eggs).await.expect("price");
+
+        assert_eq!(*price.unit(), Unit::Tray30);
+        assert_eq!(repository.stored_prices()[0].unit(), &Unit::Tray30);
+
+        let (_, wheat) = use_case.execute(9, input(850)).await.expect("price");
+
+        assert_eq!(*wheat.unit(), Unit::Kg);
     }
 
     #[tokio::test]
