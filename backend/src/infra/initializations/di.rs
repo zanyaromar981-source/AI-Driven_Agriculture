@@ -53,16 +53,17 @@ use crate::{
                 FarmCounter, FarmRemover, FarmerRepository, SignInChallengeRepository,
                 SignInCodeGenerator, SignInCodeHasher, SignInCodeSender, TokenIssuer,
                 use_cases::{
-                    EditFarmerUseCase, EditProfileUseCase, ListFarmersUseCase,
-                    RegisterFarmerUseCase, RemoveFarmerUseCase, RequestSignInCodeUseCase,
-                    VerifySignInCodeUseCase, ViewFarmerUseCase, ViewProfileUseCase,
+                    EditFarmerUseCase, EditProfileUseCase, EnsureFarmerUseCase,
+                    IdentifyFarmerUseCase, ListFarmersUseCase, RegisterFarmerUseCase,
+                    RemoveFarmerUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
+                    ViewFarmerUseCase, ViewProfileUseCase,
                 },
             },
             domain::SignInCode,
             infra::{
                 FarmerPostgresRepository, FarmsFeatureFarmCounter, FarmsFeatureFarmRemover,
                 FixedSignInCodeGenerator, JwtTokenIssuer, LogSignInCodeSender,
-                RandomSignInCodeGenerator, Sha256SignInCodeHasher,
+                OtpiqSignInCodeSender, RandomSignInCodeGenerator, Sha256SignInCodeHasher,
                 SignInChallengePostgresRepository,
             },
         },
@@ -277,7 +278,37 @@ pub async fn di_init(
     );
     let code_hasher: Arc<dyn SignInCodeHasher> =
         Arc::new(Sha256SignInCodeHasher::new(config.auth.jwt_secret.clone()));
-    let code_sender: Arc<dyn SignInCodeSender> = Arc::new(LogSignInCodeSender);
+    let code_sender: Arc<dyn SignInCodeSender> = match &config.otpiq.api_key {
+        Some(api_key) => {
+            if config.auth.sign_in_code.fixed.is_some() {
+                return Err(
+                    "AUTH__FIXED_SIGN_IN_CODE and OTPIQ__API_KEY are both set: a fixed code \
+                     with real delivery would text every phone the same code. Unset one of them."
+                        .into(),
+                );
+            }
+
+            let sender = OtpiqSignInCodeSender::new(api_key.clone(), &config.otpiq)?;
+
+            tracing::info!(
+                sender = "otpiq",
+                provider = %config.otpiq.provider,
+                base_url = %config.otpiq.base_url,
+                timeout_seconds = config.otpiq.timeout_seconds,
+                "sign-in codes are delivered through OTPIQ"
+            );
+
+            Arc::new(sender)
+        }
+        None => {
+            tracing::warn!(
+                sender = "log",
+                "OTPIQ__API_KEY is not set: sign-in codes are written to the server log"
+            );
+
+            Arc::new(LogSignInCodeSender)
+        }
+    };
     let token_issuer: Arc<dyn TokenIssuer> = Arc::new(JwtTokenIssuer::new(config.auth.clone()));
     let dashboard_farm_counter: Arc<dyn FarmCounter> =
         Arc::new(FarmsFeatureFarmCounter::new(farm_repository.clone()));
@@ -318,6 +349,8 @@ pub async fn di_init(
             config.auth.sign_in_code.max_attempts,
             Duration::seconds(config.auth.sign_in_code.reuse_window_seconds),
         )),
+        identify_farmer_use_case: Arc::new(IdentifyFarmerUseCase::new(farmer_repository.clone())),
+        ensure_farmer_use_case: Arc::new(EnsureFarmerUseCase::new(farmer_repository.clone())),
         view_profile_use_case: Arc::new(ViewProfileUseCase::new(farmer_repository.clone())),
         edit_profile_use_case: Arc::new(EditProfileUseCase::new(farmer_repository)),
         list_farmers_use_case: Arc::new(ListFarmersUseCase::new(

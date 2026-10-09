@@ -43,6 +43,7 @@ struct Script {
     fail_to_send: bool,
     lose_the_race_to_consume: bool,
     fail_to_remove_farms: bool,
+    fail_to_read_farmers: bool,
 }
 
 /// One fake standing in for every port of the feature, so a test can read
@@ -93,6 +94,15 @@ impl Fakes {
             .lock()
             .expect("script lock")
             .fail_to_remove_farms = true;
+        self
+    }
+
+    /// The database cannot be read when a farmer is looked up by phone.
+    pub fn failing_to_read_farmers(self) -> Self {
+        self.script
+            .lock()
+            .expect("script lock")
+            .fail_to_read_farmers = true;
         self
     }
 
@@ -155,7 +165,15 @@ impl FarmerRepository for Fakes {
             phone: String::from(phone),
         });
 
-        Ok(self.script.lock().expect("script lock").farmer.clone())
+        let script = self.script.lock().expect("script lock");
+
+        if script.fail_to_read_farmers {
+            return Err(
+                crate::app::AppError::DatabaseError("connection refused".to_string()).into(),
+            );
+        }
+
+        Ok(script.farmer.clone())
     }
 
     async fn create_if_absent(&self, entity: &Farmer) -> Result<(), AppError> {

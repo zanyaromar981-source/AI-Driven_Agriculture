@@ -1,5 +1,7 @@
 pub mod edit_farmer;
 pub mod edit_profile;
+pub mod ensure_farmer;
+pub mod identify_farmer;
 pub mod list_farmers;
 pub mod register_farmer;
 pub mod remove_farmer;
@@ -10,6 +12,8 @@ pub mod view_profile;
 
 pub use edit_farmer::*;
 pub use edit_profile::*;
+pub use ensure_farmer::*;
+pub use identify_farmer::*;
 pub use list_farmers::*;
 pub use register_farmer::*;
 pub use remove_farmer::*;

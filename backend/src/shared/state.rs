@@ -27,9 +27,10 @@ use crate::{
         },
         doctor::app::use_cases::AskDoctorUseCase,
         farmers::app::use_cases::{
-            EditFarmerUseCase, EditProfileUseCase, ListFarmersUseCase, RegisterFarmerUseCase,
-            RemoveFarmerUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
-            ViewFarmerUseCase, ViewProfileUseCase,
+            EditFarmerUseCase, EditProfileUseCase, EnsureFarmerUseCase, IdentifyFarmerUseCase,
+            ListFarmersUseCase, RegisterFarmerUseCase, RemoveFarmerUseCase,
+            RequestSignInCodeUseCase, VerifySignInCodeUseCase, ViewFarmerUseCase,
+            ViewProfileUseCase,
         },
         farms::app::use_cases::{
             ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
@@ -90,6 +91,8 @@ pub struct FarmFeature {
 pub struct FarmerFeature {
     pub request_sign_in_code_use_case: Arc<RequestSignInCodeUseCase>,
     pub verify_sign_in_code_use_case: Arc<VerifySignInCodeUseCase>,
+    pub identify_farmer_use_case: Arc<IdentifyFarmerUseCase>,
+    pub ensure_farmer_use_case: Arc<EnsureFarmerUseCase>,
     pub view_profile_use_case: Arc<ViewProfileUseCase>,
     pub edit_profile_use_case: Arc<EditProfileUseCase>,
     pub list_farmers_use_case: Arc<ListFarmersUseCase>,

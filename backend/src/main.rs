@@ -78,6 +78,8 @@ enum Commands {
     /// Run database migrations.
     Migrate,
     /// Print a sign-in token for a phone number, for local work with curl.
+    /// Needs the database: it also creates the farmer if the phone has none,
+    /// because a token whose farmer does not exist is refused.
     Token {
         /// E.164 Iraqi mobile number, for example +9647501234567.
         phone: String,
@@ -98,7 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     match cli.command {
         Some(Commands::Migrate) => return run_migrations().await,
-        Some(Commands::Token { phone }) => return print_token(phone),
+        Some(Commands::Token { phone }) => return print_token(phone).await,
         Some(Commands::CreateOwner { email, name }) => return create_owner(email, name).await,
         Some(Commands::Serve) | None => {}
     }
@@ -189,9 +191,18 @@ async fn run_migrations() -> Result<(), Box<dyn std::error::Error + Send + Sync>
     Ok(())
 }
 
-fn print_token(phone: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let config = Config::from_env();
+async fn print_token(phone: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let phone = Phone::new(phone)?;
+
+    let config = Config::from_env();
+    let db_context = postgres_init(&config).await?;
+    let features = di_init(&config, db_context).await?;
+
+    features
+        .farmer
+        .ensure_farmer_use_case
+        .execute(&phone)
+        .await?;
 
     let token = issue_jwt(
         phone.as_str(),

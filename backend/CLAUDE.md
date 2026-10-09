@@ -77,7 +77,7 @@ The app retries on timeouts and 5xx, and data jobs re-run and overlap. Every wri
 ## 7. Security
 
 - Never commit keys. `.env` files are ignored; `.env.example` holds names only.
-- Secrets, sign-in codes and tokens never appear in logs or `Debug` output (the one deliberate exception is `LogSignInCodeSender`, which exists only until an SMS provider is chosen).
+- Secrets, sign-in codes and tokens never appear in logs or `Debug` output (the one deliberate exception is `LogSignInCodeSender`, used only when no OTPIQ key is configured).
 - Compare secrets without leaking where they differ (`service_key.rs`).
 - Phone numbers are private: do not return one user's phone to another unless a rule in the domain says so (an Alwa deal).
 

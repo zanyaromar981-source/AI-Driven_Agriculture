@@ -43,7 +43,9 @@ sha2 = "0.10"
 hex = "0.4"
 rand = "0.9"
 argon2 = "0.5"
-reqwest = { version = "0.13.5", default-features = false, features = ["json"] }
+# HTTP client: for the local Farm Doctor service and for the OTPIQ sign-in
+# code sender. rustls for the HTTPS call to OTPIQ, JSON bodies, nothing else.
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls"] }
 base64 = "0.22.1"
 
 opentelemetry = { version = "0.32", features = ["trace"] }

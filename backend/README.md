@@ -39,9 +39,11 @@ cargo run                     # API on http://localhost:3000
 
 ## Signing in
 
-`POST /v1/auth/otp/send` then `POST /v1/auth/otp/verify`, as the app does. No SMS provider is wired yet: the code is written to the server log. For a demo, set `AUTH__FIXED_SIGN_IN_CODE=123456` in `.env` and every phone signs in with that code. Do not use either with real farmers.
+`POST /v1/auth/otp/send` then `POST /v1/auth/otp/verify`, as the app does. With `OTPIQ__API_KEY` set, the code is delivered through OTPIQ (SMS, WhatsApp or Telegram; see the `OTPIQ__*` names in `.env.example`). Without a key the code is written to the server log. For a demo, set `AUTH__FIXED_SIGN_IN_CODE=123456` in `.env` and every phone signs in with that code. Do not use the log or a fixed code with real farmers; a fixed code together with an OTPIQ key stops the server at start-up.
 
-For quick work with curl, a token can also be printed directly:
+A farmer's token works only while the farmer exists: once staff delete the farmer, every farmer route answers `401`.
+
+For quick work with curl, a token can also be printed directly. The command needs the database, because it also creates the farmer if the phone has none:
 
 ```sh
 cargo run -- token +9647501234567

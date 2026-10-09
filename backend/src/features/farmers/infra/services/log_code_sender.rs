@@ -8,9 +8,9 @@ use crate::{
     shared::Phone,
 };
 
-/// Writes the code to the server log instead of sending a message. It stands
-/// in until an SMS provider is chosen: whoever can read the log can sign in
-/// as any phone, so it must not be used with real farmers.
+/// Writes the code to the server log instead of sending a message. It is
+/// what runs when no OTPIQ key is configured: whoever can read the log can
+/// sign in as any phone, so it must not be used with real farmers.
 #[derive(Debug, Default)]
 pub struct LogSignInCodeSender;
 
@@ -26,7 +26,7 @@ impl SignInCodeSender for LogSignInCodeSender {
             phone = phone.as_str(),
             code = code.as_str(),
             language = %String::from(language),
-            "no SMS provider configured: sign-in code written to the log"
+            "no OTPIQ key configured: sign-in code written to the log"
         );
 
         Ok(())

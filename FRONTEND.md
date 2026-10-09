@@ -48,7 +48,9 @@ The districts are the 33 of `web/map_demo/kri_map_data.js` (4 governorates, 72 s
 - `verify` answers `200 {"token": "...", "farms_count": 2}` or `401 {"error": "bad_code"}`. A wrong code, an expired code, too many tries and a phone that never asked all give the same `bad_code`.
 - Codes are 6 digits, live 10 minutes and allow 5 tries. A code signs in once; if the answer is lost and the app sends the same `verify` again within 2 minutes, it succeeds again. After that the code is refused.
 - `lang` accepts `ku`, `kmr`, `ar`, `en`. It becomes the farmer's language on first sign-in.
-- **No SMS provider is wired yet** (open point 2 in `BACKEND.md` section 8). The server writes the code to its own log. For a demo, the server can be started with one fixed code for every phone (`AUTH__FIXED_SIGN_IN_CODE` in `backend/.env.example`). Neither is safe with real farmers.
+- **Delivery:** the server sends the code through OTPIQ (SMS, WhatsApp or Telegram, chosen by OTPIQ unless configured) when `OTPIQ__API_KEY` is set. Without a key it writes the code to its own log, and for a demo it can be started with one fixed code for every phone (`AUTH__FIXED_SIGN_IN_CODE`); neither is safe with real farmers. A key and a fixed code together are refused at start-up.
+- If the code cannot be delivered, `send` answers `503 {"error": "upstream_down"}` and the farmer can ask again at once.
+- A farmer who has been deleted (by staff, from the dashboard) gets `401` on every call from then on, so the app signs them out.
 
 ## 4. Farms
 
