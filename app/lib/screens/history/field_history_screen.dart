@@ -6,6 +6,7 @@ import '../../api/api.dart';
 import '../../app_scope.dart';
 import '../../crops.dart';
 import '../../l10n/strings.dart';
+import '../../store/insights_copy.dart';
 import '../../store/local_store.dart';
 import '../../theme.dart';
 import '../../widgets/header.dart';
@@ -18,28 +19,61 @@ import 'history_text.dart';
 
 /// The field's history keeps arriving while the analysis runs; this loads the
 /// copy on the phone first, then the server's, and checks again every 30 s
-/// until all five topics are in.
+/// until all five topics are in, or until the analysis looks stuck.
 class InsightsLoader {
   InsightsLoader(this.api, this.farmId);
   final Api api;
   final String farmId;
-  String get _cache => 'insights_$farmId';
+  String get _cache => InsightsCopy.name(farmId);
+  Map<String, dynamic>? _copy;
+
+  /// After [cached] or [fresh]: unfinished for longer than
+  /// [InsightsCopy.giveUpAfter], so stop promising minutes.
+  bool get stalled => InsightsCopy.stalled(_copy);
+
+  /// After [cached] or [fresh]: topics still shown from before an edit.
+  Set<String> get carried => InsightsCopy.carriedTopics(_copy);
+
+  /// Keep checking: the server's analysis is not complete and not stuck.
+  bool get keepChecking =>
+      !stalled &&
+      (carried.isNotEmpty ||
+          _serverTopics < FarmInsights.all.length ||
+          _copy == null);
+
+  int get _serverTopics {
+    final d = _copy?['data'];
+    return d is Map<String, dynamic> ? FarmInsights.fromJson(d).ready : 0;
+  }
 
   Future<FarmInsights?> cached() async {
-    final j = await LocalStore.read(_cache);
-    final d = j?['data'];
-    return d is Map<String, dynamic> ? FarmInsights.fromJson(d) : null;
+    try {
+      _copy = await LocalStore.read(_cache);
+    } catch (_) {}
+    final d = InsightsCopy.merged(_copy);
+    return d == null ? null : FarmInsights.fromJson(d);
   }
 
   Future<FarmInsights> fresh() async {
     final f = await api.getInsights(farmId);
+    Map<String, dynamic>? old = _copy;
     try {
-      await LocalStore.write(_cache, {
-        'saved_at': DateTime.now().toUtc().toIso8601String(),
-        'data': f.json,
-      });
+      old = await LocalStore.read(_cache);
     } catch (_) {}
-    return f;
+    final done = f.ready >= FarmInsights.all.length;
+    final copy = <String, dynamic>{
+      'saved_at': DateTime.now().toUtc().toIso8601String(),
+      'data': f.json,
+      if (!done)
+        'waiting_since':
+            old?['waiting_since'] ?? DateTime.now().toUtc().toIso8601String(),
+      if (!done && old?['carried'] != null) 'carried': old!['carried'],
+    };
+    _copy = copy;
+    try {
+      await LocalStore.write(_cache, copy);
+    } catch (_) {}
+    return FarmInsights.fromJson(InsightsCopy.merged(copy)!);
   }
 }
 
@@ -57,6 +91,12 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
   String? _error;
   Timer? _poll;
 
+  /// The analysis has not finished for a long time: say so, stop the clocks.
+  bool _stalled = false;
+
+  /// Topics still shown from the farm before an edit.
+  Set<String> _carried = const {};
+
   @override
   void initState() {
     super.initState();
@@ -71,10 +111,8 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
 
   Future<void> _refresh() async {
     final loader = InsightsLoader(AppScope.read(context).api, widget.farm.id);
-    if (_data == null) {
-      final c = await loader.cached();
-      if (c != null && mounted && _data == null) setState(() => _data = c);
-    }
+    final c = await loader.cached();
+    if (c != null && mounted && _data == null) setState(() => _data = c);
     if (!mounted) return;
     setState(() => _busy = true);
     try {
@@ -89,11 +127,17 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
         setState(() => _error = e.isOffline ? 'offline' : e.code);
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _stalled = loader.stalled;
+          _carried = loader.carried;
+        });
+      }
     }
     // Keep checking while the satellite part is still being read.
     _poll?.cancel();
-    if ((_data?.ready ?? 0) < FarmInsights.all.length) {
+    if (mounted && loader.keepChecking) {
       _poll = Timer(const Duration(seconds: 30), () {
         if (mounted) _refresh();
       });
@@ -146,7 +190,9 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
                         const SizedBox(height: 4),
                         Text(
                           none
-                              ? 'Rain, frost and soil arrive in about a minute; the satellite pictures take about 7 minutes, on the server.'
+                              ? _stalled
+                                    ? 'The analysis of this field has not finished on the server. Pull down to check again.'
+                                    : 'Rain, frost and soil arrive in about a minute; the satellite pictures take about 7 minutes, on the server.'
                               : "Past patterns of this field, not this season's forecast${upTo == null ? '' : ' · data up to $upTo'}",
                           style: latText(
                             size: 13.5,
@@ -181,6 +227,20 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
                             ),
                             const SizedBox(height: 12),
                           ],
+                          if (_carried.isNotEmpty) ...[
+                            Text(
+                              _stalled
+                                  ? 'Some parts are from before you edited this farm: the new analysis has not finished on the server.'
+                                  : 'Some parts are from before you edited this farm. They update when the new analysis is done.',
+                              style: latText(
+                                size: 13,
+                                weight: FontWeight.w600,
+                                color: JColors.gold,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
                           const _HowToUse(),
                           const SizedBox(height: 14),
                           if (fit.isNotEmpty) ...[
@@ -192,6 +252,7 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
                                 ? _WaitingCard(
                                     title: title,
                                     icon: icon,
+                                    stalled: _stalled,
                                     waiting:
                                         key == 'dryness' &&
                                         views['greenness'] == null,
@@ -507,9 +568,13 @@ class _WaitingCard extends StatelessWidget {
     required this.icon,
     required this.waiting,
     required this.satellite,
+    this.stalled = false,
   });
   final String title;
   final IconData icon;
+
+  /// The analysis has not finished for a long time: no promise of minutes.
+  final bool stalled;
 
   /// Waiting for another topic first (dryness waits for greenness).
   final bool waiting;
@@ -524,12 +589,16 @@ class _WaitingCard extends StatelessWidget {
       _Head(
         title: title,
         icon: icon,
-        pill: waiting
+        pill: stalled
+            ? (JColors.levelNoneSoft, JColors.muted, 'Not read')
+            : waiting
             ? (JColors.levelNoneSoft, JColors.muted, 'Waiting')
             : (JColors.accentSoft, JColors.accent, 'Reading'),
       ),
       Text(
-        waiting
+        stalled
+            ? 'This part could not be read on the server yet. Pull down to check again.'
+            : waiting
             ? 'Starts when the greenness is ready: compares the field in dry and wet seasons.'
             : satellite
             ? 'Reading every Landsat and Sentinel-2 picture of this field since 1984.'
@@ -541,7 +610,7 @@ class _WaitingCard extends StatelessWidget {
           height: 1.45,
         ),
       ),
-      if (!waiting)
+      if (!waiting && !stalled)
         ClipRRect(
           borderRadius: BorderRadius.circular(999),
           child: const LinearProgressIndicator(
@@ -550,19 +619,20 @@ class _WaitingCard extends StatelessWidget {
             backgroundColor: JColors.line,
           ),
         ),
-      Text(
-        waiting
-            ? 'Waiting for the greenness'
-            : satellite
-            ? 'About 7 minutes · it keeps going on the server if you close the app'
-            : 'About a minute',
-        style: latText(
-          size: 12,
-          weight: FontWeight.w600,
-          color: JColors.muted,
-          height: 1.35,
+      if (!stalled)
+        Text(
+          waiting
+              ? 'Waiting for the greenness'
+              : satellite
+              ? 'About 7 minutes · it keeps going on the server if you close the app'
+              : 'About a minute',
+          style: latText(
+            size: 12,
+            weight: FontWeight.w600,
+            color: JColors.muted,
+            height: 1.35,
+          ),
         ),
-      ),
     ],
   );
 }
@@ -797,6 +867,7 @@ class FieldHistoryEntry extends StatefulWidget {
 class _FieldHistoryEntryState extends State<FieldHistoryEntry> {
   FarmInsights? _data;
   Timer? _poll;
+  bool _stalled = false;
 
   @override
   void initState() {
@@ -820,8 +891,9 @@ class _FieldHistoryEntryState extends State<FieldHistoryEntry> {
     } on ApiException {
       // The copy (or nothing) stays; the card still opens the screen.
     }
+    if (mounted) setState(() => _stalled = loader.stalled);
     _poll?.cancel();
-    if (mounted && (_data?.ready ?? 0) < FarmInsights.all.length) {
+    if (mounted && loader.keepChecking) {
       _poll = Timer(const Duration(seconds: 30), () {
         if (mounted) _load();
       });
@@ -845,9 +917,13 @@ class _FieldHistoryEntryState extends State<FieldHistoryEntry> {
     final sub = d == null
         ? 'Rain, frost, soil and greenness of this field over the years'
         : ready == 0
-        ? 'Starting the analysis of this field · about 7 minutes'
+        ? _stalled
+              ? 'The analysis has not finished on the server · tap to check again'
+              : 'Starting the analysis of this field · about 7 minutes'
         : ready < FarmInsights.all.length
-        ? '$ready of ${FarmInsights.all.length} topics ready · reading satellite pictures'
+        ? _stalled
+              ? '$ready of ${FarmInsights.all.length} topics ready · the rest could not be read yet'
+              : '$ready of ${FarmInsights.all.length} topics ready · reading satellite pictures'
         : '${seasons == null ? 'Years' : '${seasons.round()} seasons'} of rain, frost, soil and greenness · 5 topics';
     return Material(
       color: JColors.card,

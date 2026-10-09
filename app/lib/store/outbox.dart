@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../api/api.dart';
 import 'draft.dart';
+import 'insights_copy.dart';
 import 'local_store.dart';
 
 /// A farm saved on the phone, waiting to be sent to the server.
@@ -190,8 +191,12 @@ class Outbox extends ChangeNotifier {
     // page instead: that is not our server, so nothing is decided by it.
     bool fromServer(ApiException e) =>
         e.extra != null ||
-        !(const {'bad_request', 'not_found', 'invalid', 'bad_response'})
-                .contains(e.code) &&
+        !(const {
+              'bad_request',
+              'not_found',
+              'invalid',
+              'bad_response',
+            }).contains(e.code) &&
             !e.code.startsWith('http_');
     // Keep and try later: no internet, not signed in, timeout, too many
     // requests (429), a server error, or an answer that is not our server.
@@ -242,8 +247,10 @@ class Outbox extends ChangeNotifier {
             } on ApiException catch (e) {
               if (e.status == 404) _deletes.remove(oldId);
             }
-            // The old farm's copies on the phone are no longer needed.
-            for (final name in ['farm_$oldId', 'insights_$oldId']) {
+            // The field's history stays on show while the new farm is
+            // analysed; the old farm's copies are then no longer needed.
+            await InsightsCopy.carry(oldId, made.farm.summary.id);
+            for (final name in ['farm_$oldId', InsightsCopy.name(oldId)]) {
               try {
                 await LocalStore.delete(name);
               } catch (_) {}
