@@ -137,14 +137,27 @@ double polygonAreaM2(List<LatLng> outline) {
   return s.abs() / 2;
 }
 
-/// True if any two non-neighbouring edges cross (a "bow tie" outline).
+/// True if two edges that are not neighbours cross or touch, even at one
+/// point (a "bow tie", or two loops meeting at a corner). The server refuses
+/// both as bad_polygon. As on the server, a corner repeated right after
+/// itself, or the first corner repeated at the end, is skipped first.
 bool selfIntersects(List<LatLng> outline) {
-  final p = _toXY(outline);
+  final ring = <LatLng>[];
+  for (final q in outline) {
+    if (ring.isEmpty || ring.last != q) ring.add(q);
+  }
+  if (ring.length > 1 && ring.first == ring.last) ring.removeLast();
+  final p = _toXY(ring);
   final k = p.length;
   if (k < 4) return false;
   double cross((double, double) o, (double, double) a, (double, double) b) =>
       (a.$1 - o.$1) * (b.$2 - o.$2) - (a.$2 - o.$2) * (b.$1 - o.$1);
-  bool crosses(
+  bool within((double, double) a, (double, double) b, (double, double) q) =>
+      q.$1 >= math.min(a.$1, b.$1) &&
+      q.$1 <= math.max(a.$1, b.$1) &&
+      q.$2 >= math.min(a.$2, b.$2) &&
+      q.$2 <= math.max(a.$2, b.$2);
+  bool touches(
     (double, double) a,
     (double, double) b,
     (double, double) c,
@@ -154,18 +167,20 @@ bool selfIntersects(List<LatLng> outline) {
         d2 = cross(c, d, b),
         d3 = cross(a, b, c),
         d4 = cross(a, b, d);
-    return ((d1 > 0) != (d2 > 0)) &&
-        ((d3 > 0) != (d4 > 0)) &&
-        d1 != 0 &&
-        d2 != 0 &&
-        d3 != 0 &&
-        d4 != 0;
+    if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+        ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) {
+      return true;
+    }
+    return (d1 == 0 && within(c, d, a)) ||
+        (d2 == 0 && within(c, d, b)) ||
+        (d3 == 0 && within(a, b, c)) ||
+        (d4 == 0 && within(a, b, d));
   }
 
   for (var i = 0; i < k; i++) {
     for (var j = i + 1; j < k; j++) {
       if (j == i + 1 || (i == 0 && j == k - 1)) continue;
-      if (crosses(p[i], p[(i + 1) % k], p[j], p[(j + 1) % k])) return true;
+      if (touches(p[i], p[(i + 1) % k], p[j], p[(j + 1) % k])) return true;
     }
   }
   return false;
