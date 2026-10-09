@@ -47,10 +47,9 @@ NORMAL_YEARS = 10
 # requests keeps the first, long fetch polite.
 BACKFILL_BATCH = 2
 BACKFILL_PAUSE_S = 65
-SOURCE = (
-    "Open-Meteo archive (ERA5), district centre; rain of the last 365 days "
-    "against the same window in the 10 years before; dryness = 100 - rain%/2"
-)
+# The backend keeps a source of at most 100 characters; the method is spelled
+# out in full in the README next to this file.
+SOURCE = "Open-Meteo ERA5, district centre: 365-day rain vs 10-yr normal; dryness=100-rain%/2"
 
 
 def log(message):
@@ -167,7 +166,7 @@ def push(slug, month, rain_pct, dryness, as_of):
             "water_need": None,
             "nitrogen_hold": False,
             "best_crops": [],
-            "source": f"{SOURCE}; data to {as_of}",
+            "source": f"{SOURCE}; to {as_of}"[:100],
         }
     ).encode()
     request = urllib.request.Request(

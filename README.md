@@ -1,4 +1,4 @@
-# Farm Doctor: SmartSuli AI Challenge 2026
+# Jutyar (Farm Doctor): built for the SmartSuli AI Challenge 2026
 
 AI for Kurdistan Region farming, built for the **SmartSuli AI Challenge** (The Foundation, Slemani).
 Build days: 8–9 October 2026 at the Foundation Hub, Culture Factory. Demo and judging: 10 October 2026.
@@ -106,7 +106,7 @@ python3 -I web/build_greenness.py                # MODIS greenness grid → web/
 | `evidence/past_seasons/` | 26-season backtest: `BACKTEST_RESULTS.md` (all investigations), `DATA_INVENTORY.md`, `backtest/` scripts and small outputs |
 | `research_library/` | scripts and README for the paper library |
 | `research_notes/` | raw notes from the research agents |
-| `evidence/*.md`, `Kurdistan_Problems_List.md`, `SmartSuli_10_Ideas_Report.md`, `Idea_Rega_Business_Journey.md` | idea-selection phase (September 2026), kept for the record |
+| `evidence/*.md`, `Kurdistan_Problems_List.md`, `Jutyar_10_Ideas_Report.md`, `Idea_Rega_Business_Journey.md` | idea-selection phase (September 2026), kept for the record |
 | `Scope_Wheat_Drought_Alarm.md`, `Build_Plan_Satellite_Monitor.md`, `Pivot_Options_Harvest_Referee.md`, `Test_Plan_Forecast_and_Farmers.md` | **outdated** earlier scopes, superseded by the FINAL plan |
 
 ## What we can honestly claim (and what we cannot)

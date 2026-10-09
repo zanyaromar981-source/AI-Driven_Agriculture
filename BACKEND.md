@@ -2,7 +2,7 @@
 
 This file is the contract between the farmer app / dashboards (frontend) and the backend. The frontend writes here what it sends and what it expects back. If the backend needs something from the frontend, it writes `FRONTEND.md`, and the frontend follows that file strictly. Both files live at the repo root and are committed with every change.
 
-Status: v2, 2026-10-08 20:48. Section 0 says exactly what the app still needs, checked against `backend/` at a0ade90 and `FRONTEND.md` v2. Backend: confirm or edit each section; mark changes with your date.
+Status: v2, 2026-10-08 20:48. Section 0 says exactly what the app still needs, checked against `backend/` at a0ade90 and `FRONTEND.md` v2. Backend: confirm or edit each section; mark changes with your date. Added 2026-10-08 21:46: section 2.11, the Control Room (officer sign-in and `/v1/admin` routes for dashboard screens 11 to 18).
 
 ## 0. What the app still needs (read this first)
 
@@ -18,6 +18,8 @@ Checked 2026-10-08 20:48 against `backend/` at commit a0ade90 and `FRONTEND.md` 
 | 4 | Open a farm: `GET /v1/farms/{id}` (2.2) | built | `inside_pct` on cells, 0.2 (not blocking). |
 | 5 | Farm from space: `GET /v1/farms/{id}/status` (2.3) | not built | **This blocks Home.** Home loads a farm and its status together; today the `404` makes every farm show "Could not load this farm (not_found)". Fastest fix: the stub answer in 2.3 until the satellite job exists. |
 | 6 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built | Home still opens without it ("Weather forecast not available right now"). Then serve the stored plan (2.4). |
+| 7 | Edit a farm: `PUT /v1/farms/{id}` (2.2, added 21:10) | not built (only `PUT /v1/farms/{id}/cells`) | Needed to change a farm's border, crops and name (the app's edit screen is being built). Changing the border needs the outline, which `PUT .../cells` cannot take. |
+| 8 | Delete a farm: `DELETE /v1/farms/{id}` (2.2) | built | Nothing. The app calls it from the farm's menu (since 21:33); `404` counts as already deleted. |
 
 Not needed yet, because their screens are not built: Ask the Doctor (2.5), reports (2.6), alerts and devices (2.7), `DELETE /v1/account`.
 
@@ -32,7 +34,7 @@ The app's clipping code can be ported: `cellsTouching` in `app/lib/geo.dart` ret
 
 ### 0.3 Answers to FRONTEND.md section 7
 
-1. `PUT /v1/farms/{id}/cells` changing only the listed cells: fine. The app sends the whole painting on create, and a future repaint screen will send every cell.
+1. `PUT /v1/farms/{id}/cells` changing only the listed cells: fine, but the app will not use it. Editing a farm sends the whole farm (outline and every cell) through `PUT /v1/farms/{id}` (2.2).
 2. 50,000 cells (2,000 dunam) per farm: fine. The app refuses outlines over 1,000 dunam (2,500,000 m²) before sending.
 3. `GET`/`PUT /v1/me`: the Settings screen is not built yet. Its design shows the language, the phone number, the number of farms, two notification switches and "Delete my account and farms". So `phone` and `lang` are enough now. `name` can stay empty: the app never asks for a name ("No password, no name"). The switches belong to `POST /v1/devices` (2.7), the number of farms comes from `GET /v1/farms`, and delete is `DELETE /v1/account`.
 
@@ -115,7 +117,10 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
   - `422` with `bad_polygon`, `farm_too_large` or `too_many_farms` (FRONTEND.md section 5).
   - Example check (pyproj): `{"lat": 36.0312, "lon": 44.6021}` is easting 464152.26, northing 3987482.22, so cell `{"e": 46415, "n": 398748}`.
   - Edge cells with a small `inside_pct` are mixed pixels: the backend may skip them for greenness.
-- `PUT /v1/farms/{id}/cells` and `DELETE /v1/farms/{id}`: as in FRONTEND.md; the app does not call them yet.
+- `PUT /v1/farms/{id}` (added 2026-10-08 21:10, for editing a farm): body as `POST /v1/farms` (`name`, `points`, `cells`, `created_offline_at`); replaces the outline, cells and name; same validation (`bad_polygon`, `farm_too_large`); `Idempotency-Key` honoured; `404` for another phone's farm. → `200 {"farm": Farm, "dropped_cells": [{"e", "n"}]}`.
+- `DELETE /v1/farms/{id}` (used since 2026-10-08 21:33): `204`, or `404` when the farm is gone or belongs to another phone. The app counts `404` as already deleted.
+- Edits and deletes made without internet wait in the phone's queue like new farms (section 3); deletes are sent first, then new farms and edits, oldest first.
+- `PUT /v1/farms/{id}/cells`: as in FRONTEND.md; the app does not call it (edits use `PUT /v1/farms/{id}`).
 
 ### 2.3 My field from space (Field Eye)
 - `GET /v1/farms/{id}/status` → `200 Status`, or `404` like 2.2. Answer from stored readings; never fetch a satellite during the call.
@@ -194,19 +199,44 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 
 ### 2.9 App decisions that affect the backend (2026-10-08)
 - Field edge: the farmer **always walks the corners**; no satellite edge suggestion in the app flow (SAM stays a backend tool for the Ministry map).
-- Home shows all farms stacked: `GET /farms` must return every farm with enough to draw the grid summary (`status`, `last_picture`, `crops`), and `GET /farms/{id}/status` is called per farm on open.
-- Opening a farm (built 2026-10-08): a tap in My farms opens Home at that farm. Home calls `GET /farms/{id}`, `/status` and `/plan` for every farm and keeps the last copy of each on the phone, shown with its date when offline. Home shows the `en` texts until the Sorani check.
+- One farm per screen (user, 2026-10-08; replaces "Home shows all farms stacked"): `GET /v1/farms` still needs `status`, `last_picture` and `crops` for the My farms cards.
+- Opening a farm: a tap in My farms opens that farm alone. The app calls `GET /v1/farms/{id}`, `/status` and `/plan` for that farm only, and keeps the last copy on the phone, shown with its date when offline. The farm screen shows the `en` texts until the Sorani check.
+- Each farm's screen has Edit (border, crops and name, through `PUT /v1/farms/{id}`) and Delete (`DELETE /v1/farms/{id}`). Both work without internet and are sent later from the phone's queue.
 - Cell tap views: cell, crop plot, whole farm. The backend adds per-crop summaries to 2.3: `"crops": [{"crop","dunam","greenness_pct_of_normal","level"}]` and the whole-farm `greenness_pct_of_normal` (already there).
 - Labels: new screens are English for now; Sorani comes later, but the backend keeps returning both `ku` and `en`.
 
 ### 2.10 The Doctor's model (decided 2026-10-08)
 - Provider: **Gemini** (Google AI Studio key `GEMINI_API_KEY`, default model `gemini-2.5-flash`), chosen for cost (about 5–10x cheaper per answer). The call is one swappable function (`farm_doctor/doctor.py`: `FARM_DOCTOR_PROVIDER=gemini|claude`, `FARM_DOCTOR_MODEL`), so a head-to-head test against Claude in Sorani (20 questions, scored by a native speaker) can be run before any real rollout. The rulebook, the JSON answer shape and the no-doses rule are identical for both.
 
+### 2.11 Control Room: the Ministry runs the app from the dashboard (added 2026-10-08)
+
+Design: `design/dashboard/jutyar_dashboard.pen`, screens 11 to 18 (builder `design/dashboard/build_control_room.py`). Not built on the backend yet. Every path is under `/v1/admin`, with an **officer** token (not a farmer token).
+
+**Privacy: Protected mode (user decision 2026-10-08).** Officers see a farmer's phone as `+964 750 ••• 4567` and a farm only at 1 km (its sub-district and a 1 km rounded centre), **unless** that farm has an open report or a Doctor case with `refer_to_officer: true`. Then the exact outline, cells and the shared point open for officers of that area, and close again when the report or case is closed. Seeing the full phone needs a typed reason. Every look and every change is written to the history, which nobody can edit or delete (kept 5 years).
+
+**Roles.** `viewer`: totals and maps only, no farms, no phones. `district_officer`: their own governorates or districts: farms (protected), inbox, draft alerts, show a phone with a reason. `admin`: everything, plus rules, prices and officers. Sending an alert and changing a rule always need a **second officer** to approve. An officer without 2-step sign-in cannot open farms.
+
+| Screen | Calls |
+|---|---|
+| Officer sign-in | `POST /v1/admin/auth/otp/send`, `/verify` (phone must be on the officer list) + second step (TOTP) → officer token with `role` and `areas` |
+| 11 Farmers and farms | `GET /admin/farms?gov=&district=&sub=&crop=&level=&synced_since=&q=&page=` → `{"total", "farms": [{"id", "name", "phone_masked", "district", "sub_district", "area_dunam", "main_crop", "level", "last_sync", "access": "1km|open|blocked", "open_reason": {"report_id"|"case_id"}}]}`. `GET /admin/farms/{id}`: the outline and cells only when `access` is `open`, otherwise `centre_1km`. `POST /admin/farmers/{phone_id}/reveal {"reason"}` → the full phone. `POST /admin/farmers/{id}/block`, `/unblock`, `DELETE /admin/farmers/{id}` (on the farmer's request, same effect as `DELETE /v1/account`). Officers never change a farm's outline or crops. |
+| 12 Crop register | `GET /admin/crops?by=district|sub_district&gov=` → per unit `{"unit", "farms", "dunam", "crops": [{"crop", "dunam"}], "week_change_dunam"}`, from painted cells (inside areas, 0.2). Registered farms only, not a census. |
+| 13 Send an alert | `POST /admin/alerts` (draft) `{"area": {"districts": [], "sub_districts": []} or {"polygon"}, "type", "day", "level", "confidence", "ku", "en", "action_ku", "action_en", "crops": []}`. `GET /admin/alerts/{id}/reach` → `{"farms", "farmers", "already_pushed_today", "no_push_token"}`. `POST /admin/alerts/{id}/approve` (a second officer) sends it within the push rules of 2.7: one push per farm per day, so farms already pushed get it at 06:00 the next day. `POST /admin/alerts/{id}/stop`. |
+| 14 Inbox | `GET /admin/inbox?kind=report|case&state=&area=` (reports of 2.6 and Doctor cases with `refer_to_officer`), `POST /admin/inbox/{id}/assign {"officer_id"}`, `/seen` (the farmer's report becomes `seen_by_officer`), `/reply {"ku", "en"}` (shown to the farmer in the app), `/close` (the farm goes back to protected). |
+| 15 Rules | `GET /admin/rules` (every threshold with its value, source, version), `POST /admin/rules/{code}/changes {"value", "reason"}`, `POST /admin/rule-changes/{id}/approve` or `/reject`. The jobs read the rule values from here; the old value is kept. Today's values: `farm_doctor/weather_planner.py` and the dryness bands in `backend/src/features/zones/domain/enums.rs`. |
+| 16 Alwa control | `PUT /admin/alwa/markets/{slug}/prices/{crop}/{day} {"price_iqd_per_kg", "fixed"}` then `POST /admin/alwa/prices/publish`; `POST /admin/alwa/listings/{id}/pause`, `DELETE /admin/alwa/listings/{id}`; `GET /admin/alwa/flags` (price far from the market price, repeats, disputes). |
+| 17 Data health | `GET /admin/jobs` → per job `{"name", "every", "last_run", "ok", "summary", "last_14_days": ["ok"|"late"|"failed"|null]}`, `POST /admin/jobs/{name}/run`; `GET /admin/server` (requests, 5xx, p95, database); `GET`/`POST`/`DELETE /admin/service-keys`; `GET /admin/config` shows a warning while `AUTH__FIXED_SIGN_IN_CODE` is set. App versions need the app to send `X-App-Version` on every call (frontend will add it). |
+| 18 Officers and history | `GET`/`POST /admin/officers`, `PUT /admin/officers/{id} {"role", "areas"}`, `DELETE /admin/officers/{id}`; `GET /admin/audit?kind=&officer=&from=&to=` (read only, exportable as CSV). |
+
+New tables: `officers (id, phone, name, role, areas, totp_secret, created_at, disabled_at)`, `audit_log (id, at, officer_id or job, action, target_kind, target_id, reason, before_json, after_json)` (insert only), `alerts (id, draft_by, approved_by, area_json, type, day, level, confidence, texts_json, state, sent_at)`, `rule_values (code, value_json, version, source, changed_by, approved_by, at)`, `inbox_actions (item_id, officer_id, action, note, at)`, `farmer_blocks (farmer_id, by, reason, at)`.
+
+- Edit until `PUT /v1/farms/{id}` exists (decided 2026-10-09, user option A): the app saves an edited farm as `POST /v1/farms` (new id, same name, new outline and crops) and then `DELETE /v1/farms/{old id}`. The new farm gets the full 20-year analysis again; the old id disappears. When the backend adds PUT, the app switches back to one call.
+
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
-- The app caches the last `status`, `plan` and farms list; it shows the cached copy with its date when offline. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
+- The app keeps the last farms list and, per farm, the last farm, `status` and `plan`. On opening it shows that copy at once, asks the server, and swaps in the fresh answer; if the server fails or there is no internet, the copy stays on screen with its date (since 2026-10-08 21:44). So every open still makes the normal calls. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
 - Idempotency: the app sends `Idempotency-Key` headers on POSTs; repeat keys must not create duplicates. A repeated key returns the farm made the first time (the app retries uploads that lost their answer).
-- Outbox (built 2026-10-08): `POST /farms` is first written to a file on the phone, then sent; with no internet it stays there and is retried every 30 seconds and when the app comes back to the front. The border being marked is also saved on the phone after every dot, and the sign-in token is kept, so the app opens and works in the field with no signal. "No internet" = the request never reached the server; any other 4xx answer (not 401, 408 or 429) removes the farm from the outbox (it will not succeed on retry).
+- Outbox (built 2026-10-08): `POST /farms` is first written to a file on the phone, then sent; with no internet it stays there and is retried every 30 seconds and when the app comes back to the front. The border being marked is also saved on the phone after every dot, and the sign-in token is kept, so the app opens and works in the field with no signal. "No internet" = the request never reached the server; any other 4xx answer (not 401, 408 or 429) removes the farm from the outbox (it will not succeed on retry). Since 2026-10-08 21:33 the same queue also holds edits (`PUT /v1/farms/{id}`) and deletes (`DELETE /v1/farms/{id}`); deletes go first, and a `404` on a delete counts as done.
 
 ## 4. Errors
 Shape (FRONTEND.md section 5): `{"error": "<code>", "detail": "<English text>"}`, plus `field` or `retry_after_s` when they apply. What the app does:
@@ -216,8 +246,8 @@ Shape (FRONTEND.md section 5): `{"error": "<code>", "detail": "<English text>"}`
 | `400` | `bad_request` | shows an error with the code; a queued farm is dropped |
 | `401` | `unauthorized` | signs the farmer out (back to the phone screen); a queued farm is kept |
 | `401` | `bad_code` (sign-in only) | shows "Wrong code, try again"; nobody is signed out |
-| `404` | `not_found` | Home shows "Could not load this farm" |
-| `408`, `429`, `5xx` | `rate_limited` (with `retry_after_s`), `upstream_down` (with `source`), `server_error` | a queued farm is kept and sent again. Home shows "Could not load this farm" for the farm or status, and the last saved plan (or "Weather forecast not available right now") for the plan. The saved copy of everything is shown only when there is no answer at all. |
+| `404` | `not_found` | the farm screen keeps its saved copy (with its date) if it has one, else shows "Could not load this farm"; a delete counts as done |
+| `408`, `429`, `5xx` | `rate_limited` (with `retry_after_s`), `upstream_down` (with `source`), `server_error` | a queued farm is kept and sent again. The farm screen keeps its saved copy (with its date) if it has one, else shows "Could not load this farm". The plan falls back to the last saved plan, or "Weather forecast not available right now". |
 | `422` | `invalid`, `bad_polygon`, `farm_too_large`, `too_many_farms` | a queued farm is dropped and the farmer is told |
 
 The only code the app branches on today is `bad_code`; the others are shown as they are and will get Sorani messages later.
@@ -227,6 +257,8 @@ The only code the app branches on today is `bad_code`; the others are shown as t
 |---|---|---|
 | 2.1 sign in | `backend/` (Rust, axum, Postgres) | built; demo uses one fixed code; no SMS provider yet |
 | 2.2 farms: list, create, open, repaint, delete | `backend/` | built; cells and crop areas still by the centre rule (0.2) |
+| 2.2 edit a farm `PUT /v1/farms/{id}` | `backend/` | not built |
+| per-farm insights `GET /v1/farms/{id}/insights` | `backend/` (commit 81faa15) | built (topics such as water, soil, rain). Not the same as 2.3: Home calls `/status` and does not read `/insights` yet. |
 | profile `GET`/`PUT /v1/me` | `backend/` | built (not used by the app yet) |
 | 2.3 status | `farm_doctor/field_eye.py` `measure(lon, lat, date)` | Python only: one 1 km square around a point, about 16 s; needs the per-cell version and a stored daily job. Decided 2026-10-08 (user, Arya): the Python AIs push results into `backend/` through `/v1/ingest` (guarded by `X-Service-Key`) and `backend/` serves them. The app-facing `GET /v1/farms/{id}/status` is not built yet. |
 | 2.4 plan | `farm_doctor/weather_planner.py` `plan(lon, lat)` | Python only; decisions are English sentences, need the codes, `ku` and the alert list. Same route in through `/v1/ingest`; `GET /v1/farms/{id}/plan` not built yet. |

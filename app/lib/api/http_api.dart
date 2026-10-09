@@ -171,6 +171,29 @@ class HttpApi implements Api {
   }
 
   @override
+  Future<CreateFarmResult> updateFarm(
+    String id,
+    NewFarmRequest request, {
+    String? idempotencyKey,
+  }) async {
+    final j = await _call(
+      'PUT',
+      _farm(id),
+      body: request.toJson(),
+      idempotencyKey: idempotencyKey,
+    );
+    return CreateFarmResult(
+      farm: Farm.fromJson(j['farm'] as Map<String, dynamic>),
+      droppedCells: (j['dropped_cells'] as List?)?.length ?? 0,
+    );
+  }
+
+  @override
+  Future<void> deleteFarm(String id) async {
+    await _call('DELETE', _farm(id));
+  }
+
+  @override
   Future<Farm> getFarm(String id) async {
     final j = await _call('GET', _farm(id));
     return Farm.fromJson(j['farm'] as Map<String, dynamic>);
@@ -179,6 +202,10 @@ class HttpApi implements Api {
   @override
   Future<FarmStatusReport> getFarmStatus(String id) async =>
       FarmStatusReport.fromJson(await _call('GET', '${_farm(id)}/status'));
+
+  @override
+  Future<FarmInsights> getInsights(String id) async =>
+      FarmInsights.fromJson(await _call('GET', '${_farm(id)}/insights'));
 
   @override
   Future<FarmPlan> getPlan(String id) async =>

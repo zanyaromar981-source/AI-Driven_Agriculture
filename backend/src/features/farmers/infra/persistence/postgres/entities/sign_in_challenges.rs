@@ -12,6 +12,7 @@ pub struct Model {
     pub attempts: i32,
     pub sent_at: DateTime,
     pub expires_at: DateTime,
+    pub used_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

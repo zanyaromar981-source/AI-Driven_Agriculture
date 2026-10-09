@@ -45,7 +45,7 @@ The districts are the 33 of `web/map_demo/kri_map_data.js` (4 governorates, 72 s
 
 - `send` answers `200 {"sent": true, "retry_after_s": 60}`. Asking again before that time answers `429 {"error": "rate_limited", "retry_after_s": <seconds left>}`.
 - `verify` answers `200 {"token": "...", "farms_count": 2}` or `401 {"error": "bad_code"}`. A wrong code, an expired code, too many tries and a phone that never asked all give the same `bad_code`.
-- Codes are 6 digits, live 10 minutes, allow 5 tries and work once.
+- Codes are 6 digits, live 10 minutes and allow 5 tries. A code signs in once; if the answer is lost and the app sends the same `verify` again within 2 minutes, it succeeds again. After that the code is refused.
 - `lang` accepts `ku`, `kmr`, `ar`, `en`. It becomes the farmer's language on first sign-in.
 - **No SMS provider is wired yet** (open point 2 in `BACKEND.md` section 8). The server writes the code to its own log. For a demo, the server can be started with one fixed code for every phone (`AUTH__FIXED_SIGN_IN_CODE` in `backend/.env.example`). Neither is safe with real farmers.
 
@@ -60,6 +60,7 @@ Shapes are those of `BACKEND.md` 2.2. Notes on what the backend does with them:
 - `Idempotency-Key` on `POST /v1/farms` (and on `POST /v1/alwa/listings`) is honoured: a repeat with the same key and phone returns the farm created the first time, with status `201` and an empty `dropped_cells`.
 - `PUT /v1/farms/{id}/cells` changes only the cells listed. To clear a cell, send it with `"crop": "empty"`.
 - A farm of another phone answers `404`, the same as a farm that does not exist.
+- Retries are safe: `DELETE /v1/farms/{id}` answers `204` whether or not the farm was still there; cancelling an Alwa listing twice answers `204` both times; accepting the same offer twice answers `200` with the same listing both times.
 - Not sent yet, because there are no satellite readings in the database: `status`, `last_picture`, `picture_date`, and on cells `greenness_pct`, `level`, `inside_pct`. The app already treats them as optional.
 - Cells are still "centre inside the outline", and `crops[].dunam` still counts whole cells. BACKEND.md 0.2 asks for every touched cell with `inside_pct`; that is not done yet.
 - The outline is returned as the farmer walked it. It is not snapped to the grid.
@@ -96,3 +97,41 @@ Answered in BACKEND.md 0.3 (thank you). Still open:
 ## 9. Alwa market
 
 With the farmer's token: `POST /v1/alwa/listings` (put a crop on sale), `GET /v1/alwa/listings/mine`, `DELETE /v1/alwa/listings/{id}` (cancel), `POST /v1/alwa/listings/{id}/offers` (make an offer), `POST /v1/alwa/listings/{id}/offers/{offer_id}/accept` (seller only), `GET /v1/alwa/offers/mine`. Phone numbers stay hidden until a deal: then the seller sees the buyer's and the buyer sees the seller's. Error codes: `too_many_listings`, `own_listing`, `listing_not_open`, `offer_not_open`, `offer_too_large`, `bad_closes_at`.
+
+## 10. Dashboard sign-in and roles
+
+For the web dashboard, not the farmer app. Everything is under `/v1/dashboard`; shapes are in `/api-docs`.
+
+- `POST /v1/dashboard/auth/login` with `{"email", "password"}` answers `{"token", "staff", "permissions": [{"resource", "action"}]}`. Send the token as `Authorization: Bearer`. It is a different kind of token from the farmer's: neither works on the other's routes.
+- `GET /v1/dashboard/me` answers the signed-in staff member and their permissions. Use it to decide which buttons to show; the server still checks every call.
+- `GET /v1/dashboard/permissions` lists the resources and actions a role can hold.
+- `/v1/dashboard/roles` and `/v1/dashboard/staff`: list, create, read, update, delete. Each needs its own permission (`roles:read`, `roles:create`, `staff:update`, ...).
+- A missing permission answers `403 {"error": "forbidden"}`; no token or a bad one answers `401`.
+- Codes to handle: `bad_credentials`, `system_role` (the Owner role cannot be changed), `role_in_use`, `role_name_taken`, `email_taken`, `unknown_role`, `own_account`, `last_owner`, and `cannot_grant` (403: you tried to give a permission, a role or a password reset that goes beyond what you hold yourself).
+- A change to a role, or deactivating a staff member, takes effect on that person's next request.
+
+## 11. Dashboard data routes
+
+For the web dashboard, with a staff token. All under `/v1/dashboard`; exact shapes are in `/api-docs`. Every method needs its own permission, named `<resource>:<action>`: `GET` needs `read`, `POST` needs `create`, `PUT` needs `update`, `DELETE` needs `delete`. Without it the answer is `403 {"error": "forbidden"}`.
+
+| Resource | Routes |
+|---|---|
+| `zones` | `/zones` (districts with sub-districts), `/zones/{slug}/readings[/{month}]`, `/zones/{slug}/sub-zones/{sub_slug}/readings[/{month}]` |
+| `dams` | `/dams`, `/dams/{slug}/readings[/{day}]` |
+| `outlooks` | `/outlooks`, `/outlooks/{season}/{issued}/zones/{zone_slug}`, `/outlook-runs[/{season}/{issued}]` |
+| `water` | `/water/seasons`, `/water/plan/{season}/entries[/{zone_slug}]` |
+| `fires` | `/fires[/{id}]` |
+| `insights` | `/farms/{id}/insights[/{topic}]` |
+| `alwa` | `/alwa/markets[/{slug}]`, `/alwa/markets/{slug}/prices[/{crop}/{day}]`, `/alwa/listings[/{id}]` (moderation: close or delete; shows phone numbers) |
+| `farmers` | `/farmers[/{id}]` (shows phone numbers) |
+| `farms` | `/farms[/{id}]` (shows the owner's phone) |
+| `roles`, `staff` | section 10 |
+
+The same rules everywhere:
+
+- `POST` creates. If the thing already exists the answer is `409 {"error": "already_exists"}` and nothing changes.
+- `PUT` changes an existing thing. If there is none the answer is `404`.
+- `DELETE` answers `204`, also when the thing was already gone.
+- Lists that can grow take `page` and `rows_per_page` and answer with `count`, `page`, `rows_per_page`.
+- A reading changed by hand looks like any other; the next data-job push for the same key replaces it.
+- The public read routes of section 2 are unchanged and still need no login.

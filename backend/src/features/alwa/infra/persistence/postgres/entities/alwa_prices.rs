@@ -26,7 +26,7 @@ pub enum Relation {
         from = "Column::MarketId",
         to = "super::alwa_markets::Column::Id",
         on_update = "NoAction",
-        on_delete = "Cascade"
+        on_delete = "Restrict"
     )]
     AlwaMarkets,
 }

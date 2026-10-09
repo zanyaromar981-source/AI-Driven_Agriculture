@@ -93,7 +93,7 @@ impl RequestSignInCodeUseCase {
             // A code that never left must not hold the phone in its waiting
             // time, or the farmer could not ask again.
             self.challenges
-                .consume(&input.phone, challenge.code_hash())
+                .consume(&input.phone, challenge.code_hash(), now, now)
                 .await?;
 
             return Err(error);
@@ -204,8 +204,12 @@ mod tests {
         let fakes = Fakes::failing_to_send();
 
         assert!(use_case(&fakes).execute(input()).await.is_err());
+        let left_behind = fakes.stored_challenge().expect("the challenge");
+
         assert!(
-            fakes.stored_challenge().is_none(),
+            left_behind
+                .ensure_can_resend(chrono::Utc::now(), Duration::seconds(60))
+                .is_ok(),
             "a code that never left must not block the next request"
         );
     }

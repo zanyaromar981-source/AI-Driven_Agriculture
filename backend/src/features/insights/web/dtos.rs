@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use validator::Validate;
@@ -251,4 +251,62 @@ impl From<&FarmCoverage> for FarmCoverageResponse {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct FarmsCoverageResponse {
     pub farms: Vec<FarmCoverageResponse>,
+}
+
+/// A reading a staff member enters by hand: the ingest body plus the topic
+/// it is about.
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct InsightDashboardCreateParams {
+    pub topic: Topic,
+    #[serde(flatten)]
+    pub reading: RecordFarmInsightParams,
+}
+
+impl InsightDashboardCreateParams {
+    pub fn into_input(self, farm_id: i32) -> Result<RecordFarmInsightInput, AppError> {
+        self.reading.into_input(farm_id, self.topic.into())
+    }
+}
+
+/// A stored reading as the dashboard's editing screen sees it. The owner of
+/// the farm is deliberately not part of it.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct InsightDashboardResponse {
+    pub topic: Topic,
+    pub as_of: NaiveDate,
+    pub source: String,
+    pub confidence: Confidence,
+    pub summary_en: Option<String>,
+    pub summary_ku: Option<String>,
+    pub measures: Vec<MeasureResponse>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl From<&FarmInsight> for InsightDashboardResponse {
+    fn from(insight: &FarmInsight) -> Self {
+        Self {
+            topic: (*insight.topic()).into(),
+            as_of: *insight.as_of(),
+            source: insight.source().into(),
+            confidence: (*insight.confidence()).into(),
+            summary_en: insight.summary_en().as_ref().map(Into::into),
+            summary_ku: insight.summary_ku().as_ref().map(Into::into),
+            measures: insight.measures().iter().map(Into::into).collect(),
+            updated_at: *insight.updated_at(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct InsightDashboardOneResponse {
+    pub farm_id: String,
+    pub insight: InsightDashboardResponse,
+}
+
+/// `insights` holds only the topics that have a reading, in the fixed topic
+/// order.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct InsightDashboardListResponse {
+    pub farm_id: String,
+    pub insights: Vec<InsightDashboardResponse>,
 }

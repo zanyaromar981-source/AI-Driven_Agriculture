@@ -44,6 +44,14 @@ impl FarmDirectory for FarmsFeatureFarmDirectory {
             })
             .collect())
     }
+
+    async fn exists(&self, farm_id: i32) -> Result<bool, AppError> {
+        self.farms.exists(farm_id).await.map_err(|error| {
+            tracing::error!(%error, farm_id, "checking that a farm exists for insights failed");
+
+            GlobalAppError::InternalServerError.into()
+        })
+    }
 }
 
 #[cfg(test)]
@@ -80,5 +88,29 @@ mod tests {
         let directory = FarmsFeatureFarmDirectory::new(Arc::new(FakeFarmRepository::failing()));
 
         assert!(directory.all_sites().await.is_err());
+    }
+
+    #[tokio::test]
+    async fn a_farm_the_farms_feature_holds_exists_whoever_owns_it() {
+        let farms = FakeFarmRepository::holding(a_farm());
+        let directory = FarmsFeatureFarmDirectory::new(Arc::new(farms.clone()));
+
+        assert!(directory.exists(7).await.expect("answer"));
+        assert!(!directory.exists(8).await.expect("answer"));
+        assert_eq!(
+            farms.calls(),
+            vec![
+                RepositoryCall::Exists { id: 7 },
+                RepositoryCall::Exists { id: 8 }
+            ],
+            "only the id crosses over: no owner is asked for or returned"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_failure_while_checking_is_an_error_not_a_no() {
+        let directory = FarmsFeatureFarmDirectory::new(Arc::new(FakeFarmRepository::failing()));
+
+        assert!(directory.exists(7).await.is_err());
     }
 }

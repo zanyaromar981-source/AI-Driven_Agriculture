@@ -4,8 +4,9 @@ pub mod handlers;
 pub mod routes;
 
 pub use dtos::{
-    DamHistoryQuery, DamHistoryResponse, DamReadingResponse, DamResponse, DamsResponse,
-    HistoryReadingResponse, LatestReadingResponse, RecordDamReadingParams, SavedDamReadingResponse,
-    YearAgoReadingResponse,
+    CreateDamDashboardReadingParams, DamDashboardReadingsQuery, DamHistoryQuery,
+    DamHistoryResponse, DamReadingResponse, DamReadingsPageResponse, DamReferenceResponse,
+    DamReferencesResponse, DamResponse, DamsResponse, HistoryReadingResponse,
+    LatestReadingResponse, RecordDamReadingParams, SavedDamReadingResponse, YearAgoReadingResponse,
 };
-pub use routes::{ingest_routes, public_routes};
+pub use routes::{dashboard_routes, ingest_routes, public_routes};

@@ -23,6 +23,18 @@ pub enum AlwaError {
     #[error("A listing must close in the future, at most {0} days ahead")]
     BadClosingTime(i64),
 
+    #[error("This {0} already exists")]
+    AlreadyExists(&'static str),
+
+    #[error("The market still has prices or listings")]
+    MarketInUse,
+
+    #[error("The listing was sold: a deal cannot be deleted")]
+    ListingHasDeal,
+
+    #[error("Staff may only close a listing")]
+    StaffMayOnlyClose,
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

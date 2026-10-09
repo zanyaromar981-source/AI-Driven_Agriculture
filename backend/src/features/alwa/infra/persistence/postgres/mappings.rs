@@ -4,8 +4,9 @@ use crate::{
     features::alwa::{
         app::AppError,
         domain::{
-            BuyerKind, Crop, DisplayName, Grade, Listing, ListingStatus, Market, MarketSlug, Note,
-            Offer, OfferStatus, Pickup, Price, PricePerKg, PriceSource, QuantityKg, ZoneSlug,
+            BuyerKind, Crop, DisplayName, Grade, Listing, ListingStatus, Market, MarketSlug,
+            Moderation, Note, Offer, OfferStatus, Pickup, Price, PricePerKg, PriceSource,
+            QuantityKg, ZoneSlug,
         },
         infra::persistence::postgres::entities::{
             alwa_listings, alwa_markets, alwa_offers, alwa_prices,
@@ -67,7 +68,15 @@ impl TryFrom<(alwa_listings::Model, MarketSlug)> for Listing {
     type Error = AppError;
 
     fn try_from((model, market): (alwa_listings::Model, MarketSlug)) -> Result<Self, Self::Error> {
-        Ok(Listing::rehydrate(
+        let moderation = match model.closed_by_staff_id {
+            Some(staff_id) => Some(Moderation::new(
+                staff_id,
+                model.moderation_note.map(Note::new).transpose()?,
+            )),
+            None => None,
+        };
+
+        let listing = Listing::rehydrate(
             model.id,
             Phone::new(model.seller_phone)?,
             model.seller_name.map(DisplayName::new).transpose()?,
@@ -84,7 +93,12 @@ impl TryFrom<(alwa_listings::Model, MarketSlug)> for Listing {
             ListingStatus::try_from(model.status.as_str())?,
             model.created_at.and_utc(),
             model.updated_at.and_utc(),
-        ))
+        );
+
+        Ok(match moderation {
+            Some(moderation) => listing.moderated(moderation),
+            None => listing,
+        })
     }
 }
 
@@ -111,6 +125,14 @@ impl From<&Listing> for alwa_listings::ActiveModel {
             updated_at: Set(listing.updated_at().naive_utc()),
             // Set by the repository when a listing is created with a key.
             idempotency_key: NotSet,
+            closed_by_staff_id: Set(listing
+                .moderation()
+                .as_ref()
+                .map(|moderation| *moderation.staff_id())),
+            moderation_note: Set(listing
+                .moderation()
+                .as_ref()
+                .and_then(|moderation| moderation.note().as_ref().map(Into::into))),
         }
     }
 }

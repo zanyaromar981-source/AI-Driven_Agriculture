@@ -1,9 +1,13 @@
 use axum::{
     Router,
-    routing::{get, post},
+    routing::{delete, get, post, put},
 };
 
-use crate::shared::AppState;
+use crate::{
+    app::{Action, Resource},
+    require,
+    shared::AppState,
+};
 
 use super::handlers;
 
@@ -22,4 +26,33 @@ pub fn routes() -> Router<AppState> {
         "/me",
         get(handlers::get_profile).put(handlers::update_profile),
     )
+}
+
+/// Routes behind the `staff_auth` layer, for Ministry staff. Each method
+/// carries the one permission it needs. They show farmers' phones, so none
+/// of them may ever be merged into `routes()` or `public_routes()`.
+pub fn dashboard_routes() -> Router<AppState> {
+    Router::new()
+        .route(
+            "/farmers",
+            get(handlers::dashboard_get_farmers)
+                .route_layer(require!(Resource::Farmers, Action::Read))
+                .merge(
+                    post(handlers::dashboard_create_farmer)
+                        .route_layer(require!(Resource::Farmers, Action::Create)),
+                ),
+        )
+        .route(
+            "/farmers/{id}",
+            get(handlers::dashboard_get_farmer)
+                .route_layer(require!(Resource::Farmers, Action::Read))
+                .merge(
+                    put(handlers::dashboard_update_farmer)
+                        .route_layer(require!(Resource::Farmers, Action::Update)),
+                )
+                .merge(
+                    delete(handlers::dashboard_delete_farmer)
+                        .route_layer(require!(Resource::Farmers, Action::Delete)),
+                ),
+        )
 }

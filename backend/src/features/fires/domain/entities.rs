@@ -53,21 +53,7 @@ impl Fire {
         farmers_alerted: Option<i32>,
         source: FireSource,
     ) -> Result<Self, FireError> {
-        if area_ha.is_some_and(|area| !area.is_finite() || area < 0.0) {
-            return Err(invalid("Burnt area must be zero or more hectares"));
-        }
-
-        if wind_kmh.is_some_and(|wind| !(0.0..=MAX_WIND_KMH).contains(&wind)) {
-            return Err(invalid("Wind speed must be between 0 and 300 km/h"));
-        }
-
-        if farms_within_5km.is_some_and(|farms| farms < 0) {
-            return Err(invalid("Farms within 5 km must be zero or more"));
-        }
-
-        if farmers_alerted.is_some_and(|farmers| farmers < 0) {
-            return Err(invalid("Farmers alerted must be zero or more"));
-        }
+        check_numbers(area_ha, wind_kmh, farms_within_5km, farmers_alerted)?;
 
         Ok(Self {
             id: None,
@@ -127,8 +113,92 @@ impl Fire {
     }
 }
 
+/// The rules for the numbers of a fire, whoever sends them: the data job or
+/// a staff member correcting what the job stored.
+fn check_numbers(
+    area_ha: Option<f64>,
+    wind_kmh: Option<f64>,
+    farms_within_5km: Option<i32>,
+    farmers_alerted: Option<i32>,
+) -> Result<(), FireError> {
+    if area_ha.is_some_and(|area| !area.is_finite() || area < 0.0) {
+        return Err(invalid("Burnt area must be zero or more hectares"));
+    }
+
+    if wind_kmh.is_some_and(|wind| !(0.0..=MAX_WIND_KMH).contains(&wind)) {
+        return Err(invalid("Wind speed must be between 0 and 300 km/h"));
+    }
+
+    if farms_within_5km.is_some_and(|farms| farms < 0) {
+        return Err(invalid("Farms within 5 km must be zero or more"));
+    }
+
+    if farmers_alerted.is_some_and(|farmers| farmers < 0) {
+        return Err(invalid("Farmers alerted must be zero or more"));
+    }
+
+    Ok(())
+}
+
 fn invalid(detail: &str) -> FireError {
     DomainError::InvalidValue(detail.to_string()).into()
+}
+
+/// What a staff member says a stored fire should read: every field but the
+/// two that identify it, the row id and the job's external id. It replaces
+/// the stored fields as a whole, so a field left out becomes unknown.
+#[derive(Clone, Debug, Getters)]
+#[getset(get = "pub")]
+pub struct FireCorrection {
+    location: FireLocation,
+    zone_slug: Option<ZoneSlug>,
+    place_en: Option<PlaceName>,
+    place_ku: Option<PlaceName>,
+    detected_at: DateTime<Utc>,
+    area_ha: Option<f64>,
+    wind_kmh: Option<f64>,
+    wind_direction: Option<WindDirection>,
+    status: FireStatus,
+    farms_within_5km: Option<i32>,
+    farmers_alerted: Option<i32>,
+    source: FireSource,
+    updated_at: DateTime<Utc>,
+}
+
+impl FireCorrection {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        location: FireLocation,
+        zone_slug: Option<ZoneSlug>,
+        place_en: Option<PlaceName>,
+        place_ku: Option<PlaceName>,
+        detected_at: DateTime<Utc>,
+        area_ha: Option<f64>,
+        wind_kmh: Option<f64>,
+        wind_direction: Option<WindDirection>,
+        status: FireStatus,
+        farms_within_5km: Option<i32>,
+        farmers_alerted: Option<i32>,
+        source: FireSource,
+    ) -> Result<Self, FireError> {
+        check_numbers(area_ha, wind_kmh, farms_within_5km, farmers_alerted)?;
+
+        Ok(Self {
+            location,
+            zone_slug,
+            place_en,
+            place_ku,
+            detected_at,
+            area_ha,
+            wind_kmh,
+            wind_direction,
+            status,
+            farms_within_5km,
+            farmers_alerted,
+            source,
+            updated_at: Utc::now(),
+        })
+    }
 }
 
 /// The totals the dashboard shows above the list of fires.
@@ -307,6 +377,49 @@ mod tests {
 
         assert!(farms.is_err());
         assert!(farmers.is_err());
+    }
+
+    fn correction_with(numbers: Numbers) -> Result<FireCorrection, FireError> {
+        FireCorrection::new(
+            FireLocation::new(36.1, 44.0).expect("location"),
+            Some(ZoneSlug::new("soran".to_string()).expect("zone")),
+            None,
+            None,
+            Utc::now(),
+            numbers.area_ha,
+            numbers.wind_kmh,
+            None,
+            FireStatus::Out,
+            numbers.farms_within_5km,
+            numbers.farmers_alerted,
+            FireSource::new("Field report".to_string()).expect("source"),
+        )
+    }
+
+    #[test]
+    fn a_correction_obeys_the_same_number_rules_as_a_new_fire() {
+        assert!(correction_with(Numbers::default()).is_ok());
+
+        for broken in [
+            Numbers {
+                area_ha: Some(-1.0),
+                ..Numbers::default()
+            },
+            Numbers {
+                wind_kmh: Some(300.1),
+                ..Numbers::default()
+            },
+            Numbers {
+                farms_within_5km: Some(-1),
+                ..Numbers::default()
+            },
+            Numbers {
+                farmers_alerted: Some(-1),
+                ..Numbers::default()
+            },
+        ] {
+            assert!(correction_with(broken).is_err());
+        }
     }
 
     #[test]

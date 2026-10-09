@@ -16,6 +16,9 @@ impl MigratorTrait for Migrator {
             Box::new(m20261008_225000_create_farm_insights::Migration),
             Box::new(m20261008_226000_create_alwa::Migration),
             Box::new(m20261009_010000_add_alwa_listing_idempotency_key::Migration),
+            Box::new(m20261009_020000_create_staff::Migration),
+            Box::new(m20261009_030000_add_sign_in_challenge_used_at::Migration),
+            Box::new(m20261009_140000_alwa_dashboard::Migration),
         ]
     }
 }
@@ -30,3 +33,6 @@ mod m20261008_224000_create_fires;
 mod m20261008_225000_create_farm_insights;
 mod m20261008_226000_create_alwa;
 mod m20261009_010000_add_alwa_listing_idempotency_key;
+mod m20261009_020000_create_staff;
+mod m20261009_030000_add_sign_in_challenge_used_at;
+mod m20261009_140000_alwa_dashboard;

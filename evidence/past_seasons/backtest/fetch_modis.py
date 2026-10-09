@@ -8,7 +8,7 @@ def get(z,y):
     url=(f"https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset?latitude={z['lat']}&longitude={z['lon']}&startDate={s}&endDate=A{y}145&kmAboveBelow=4&kmLeftRight=4&band=250m_16_days_NDVI")
     for attempt in range(4):
         try:
-            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (Macintosh) SmartSuli-backtest','Accept':'application/json'})
+            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (Macintosh) Jutyar-backtest','Accept':'application/json'})
             raw=urllib.request.urlopen(req,timeout=120).read(); json.loads(raw)
             open(fn,'wb').write(raw); return 'ok'
         except Exception as e:

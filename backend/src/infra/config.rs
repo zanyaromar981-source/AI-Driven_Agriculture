@@ -27,6 +27,11 @@ pub struct Auth {
     pub audience: String,
     pub token_ttl_days: u64,
     pub sign_in_code: SignInCode,
+    /// The audience of dashboard staff tokens. It differs from the farmer
+    /// audience so that a farmer token can never open a dashboard route, nor
+    /// a staff token a farmer route.
+    pub dashboard_audience: String,
+    pub dashboard_token_ttl_hours: u64,
 }
 
 #[derive(Clone, Debug)]
@@ -34,6 +39,9 @@ pub struct SignInCode {
     pub valid_minutes: i64,
     pub resend_after_seconds: i64,
     pub max_attempts: u32,
+    /// For this long after a code first signs someone in, the same code is
+    /// accepted again, so a sign-in whose answer was lost can be repeated.
+    pub reuse_window_seconds: i64,
     /// When set, every sign-in code is this value. For demos and local work
     /// only: anyone who knows it can sign in as any phone.
     pub fixed: Option<String>,
@@ -106,6 +114,16 @@ impl Config {
                 token_ttl_days: fetch_env_with_default("AUTH__TOKEN_TTL_DAYS", "30")
                     .parse::<u64>()
                     .unwrap(),
+                dashboard_audience: fetch_env_with_default(
+                    "AUTH__DASHBOARD_AUDIENCE",
+                    "farm-doctor-dashboard",
+                ),
+                dashboard_token_ttl_hours: fetch_env_with_default(
+                    "AUTH__DASHBOARD_TOKEN_TTL_HOURS",
+                    "12",
+                )
+                .parse::<u64>()
+                .unwrap(),
                 sign_in_code: SignInCode {
                     valid_minutes: fetch_env_with_default("AUTH__CODE_VALID_MINUTES", "10")
                         .parse::<i64>()
@@ -119,6 +137,12 @@ impl Config {
                     max_attempts: fetch_env_with_default("AUTH__CODE_MAX_ATTEMPTS", "5")
                         .parse::<u32>()
                         .unwrap(),
+                    reuse_window_seconds: fetch_env_with_default(
+                        "AUTH__CODE_REUSE_WINDOW_SECONDS",
+                        "120",
+                    )
+                    .parse::<i64>()
+                    .unwrap(),
                     fixed: dotenvy::var("AUTH__FIXED_SIGN_IN_CODE")
                         .ok()
                         .filter(|code| !code.trim().is_empty()),

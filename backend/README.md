@@ -47,6 +47,16 @@ For quick work with curl, a token can also be printed directly:
 cargo run -- token +9647501234567
 ```
 
+## Dashboard staff
+
+Ministry staff sign in with `POST /v1/dashboard/auth/login` (email and password). Every other route under `/v1/dashboard` needs the staff token and one permission (an action on a resource), which staff hold through roles. The first account is made on the command line and holds the `Owner` role:
+
+```sh
+OWNER_PASSWORD='at least 10 characters' cargo run -- create-owner owner@example.org "Full Name"
+```
+
+Running it again for the same email changes nothing.
+
 ## Checks
 
 ```sh
@@ -57,7 +67,7 @@ cargo test
 
 ## What is here today
 
-43 routes under `/v1` plus `/status` and `/health`; the full list with shapes is at `/api-docs`. By slice:
+75 paths in the API docs (`/status` and `/health` included), with 71 operations under `/v1/dashboard`; the full list with shapes is at `/api-docs`. By slice:
 
 | Slice | Routes | For |
 |---|---|---|
@@ -70,6 +80,7 @@ cargo test
 | `water` | `/v1/water/plan` | dashboard: water plan |
 | `fires` | `/v1/fires` | dashboard: fire detections |
 | `alwa` | `/v1/alwa/...` | wholesale market: prices, listings, offers, deals |
+| `staff` | `/v1/dashboard/auth/login`, `/me`, `/permissions`, `/roles`, `/staff` | dashboard: staff accounts, custom roles, sign-in |
 
 Answers use the body shapes of `BACKEND.md`; errors are `{"error": "<code>", "detail": "..."}`.
 

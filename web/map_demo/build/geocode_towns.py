@@ -53,7 +53,7 @@ def fetch(q):
     if q not in cache:
         url = 'https://nominatim.openstreetmap.org/search?' + urllib.parse.urlencode(
             {'q': q, 'countrycodes': 'iq', 'format': 'jsonv2', 'limit': 8, 'viewbox': '42.2,37.5,46.5,34.3', 'bounded': 1})
-        req = urllib.request.Request(url, headers={'User-Agent': 'SmartSuli-FarmDoctor-map-demo/1.0 (hackathon prototype)'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'Jutyar-map-demo/1.0 (hackathon prototype)'})
         try:
             cache[q] = json.load(urllib.request.urlopen(req, timeout=30))
         except Exception as e:

@@ -6,7 +6,8 @@ use crate::{
     features::alwa::{
         app::AppError,
         domain::{
-            Crop, Deal, IdempotencyKey, Listing, ListingStatus, Market, MarketSlug, Offer, Price,
+            Crop, Deal, IdempotencyKey, Listing, ListingStatus, Market, MarketNames, MarketSlug,
+            Offer, Price,
         },
     },
     shared::Phone,
@@ -19,6 +20,27 @@ pub struct ListingFilter {
     pub crop: Option<Crop>,
     /// The status a reader sees, see `Listing::status_at`.
     pub status: ListingStatus,
+}
+
+/// Which stored prices of one market the dashboard lists.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StoredPriceFilter {
+    pub market_id: i32,
+    pub crop: Option<Crop>,
+    /// The first day, included.
+    pub from: Option<NaiveDate>,
+    /// The last day, included.
+    pub to: Option<NaiveDate>,
+}
+
+/// Which listings the dashboard lists. Nothing set means every listing.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ModerationFilter {
+    pub market_id: Option<i32>,
+    pub crop: Option<Crop>,
+    /// The status a reader sees, see `Listing::status_at`.
+    pub status: Option<ListingStatus>,
+    pub seller: Option<Phone>,
 }
 
 #[async_trait]
@@ -114,4 +136,66 @@ pub trait AlwaRepository: Send + Sync + std::fmt::Debug {
         market_id: Option<i32>,
         day: NaiveDate,
     ) -> Result<Vec<Deal>, AppError>;
+
+    /// Creates the market unless one already has the slug: `None` then, and
+    /// nothing is written.
+    async fn create_market(
+        &self,
+        slug: &MarketSlug,
+        names: &MarketNames,
+    ) -> Result<Option<Market>, AppError>;
+
+    /// Replaces the names of the market with this slug. `None` when there is
+    /// no such market.
+    async fn update_market(
+        &self,
+        slug: &MarketSlug,
+        names: &MarketNames,
+    ) -> Result<Option<Market>, AppError>;
+
+    /// Removes the market and says whether there was one. Fails with
+    /// `MarketInUse` while a price or a listing still points at it.
+    async fn delete_market(&self, slug: &MarketSlug) -> Result<bool, AppError>;
+
+    /// Returns one page of a market's stored prices, newest day first, and
+    /// how many match in all.
+    async fn find_stored_prices(
+        &self,
+        filter: &StoredPriceFilter,
+        pagination: &Pagination,
+    ) -> Result<(Vec<Price>, u64), AppError>;
+
+    /// Stores the price unless the market already has one for that crop and
+    /// day: `None` then, and nothing is written.
+    async fn create_price(&self, price: &Price) -> Result<Option<Price>, AppError>;
+
+    /// Replaces the price the market has for that crop and day. `None` when
+    /// it has none.
+    async fn update_price(&self, price: &Price) -> Result<Option<Price>, AppError>;
+
+    /// Removes one price and says whether there was one.
+    async fn delete_price(
+        &self,
+        market: &MarketSlug,
+        crop: Crop,
+        day: NaiveDate,
+    ) -> Result<bool, AppError>;
+
+    /// Returns one page of the listings of every seller, newest first, and
+    /// how many match in all.
+    async fn find_listings_for_moderation(
+        &self,
+        filter: &ModerationFilter,
+        now: DateTime<Utc>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<Listing>, u64), AppError>;
+
+    /// Stores a listing staff closed and, in the same transaction, declines
+    /// every open offer on it. Fails with `ListingNotOpen` when the stored
+    /// listing stopped being open in the meantime, and then changes nothing.
+    async fn close_listing(&self, entity: &Listing) -> Result<(), AppError>;
+
+    /// Removes the listing with its offers and says whether there was one.
+    /// Fails with `ListingHasDeal` when an offer on it was accepted.
+    async fn delete_listing(&self, id: i32) -> Result<bool, AppError>;
 }

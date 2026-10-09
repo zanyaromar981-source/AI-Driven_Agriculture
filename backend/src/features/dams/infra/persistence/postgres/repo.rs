@@ -1,12 +1,13 @@
 use async_trait::async_trait;
 use chrono::NaiveDate;
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryOrder,
-    sea_query::OnConflict,
+    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
+    QuerySelect, TryInsertResult,
+    sea_query::{Expr, OnConflict},
 };
 
 use crate::{
-    app::AppError as GlobalAppError,
+    app::{AppError as GlobalAppError, Pagination},
     features::dams::{
         app::{AppError, DamRepository},
         domain::{Dam, DamReading, DamSlug},
@@ -102,5 +103,116 @@ impl DamRepository for DamPostgresRepository {
             .map_err(database_error)?;
 
         DamReading::try_from(model)
+    }
+
+    async fn find_readings_page(
+        &self,
+        dam_id: i32,
+        from: Option<NaiveDate>,
+        to: Option<NaiveDate>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<DamReading>, u64), AppError> {
+        let mut query = dam_readings::Entity::find().filter(dam_readings::Column::DamId.eq(dam_id));
+
+        if let Some(from) = from {
+            query = query.filter(dam_readings::Column::Day.gte(from));
+        }
+
+        if let Some(to) = to {
+            query = query.filter(dam_readings::Column::Day.lte(to));
+        }
+
+        let count = query
+            .clone()
+            .count(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        let models = query
+            .order_by_desc(dam_readings::Column::Day)
+            .offset(pagination.skip())
+            .limit(*pagination.rows_per_page())
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        Ok((
+            models
+                .into_iter()
+                .map(DamReading::try_from)
+                .collect::<Result<Vec<_>, _>>()?,
+            count,
+        ))
+    }
+
+    async fn create_reading(&self, reading: &DamReading) -> Result<Option<DamReading>, AppError> {
+        // One statement decides: the unique index on the dam and the day
+        // lets exactly one of two racing creates insert, and the other gets
+        // no row back.
+        let inserted = dam_readings::Entity::insert(dam_readings::ActiveModel::from(reading))
+            .on_conflict(
+                OnConflict::columns([dam_readings::Column::DamId, dam_readings::Column::Day])
+                    .do_nothing()
+                    .to_owned(),
+            )
+            .try_insert()
+            .exec_with_returning_many(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        match inserted {
+            // A conflict returns no row, which is an empty list, not an error.
+            TryInsertResult::Inserted(mut models) => {
+                models.pop().map(DamReading::try_from).transpose()
+            }
+            TryInsertResult::Conflicted | TryInsertResult::Empty => Ok(None),
+        }
+    }
+
+    async fn update_reading(&self, reading: &DamReading) -> Result<Option<DamReading>, AppError> {
+        let mut models = dam_readings::Entity::update_many()
+            .col_expr(
+                dam_readings::Column::PctFull,
+                Expr::value(reading.pct_full().value()),
+            )
+            .col_expr(
+                dam_readings::Column::VolumeBnM3,
+                Expr::value(*reading.volume_bn_m3()),
+            )
+            .col_expr(
+                dam_readings::Column::LakeAreaKm2,
+                Expr::value(*reading.lake_area_km2()),
+            )
+            .col_expr(
+                dam_readings::Column::FarmSupplyBnM3,
+                Expr::value(*reading.farm_supply_bn_m3()),
+            )
+            .col_expr(
+                dam_readings::Column::Source,
+                Expr::value(reading.source().as_str()),
+            )
+            .col_expr(
+                dam_readings::Column::UpdatedAt,
+                Expr::value(reading.updated_at().naive_utc()),
+            )
+            .filter(dam_readings::Column::DamId.eq(*reading.dam_id()))
+            .filter(dam_readings::Column::Day.eq(*reading.day()))
+            .exec_with_returning(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        // The key is unique, so the update touched one row or none.
+        models.pop().map(DamReading::try_from).transpose()
+    }
+
+    async fn delete_reading(&self, dam_id: i32, day: NaiveDate) -> Result<bool, AppError> {
+        let result = dam_readings::Entity::delete_many()
+            .filter(dam_readings::Column::DamId.eq(dam_id))
+            .filter(dam_readings::Column::Day.eq(day))
+            .exec(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        Ok(result.rows_affected > 0)
     }
 }

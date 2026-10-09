@@ -1,3 +1,3 @@
 mod repo;
 
-pub use repo::FireRepository;
+pub use repo::{FireFilter, FireRepository};

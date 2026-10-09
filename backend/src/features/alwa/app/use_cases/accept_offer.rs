@@ -6,7 +6,7 @@ use crate::{
     app::{AppError as GlobalAppError, AuthContext},
     features::alwa::{
         app::{AlwaRepository, AppError, listing_cards::assemble_cards},
-        domain::ListingCard,
+        domain::{Listing, ListingCard},
     },
 };
 
@@ -39,6 +39,19 @@ impl AcceptOfferUseCase {
             .await?;
         let now = Utc::now();
 
+        // The app repeats an accept whose answer was lost. If this seller
+        // already made the deal on this very offer, the repeat gets the same
+        // answer; accepting another offer on a sold listing is still refused.
+        if listing.was_sold_on(auth_context.user().phone(), offer_id, &offers) {
+            tracing::info!(
+                listing_id,
+                offer_id,
+                "offer already accepted: nothing to do"
+            );
+
+            return first_card(self.repository.as_ref(), listing, now).await;
+        }
+
         listing
             .accept(auth_context.user().phone(), offer_id, &mut offers, now)
             .inspect_err(|error| tracing::info!(listing_id, offer_id, %error, "accept refused"))?;
@@ -61,12 +74,20 @@ impl AcceptOfferUseCase {
 
         // Read back rather than trust the copies in memory: the answer shows
         // what the transaction really left behind.
-        let cards = assemble_cards(self.repository.as_ref(), vec![listing], now).await?;
-
-        cards.into_iter().next().ok_or_else(|| {
-            GlobalAppError::MissingValue("The sold listing has no card".to_string()).into()
-        })
+        first_card(self.repository.as_ref(), listing, now).await
     }
+}
+
+async fn first_card(
+    repository: &dyn AlwaRepository,
+    listing: Listing,
+    now: chrono::DateTime<Utc>,
+) -> Result<ListingCard, AppError> {
+    let cards = assemble_cards(repository, vec![listing], now).await?;
+
+    cards.into_iter().next().ok_or_else(|| {
+        GlobalAppError::MissingValue("The sold listing has no card".to_string()).into()
+    })
 }
 
 #[cfg(test)]
@@ -194,6 +215,36 @@ mod tests {
             Err(AppError::Alwa(AlwaError::ListingNotOpen))
         ));
         assert!(!repository.wrote());
+    }
+
+    #[tokio::test]
+    async fn accepting_the_same_offer_again_gives_the_same_answer_and_writes_nothing() {
+        let (sold, offers) = a_sold_listing(7);
+        let repository = offers.into_iter().fold(
+            FakeAlwaRepository::new().with_listing(sold),
+            FakeAlwaRepository::with_offer,
+        );
+        let use_case = AcceptOfferUseCase::new(Arc::new(repository.clone()));
+
+        let repeat = use_case.execute(&auth_context(SELLER), 7, 1).await;
+
+        assert!(
+            repeat.is_ok(),
+            "the app repeats an accept whose answer was lost"
+        );
+        assert!(!repository.wrote());
+    }
+
+    #[tokio::test]
+    async fn someone_else_repeating_the_accept_learns_nothing() {
+        let (sold, offers) = a_sold_listing(7);
+        let repository = offers.into_iter().fold(
+            FakeAlwaRepository::new().with_listing(sold),
+            FakeAlwaRepository::with_offer,
+        );
+        let use_case = AcceptOfferUseCase::new(Arc::new(repository));
+
+        assert!(use_case.execute(&auth_context(BUYER), 7, 1).await.is_err());
     }
 
     #[tokio::test]

@@ -25,3 +25,26 @@ pub use record_price::*;
 pub use view_listing::*;
 pub use view_market_prices::*;
 pub use view_price_history::*;
+
+// The dashboard's use cases.
+pub mod create_market;
+pub mod create_price;
+pub mod delete_listing;
+pub mod delete_market;
+pub mod delete_price;
+pub mod list_all_listings;
+pub mod list_stored_prices;
+pub mod moderate_listing;
+pub mod update_market;
+pub mod update_price;
+
+pub use create_market::*;
+pub use create_price::*;
+pub use delete_listing::*;
+pub use delete_market::*;
+pub use delete_price::*;
+pub use list_all_listings::*;
+pub use list_stored_prices::*;
+pub use moderate_listing::*;
+pub use update_market::*;
+pub use update_price::*;

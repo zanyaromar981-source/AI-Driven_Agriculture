@@ -2,9 +2,15 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 
-use crate::features::zones::{
-    app::{AppError, ZoneRepository},
-    domain::{Dryness, Month, ReadingSource, SubZone, SubZoneReading, Zone, ZoneReading, ZoneSlug},
+use crate::{
+    app::{Pagination, Permission, StaffContext},
+    features::zones::{
+        app::{AppError, ZoneRepository},
+        domain::{
+            Dryness, Month, MonthRange, ReadingSource, SubZone, SubZoneReading, Zone, ZoneReading,
+            ZoneSlug,
+        },
+    },
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -36,6 +42,45 @@ pub enum RepositoryCall {
         month: String,
     },
     UpsertSubZoneReading {
+        sub_zone_id: i32,
+        month: String,
+    },
+    FindAllSubZones,
+    FindReadingsByZoneInRange {
+        zone_id: i32,
+        from: String,
+        to: String,
+        page: u64,
+        rows_per_page: u64,
+    },
+    InsertReading {
+        zone_id: i32,
+        month: String,
+    },
+    UpdateReading {
+        zone_id: i32,
+        month: String,
+    },
+    DeleteReading {
+        zone_id: i32,
+        month: String,
+    },
+    FindSubZoneReadingsInRange {
+        sub_zone_id: i32,
+        from: String,
+        to: String,
+        page: u64,
+        rows_per_page: u64,
+    },
+    InsertSubZoneReading {
+        sub_zone_id: i32,
+        month: String,
+    },
+    UpdateSubZoneReading {
+        sub_zone_id: i32,
+        month: String,
+    },
+    DeleteSubZoneReading {
         sub_zone_id: i32,
         month: String,
     },
@@ -98,9 +143,30 @@ impl FakeZoneRepository {
         self.calls().iter().any(|call| {
             matches!(
                 call,
-                RepositoryCall::UpsertReading { .. } | RepositoryCall::UpsertSubZoneReading { .. }
+                RepositoryCall::UpsertReading { .. }
+                    | RepositoryCall::UpsertSubZoneReading { .. }
+                    | RepositoryCall::InsertReading { .. }
+                    | RepositoryCall::UpdateReading { .. }
+                    | RepositoryCall::DeleteReading { .. }
+                    | RepositoryCall::InsertSubZoneReading { .. }
+                    | RepositoryCall::UpdateSubZoneReading { .. }
+                    | RepositoryCall::DeleteSubZoneReading { .. }
             )
         })
+    }
+
+    /// The zone readings now held, in the order they were stored.
+    pub fn stored_readings(&self) -> Vec<ZoneReading> {
+        self.script.lock().expect("script lock").readings.clone()
+    }
+
+    /// The sub-zone readings now held, in the order they were stored.
+    pub fn stored_sub_zone_readings(&self) -> Vec<SubZoneReading> {
+        self.script
+            .lock()
+            .expect("script lock")
+            .sub_zone_readings
+            .clone()
     }
 
     fn record(&self, call: RepositoryCall) {
@@ -292,6 +358,252 @@ impl ZoneRepository for FakeZoneRepository {
             *entity.updated_at(),
         ))
     }
+
+    async fn find_all_sub_zones(&self) -> Result<Vec<SubZone>, AppError> {
+        self.record(RepositoryCall::FindAllSubZones);
+        self.guard()?;
+
+        Ok(self.script.lock().expect("script lock").sub_zones.clone())
+    }
+
+    async fn find_readings_by_zone_in_range(
+        &self,
+        zone_id: i32,
+        range: MonthRange,
+        pagination: &Pagination,
+    ) -> Result<(Vec<ZoneReading>, u64), AppError> {
+        self.record(RepositoryCall::FindReadingsByZoneInRange {
+            zone_id,
+            from: String::from(range.from()),
+            to: String::from(range.to()),
+            page: *pagination.page(),
+            rows_per_page: *pagination.rows_per_page(),
+        });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        let mut matching: Vec<ZoneReading> = script
+            .readings
+            .iter()
+            .filter(|reading| *reading.zone_id() == zone_id && range.contains(*reading.month()))
+            .cloned()
+            .collect();
+        matching.sort_by(|a, b| b.month().cmp(a.month()));
+
+        let count = matching.len() as u64;
+
+        Ok((
+            matching
+                .into_iter()
+                .skip(pagination.skip() as usize)
+                .take(*pagination.rows_per_page() as usize)
+                .collect(),
+            count,
+        ))
+    }
+
+    async fn insert_reading(&self, entity: &ZoneReading) -> Result<Option<ZoneReading>, AppError> {
+        self.record(RepositoryCall::InsertReading {
+            zone_id: *entity.zone_id(),
+            month: String::from(entity.month()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script
+            .readings
+            .iter()
+            .any(|kept| kept.zone_id() == entity.zone_id() && kept.month() == entity.month())
+        {
+            return Ok(None);
+        }
+
+        let stored = stored_reading(script.readings.len() as i32 + 1, entity);
+        script.readings.push(stored.clone());
+
+        Ok(Some(stored))
+    }
+
+    async fn update_reading(&self, entity: &ZoneReading) -> Result<Option<ZoneReading>, AppError> {
+        self.record(RepositoryCall::UpdateReading {
+            zone_id: *entity.zone_id(),
+            month: String::from(entity.month()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(kept) = script
+            .readings
+            .iter_mut()
+            .find(|kept| kept.zone_id() == entity.zone_id() && kept.month() == entity.month())
+        else {
+            return Ok(None);
+        };
+
+        *kept = stored_reading(kept.id().unwrap_or(1), entity);
+
+        Ok(Some(kept.clone()))
+    }
+
+    async fn delete_reading(&self, zone_id: i32, month: Month) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeleteReading {
+            zone_id,
+            month: String::from(month),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+        let before = script.readings.len();
+        script
+            .readings
+            .retain(|kept| !(*kept.zone_id() == zone_id && *kept.month() == month));
+
+        Ok(script.readings.len() < before)
+    }
+
+    async fn find_sub_zone_readings_in_range(
+        &self,
+        sub_zone_id: i32,
+        range: MonthRange,
+        pagination: &Pagination,
+    ) -> Result<(Vec<SubZoneReading>, u64), AppError> {
+        self.record(RepositoryCall::FindSubZoneReadingsInRange {
+            sub_zone_id,
+            from: String::from(range.from()),
+            to: String::from(range.to()),
+            page: *pagination.page(),
+            rows_per_page: *pagination.rows_per_page(),
+        });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        let mut matching: Vec<SubZoneReading> = script
+            .sub_zone_readings
+            .iter()
+            .filter(|reading| {
+                *reading.sub_zone_id() == sub_zone_id && range.contains(*reading.month())
+            })
+            .cloned()
+            .collect();
+        matching.sort_by(|a, b| b.month().cmp(a.month()));
+
+        let count = matching.len() as u64;
+
+        Ok((
+            matching
+                .into_iter()
+                .skip(pagination.skip() as usize)
+                .take(*pagination.rows_per_page() as usize)
+                .collect(),
+            count,
+        ))
+    }
+
+    async fn insert_sub_zone_reading(
+        &self,
+        entity: &SubZoneReading,
+    ) -> Result<Option<SubZoneReading>, AppError> {
+        self.record(RepositoryCall::InsertSubZoneReading {
+            sub_zone_id: *entity.sub_zone_id(),
+            month: String::from(entity.month()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script.sub_zone_readings.iter().any(|kept| {
+            kept.sub_zone_id() == entity.sub_zone_id() && kept.month() == entity.month()
+        }) {
+            return Ok(None);
+        }
+
+        let stored = stored_sub_zone_reading(script.sub_zone_readings.len() as i32 + 1, entity);
+        script.sub_zone_readings.push(stored.clone());
+
+        Ok(Some(stored))
+    }
+
+    async fn update_sub_zone_reading(
+        &self,
+        entity: &SubZoneReading,
+    ) -> Result<Option<SubZoneReading>, AppError> {
+        self.record(RepositoryCall::UpdateSubZoneReading {
+            sub_zone_id: *entity.sub_zone_id(),
+            month: String::from(entity.month()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(kept) = script.sub_zone_readings.iter_mut().find(|kept| {
+            kept.sub_zone_id() == entity.sub_zone_id() && kept.month() == entity.month()
+        }) else {
+            return Ok(None);
+        };
+
+        *kept = stored_sub_zone_reading(kept.id().unwrap_or(1), entity);
+
+        Ok(Some(kept.clone()))
+    }
+
+    async fn delete_sub_zone_reading(
+        &self,
+        sub_zone_id: i32,
+        month: Month,
+    ) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeleteSubZoneReading {
+            sub_zone_id,
+            month: String::from(month),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+        let before = script.sub_zone_readings.len();
+        script
+            .sub_zone_readings
+            .retain(|kept| !(*kept.sub_zone_id() == sub_zone_id && *kept.month() == month));
+
+        Ok(script.sub_zone_readings.len() < before)
+    }
+}
+
+fn stored_reading(id: i32, entity: &ZoneReading) -> ZoneReading {
+    ZoneReading::rehydrate(
+        id,
+        *entity.zone_id(),
+        *entity.month(),
+        *entity.dryness(),
+        *entity.rain_pct_of_normal(),
+        *entity.greenness_pct_vs_normal(),
+        *entity.water_need(),
+        *entity.nitrogen_hold(),
+        entity.best_crops().clone(),
+        entity.source().clone(),
+        *entity.updated_at(),
+    )
+}
+
+fn stored_sub_zone_reading(id: i32, entity: &SubZoneReading) -> SubZoneReading {
+    SubZoneReading::rehydrate(
+        id,
+        *entity.sub_zone_id(),
+        *entity.month(),
+        *entity.dryness(),
+        *entity.updated_at(),
+    )
+}
+
+/// A signed-in staff member, for the use cases that log who acted.
+pub fn an_actor(staff_id: i32) -> StaffContext {
+    StaffContext::new(
+        staff_id,
+        "officer@example.org".to_string(),
+        Permission::all().into_iter().collect(),
+    )
 }
 
 pub fn a_slug(value: &str) -> ZoneSlug {

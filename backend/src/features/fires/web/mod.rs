@@ -4,7 +4,8 @@ pub mod handlers;
 pub mod routes;
 
 pub use dtos::{
-    FireResponse, FireStatus, FireSummaryResponse, FiresQueryDto, FiresResponse, RecordFireParams,
-    WindDirection,
+    FireDashboardCreateParams, FireDashboardListResponse, FireDashboardOneResponse,
+    FireDashboardQuery, FireDashboardResponse, FireResponse, FireStatus, FireSummaryResponse,
+    FiresQueryDto, FiresResponse, RecordFireParams, WindDirection,
 };
-pub use routes::{ingest_routes, public_routes};
+pub use routes::{dashboard_routes, ingest_routes, public_routes};

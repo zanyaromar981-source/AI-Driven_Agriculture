@@ -29,7 +29,7 @@ PRELIM_DIR = 'https://data.chc.ucsb.edu/products/CHIRPS-2.0/prelim/global_monthl
 RES, X0, Y0 = 0.05, -180.0, 50.0
 HALF = 0.04
 MARGIN = 3  # pixels around the union of zone boxes
-UA = {'User-Agent': 'SmartSuli-backtest/1.0 (python urllib)'}
+UA = {'User-Agent': 'Jutyar-backtest/1.0 (python urllib)'}
 
 
 def http_get(url, start=None, end=None, tries=6, allow_short=False):

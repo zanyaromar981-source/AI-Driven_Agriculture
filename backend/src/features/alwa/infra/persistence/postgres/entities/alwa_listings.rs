@@ -24,6 +24,8 @@ pub struct Model {
     pub updated_at: DateTime,
     #[sea_orm(unique_key = "idx_alwa_listings_seller_phone_idempotency_key")]
     pub idempotency_key: Option<String>,
+    pub closed_by_staff_id: Option<i32>,
+    pub moderation_note: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryOrder,
-    sea_query::OnConflict,
+    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryOrder, QuerySelect,
+    TryInsertResult,
+    sea_query::{Expr, OnConflict},
 };
 
 use crate::{
@@ -91,5 +92,91 @@ impl WaterPlanRepository for WaterPlanPostgresRepository {
             .map_err(database_error)?;
 
         Ok(result.rows_affected > 0)
+    }
+
+    async fn find_seasons(&self) -> Result<Vec<Season>, AppError> {
+        // The season text sorts in time order, see `Season`.
+        let seasons: Vec<String> = water_plan_entries::Entity::find()
+            .select_only()
+            .column(water_plan_entries::Column::Season)
+            .distinct()
+            .order_by_desc(water_plan_entries::Column::Season)
+            .into_tuple()
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        Ok(seasons
+            .into_iter()
+            .map(Season::new)
+            .collect::<Result<Vec<_>, _>>()?)
+    }
+
+    async fn create(&self, entry: &WaterPlanEntry) -> Result<Option<WaterPlanEntry>, AppError> {
+        // One statement decides: the unique index on the season and the zone
+        // lets exactly one of two racing creates insert, and the other gets
+        // no row back.
+        let inserted =
+            water_plan_entries::Entity::insert(water_plan_entries::ActiveModel::from(entry))
+                .on_conflict(
+                    OnConflict::columns([
+                        water_plan_entries::Column::Season,
+                        water_plan_entries::Column::ZoneSlug,
+                    ])
+                    .do_nothing()
+                    .to_owned(),
+                )
+                .try_insert()
+                .exec_with_returning_many(&self.conn)
+                .await
+                .map_err(database_error)?;
+
+        match inserted {
+            // A conflict returns no row, which is an empty list, not an error.
+            TryInsertResult::Inserted(mut models) => {
+                models.pop().map(WaterPlanEntry::try_from).transpose()
+            }
+            TryInsertResult::Conflicted | TryInsertResult::Empty => Ok(None),
+        }
+    }
+
+    async fn update(&self, entry: &WaterPlanEntry) -> Result<Option<WaterPlanEntry>, AppError> {
+        let mut models = water_plan_entries::Entity::update_many()
+            .col_expr(
+                water_plan_entries::Column::Need,
+                Expr::value(entry.need().value()),
+            )
+            .col_expr(
+                water_plan_entries::Column::DamSlug,
+                Expr::value(entry.dam_slug().as_ref().map(String::from)),
+            )
+            .col_expr(
+                water_plan_entries::Column::SendMillionM3,
+                Expr::value(*entry.send_million_m3()),
+            )
+            .col_expr(
+                water_plan_entries::Column::Urgent,
+                Expr::value(*entry.urgent()),
+            )
+            .col_expr(
+                water_plan_entries::Column::NoteEn,
+                Expr::value(entry.note_en().as_ref().map(String::from)),
+            )
+            .col_expr(
+                water_plan_entries::Column::NoteKu,
+                Expr::value(entry.note_ku().as_ref().map(String::from)),
+            )
+            .col_expr(
+                water_plan_entries::Column::UpdatedAt,
+                Expr::value(entry.updated_at().naive_utc()),
+            )
+            .filter(water_plan_entries::Column::Season.eq(entry.season().as_str()))
+            .filter(water_plan_entries::Column::ZoneSlug.eq(entry.zone_slug().as_str()))
+            .exec_with_returning(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        // The key is unique, so the update touched one row or none.
+        models.pop().map(WaterPlanEntry::try_from).transpose()
     }
 }

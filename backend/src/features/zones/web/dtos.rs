@@ -6,13 +6,13 @@ use validator::Validate;
 use crate::features::zones::{
     app::{
         AppError,
-        use_cases::{RecordSubZoneReadingInput, RecordZoneReadingInput},
+        use_cases::{RecordSubZoneReadingInput, RecordZoneReadingInput, ZoneWithSubZones},
     },
     domain::{
         self, Dryness, GreennessPctVsNormal, Month, RainPctOfNormal, RankedReading, ReadingSource,
-        RegionComparison, RegionOverview, RegionSummary, SubZoneDryness, SubZoneReading, WaterNeed,
-        YearAverage, YearComparison, YearDryness, ZoneComparison, ZoneDetail, ZoneOverview,
-        ZoneReading, ZoneSlug,
+        RegionComparison, RegionOverview, RegionSummary, SubZone, SubZoneDryness, SubZoneReading,
+        WaterNeed, YearAverage, YearComparison, YearDryness, ZoneComparison, ZoneDetail,
+        ZoneOverview, ZoneReading, ZoneSlug,
     },
 };
 
@@ -540,6 +540,133 @@ impl From<&RegionComparison> for RegionComparisonResponse {
     }
 }
 
+/// `?from=YYYY-MM&to=YYYY-MM` on the dashboard's lists of readings, read as
+/// text so that a month written wrongly is answered with `bad_month`.
+#[derive(Deserialize, Debug, Clone, Default)]
+pub struct ZoneDashboardReadingsQuery {
+    pub from: Option<String>,
+    pub to: Option<String>,
+}
+
+impl ZoneDashboardReadingsQuery {
+    pub fn into_bounds(self) -> Result<(Option<Month>, Option<Month>), AppError> {
+        Ok((
+            self.from.as_deref().map(Month::parse).transpose()?,
+            self.to.as_deref().map(Month::parse).transpose()?,
+        ))
+    }
+}
+
+/// A sub-zone a reading can be filed under.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct ZoneDashboardSubZoneResponse {
+    pub slug: String,
+    pub name_en: String,
+    pub name_ku: String,
+}
+
+impl From<&SubZone> for ZoneDashboardSubZoneResponse {
+    fn from(sub_zone: &SubZone) -> Self {
+        Self {
+            slug: sub_zone.slug().into(),
+            name_en: sub_zone.name_en().clone(),
+            name_ku: sub_zone.name_ku().clone(),
+        }
+    }
+}
+
+/// A zone as the dashboard's pickers show it: who it is, with no readings.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct ZoneDashboardZoneResponse {
+    pub slug: String,
+    pub name_en: String,
+    pub name_ku: String,
+    pub governorate: String,
+    pub sub_zones: Vec<ZoneDashboardSubZoneResponse>,
+}
+
+impl From<&ZoneWithSubZones> for ZoneDashboardZoneResponse {
+    fn from(row: &ZoneWithSubZones) -> Self {
+        Self {
+            slug: row.zone.slug().into(),
+            name_en: row.zone.name_en().clone(),
+            name_ku: row.zone.name_ku().clone(),
+            governorate: row.zone.governorate().clone(),
+            sub_zones: row
+                .sub_zones
+                .iter()
+                .map(ZoneDashboardSubZoneResponse::from)
+                .collect(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct ZoneDashboardZonesResponse {
+    pub zones: Vec<ZoneDashboardZoneResponse>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct ZoneDashboardReadingsResponse {
+    /// Newest month first.
+    pub readings: Vec<ZoneReadingResponse>,
+    /// How many readings the range holds in all, on every page.
+    pub count: u64,
+    pub page: u64,
+    pub rows_per_page: u64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct ZoneDashboardSubZoneReadingsResponse {
+    /// Newest month first.
+    pub readings: Vec<SubZoneReadingResponse>,
+    /// How many readings the range holds in all, on every page.
+    pub count: u64,
+    pub page: u64,
+    pub rows_per_page: u64,
+}
+
+/// A reading a staff member types in: what the data jobs send, with the
+/// month in the body because the row does not exist yet.
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct CreateZoneDashboardReadingParams {
+    /// `YYYY-MM`
+    pub month: String,
+    #[serde(flatten)]
+    pub reading: ZoneReadingParams,
+}
+
+impl CreateZoneDashboardReadingParams {
+    pub fn into_input(self, zone_slug: ZoneSlug) -> Result<RecordZoneReadingInput, AppError> {
+        let month = Month::parse(&self.month)?;
+
+        self.reading.into_input(zone_slug, month)
+    }
+}
+
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct CreateZoneDashboardSubZoneReadingParams {
+    /// `YYYY-MM`
+    pub month: String,
+    /// Whole number, 0 to 100. Higher is drier.
+    pub dryness: f64,
+}
+
+impl CreateZoneDashboardSubZoneReadingParams {
+    pub fn into_input(
+        self,
+        zone_slug: ZoneSlug,
+        sub_zone_slug: ZoneSlug,
+    ) -> Result<RecordSubZoneReadingInput, AppError> {
+        let month = Month::parse(&self.month)?;
+
+        SubZoneReadingParams {
+            dryness: self.dryness,
+        }
+        .into_input(zone_slug, sub_zone_slug, month)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -745,5 +872,113 @@ mod tests {
         }
 
         assert!(json["summary"]["average_dryness"].is_null());
+    }
+
+    #[test]
+    fn a_dashboard_create_is_the_ingest_body_with_the_month_beside_it() {
+        let mut body = full();
+        body["month"] = serde_json::json!("2026-03");
+
+        let params: CreateZoneDashboardReadingParams =
+            serde_json::from_value(body).expect("params deserialize");
+        let input = params.into_input(slug()).expect("input");
+
+        assert_eq!(String::from(input.month), "2026-03");
+        assert_eq!(input.dryness.value(), 72);
+        assert_eq!(input.source.as_str(), "chirps+modis");
+    }
+
+    #[test]
+    fn a_dashboard_create_validates_exactly_as_the_ingest_route_does() {
+        for (field, value, code) in [
+            ("month", serde_json::json!("2026-3"), "bad_month"),
+            ("dryness", serde_json::json!(101), "bad_dryness"),
+            (
+                "rain_pct_of_normal",
+                serde_json::json!(401),
+                "bad_rain_pct_of_normal",
+            ),
+            ("water_need", serde_json::json!(-1), "bad_water_need"),
+            ("best_crops", serde_json::json!(["rice"]), "bad_crop"),
+            ("source", serde_json::json!("  "), "invalid"),
+        ] {
+            let mut body = full();
+            body["month"] = serde_json::json!("2026-03");
+            body[field] = value;
+
+            let params: CreateZoneDashboardReadingParams =
+                serde_json::from_value(body).expect("params deserialize");
+
+            assert_eq!(
+                code_of(
+                    params
+                        .into_input(slug())
+                        .err()
+                        .unwrap_or_else(|| panic!("accepted"))
+                ),
+                code,
+                "{field}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_dashboard_create_without_a_month_does_not_deserialize() {
+        assert!(serde_json::from_value::<CreateZoneDashboardReadingParams>(full()).is_err());
+    }
+
+    #[test]
+    fn a_sub_zone_create_carries_its_month_and_dryness() {
+        let params: CreateZoneDashboardSubZoneReadingParams =
+            serde_json::from_value(serde_json::json!({"month": "2026-03", "dryness": 64}))
+                .expect("params deserialize");
+        let input = params.into_input(slug(), slug()).expect("input");
+
+        assert_eq!(String::from(input.month), "2026-03");
+        assert_eq!(input.dryness.value(), 64);
+
+        let bad = CreateZoneDashboardSubZoneReadingParams {
+            month: "2026-03".to_string(),
+            dryness: 64.5,
+        };
+
+        assert_eq!(
+            code_of(
+                bad.into_input(slug(), slug())
+                    .err()
+                    .unwrap_or_else(|| panic!("accepted"))
+            ),
+            "bad_dryness"
+        );
+    }
+
+    #[test]
+    fn the_range_bounds_are_both_optional_and_each_is_checked() {
+        let query = |from: Option<&str>, to: Option<&str>| ZoneDashboardReadingsQuery {
+            from: from.map(str::to_string),
+            to: to.map(str::to_string),
+        };
+
+        assert_eq!(
+            query(None, None).into_bounds().expect("bounds"),
+            (None, None)
+        );
+        assert_eq!(
+            query(Some("2026-01"), None)
+                .into_bounds()
+                .expect("bounds")
+                .0
+                .map(String::from),
+            Some("2026-01".to_string())
+        );
+        assert_eq!(
+            code_of(
+                query(None, Some("march"))
+                    .into_bounds()
+                    .err()
+                    .unwrap_or_else(|| panic!("accepted"))
+            ),
+            "bad_month"
+        );
     }
 }

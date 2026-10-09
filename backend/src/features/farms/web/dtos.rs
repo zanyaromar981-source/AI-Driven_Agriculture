@@ -1,20 +1,23 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 use validator::Validate;
 
 use crate::{
-    app::AppError as GlobalAppError,
+    app::{AppError as GlobalAppError, Pagination},
     features::farms::{
         app::{
             AppError,
-            use_cases::{RegisterFarmInput, RepaintFarmCellsInput},
+            use_cases::{
+                ListAllFarmsInput, RegisterFarmInput, RenameFarmInput, RepaintFarmCellsInput,
+            },
         },
         domain::{
             self, Cell, CropArea, Farm, FarmName, FarmSummary, GridCell, IdempotencyKey, Outline,
-            PaintedCell, Point,
+            OwnedFarmSummary, PaintedCell, Point,
         },
     },
+    shared::Phone,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
@@ -384,5 +387,207 @@ impl From<&Farm> for FarmStatusResponse {
                 })
                 .collect(),
         }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct DashboardFarmsQuery {
+    /// Only the farms of the farmer with exactly this phone, for example
+    /// `+9647501234567`.
+    pub owner_phone: Option<String>,
+}
+
+impl DashboardFarmsQuery {
+    pub fn into_input(self, pagination: Pagination) -> Result<ListAllFarmsInput, AppError> {
+        Ok(ListAllFarmsInput {
+            owner: self
+                .owner_phone
+                .filter(|phone| !phone.is_empty())
+                .map(Phone::new)
+                .transpose()?,
+            pagination,
+        })
+    }
+}
+
+/// The farmer app's create body, plus the farmer the farm is for.
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct DashboardCreateFarmParams {
+    /// The phone of a registered farmer, who will own the farm.
+    pub owner_phone: String,
+    #[serde(flatten)]
+    pub farm: CreateFarmParams,
+}
+
+impl DashboardCreateFarmParams {
+    pub fn into_input(
+        self,
+        idempotency_key: Option<String>,
+    ) -> Result<(Phone, RegisterFarmInput), AppError> {
+        Ok((
+            Phone::new(self.owner_phone)?,
+            self.farm.into_input(idempotency_key)?,
+        ))
+    }
+}
+
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct DashboardRenameFarmParams {
+    pub name: String,
+}
+
+impl DashboardRenameFarmParams {
+    pub fn into_input(self) -> Result<RenameFarmInput, AppError> {
+        Ok(RenameFarmInput {
+            name: FarmName::new(self.name)?,
+        })
+    }
+}
+
+/// A farm's card with its owner's phone. Only staff holding a `farms`
+/// permission get this shape.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct DashboardFarmSummaryResponse {
+    #[serde(flatten)]
+    pub summary: FarmSummaryResponse,
+    pub owner_phone: String,
+}
+
+impl From<&OwnedFarmSummary> for DashboardFarmSummaryResponse {
+    fn from(farm: &OwnedFarmSummary) -> Self {
+        Self {
+            summary: farm.summary().into(),
+            owner_phone: farm.owner().into(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct DashboardFarmsResponse {
+    pub farms: Vec<DashboardFarmSummaryResponse>,
+    /// How many farms match in all, on every page.
+    pub count: u64,
+    pub page: u64,
+    pub rows_per_page: u64,
+}
+
+/// A farm in full with its owner's phone.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct DashboardFarmResponse {
+    #[serde(flatten)]
+    pub farm: FarmResponse,
+    pub owner_phone: String,
+}
+
+impl TryFrom<&Farm> for DashboardFarmResponse {
+    type Error = AppError;
+
+    fn try_from(farm: &Farm) -> Result<Self, Self::Error> {
+        Ok(Self {
+            farm: FarmResponse::try_from(farm)?,
+            owner_phone: farm.owner().into(),
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct DashboardOneFarmResponse {
+    pub farm: DashboardFarmResponse,
+}
+
+impl TryFrom<&Farm> for DashboardOneFarmResponse {
+    type Error = AppError;
+
+    fn try_from(farm: &Farm) -> Result<Self, Self::Error> {
+        Ok(Self {
+            farm: DashboardFarmResponse::try_from(farm)?,
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct DashboardSavedFarmResponse {
+    pub farm: DashboardFarmResponse,
+    pub dropped_cells: Vec<GridCellResponse>,
+}
+
+impl TryFrom<(&Farm, &[GridCell])> for DashboardSavedFarmResponse {
+    type Error = AppError;
+
+    fn try_from((farm, dropped_cells): (&Farm, &[GridCell])) -> Result<Self, Self::Error> {
+        Ok(Self {
+            farm: DashboardFarmResponse::try_from(farm)?,
+            dropped_cells: dropped_cells.iter().map(Into::into).collect(),
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::features::farms::app::testing::{OWNER, a_farm};
+
+    #[test]
+    fn the_app_shape_of_a_farm_never_carries_the_owners_phone() {
+        let body = serde_json::to_string(&OneFarmResponse::try_from(&a_farm()).expect("farm"))
+            .expect("json");
+
+        assert!(
+            !body.contains(OWNER) && !body.contains("owner_phone"),
+            "the phone is shown on the dashboard only"
+        );
+    }
+
+    #[test]
+    fn the_dashboard_shape_is_the_app_shape_plus_the_owners_phone() {
+        let farm = a_farm();
+        let app = serde_json::to_value(FarmResponse::try_from(&farm).expect("farm")).expect("json");
+        let mut dashboard =
+            serde_json::to_value(DashboardFarmResponse::try_from(&farm).expect("farm"))
+                .expect("json");
+
+        assert_eq!(dashboard["owner_phone"], OWNER);
+
+        dashboard
+            .as_object_mut()
+            .expect("object")
+            .remove("owner_phone");
+        assert_eq!(dashboard, app);
+    }
+
+    #[test]
+    fn an_empty_phone_filter_is_no_filter_and_a_bad_one_is_refused() {
+        let query = |phone: &str| DashboardFarmsQuery {
+            owner_phone: Some(phone.to_string()),
+        };
+
+        assert!(
+            query("")
+                .into_input(Pagination::new(1, 20))
+                .expect("input")
+                .owner
+                .is_none()
+        );
+        assert!(query("0750").into_input(Pagination::new(1, 20)).is_err());
+    }
+
+    #[test]
+    fn the_staff_create_body_is_the_app_body_plus_the_owner() {
+        let params: DashboardCreateFarmParams = serde_json::from_value(serde_json::json!({
+            "owner_phone": OWNER,
+            "name": "Upper field",
+            "points": [
+                {"lat": 36.0300, "lon": 44.6000},
+                {"lat": 36.0300, "lon": 44.6010},
+                {"lat": 36.0310, "lon": 44.6010}
+            ]
+        }))
+        .expect("body");
+
+        let (owner, input) = params.into_input(None).expect("input");
+
+        assert_eq!(owner.as_str(), OWNER);
+        assert_eq!(input.name.as_str(), "Upper field");
     }
 }

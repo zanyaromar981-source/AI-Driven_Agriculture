@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/farm_card.dart';
 import 'add_farm/corners_screen.dart';
+import 'add_farm/farm_actions.dart';
 import 'home/home_screen.dart';
 
 /// What the list shows: from the server, or the last copy saved on the phone.
@@ -31,13 +32,22 @@ class MyFarmsScreen extends StatefulWidget {
 
 class _MyFarmsScreenState extends State<MyFarmsScreen> {
   static const _cacheName = 'farms_cache';
-  late Future<_FarmList> _farms = _load();
   int _waiting = Outbox.instance.items.length;
+
+  /// What is on screen: the copy saved on the phone first, then fresh data.
+  _FarmList? _list;
+
+  /// True while fresh data is loading (a thin bar shows at the top).
+  bool _busy = false;
+
+  /// Only shown when there is nothing at all to show.
+  Object? _error;
 
   @override
   void initState() {
     super.initState();
     Outbox.instance.addListener(_outboxChanged);
+    _refresh();
   }
 
   @override
@@ -57,9 +67,41 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
     _reload();
   }
 
-  void _reload() => setState(() {
-    _farms = _load();
-  });
+  void _reload() => _refresh();
+
+  /// Show the saved copy straight away (first time only), then load fresh
+  /// data and swap it in. The screen never goes blank while loading.
+  Future<void> _refresh() async {
+    if (_list == null) {
+      final j = await LocalStore.read(_cacheName);
+      if (j != null && mounted && _list == null) {
+        try {
+          setState(
+            () => _list = _FarmList([
+              for (final f in (j['farms'] as List? ?? const []))
+                FarmSummary.fromJson(f as Map<String, dynamic>),
+            ]),
+          );
+        } catch (_) {
+          // A damaged copy is simply skipped.
+        }
+      }
+    }
+    if (!mounted) return;
+    setState(() => _busy = true);
+    try {
+      final fresh = await _load();
+      if (!mounted) return;
+      setState(() {
+        _list = fresh;
+        _error = null;
+      });
+    } catch (e) {
+      if (mounted && _list == null) setState(() => _error = e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   Future<_FarmList> _load() async {
     final api = AppScope.read(context).api;
@@ -89,20 +131,19 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
     }
   }
 
-  /// Home shows every farm stacked; it opens at the one that was tapped.
-  Future<void> _openFarm(List<FarmSummary> farms, String id) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => HomeScreen(farms: farms, openId: id),
-      ),
-    );
+  /// Each farm opens on its own screen (user, 2026-10-08).
+  Future<void> _openFarm(FarmSummary farm) async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => HomeScreen(farm: farm)));
     if (!mounted) return;
     _reload();
   }
 
   Future<void> _addFarm() async {
-    await Navigator.of(context)
-        .push(MaterialPageRoute<void>(builder: (_) => const CornersScreen()));
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const CornersScreen()));
     if (!mounted) return;
     _reload();
   }
@@ -149,10 +190,16 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
           ),
         ),
         const SizedBox(height: 28),
-        FutureBuilder<_FarmList>(
-          future: _farms,
-          builder: (context, snap) {
-            if (snap.connectionState != ConnectionState.done) {
+        Builder(
+          builder: (context) {
+            final current = _list;
+            if (current == null) {
+              if (_error != null) {
+                return Text(
+                  '${s.error}: $_error',
+                  style: jText(ku, size: 14, color: JColors.levelAlarm),
+                );
+              }
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
                 child: Center(
@@ -167,26 +214,61 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
                 ),
               );
             }
-            if (snap.hasError) {
-              return Text(
-                '${s.error}: ${snap.error}',
-                style: jText(ku, size: 14, color: JColors.levelAlarm),
-              );
-            }
-            final list = snap.data!;
+            final list = current;
+            final gone = Outbox.instance.deletes.toSet();
+            final shown = [
+              for (final f in list.farms)
+                if (!gone.contains(f.id)) f,
+            ];
+            final edits = {
+              for (final p in pending)
+                if (p.farmId != null) p.farmId!: p,
+            };
             final since = list.offlineSince;
             return Column(
               spacing: 12,
               children: [
+                // Fresh data on its way; what is shown is the saved copy.
+                SizedBox(
+                  height: 3,
+                  child: _busy
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: const LinearProgressIndicator(
+                            minHeight: 3,
+                            color: JColors.accent,
+                            backgroundColor: JColors.accentSoft,
+                          ),
+                        )
+                      : null,
+                ),
                 if (since != null)
                   _OfflineBanner(
                     text: s.offlineList('\u2066${_fmtWhen(since)}\u2069'),
                   ),
-                if (list.farms.isEmpty && pending.isEmpty) const EmptyFarms(),
+                if (shown.isEmpty && !pending.any((p) => p.farmId == null))
+                  const EmptyFarms(),
+                // New farms not uploaded yet.
                 for (final p in pending)
-                  FarmCard(farm: p.summary, waiting: true, onTap: () {}),
-                for (final f in list.farms)
-                  FarmCard(farm: f, onTap: () => _openFarm(list.farms, f.id)),
+                  if (p.farmId == null)
+                    FarmCard(farm: p.summary, waiting: true, onTap: () {}),
+                // Server farms; a waiting edit shows its new version, and a
+                // farm deleted on the phone is hidden at once.
+                // Slide a farm sideways to show Delete; letting go asks first.
+                for (final f in shown)
+                  Dismissible(
+                    key: ValueKey('farm-${f.id}'),
+                    direction: DismissDirection.horizontal,
+                    background: const _DeleteBehind(alignStart: true),
+                    secondaryBackground: const _DeleteBehind(alignStart: false),
+                    confirmDismiss: (_) =>
+                        confirmDeleteFarm(context, edits[f.id]?.summary ?? f),
+                    child: FarmCard(
+                      farm: edits[f.id]?.summary ?? f,
+                      waiting: edits.containsKey(f.id),
+                      onTap: () => _openFarm(edits[f.id]?.summary ?? f),
+                    ),
+                  ),
                 AddFarmCard(onTap: _addFarm),
               ],
             );
@@ -228,6 +310,49 @@ class _OfflineBanner extends StatelessWidget {
                 weight: FontWeight.w600,
                 color: JColors.ink,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The red Delete shown behind a farm card while it is slid sideways.
+class _DeleteBehind extends StatelessWidget {
+  const _DeleteBehind({required this.alignStart});
+
+  /// True: Delete sits at the side the card is slid away from first.
+  final bool alignStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = AppScope.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      alignment: alignStart
+          ? AlignmentDirectional.centerStart
+          : AlignmentDirectional.centerEnd,
+      decoration: BoxDecoration(
+        color: JColors.levelAlarm,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 4,
+        children: [
+          const Icon(
+            Icons.delete_outline_rounded,
+            color: Colors.white,
+            size: 26,
+          ),
+          Text(
+            scope.s.delete,
+            style: jText(
+              scope.ku,
+              size: 13,
+              weight: FontWeight.w700,
+              color: Colors.white,
             ),
           ),
         ],

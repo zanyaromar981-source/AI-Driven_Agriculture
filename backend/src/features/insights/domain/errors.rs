@@ -8,6 +8,9 @@ pub enum InsightError {
     #[error("The measure code {0} appears more than once in the reading")]
     DuplicateMeasureCode(String),
 
+    #[error("The farm already has a reading for this topic")]
+    AlreadyExists,
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

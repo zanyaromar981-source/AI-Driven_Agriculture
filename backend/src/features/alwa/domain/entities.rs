@@ -3,8 +3,8 @@ use getset::Getters;
 
 use crate::{
     features::alwa::domain::{
-        AlwaError, BuyerKind, Crop, DisplayName, FairPrice, Grade, ListingStatus, MarketSlug, Note,
-        OfferStatus, Pickup, PricePerKg, PriceSource, QuantityKg, ZoneSlug,
+        AlwaError, BuyerKind, Crop, DisplayName, FairPrice, Grade, ListingStatus, MarketName,
+        MarketSlug, Note, OfferStatus, Pickup, PricePerKg, PriceSource, QuantityKg, ZoneSlug,
     },
     shared::Phone,
 };
@@ -29,8 +29,9 @@ fn percent_change(from: PricePerKg, to: PricePerKg) -> i32 {
     ((to - from) / from * 100.0).round() as i32
 }
 
-/// An alwa: the wholesale produce market of one city. The markets are
-/// reference data seeded by the migration, so one is only ever read.
+/// An alwa: the wholesale produce market of one city. The first ones are
+/// seeded by the migration; staff add, rename and remove them on the
+/// dashboard.
 #[derive(Clone, Debug, PartialEq, Eq, Getters)]
 #[getset(get = "pub")]
 pub struct Market {
@@ -52,7 +53,15 @@ impl Market {
     }
 }
 
-/// The price of one crop at one alwa on one day, as a data job reported it.
+/// The two names staff give an alwa. Its slug is fixed once it is made.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MarketNames {
+    pub name_en: MarketName,
+    pub name_ku: MarketName,
+}
+
+/// The price of one crop at one alwa on one day, as a data job reported it
+/// or staff entered it.
 #[derive(Clone, Debug, Getters)]
 #[getset(get = "pub")]
 pub struct Price {
@@ -171,6 +180,22 @@ pub struct Listing {
     status: ListingStatus,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
+    /// Set once staff closed the listing on the dashboard.
+    moderation: Option<Moderation>,
+}
+
+/// Who on the staff closed a listing, and the reason they gave.
+#[derive(Clone, Debug, PartialEq, Eq, Getters)]
+#[getset(get = "pub")]
+pub struct Moderation {
+    staff_id: i32,
+    note: Option<Note>,
+}
+
+impl Moderation {
+    pub fn new(staff_id: i32, note: Option<Note>) -> Self {
+        Self { staff_id, note }
+    }
 }
 
 impl Listing {
@@ -201,6 +226,7 @@ impl Listing {
             status: ListingStatus::Open,
             created_at: now,
             updated_at: now,
+            moderation: None,
         })
     }
 
@@ -241,7 +267,14 @@ impl Listing {
             status,
             created_at,
             updated_at,
+            moderation: None,
         }
+    }
+
+    /// Completes `rehydrate` for a listing stored as closed by staff.
+    pub fn moderated(mut self, moderation: Moderation) -> Self {
+        self.moderation = Some(moderation);
+        self
     }
 
     /// The status a reader sees. Nothing runs at the closing time, so a
@@ -260,6 +293,60 @@ impl Listing {
 
     pub fn is_sold_by(&self, phone: &Phone) -> bool {
         &self.seller_phone == phone
+    }
+
+    /// True when this seller has already taken the listing down. A repeated
+    /// cancel then has nothing left to do and is not an error.
+    pub fn was_cancelled_by(&self, phone: &Phone) -> bool {
+        self.is_sold_by(phone) && self.status == ListingStatus::Cancelled
+    }
+
+    /// True when this seller has already made the deal on exactly this
+    /// offer. A repeated accept of the same offer then has nothing left to
+    /// do and is not an error; accepting a different offer still is.
+    pub fn was_sold_on(&self, by: &Phone, offer_id: i32, offers: &[Offer]) -> bool {
+        self.is_sold_by(by)
+            && self.status == ListingStatus::Sold
+            && offers.iter().any(|offer| {
+                offer.is_on(self)
+                    && offer.id == Some(offer_id)
+                    && offer.status == OfferStatus::Accepted
+            })
+    }
+
+    /// True when staff have already closed the listing with exactly this
+    /// note. A repeated close then has nothing left to do and is not an
+    /// error; a close with another note still is.
+    pub fn was_closed_by_staff_with(&self, note: Option<&Note>) -> bool {
+        self.status == ListingStatus::Closed
+            && self
+                .moderation
+                .as_ref()
+                .is_some_and(|moderation| moderation.note.as_ref() == note)
+    }
+
+    /// A staff member moderates the listing. Closing an open listing is all
+    /// they may do: only a deal sells a listing, and nothing reopens one.
+    pub fn moderate(
+        &mut self,
+        to: ListingStatus,
+        staff_id: i32,
+        note: Option<Note>,
+        now: DateTime<Utc>,
+    ) -> Result<(), AlwaError> {
+        if to != ListingStatus::Closed {
+            return Err(AlwaError::StaffMayOnlyClose);
+        }
+
+        if !self.is_open_at(now) {
+            return Err(AlwaError::ListingNotOpen);
+        }
+
+        self.status = ListingStatus::Closed;
+        self.updated_at = now;
+        self.moderation = Some(Moderation::new(staff_id, note));
+
+        Ok(())
     }
 
     /// The seller takes the listing down.
@@ -786,6 +873,68 @@ mod tests {
             expired.cancel(&phone(SELLER), now + Duration::days(4)),
             Err(AlwaError::ListingNotOpen)
         ));
+    }
+
+    #[test]
+    fn staff_close_an_open_listing_and_leave_their_name_on_it() {
+        let now = Utc::now();
+        let mut listing = listing(now);
+        let note = Note::new("duplicate".to_string()).expect("note");
+
+        listing
+            .moderate(ListingStatus::Closed, 9, Some(note.clone()), now)
+            .expect("close");
+
+        assert_eq!(*listing.status(), ListingStatus::Closed);
+        assert_eq!(
+            listing.moderation(),
+            &Some(Moderation::new(9, Some(note.clone())))
+        );
+        assert!(listing.was_closed_by_staff_with(Some(&note)));
+        assert!(
+            !listing.was_closed_by_staff_with(None),
+            "a close with another note is a different request"
+        );
+    }
+
+    #[test]
+    fn staff_may_not_sell_reopen_or_cancel_a_listing() {
+        let now = Utc::now();
+
+        for to in [
+            ListingStatus::Open,
+            ListingStatus::Sold,
+            ListingStatus::Cancelled,
+        ] {
+            let mut listing = listing(now);
+
+            assert!(matches!(
+                listing.moderate(to, 9, None, now),
+                Err(AlwaError::StaffMayOnlyClose)
+            ));
+            assert_eq!(*listing.status(), ListingStatus::Open);
+        }
+    }
+
+    #[test]
+    fn staff_cannot_close_a_listing_that_is_not_open() {
+        let now = Utc::now();
+        let mut cancelled = listing(now);
+        cancelled.cancel(&phone(SELLER), now).expect("cancel");
+        let mut expired = listing(now - Duration::days(5));
+
+        for listing in [&mut cancelled, &mut expired] {
+            assert!(matches!(
+                listing.moderate(ListingStatus::Closed, 9, None, now),
+                Err(AlwaError::ListingNotOpen)
+            ));
+            assert!(listing.moderation().is_none());
+        }
+
+        assert!(
+            !expired.was_closed_by_staff_with(None),
+            "a listing whose time ran out was not closed by staff"
+        );
     }
 
     #[test]

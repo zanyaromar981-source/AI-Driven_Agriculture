@@ -13,6 +13,7 @@ impl ToErrorInfo for ZoneError {
         match self {
             // A data job fixes a month the same way wherever it was wrong.
             ZoneError::BadMonth { .. } | ZoneError::BadCalendarMonth => invalid("bad_month"),
+            ZoneError::FromAfterTo => invalid("bad_range"),
             ZoneError::BadYear { .. } => invalid("bad_year"),
             ZoneError::SameYear => invalid("same_year"),
             ZoneError::DrynessOutOfRange => invalid("bad_dryness"),
@@ -30,6 +31,9 @@ pub enum AppError {
     #[error(transparent)]
     Zone(#[from] ZoneError),
 
+    #[error("A reading for this month is already stored: update it instead")]
+    ReadingAlreadyExists,
+
     #[error(transparent)]
     Domain(#[from] DomainError),
 
@@ -41,6 +45,9 @@ impl ToErrorInfo for AppError {
     fn to_error_info(&self) -> ErrorInfo {
         match self {
             AppError::Zone(err) => err.to_error_info(),
+            AppError::ReadingAlreadyExists => {
+                ErrorInfo::with_code(ErrorKind::Conflict, "already_exists", self.to_string())
+            }
             AppError::Domain(err) => err.to_error_info(),
             AppError::GlobalAppError(err) => err.to_error_info(),
         }
@@ -80,6 +87,7 @@ mod tests {
             (ZoneError::UnknownCrop("rice".to_string()), "bad_crop"),
             (ZoneError::RepeatedCrop("wheat".to_string()), "bad_crop"),
             (ZoneError::SameYear, "same_year"),
+            (ZoneError::FromAfterTo, "bad_range"),
             (
                 ZoneError::BadYear {
                     min: 2000,
@@ -93,6 +101,14 @@ mod tests {
             assert_eq!(info.kind, ErrorKind::InvalidInput, "{code}");
             assert_eq!(info.code, code);
         }
+    }
+
+    #[test]
+    fn creating_a_reading_that_is_already_stored_is_a_conflict_a_client_can_tell_apart() {
+        let info = AppError::ReadingAlreadyExists.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Conflict);
+        assert_eq!(info.code, "already_exists");
     }
 
     #[test]

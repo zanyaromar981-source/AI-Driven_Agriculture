@@ -88,6 +88,10 @@ fn main() {
                     "alwa_markets,alwa_prices,alwa_listings,alwa_offers",
                     "src/features/alwa/infra/persistence/postgres/entities",
                 ),
+                (
+                    "staff,roles,role_permissions,staff_roles",
+                    "src/features/staff/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

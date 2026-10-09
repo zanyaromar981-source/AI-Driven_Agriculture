@@ -27,6 +27,58 @@ class _Failing implements Api {
   }) => Future.error(ApiException(status, code));
 
   @override
+  Future<CreateFarmResult> updateFarm(
+    String id,
+    NewFarmRequest request, {
+    String? idempotencyKey,
+  }) => Future.error(ApiException(status, code));
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Records which call the outbox made.
+class _Recorder implements Api {
+  final calls = <String>[];
+
+  @override
+  Future<CreateFarmResult> createFarm(
+    NewFarmRequest request, {
+    String? idempotencyKey,
+  }) {
+    calls.add('create ${request.name}');
+    final id = 'new_${calls.length}';
+    return Future.value(
+      CreateFarmResult(
+        farm: Farm.fromJson({
+          'id': id,
+          'name': request.name,
+          'area_dunam': 1,
+          'crops': const [],
+          'status': 'none',
+          'outline': const [],
+          'cells': const [],
+        }),
+        droppedCells: 0,
+      ),
+    );
+  }
+
+  @override
+  Future<CreateFarmResult> updateFarm(
+    String id,
+    NewFarmRequest request, {
+    String? idempotencyKey,
+  }) {
+    calls.add('update $id ${request.name}');
+    return Future.error(ApiException(0, 'offline'));
+  }
+
+  /// Deletes succeed, so the queue moves on to the rest.
+  @override
+  Future<void> deleteFarm(String id) async => calls.add('delete $id');
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -65,6 +117,7 @@ void main() {
       await box.add(_req('Busy farm'), _summary);
       for (final (status, code) in [
         (429, 'rate_limited'),
+        (405, 'http_405'),
         (408, 'timeout'),
         (503, 'upstream_down'),
         (0, 'offline'),
@@ -91,4 +144,34 @@ void main() {
       expect(box.items.length, lessThanOrEqualTo(before));
     },
   );
+
+  test(
+    'an edit is sent as an edit, and a newer edit replaces an older one',
+    () async {
+      final box = Outbox.instance;
+      await box.flush(_Failing(422, 'x')); // clear what earlier tests left
+      await box.add(_req('Edit 1'), _summary, farmId: 'f_7');
+      await box.add(_req('Edit 2'), _summary, farmId: 'f_7');
+      expect(box.items.where((i) => i.farmId == 'f_7').length, 1);
+      final rec = _Recorder();
+      await box.flush(rec);
+      // No edit call on the server yet: the farm is made again, the old one deleted.
+      expect(rec.calls, ['create Edit 2', 'delete f_7']);
+      expect(box.replacedBy('f_7'), 'new_1');
+      expect(box.deletes, isNot(contains('f_7')));
+    },
+  );
+
+  test('a delete goes first and drops any waiting edit of that farm', () async {
+    final box = Outbox.instance;
+    await box.flush(_Failing(422, 'x'));
+    await box.add(_req('Edit of f_9'), _summary, farmId: 'f_9');
+    await box.add(_req('New farm'), _summary);
+    await box.delete('f_9');
+    expect(box.items.any((i) => i.farmId == 'f_9'), isFalse);
+    final rec = _Recorder();
+    await box.flush(rec);
+    expect(rec.calls, ['delete f_9', 'create New farm']);
+    expect(box.deletes, isEmpty);
+  });
 }

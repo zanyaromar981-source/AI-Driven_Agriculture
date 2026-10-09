@@ -273,11 +273,11 @@ pub fn parse_day(raw: &str) -> Result<NaiveDate, AppError> {
 }
 
 /// A filter sent empty, as in `?market=&crop=`, is a filter not set.
-fn given(value: Option<String>) -> Option<String> {
+pub(super) fn given(value: Option<String>) -> Option<String> {
     value.filter(|value| !value.is_empty())
 }
 
-fn missing_id(what: &str) -> AppError {
+pub(super) fn missing_id(what: &str) -> AppError {
     AppError::GlobalAppError(GlobalAppError::MissingValue(format!(
         "{what} is missing its id"
     )))
@@ -546,7 +546,7 @@ impl TryFrom<&ListingCard> for AlwaListingSummaryResponse {
     }
 }
 
-fn listing_id(listing: &Listing) -> Result<String, AppError> {
+pub(super) fn listing_id(listing: &Listing) -> Result<String, AppError> {
     Ok(listing
         .id()
         .ok_or_else(|| missing_id("Listing"))?

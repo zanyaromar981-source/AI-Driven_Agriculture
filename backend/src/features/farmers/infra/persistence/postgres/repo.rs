@@ -1,15 +1,16 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, DbErr, EntityTrait, ExprTrait, QueryFilter,
+    ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, DbErr, EntityTrait, ExprTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, TransactionTrait, TryInsertResult,
     sea_query::{Expr, OnConflict},
 };
 
 use crate::{
-    app::AppError as GlobalAppError,
+    app::{AppError as GlobalAppError, Pagination},
     features::farmers::{
         app::{AppError, FarmerRepository, SignInChallengeRepository},
-        domain::{Farmer, SignInChallenge},
+        domain::{Farmer, FarmerName, Language, SignInChallenge},
         infra::persistence::postgres::entities::{farmers, sign_in_challenges},
     },
     shared::Phone,
@@ -71,6 +72,116 @@ impl FarmerRepository for FarmerPostgresRepository {
 
         Farmer::try_from(model)
     }
+
+    async fn find_by_id(&self, id: i32) -> Result<Option<Farmer>, AppError> {
+        let model = farmers::Entity::find_by_id(id)
+            .one(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        model.map(Farmer::try_from).transpose()
+    }
+
+    async fn find_page(
+        &self,
+        phone: Option<&Phone>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<Farmer>, u64), AppError> {
+        let mut query = farmers::Entity::find();
+
+        if let Some(phone) = phone {
+            query = query.filter(farmers::Column::Phone.eq(phone.as_str()));
+        }
+
+        let count = query
+            .clone()
+            .count(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        let models = query
+            .order_by_desc(farmers::Column::CreatedAt)
+            .order_by_desc(farmers::Column::Id)
+            .offset(pagination.skip())
+            .limit(*pagination.rows_per_page())
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        let farmers = models
+            .into_iter()
+            .map(Farmer::try_from)
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok((farmers, count))
+    }
+
+    async fn create(&self, entity: &Farmer) -> Result<Option<Farmer>, AppError> {
+        // The unique index on the phone decides: a phone that already has a
+        // farmer inserts nothing, so no row comes back. (The single-row
+        // `exec_with_returning` reports that as an error, not as a conflict.)
+        let inserted = farmers::Entity::insert(farmers::ActiveModel::from(entity))
+            .on_conflict_do_nothing_on([farmers::Column::Phone])
+            .exec_with_returning_many(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        match inserted {
+            TryInsertResult::Inserted(models) => {
+                models.into_iter().next().map(Farmer::try_from).transpose()
+            }
+            TryInsertResult::Conflicted | TryInsertResult::Empty => Ok(None),
+        }
+    }
+
+    async fn update_by_id(
+        &self,
+        id: i32,
+        name: Option<&FarmerName>,
+        language: Language,
+        now: DateTime<Utc>,
+    ) -> Result<Option<Farmer>, AppError> {
+        let updated = farmers::Entity::update_many()
+            .col_expr(
+                farmers::Column::Name,
+                Expr::value(name.map(|name| name.as_str().to_string())),
+            )
+            .col_expr(
+                farmers::Column::Language,
+                Expr::value(String::from(language)),
+            )
+            .col_expr(farmers::Column::UpdatedAt, Expr::value(now.naive_utc()))
+            .filter(farmers::Column::Id.eq(id))
+            .exec_with_returning(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        updated.into_iter().next().map(Farmer::try_from).transpose()
+    }
+
+    async fn delete_with_challenge(&self, id: i32) -> Result<bool, AppError> {
+        let transaction = self.conn.begin().await.map_err(database_error)?;
+
+        let deleted = farmers::Entity::delete_many()
+            .filter(farmers::Column::Id.eq(id))
+            .exec_with_returning(&transaction)
+            .await
+            .map_err(database_error)?;
+
+        // A code still open for the phone would otherwise sign the removed
+        // farmer straight back in.
+        for farmer in &deleted {
+            sign_in_challenges::Entity::delete_many()
+                .filter(sign_in_challenges::Column::Phone.eq(farmer.phone.as_str()))
+                .exec(&transaction)
+                .await
+                .map_err(database_error)?;
+        }
+
+        transaction.commit().await.map_err(database_error)?;
+
+        Ok(!deleted.is_empty())
+    }
 }
 
 #[derive(Debug)]
@@ -113,13 +224,22 @@ impl SignInChallengeRepository for SignInChallengePostgresRepository {
                             sign_in_challenges::Column::Attempts,
                             sign_in_challenges::Column::SentAt,
                             sign_in_challenges::Column::ExpiresAt,
+                            sign_in_challenges::Column::UsedAt,
                         ])
+                        // A code that was already used does not hold the
+                        // phone waiting; an unused one does until it is old
+                        // enough.
                         .action_and_where(
                             Expr::col((
                                 sign_in_challenges::Entity,
                                 sign_in_challenges::Column::SentAt,
                             ))
-                            .lte(sent_before.naive_utc()),
+                            .lte(sent_before.naive_utc())
+                            .or(Expr::col((
+                                sign_in_challenges::Entity,
+                                sign_in_challenges::Column::UsedAt,
+                            ))
+                            .is_not_null()),
                         )
                         .to_owned(),
                 )
@@ -158,10 +278,28 @@ impl SignInChallengeRepository for SignInChallengePostgresRepository {
             .transpose()
     }
 
-    async fn consume(&self, phone: &Phone, code_hash: &str) -> Result<bool, AppError> {
-        let result = sign_in_challenges::Entity::delete_many()
+    async fn consume(
+        &self,
+        phone: &Phone,
+        code_hash: &str,
+        now: DateTime<Utc>,
+        reusable_since: DateTime<Utc>,
+    ) -> Result<bool, AppError> {
+        // One statement decides: the first use stamps the time, a repeat
+        // inside the window leaves the stamp alone, anything later matches
+        // no row.
+        let result = sign_in_challenges::Entity::update_many()
+            .col_expr(
+                sign_in_challenges::Column::UsedAt,
+                Expr::cust_with_values("COALESCE(used_at, $1)", [now.naive_utc()]),
+            )
             .filter(sign_in_challenges::Column::Phone.eq(phone.as_str()))
             .filter(sign_in_challenges::Column::CodeHash.eq(code_hash))
+            .filter(
+                Condition::any()
+                    .add(sign_in_challenges::Column::UsedAt.is_null())
+                    .add(sign_in_challenges::Column::UsedAt.gt(reusable_since.naive_utc())),
+            )
             .exec(&self.conn)
             .await
             .map_err(database_error)?;

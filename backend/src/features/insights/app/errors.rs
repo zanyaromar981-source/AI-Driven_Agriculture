@@ -17,6 +17,9 @@ impl ToErrorInfo for InsightError {
                 "duplicate_measure",
                 self.to_string(),
             ),
+            InsightError::AlreadyExists => {
+                ErrorInfo::with_code(ErrorKind::Conflict, "already_exists", self.to_string())
+            }
             InsightError::DomainError(err) => err.to_error_info(),
         }
     }
@@ -67,5 +70,13 @@ mod tests {
         );
         assert_eq!(info.code, "duplicate_measure");
         assert!(info.detail.contains("level_pct"));
+    }
+
+    #[test]
+    fn a_reading_that_is_already_stored_is_a_conflict_with_its_own_code() {
+        let info = InsightError::AlreadyExists.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Conflict);
+        assert_eq!(info.code, "already_exists");
     }
 }

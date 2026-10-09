@@ -61,6 +61,7 @@ The app retries on timeouts and 5xx, and data jobs re-run and overlap. Every wri
 - Every natural key has a unique index in the migration. The index, not the code, is what stops a duplicate.
 - Ingest writes are `PUT` upserts on a natural key (district and month, dam and day, external id, farm and topic) in one statement, replacing every non-key column. Where a key has no date in it, guard against an older push replacing a newer one (`excluded.as_of >= table.as_of`).
 - A `POST` that creates something the app may retry takes `Idempotency-Key` and returns the thing already created, also when two copies race (re-read by key after a unique violation). See `register_farm.rs` and `post_listing.rs`.
+- A repeat of a call that already succeeded succeeds again with the same answer: deleting what is gone, cancelling what is cancelled, accepting the offer already accepted. The domain decides what "already done" means (`was_cancelled_by`, `was_sold_on`); a different request against the finished thing is still refused.
 - Write only what changed. Rewriting a whole aggregate from memory undoes a parallel request (see the `repainted` flag on `Cell`).
 - Several statements that belong together run in one transaction.
 - Limits, counters and one-use tokens are enforced in one statement (`record_attempt`, `consume`, `save_if_due` in `farmers`).

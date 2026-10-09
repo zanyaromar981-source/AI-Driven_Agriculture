@@ -24,6 +24,9 @@ class FakeApi implements Api {
   String? _phone;
   final List<Map<String, dynamic>> _created = [];
   final Map<String, Map<String, dynamic>> _byKey = {};
+
+  /// Ids of deleted farms (also hides deleted demo farms).
+  final Set<String> _deleted = {};
   bool _loaded = false;
 
   /// For tests: skip the internet check and the file on the phone.
@@ -37,6 +40,9 @@ class FakeApi implements Api {
     for (final f in (j?['created'] as List? ?? const [])) {
       _created.add((f as Map).cast<String, dynamic>());
     }
+    _deleted.addAll([
+      for (final d in (j?['deleted'] as List? ?? const [])) d as String,
+    ]);
     (j?['keys'] as Map?)?.forEach((k, v) {
       final f = _created.where((c) => c['id'] == v);
       if (f.isNotEmpty) _byKey[k as String] = f.first;
@@ -48,6 +54,7 @@ class FakeApi implements Api {
     await LocalStore.write('fake_server', {
       'created': _created,
       'keys': {for (final e in _byKey.entries) e.key: e.value['id']},
+      'deleted': _deleted.toList(),
     });
   }
 
@@ -133,8 +140,80 @@ class FakeApi implements Api {
     if (seen != null) {
       return CreateFarmResult(farm: Farm.fromJson(seen), droppedCells: 0);
     }
-    final body = request.toJson();
+    final (farm, dropped) = _buildFarm(
+      request.toJson(),
+      'f_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    _created.add(farm);
+    if (idempotencyKey != null) _byKey[idempotencyKey] = farm;
+    await _save();
+    final response = <String, dynamic>{'farm': farm, 'dropped_cells': dropped};
+    return CreateFarmResult(
+      farm: Farm.fromJson(response['farm'] as Map<String, dynamic>),
+      droppedCells: (response['dropped_cells'] as List).length,
+    );
+  }
 
+  /// PUT /farms/{id}: replaces the outline, cells and name of one of this
+  /// phone's farms (a demo farm gets an edited copy that hides the original).
+  @override
+  Future<CreateFarmResult> updateFarm(
+    String id,
+    NewFarmRequest request, {
+    String? idempotencyKey,
+  }) async {
+    await _online();
+    await _load();
+    await Future<void>.delayed(_latency);
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    final seen = idempotencyKey == null ? null : _byKey[idempotencyKey];
+    if (seen != null) {
+      return CreateFarmResult(farm: Farm.fromJson(seen), droppedCells: 0);
+    }
+    if (!_farmsJson(_phone!).any((f) => f['id'] == id)) {
+      throw ApiException(404, 'not_found');
+    }
+    final old = _farmsJson(_phone!).firstWhere((f) => f['id'] == id);
+    final (farm, dropped) = _buildFarm(request.toJson(), id);
+    farm['status'] = old['status'] ?? 'none';
+    farm['last_picture'] = old['last_picture'];
+    final i = _created.indexWhere((f) => f['id'] == id);
+    if (i >= 0) {
+      _created[i] = farm;
+    } else {
+      _created.add(farm);
+    }
+    if (idempotencyKey != null) _byKey[idempotencyKey] = farm;
+    await _save();
+    final response = <String, dynamic>{'farm': farm, 'dropped_cells': dropped};
+    return CreateFarmResult(
+      farm: Farm.fromJson(response['farm'] as Map<String, dynamic>),
+      droppedCells: (response['dropped_cells'] as List).length,
+    );
+  }
+
+  /// DELETE /farms/{id}: 404 when it is not one of this phone's farms.
+  @override
+  Future<void> deleteFarm(String id) async {
+    await _online();
+    await _load();
+    await Future<void>.delayed(_latency);
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    if (!_farmsJson(_phone!).any((f) => f['id'] == id)) {
+      throw ApiException(404, 'not_found');
+    }
+    _created.removeWhere((f) => f['id'] == id);
+    _deleted.add(id);
+    await _save();
+  }
+
+  /// Server rules for a farm body: area = exact outline area; cells = every
+  /// cell that overlaps the outline, cut along the border; sent cells that do
+  /// not overlap are dropped; overlapping cells not sent count as "empty".
+  (Map<String, dynamic>, List<Map<String, dynamic>>) _buildFarm(
+    Map<String, dynamic> body,
+    String id,
+  ) {
     final points = [
       for (final p in body['points'] as List)
         LatLng(
@@ -148,10 +227,6 @@ class FakeApi implements Api {
     if (selfIntersects(points)) {
       throw ApiException(422, 'bad_polygon', {'field': 'points'});
     }
-
-    // Server rules: area = exact outline area; cells = every cell that overlaps
-    // the outline, cut along the border; sent cells that do not overlap are
-    // dropped; overlapping cells that were not sent count as "empty".
     final touching = cellsTouching(points);
     final sent = <CellKey, String>{
       for (final c in body['cells'] as List)
@@ -183,9 +258,8 @@ class FakeApi implements Api {
         points.map((p) => p.latitude).reduce((a, b) => a + b) / points.length;
     final lon =
         points.map((p) => p.longitude).reduce((a, b) => a + b) / points.length;
-
     final farm = <String, dynamic>{
-      'id': 'f_${DateTime.now().microsecondsSinceEpoch}',
+      'id': id,
       'name': body['name'],
       'area_dunam': _round2(polygonAreaM2(points) / 2500),
       'crops': [
@@ -201,14 +275,7 @@ class FakeApi implements Api {
       'cells': cells,
       'picture_date': null,
     };
-    _created.add(farm);
-    if (idempotencyKey != null) _byKey[idempotencyKey] = farm;
-    await _save();
-    final response = <String, dynamic>{'farm': farm, 'dropped_cells': dropped};
-    return CreateFarmResult(
-      farm: Farm.fromJson(response['farm'] as Map<String, dynamic>),
-      droppedCells: (response['dropped_cells'] as List).length,
-    );
+    return (farm, dropped);
   }
 
   // ---- Farm Home: GET /farms/{id}, /status, /plan ----
@@ -239,6 +306,19 @@ class FakeApi implements Api {
     await _load();
     await Future<void>.delayed(_latency);
     return FarmStatusReport.fromJson(statusFromFarm(_ownFarm(id)));
+  }
+
+  /// Demo field history: the real analysis of a test field near Erbil
+  /// (9 Oct 2026), shown for every farm on the demo server.
+  @override
+  Future<FarmInsights> getInsights(String id) async {
+    await _online();
+    await _load();
+    await Future<void>.delayed(_latency);
+    _ownFarm(id);
+    return FarmInsights.fromJson(
+      (jsonDecode(_demoInsights) as Map).cast<String, dynamic>(),
+    );
   }
 
   @override
@@ -758,9 +838,16 @@ class FakeApi implements Api {
 
   static double _round2(double v) => (v * 100).round() / 100;
 
+  /// Demo farms (unless edited, then the edited copy in [_created] is used)
+  /// plus farms made on this phone.
   List<Map<String, dynamic>> _farmsJson(String phone) => [
-    ...(phone.endsWith('0') ? const <Map<String, dynamic>>[] : _demoFarms),
-    ..._created,
+    if (!phone.endsWith('0'))
+      for (final d in _demoFarms)
+        if (!_created.any((c) => c['id'] == d['id']) &&
+            !_deleted.contains(d['id']))
+          d,
+    for (final c in _created)
+      if (!_deleted.contains(c['id'])) c,
   ];
 
   static const _demoFarms = <Map<String, dynamic>>[
@@ -789,3 +876,277 @@ class FakeApi implements Api {
     },
   ];
 }
+
+const _demoInsights = r'''
+{
+  "topics": [
+    {
+      "topic": "soil",
+      "as_of": "2026-10-09",
+      "source": "SoilGrids 2.0 250 m (modelled, not sampled), Copernicus DEM 30 m, ERA5-Land soil water 28-100 cm",
+      "confidence": "unsure",
+      "summary_en": "Topsoil (modelled, 250 m): clay 38.9%, sand 21.6%, organic carbon 18.1 g/kg, pH 7.5. Height 307.8 m, slope 0.48 degrees on average.",
+      "summary_ku": null,
+      "measures": [
+        {
+          "code": "clay_pct_topsoil",
+          "value": 38.9,
+          "unit": "%",
+          "label_en": "Clay in the topsoil",
+          "label_ku": null
+        },
+        {
+          "code": "sand_pct_topsoil",
+          "value": 21.6,
+          "unit": "%",
+          "label_en": "Sand in the topsoil",
+          "label_ku": null
+        },
+        {
+          "code": "organic_carbon_g_kg_topsoil",
+          "value": 18.1,
+          "unit": "g/kg",
+          "label_en": "Organic carbon in the topsoil",
+          "label_ku": null
+        },
+        {
+          "code": "ph_topsoil",
+          "value": 7.5,
+          "unit": "pH",
+          "label_en": "Topsoil pH",
+          "label_ku": null
+        },
+        {
+          "code": "elevation_m",
+          "value": 307.8,
+          "unit": "m",
+          "label_en": "Height above sea level",
+          "label_ku": null
+        },
+        {
+          "code": "slope_deg",
+          "value": 0.48,
+          "unit": "deg",
+          "label_en": "Average slope",
+          "label_ku": null
+        }
+      ]
+    },
+    {
+      "topic": "rain",
+      "as_of": "2026-10-03",
+      "source": "ERA5 ~25 km, daily since 1981 (Open-Meteo era5_seamless); Oct-May totals; normal 1991-2020; drought <80%",
+      "confidence": "likely",
+      "summary_en": "Normal October to May rain here: 399.0 mm. Since 1981/82, 12 seasons were droughts (latest: 2020/21, 2021/22, 2024/25). Last full season 2025/26: 638 mm, 160% of normal. This season so far (2026/27, to 2026-10-03): 1 mm against 0.0 mm normal for the same days.",
+      "summary_ku": null,
+      "measures": [
+        {
+          "code": "normal_mm_oct_may",
+          "value": 399.0,
+          "unit": "mm",
+          "label_en": "Normal October-May rain",
+          "label_ku": null
+        },
+        {
+          "code": "last_season_mm",
+          "value": 638.0,
+          "unit": "mm",
+          "label_en": "Rain in 2025/26",
+          "label_ku": null
+        },
+        {
+          "code": "last_season_pct_of_normal",
+          "value": 160.0,
+          "unit": "%",
+          "label_en": "2025/26 vs normal",
+          "label_ku": null
+        },
+        {
+          "code": "drought_seasons",
+          "value": 12.0,
+          "unit": "seasons",
+          "label_en": "Drought seasons since 1981/82",
+          "label_ku": null
+        },
+        {
+          "code": "trend_mm_per_decade",
+          "value": -16.2,
+          "unit": "mm per decade",
+          "label_en": "Rain trend",
+          "label_ku": null
+        },
+        {
+          "code": "this_season_so_far_mm",
+          "value": 1.0,
+          "unit": "mm",
+          "label_en": "Rain so far in 2026/27",
+          "label_ku": null
+        },
+        {
+          "code": "this_season_normal_so_far_mm",
+          "value": 0.0,
+          "unit": "mm",
+          "label_en": "Normal for the same days",
+          "label_ku": null
+        }
+      ]
+    },
+    {
+      "topic": "dryness",
+      "as_of": "2026-10-03",
+      "source": "Derived: ERA5 rain vs Landsat/Sentinel-2 spring peak; Landsat surface heat; NASA FIRMS fires",
+      "confidence": "likely",
+      "summary_en": "Over 42 seasons the crop follows the rain partly (r = 0.34). Spring peak in drought seasons 0.442, in wet seasons 0.574. Green in summer in 4 of 41 seasons. Summer ground temperature from space normally 51.0 C. Fires seen within about 1 km: 3 (years 2007, 2013, 2024).",
+      "summary_ku": null,
+      "measures": [
+        {
+          "code": "rain_green_r",
+          "value": 0.34,
+          "unit": "r",
+          "label_en": "How closely the crop follows the rain",
+          "label_ku": null
+        },
+        {
+          "code": "peak_ndvi_in_droughts",
+          "value": 0.442,
+          "unit": "NDVI",
+          "label_en": "Spring peak in drought seasons",
+          "label_ku": null
+        },
+        {
+          "code": "peak_ndvi_in_wet_seasons",
+          "value": 0.574,
+          "unit": "NDVI",
+          "label_en": "Spring peak in wet seasons",
+          "label_ku": null
+        },
+        {
+          "code": "summer_green_seasons",
+          "value": 4.0,
+          "unit": "seasons",
+          "label_en": "Seasons green in summer",
+          "label_ku": null
+        },
+        {
+          "code": "summer_surface_c_normal",
+          "value": 51.0,
+          "unit": "C",
+          "label_en": "Summer ground temperature (normal)",
+          "label_ku": null
+        },
+        {
+          "code": "fire_detections",
+          "value": 3.0,
+          "unit": "count",
+          "label_en": "Fires seen within about 1 km",
+          "label_ku": null
+        }
+      ]
+    },
+    {
+      "topic": "greenness",
+      "as_of": "2026-10-03",
+      "source": "Landsat 30 m (1984-), Sentinel-2 10 m (2017-), MODIS 250 m (2000-): field NDVI, spring peak vs own median",
+      "confidence": "sure",
+      "summary_en": "Seen from space for 42 seasons (1983/84 to 2025/26). Normal spring peak NDVI 0.569. Best seasons: 2024/25, 2015/16, 2025/26. Worst: 1983/84, 1998/99, 2011/12. Last season 2025/26: 147% of normal. 0% of the field stays behind the rest almost every season. Measured on 10 m pixels over 10 seasons.",
+      "summary_ku": null,
+      "measures": [
+        {
+          "code": "seasons_measured",
+          "value": 42.0,
+          "unit": "seasons",
+          "label_en": "Seasons measured from space",
+          "label_ku": null
+        },
+        {
+          "code": "normal_peak_ndvi",
+          "value": 0.569,
+          "unit": "NDVI",
+          "label_en": "Normal spring peak greenness",
+          "label_ku": null
+        },
+        {
+          "code": "last_season_pct_of_normal",
+          "value": 147.0,
+          "unit": "%",
+          "label_en": "Last season (2025/26) vs normal",
+          "label_ku": null
+        },
+        {
+          "code": "trend_peak_ndvi_per_decade",
+          "value": 0.08,
+          "unit": "NDVI per decade",
+          "label_en": "Trend of the spring peak",
+          "label_ku": null
+        },
+        {
+          "code": "weak_share_pct",
+          "value": 0.0,
+          "unit": "%",
+          "label_en": "Share of the field weak almost every season",
+          "label_ku": null
+        },
+        {
+          "code": "pictures_landsat",
+          "value": 1466.0,
+          "unit": "pictures",
+          "label_en": "Clear Landsat pictures used",
+          "label_ku": null
+        },
+        {
+          "code": "pictures_sentinel2",
+          "value": 512.0,
+          "unit": "pictures",
+          "label_en": "Clear Sentinel-2 pictures used",
+          "label_ku": null
+        }
+      ]
+    },
+    {
+      "topic": "weather",
+      "as_of": "2026-10-03",
+      "source": "ERA5-Land ~9 km, daily air temperature since 1981 (Open-Meteo); normal 1991-2020",
+      "confidence": "likely",
+      "summary_en": "About 17.0 frost nights a season. The last spring frost usually falls around 02-19 and the first autumn frost around 12-15 (month-day). Hard spring frost, which hurts heading wheat, came in: 1981/82, 1984/85, 1991/92, 2011/12. About 21.0 days of 31 C or more in April and May.",
+      "summary_ku": null,
+      "measures": [
+        {
+          "code": "frost_days_normal",
+          "value": 17.0,
+          "unit": "days",
+          "label_en": "Frost nights a season (normal)",
+          "label_ku": null
+        },
+        {
+          "code": "frost_days_trend_per_decade",
+          "value": -4.2,
+          "unit": "days per decade",
+          "label_en": "Frost nights trend",
+          "label_ku": null
+        },
+        {
+          "code": "hard_spring_frost_days_normal",
+          "value": 0.1,
+          "unit": "days",
+          "label_en": "Hard spring frost nights (normal)",
+          "label_ku": null
+        },
+        {
+          "code": "spring_heat_days_normal",
+          "value": 21.0,
+          "unit": "days",
+          "label_en": "Days of 31 C or more in April-May (normal)",
+          "label_ku": null
+        },
+        {
+          "code": "spring_heat_days_trend_per_decade",
+          "value": 1.25,
+          "unit": "days per decade",
+          "label_en": "Spring heat trend",
+          "label_ku": null
+        }
+      ]
+    }
+  ]
+}
+''';

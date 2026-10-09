@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::NaiveDate;
 
 use crate::{
-    app::{AuthContext, User},
+    app::{AuthContext, Permission, StaffContext, User},
     features::insights::{
         app::{AppError, FarmDirectory, FarmOwnership, InsightRepository},
         domain::{
@@ -20,6 +20,8 @@ pub const OWNER: &str = "+9647501234567";
 /// The farm the fakes say `OWNER` owns.
 pub const FARM_ID: i32 = 7;
 
+pub const STAFF_ID: i32 = 4;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Call {
     IsOwnedBy { farm_id: i32, phone: String },
@@ -27,6 +29,10 @@ pub enum Call {
     FindAllByFarm { farm_id: i32 },
     FindAllStamps,
     Upsert { farm_id: i32, topic: Topic },
+    Exists { farm_id: i32 },
+    Create { farm_id: i32, topic: Topic },
+    Update { farm_id: i32, topic: Topic },
+    Delete { farm_id: i32, topic: Topic },
 }
 
 #[derive(Debug, Default)]
@@ -86,6 +92,17 @@ impl Fakes {
         self
     }
 
+    /// The reading as the fake holds it now, after the writes of a test.
+    pub fn stored(&self, farm_id: i32, topic: Topic) -> Option<FarmInsight> {
+        self.script
+            .lock()
+            .expect("script lock")
+            .stored
+            .iter()
+            .find(|insight| *insight.farm_id() == farm_id && *insight.topic() == topic)
+            .cloned()
+    }
+
     pub fn calls(&self) -> Vec<Call> {
         self.calls.lock().expect("calls lock").clone()
     }
@@ -130,6 +147,19 @@ impl FarmDirectory for Fakes {
         self.guard()?;
 
         Ok(self.script.lock().expect("script lock").sites.clone())
+    }
+
+    async fn exists(&self, farm_id: i32) -> Result<bool, AppError> {
+        self.record(Call::Exists { farm_id });
+        self.guard()?;
+
+        Ok(self
+            .script
+            .lock()
+            .expect("script lock")
+            .sites
+            .iter()
+            .any(|site| *site.farm_id() == farm_id))
     }
 }
 
@@ -183,6 +213,71 @@ impl InsightRepository for Fakes {
 
         Ok(stored)
     }
+
+    async fn create(&self, entity: &FarmInsight) -> Result<Option<FarmInsight>, AppError> {
+        self.record(Call::Create {
+            farm_id: *entity.farm_id(),
+            topic: *entity.topic(),
+        });
+        self.guard()?;
+
+        if self.stored(*entity.farm_id(), *entity.topic()).is_some() {
+            return Ok(None);
+        }
+
+        let stored = persisted(entity, 1);
+        self.script
+            .lock()
+            .expect("script lock")
+            .stored
+            .push(stored.clone());
+
+        Ok(Some(stored))
+    }
+
+    async fn update(&self, entity: &FarmInsight) -> Result<Option<FarmInsight>, AppError> {
+        self.record(Call::Update {
+            farm_id: *entity.farm_id(),
+            topic: *entity.topic(),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(slot) = script
+            .stored
+            .iter_mut()
+            .find(|other| other.farm_id() == entity.farm_id() && other.topic() == entity.topic())
+        else {
+            return Ok(None);
+        };
+
+        *slot = persisted(entity, slot.id().unwrap_or_default());
+
+        Ok(Some(slot.clone()))
+    }
+
+    async fn delete(&self, farm_id: i32, topic: Topic) -> Result<(), AppError> {
+        self.record(Call::Delete { farm_id, topic });
+        self.guard()?;
+
+        self.script
+            .lock()
+            .expect("script lock")
+            .stored
+            .retain(|insight| *insight.farm_id() != farm_id || *insight.topic() != topic);
+
+        Ok(())
+    }
+}
+
+/// The signed-in staff member a dashboard use case is acting for.
+pub fn actor() -> StaffContext {
+    StaffContext::new(
+        STAFF_ID,
+        "officer@example.org".to_string(),
+        Permission::all().into_iter().collect(),
+    )
 }
 
 fn persisted(entity: &FarmInsight, id: i32) -> FarmInsight {

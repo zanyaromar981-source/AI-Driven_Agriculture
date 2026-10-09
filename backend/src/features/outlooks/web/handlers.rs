@@ -1,17 +1,27 @@
-use axum::extract::{Path, Query, State};
+use axum::{
+    Extension,
+    extract::{Path, Query, State},
+    http::StatusCode,
+};
 use axum_extra::extract::WithRejection;
 
 use super::{
     dtos::{
-        RecordOutlookRunParams, RecordZoneOutlookParams, SavedOutlookRunResponse,
-        SavedZoneOutlookResponse, SeasonOutlookQuery, SeasonOutlookResponse,
-        ZoneOutlookHistoryResponse, ZoneOutlookQuery,
+        CreateOutlookDashboardParams, CreateOutlookRunDashboardParams, OutlookDashboardQuery,
+        OutlookRunsResponse, OutlooksPageResponse, RecordOutlookRunParams, RecordZoneOutlookParams,
+        SavedOutlookRunResponse, SavedZoneOutlookResponse, SeasonOutlookQuery,
+        SeasonOutlookResponse, ZoneOutlookHistoryResponse, ZoneOutlookQuery,
     },
     errors::WebError,
 };
 
 use crate::{
-    infra::http::{ApiResponse, ErrorBody, ValidatedJson},
+    app::{Pagination, StaffContext},
+    features::outlooks::{
+        app::AppError,
+        domain::{IssueMonth, Season, ZoneSlug},
+    },
+    infra::http::{ApiResponse, ErrorBody, PaginationQueryDto, ValidatedJson},
     shared::AppState,
 };
 
@@ -151,4 +161,300 @@ pub async fn put_outlook_run(
         .await?;
 
     Ok(ApiResponse::ok(SavedOutlookRunResponse::from(&run)))
+}
+
+/// List the stored zone outlooks, newest issue first
+#[utoipa::path(
+    get,
+    path = "/v1/dashboard/outlooks",
+    tag = "outlooks",
+    params(OutlookDashboardQuery, PaginationQueryDto),
+    responses(
+        (status = 200, description = "Outlooks retrieved successfully", body = OutlooksPageResponse),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs outlooks:read", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_get_outlooks(
+    State(state): State<AppState>,
+    WithRejection(Query(query), _): WithRejection<Query<OutlookDashboardQuery>, WebError>,
+    WithRejection(Query(page), _): WithRejection<Query<PaginationQueryDto>, WebError>,
+) -> Result<ApiResponse<OutlooksPageResponse>, WebError> {
+    let pagination = Pagination::from(&page);
+
+    let (outlooks, count) = state
+        .features
+        .outlook
+        .list_zone_outlooks_use_case
+        .execute(query.into_input(pagination)?)
+        .await?;
+
+    Ok(ApiResponse::ok(OutlooksPageResponse {
+        outlooks: outlooks
+            .iter()
+            .map(|outlook| SavedZoneOutlookResponse::from(outlook).outlook)
+            .collect(),
+        count,
+        page: *pagination.page(),
+        rows_per_page: *pagination.rows_per_page(),
+    }))
+}
+
+/// Add an outlook for a zone, season and issue that has none
+#[utoipa::path(
+    post,
+    path = "/v1/dashboard/outlooks",
+    tag = "outlooks",
+    request_body = CreateOutlookDashboardParams,
+    responses(
+        (status = 201, description = "Outlook created", body = SavedZoneOutlookResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs outlooks:create", body = ErrorBody),
+        (status = 409, description = "The zone already has an outlook for that season and issue (`already_exists`)", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_create_outlook(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    ValidatedJson(params): ValidatedJson<CreateOutlookDashboardParams>,
+) -> Result<ApiResponse<SavedZoneOutlookResponse>, WebError> {
+    let outlook = state
+        .features
+        .outlook
+        .create_zone_outlook_use_case
+        .execute(&staff_context, params.into_input()?)
+        .await?;
+
+    Ok(ApiResponse::created(SavedZoneOutlookResponse::from(
+        &outlook,
+    )))
+}
+
+/// Replace the stored outlook of one zone, season and issue
+#[utoipa::path(
+    put,
+    path = "/v1/dashboard/outlooks/{season}/{issued}/zones/{zone_slug}",
+    tag = "outlooks",
+    params(
+        ("season" = String, Path, description = "Season, for example 2026-27"),
+        ("issued" = String, Path, description = "Issue month, YYYY-MM"),
+        ("zone_slug" = String, Path, description = "Zone slug, for example chamchamal")
+    ),
+    request_body = RecordZoneOutlookParams,
+    responses(
+        (status = 200, description = "Outlook updated", body = SavedZoneOutlookResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs outlooks:update", body = ErrorBody),
+        (status = 404, description = "No outlook stored under that key", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_update_outlook(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    WithRejection(Path((season, issued, zone_slug)), _): WithRejection<
+        Path<(String, String, String)>,
+        WebError,
+    >,
+    ValidatedJson(params): ValidatedJson<RecordZoneOutlookParams>,
+) -> Result<ApiResponse<SavedZoneOutlookResponse>, WebError> {
+    let input = params.into_input(season, issued, zone_slug)?;
+
+    let outlook = state
+        .features
+        .outlook
+        .update_zone_outlook_use_case
+        .execute(&staff_context, input)
+        .await?;
+
+    Ok(ApiResponse::ok(SavedZoneOutlookResponse::from(&outlook)))
+}
+
+/// Remove the stored outlook of one zone, season and issue
+#[utoipa::path(
+    delete,
+    path = "/v1/dashboard/outlooks/{season}/{issued}/zones/{zone_slug}",
+    tag = "outlooks",
+    params(
+        ("season" = String, Path, description = "Season, for example 2026-27"),
+        ("issued" = String, Path, description = "Issue month, YYYY-MM"),
+        ("zone_slug" = String, Path, description = "Zone slug, for example chamchamal")
+    ),
+    responses(
+        (status = 204, description = "Delete was successful, or the outlook was already gone"),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs outlooks:delete", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_delete_outlook(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    WithRejection(Path((season, issued, zone_slug)), _): WithRejection<
+        Path<(String, String, String)>,
+        WebError,
+    >,
+) -> Result<StatusCode, WebError> {
+    let season = Season::new(season).map_err(AppError::from)?;
+    let issued = IssueMonth::new(&issued).map_err(AppError::from)?;
+    let zone_slug = ZoneSlug::new(zone_slug).map_err(AppError::from)?;
+
+    state
+        .features
+        .outlook
+        .delete_zone_outlook_use_case
+        .execute(&staff_context, zone_slug, season, issued)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// List every stored track record, newest issue first
+#[utoipa::path(
+    get,
+    path = "/v1/dashboard/outlook-runs",
+    tag = "outlooks",
+    responses(
+        (status = 200, description = "Track records retrieved successfully", body = OutlookRunsResponse),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs outlooks:read", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_get_outlook_runs(
+    State(state): State<AppState>,
+) -> Result<ApiResponse<OutlookRunsResponse>, WebError> {
+    let runs = state
+        .features
+        .outlook
+        .list_outlook_runs_use_case
+        .execute()
+        .await?;
+
+    Ok(ApiResponse::ok(OutlookRunsResponse {
+        runs: runs
+            .iter()
+            .map(|run| SavedOutlookRunResponse::from(run).run)
+            .collect(),
+    }))
+}
+
+/// Add a track record for a season and issue that has none
+#[utoipa::path(
+    post,
+    path = "/v1/dashboard/outlook-runs",
+    tag = "outlooks",
+    request_body = CreateOutlookRunDashboardParams,
+    responses(
+        (status = 201, description = "Track record created", body = SavedOutlookRunResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs outlooks:create", body = ErrorBody),
+        (status = 409, description = "The season and issue already have a track record (`already_exists`)", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_create_outlook_run(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    ValidatedJson(params): ValidatedJson<CreateOutlookRunDashboardParams>,
+) -> Result<ApiResponse<SavedOutlookRunResponse>, WebError> {
+    let run = state
+        .features
+        .outlook
+        .create_outlook_run_use_case
+        .execute(&staff_context, params.into_input()?)
+        .await?;
+
+    Ok(ApiResponse::created(SavedOutlookRunResponse::from(&run)))
+}
+
+/// Replace the stored track record of one season and issue
+#[utoipa::path(
+    put,
+    path = "/v1/dashboard/outlook-runs/{season}/{issued}",
+    tag = "outlooks",
+    params(
+        ("season" = String, Path, description = "Season, for example 2026-27"),
+        ("issued" = String, Path, description = "Issue month, YYYY-MM")
+    ),
+    request_body = RecordOutlookRunParams,
+    responses(
+        (status = 200, description = "Track record updated", body = SavedOutlookRunResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs outlooks:update", body = ErrorBody),
+        (status = 404, description = "No track record stored under that key", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_update_outlook_run(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    WithRejection(Path((season, issued)), _): WithRejection<Path<(String, String)>, WebError>,
+    ValidatedJson(params): ValidatedJson<RecordOutlookRunParams>,
+) -> Result<ApiResponse<SavedOutlookRunResponse>, WebError> {
+    let input = params.into_input(season, issued)?;
+
+    let run = state
+        .features
+        .outlook
+        .update_outlook_run_use_case
+        .execute(&staff_context, input)
+        .await?;
+
+    Ok(ApiResponse::ok(SavedOutlookRunResponse::from(&run)))
+}
+
+/// Remove the stored track record of one season and issue
+#[utoipa::path(
+    delete,
+    path = "/v1/dashboard/outlook-runs/{season}/{issued}",
+    tag = "outlooks",
+    params(
+        ("season" = String, Path, description = "Season, for example 2026-27"),
+        ("issued" = String, Path, description = "Issue month, YYYY-MM")
+    ),
+    responses(
+        (status = 204, description = "Delete was successful, or the track record was already gone"),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs outlooks:delete", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_delete_outlook_run(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    WithRejection(Path((season, issued)), _): WithRejection<Path<(String, String)>, WebError>,
+) -> Result<StatusCode, WebError> {
+    let season = Season::new(season).map_err(AppError::from)?;
+    let issued = IssueMonth::new(&issued).map_err(AppError::from)?;
+
+    state
+        .features
+        .outlook
+        .delete_outlook_run_use_case
+        .execute(&staff_context, season, issued)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
 }

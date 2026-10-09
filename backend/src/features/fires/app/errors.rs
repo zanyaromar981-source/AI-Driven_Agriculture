@@ -15,6 +15,9 @@ impl ToErrorInfo for FireError {
             FireError::WindowOutOfRange { .. } => {
                 ErrorInfo::with_code(ErrorKind::InvalidInput, "bad_window", self.to_string())
             }
+            FireError::AlreadyExists => {
+                ErrorInfo::with_code(ErrorKind::Conflict, "already_exists", self.to_string())
+            }
             FireError::DomainError(err) => err.to_error_info(),
         }
     }
@@ -60,5 +63,13 @@ mod tests {
 
         assert_eq!(info.kind, ErrorKind::InvalidInput);
         assert_eq!(info.code, "bad_window");
+    }
+
+    #[test]
+    fn a_fire_that_is_already_stored_is_a_conflict_with_its_own_code() {
+        let info = FireError::AlreadyExists.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Conflict);
+        assert_eq!(info.code, "already_exists");
     }
 }

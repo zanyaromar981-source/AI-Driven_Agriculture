@@ -33,6 +33,15 @@ class _FarmSectionState extends State<FarmSection> {
   FarmPlan? _plan;
   bool _planDown = false;
   bool _loading = true;
+
+  /// True while fresh data loads over the copy already on screen.
+  bool _refreshing = false;
+
+  /// When the copy on screen was saved (for the banner if fresh data fails).
+  DateTime? _shownSavedAt;
+
+  /// True when the copy is shown because the server failed (not no internet).
+  bool _refreshFailed = false;
   String? _error;
   DateTime? _offlineSince;
   bool _told = false;
@@ -58,6 +67,35 @@ class _FarmSectionState extends State<FarmSection> {
     FarmPlan? plan;
     var planDown = false;
     DateTime? offlineSince;
+    // Show the copy saved on the phone at once; fresh data replaces it below.
+    if (_farm == null) {
+      final c = await LocalStore.read(_cacheName);
+      final cf = c?['farm'];
+      if (cf is Map<String, dynamic> && mounted) {
+        try {
+          final cfarm = Farm.fromJson(cf);
+          final cs = c!['status'];
+          final cst = cs is Map<String, dynamic>
+              ? FarmStatusReport.fromJson(cs)
+              : null;
+          final cp = c['plan'];
+          setState(() {
+            _farm = cfarm;
+            _status = cst;
+            _shape = cfarm.outline.length < 3 ? null : FarmShape(cfarm, cst);
+            _plan = cp is Map<String, dynamic> ? FarmPlan.fromJson(cp) : null;
+            _shownSavedAt = DateTime.tryParse(
+              c['saved_at'] as String? ?? '',
+            )?.toLocal();
+            _loading = false;
+          });
+        } catch (_) {
+          // A damaged copy is skipped; the spinner stays until fresh data.
+        }
+      }
+    }
+    if (!mounted) return;
+    if (_farm != null) setState(() => _refreshing = true);
     String? error;
     try {
       final got = await Future.wait<Object>([
@@ -101,8 +139,24 @@ class _FarmSectionState extends State<FarmSection> {
       error = '${s.loadFailed} ($e)';
     }
     if (!mounted) return;
+    if (farm == null && _farm != null) {
+      // Fresh data failed but a copy is on screen: keep it, say how old it is.
+      setState(() {
+        _loading = false;
+        _refreshing = false;
+        _refreshFailed = offlineSince == null;
+        _offlineSince = offlineSince ?? _shownSavedAt;
+      });
+      if (!_told) {
+        _told = true;
+        widget.onLoaded?.call();
+      }
+      return;
+    }
     setState(() {
       _loading = false;
+      _refreshing = false;
+      _refreshFailed = false;
       _error = error;
       _farm = farm;
       _status = status;
@@ -160,6 +214,20 @@ class _FarmSectionState extends State<FarmSection> {
                 hasPicture: sum.lastPicture != null,
               ),
             ],
+          ),
+          // Thin bar while fresh data loads over the saved copy.
+          SizedBox(
+            height: 3,
+            child: _refreshing
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: const LinearProgressIndicator(
+                      minHeight: 3,
+                      color: JColors.accent,
+                      backgroundColor: JColors.accentSoft,
+                    ),
+                  )
+                : null,
           ),
           if (_loading)
             const Padding(
@@ -232,7 +300,12 @@ class _FarmSectionState extends State<FarmSection> {
           ),
         ],
       ),
-      if (since != null) _Banner(text: s.offlineCopy(fmtWhen(since))),
+      if (since != null)
+        _Banner(
+          text: _refreshFailed
+              ? s.refreshFailedCopy(fmtWhen(since))
+              : s.offlineCopy(fmtWhen(since)),
+        ),
       _ViewToggle(view: _view, onChanged: _setView),
       FarmDrawing(
         shape: shape,
@@ -325,6 +398,7 @@ class _FarmSectionState extends State<FarmSection> {
               '${s.cellName(shape.label(k))} · ${cropOf(crop).emoji} ${s.crop(crop)}',
           level: r?.level ?? FarmStatus.none,
           pct: r?.greennessPct,
+          emptyText: st?.pictureDate == null ? s.noReading : s.cloudOrNotSown,
           lines: [
             if (days != null) s.sinceLine(fmtDay(r!.since!), days),
             if (r?.greennessPct != null)
@@ -345,6 +419,7 @@ class _FarmSectionState extends State<FarmSection> {
               '${cropOf(c).emoji} ${s.crop(c)} · ${fmtM2((r?.dunam ?? 0) * 2500)} ${s.m2}',
           level: r?.level ?? FarmStatus.none,
           pct: r?.greennessPctOfNormal,
+          emptyText: st?.pictureDate == null ? s.noReading : s.notSownCap,
           lines: [
             if (r?.greennessPctOfNormal != null) s.compareLine(null, whole),
           ],
@@ -487,9 +562,11 @@ class _CropList extends StatelessWidget {
                 child: Text(
                   [
                     '${s.crop(c.crop)} ${fmtM2(c.dunam * 2500)} ${s.m2}',
-                    c.greennessPctOfNormal == null
-                        ? s.notSownYet
-                        : s.pctOfNormal(c.greennessPctOfNormal!),
+                    c.greennessPctOfNormal != null
+                        ? s.pctOfNormal(c.greennessPctOfNormal!)
+                        : status?.pictureDate == null
+                        ? s.noReadingYet
+                        : s.notSownYet,
                     if (c.greennessPctOfNormal != null) s.levelName(c.level),
                   ].join(' · '),
                   style: jText(false, size: 13, color: JColors.ink),

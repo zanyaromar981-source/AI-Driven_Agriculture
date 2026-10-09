@@ -4,7 +4,9 @@ pub mod handlers;
 pub mod routes;
 
 pub use dtos::{
-    DamAllocationResponse, PlanTotalsResponse, RankedEntryResponse, SavedWaterPlanEntryResponse,
-    SetWaterPlanEntryParams, StoredWaterPlanEntryResponse, WaterPlanQuery, WaterPlanResponse,
+    CreateWaterPlanEntryDashboardParams, DamAllocationResponse, PlanTotalsResponse,
+    RankedEntryResponse, SavedWaterPlanEntryResponse, SetWaterPlanEntryParams,
+    StoredWaterPlanEntryResponse, WaterPlanEntriesResponse, WaterPlanQuery, WaterPlanResponse,
+    WaterSeasonsResponse,
 };
-pub use routes::{ingest_routes, public_routes};
+pub use routes::{dashboard_routes, ingest_routes, public_routes};

@@ -108,7 +108,7 @@ class PlaceNames extends ChangeNotifier {
       final req = await client.postUrl(Uri.parse(_endpoint));
       req.headers.set(
         HttpHeaders.userAgentHeader,
-        'krd.jutyar (SmartSuli farm app prototype)',
+        'krd.jutyar (Jutyar farm app prototype)',
       );
       req.headers.contentType = ContentType(
         'application',

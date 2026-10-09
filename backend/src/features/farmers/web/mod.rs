@@ -4,7 +4,9 @@ pub mod handlers;
 pub mod routes;
 
 pub use dtos::{
-    EditProfileParams, Language, ProfileResponse, SendSignInCodeParams, SignInCodeSentResponse,
-    SignedInResponse, VerifySignInCodeParams,
+    DashboardCreateFarmerParams, DashboardFarmerResponse, DashboardFarmersResponse,
+    DashboardOneFarmerResponse, DashboardUpdateFarmerParams, EditProfileParams, Language,
+    ProfileResponse, SendSignInCodeParams, SignInCodeSentResponse, SignedInResponse,
+    VerifySignInCodeParams,
 };
-pub use routes::{public_routes, routes};
+pub use routes::{dashboard_routes, public_routes, routes};

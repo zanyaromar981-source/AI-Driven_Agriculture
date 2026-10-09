@@ -4,7 +4,7 @@ Queue order: (1) remaining zones Feb-May  (2) Dukan + Darbandikhan 40 km boxes, 
              (3) all zones Jan, then Oct-Dec, then Jun-Sep (full-year curves)  (4) 2026 so far for all zones."""
 import json, sys, urllib.request, time, os
 zones=json.load(open(sys.argv[1]))['zones']; ROOT=sys.argv[2]
-UA={'User-Agent':'Mozilla/5.0 (Macintosh) SmartSuli-backtest','Accept':'application/json'}
+UA={'User-Agent':'Mozilla/5.0 (Macintosh) Jutyar-backtest','Accept':'application/json'}
 def url(lat,lon,s,e,km): return (f"https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset?latitude={lat}&longitude={lon}&startDate={s}&endDate={e}"
                                  f"&kmAboveBelow={km}&kmLeftRight={km}&band=250m_16_days_NDVI")
 jobs=[]
