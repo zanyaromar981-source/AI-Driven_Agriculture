@@ -2,10 +2,10 @@
 
 For everyone building the farmer app and the website (public View page and staff Admin). The backend in `backend/` is the one source of data: the app and the website read and write everything through it and keep no numbers of their own.
 
-Status: v5, 2026-10-09, API version 1.6.0. Three places describe the API, from short to complete:
+Status: v6, 2026-10-09, API version 1.7.0. Three places describe the API, from short to complete:
 
 1. **This file**: how things work, which screen calls what, the rules, what is empty today.
-2. **`backend/API.md`**: every route (155 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
+2. **`backend/API.md`**: every route (183 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
 3. **`/api-docs` on the server**: the same, clickable, with a "try it" button.
 
 `BACKEND.md` is where the frontend writes what it needs. Where the two files disagree, say so in the files and we fix one of them.
@@ -17,7 +17,7 @@ Contents: 1 where it is, 2 who calls what, 3 rules for every route, 4 the farmer
 - **Test server:** `http://95.217.14.92:8790`. Everything is under `/v1`, so the app is built with `--dart-define=API_URL=http://95.217.14.92:8790/v1`. It is a small shared server for the competition, plain `http`, not for real farmers' data.
 - **Clickable docs:** `http://95.217.14.92:8790/api-docs`.
 - **Is it up?** `GET /status` (the process) and `GET /health` (the database).
-- **Which version is it?** Every answer under `/v1` carries the header `X-Api-Version`. This file describes 1.6.0.
+- **Which version is it?** Every answer under `/v1` carries the header `X-Api-Version`. This file describes 1.7.0.
 - **A staff account for testing the website:** there is one with the `Owner` role (every permission) on the test server. Ask Arya for its email and password; they are not written in this public repo.
 - **A farmer account:** sign in with any real Iraqi mobile number; the code is really sent.
 - **Run your own:** `backend/README.md` (Rust, Docker, three commands).
@@ -153,16 +153,18 @@ The `groundwater` topic is **not** a well depth. It is a percentile (50 is norma
 
 ## 5. The Alwa market
 
-Sellers set their own price on each listing. There is no automatic price feed: the "price at the alwa today" board only shows what Ministry staff have typed in.
+Sellers set their own price on each listing and buyers call them. There is no automatic price feed: the "price at the alwa today" board only shows what Ministry staff have typed in. This is the simpler Alwa of `BACKEND.md` 2.14; the offer routes are still there for the website.
 
-- **No login:** `GET /v1/alwa/markets`, `/v1/alwa/markets/{slug}/prices`, `/prices/{crop}/history`, `GET /v1/alwa/listings` (filters `market`, `crop`, `status`; `page`, `rows_per_page`), `GET /v1/alwa/listings/{id}` (with its offers), `GET /v1/alwa/deals`.
-- **With the farmer token:** `POST /v1/alwa/listings`, `GET /v1/alwa/listings/mine`, `DELETE /v1/alwa/listings/{id}` (cancel), `POST /v1/alwa/listings/{id}/offers`, `POST /v1/alwa/listings/{id}/offers/{offer_id}/accept`, `GET /v1/alwa/offers/mine`.
-- **Phones are hidden** until a deal. After the seller accepts, the seller's answer shows the buyer's phone and the buyer's answer shows the seller's.
-- **Rules:** at most 20 open listings per phone; a listing closes at `closes_at` (at most 14 days ahead); you cannot offer on your own listing; a buyer has one open offer per listing (a new one replaces it); accepting any offer sells the whole listing and declines the others.
+- **Post a listing** (farmer token): `POST /v1/alwa/listings` with `{"crop", "quantity_kg", "asking_price_iqd_per_kg", "lat", "lon", "closes_at"}` and an `Idempotency-Key`. `lat` and `lon` are the phone's GPS (both or neither, inside the region). `market`, `pickup`, `grade` and `note` are optional. Without a `market`, the nearest market that has a point is filled in; `zone_slug` is filled from the point. The app's old workaround (sending `market` and `pickup: "farm"`) keeps working.
+- **Every listing answer** carries `lat`, `lon`, `seller_phone`, `created_at` and `sold_at`. `grade`, `pickup` and `market` may be `null`. **`seller_phone` is shown only when the call carries a valid farmer token**; without one it is `null`, so send the token on `GET /v1/alwa/listings` and `/{id}` too.
+- **Nearest first:** `GET /v1/alwa/listings?lat=&lon=&crop=` sorts by distance from that point and adds `distance_km` (not rounded) to each; listings without a point come last with `distance_km: null`. Other filters: `market`, `status`; `page`, `rows_per_page`.
+- **Mine, cancel, sold:** `GET /v1/alwa/listings/mine`; `DELETE /v1/alwa/listings/{id}` cancels; `POST /v1/alwa/listings/{id}/sold` (the seller only) marks it sold and declines any open offers. A repeat of either answers the same success; another farmer's listing is `404`; a cancelled or closed one is `409 listing_not_open`.
+- **Markets:** `GET /v1/alwa/markets` gives each market's `lat` and `lon` (the town centre for the four seeded markets, not the market's gate); `GET /v1/alwa/markets/{slug}/prices` and `/prices/{crop}/history` are the price board. No login needed.
+- **Rules:** at most 20 open listings per phone (`too_many_listings`); a listing closes at `closes_at`, at most 14 days ahead (`bad_closes_at`).
 - **`fair_price`** on a listing is `fair`, `high`, `low` or `unknown`. It is `unknown` unless staff have entered a price for that crop at that market in the last 7 days.
-- **Codes:** `too_many_listings`, `own_listing`, `listing_not_open`, `offer_not_open`, `offer_too_large`, `bad_closes_at`.
-- Crop codes: the same table, `GET /v1/crops` (16 crops seeded: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple).
-- **The simpler Alwa the app asked for in `BACKEND.md` 2.14** (a GPS point on each listing, the seller's phone shown from the start, nearest first, mark as sold, markets with a point) is **not built yet**. It is next after crops; see section 14. Until then the routes behave as written here.
+- Crop codes: the crops table, `GET /v1/crops` (16 seeded: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple).
+- **Still there for the website, not used by the app:** `POST /v1/alwa/listings/{id}/offers`, `.../offers/{offer_id}/accept`, `GET /v1/alwa/offers/mine`, `GET /v1/alwa/deals`. Their rules: no offer on your own listing (`own_listing`), one open offer per buyer per listing, accepting sells the whole listing; codes `offer_not_open`, `offer_too_large`.
+- Known rough edge: staff cannot delete a listing that was marked sold (`listing_has_deal`).
 
 ## 6. Ask the Doctor
 
@@ -336,7 +338,7 @@ The same rules everywhere:
 
 ## 10. Caching (for the website)
 
-- `GET /v1/versions` (no login) answers `{"api": "1.6.0", "versions": {"zones": 41, "dams": 7, ...}, "server_time"}` for the public topics: `zones, sub_zones, dams, fires, outlooks, water, alwa_prices, alwa_listings, crops, rules, briefs, app_config`.
+- `GET /v1/versions` (no login) answers `{"api": "1.7.0", "versions": {"zones": 41, "dams": 7, ...}, "server_time"}` for the public topics: `zones, sub_zones, dams, fires, outlooks, water, alwa_prices, alwa_listings, crops, rules, briefs, app_config`.
 - `GET /v1/dashboard/versions` (any signed-in staff) adds the private ones: `farmers, farms, messages, jobs, staff_roles`.
 - A topic's number goes up whenever anything of that kind is written, by anyone (website, data job, farmer app). The database does it itself inside the write, so it cannot be forgotten. It may go up by more than one for a single action: only compare "is it higher than what I have".
 - Topic to routes: `zones` district readings and `/v1/region...`; `sub_zones` sub-district readings; `dams`; `fires`; `outlooks` (outlooks and outlook runs); `water`; `alwa_prices` (markets and prices); `alwa_listings` (listings, offers, deals); `briefs`; `rules`; `app_config` (the settings, not the versions-in-use list); `farmers` (farmers and letters); `farms` (farms, cells, per-farm readings, and both totals routes); `messages`; `jobs`; `staff_roles` (staff, roles and their permissions). `crops` is the crops table.
@@ -402,7 +404,6 @@ These answer `404` today. Build the screens so that a `404` or an empty answer s
 
 | Thing | State |
 |---|---|
-| The simpler Alwa of `BACKEND.md` 2.14 (GPS point, phones shown, nearest first, mark as sold) | next |
 | Real data in `GET /v1/farms/{id}/status` | not started; needs a satellite job and a store |
 | Reports (`BACKEND.md` 2.6); the Sunday weekly-plan push | not started |
 | Protected mode for phones and farm positions (`BACKEND.md` 2.11) | not started; the website team said it is not needed for now |

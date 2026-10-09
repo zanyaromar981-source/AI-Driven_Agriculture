@@ -15,8 +15,9 @@ use crate::{
                 use_cases::{
                     AcceptOfferUseCase, BrowseListingsUseCase, CancelListingUseCase,
                     ListDealsUseCase, ListMarketsUseCase, ListMyListingsUseCase,
-                    ListMyOffersUseCase, MakeOfferUseCase, PostListingUseCase, RecordPriceUseCase,
-                    ViewListingUseCase, ViewMarketPricesUseCase, ViewPriceHistoryUseCase,
+                    ListMyOffersUseCase, MakeOfferUseCase, MarkListingSoldUseCase,
+                    PostListingUseCase, RecordPriceUseCase, ViewListingUseCase,
+                    ViewMarketPricesUseCase, ViewPriceHistoryUseCase,
                 },
             },
             domain::MAX_OPEN_LISTINGS_PER_SELLER,
@@ -214,6 +215,9 @@ pub async fn di_init(
     )));
     let place_locator: Arc<dyn PlaceLocator> =
         Arc::new(ZonesFeaturePlaceLocator::new(locate_place_use_case.clone()));
+    let alwa_zone_locator: Arc<dyn crate::features::alwa::app::ZoneLocator> = Arc::new(
+        crate::features::alwa::infra::ZonesFeatureZoneLocator::new(locate_place_use_case.clone()),
+    );
     let area_directory: Arc<dyn AreaDirectory> = Arc::new(ZonesFeatureAreaDirectory::new(
         Arc::new(ZonePostgresRepository::new(db_context.conn_clone())),
     ));
@@ -719,10 +723,12 @@ pub async fn di_init(
         post_listing_use_case: Arc::new(PostListingUseCase::new(
             alwa_repository.clone(),
             alwa_crop_directory.clone(),
+            alwa_zone_locator,
             MAX_OPEN_LISTINGS_PER_SELLER,
         )),
         list_my_listings_use_case: Arc::new(ListMyListingsUseCase::new(alwa_repository.clone())),
         cancel_listing_use_case: Arc::new(CancelListingUseCase::new(alwa_repository.clone())),
+        mark_listing_sold_use_case: Arc::new(MarkListingSoldUseCase::new(alwa_repository.clone())),
         make_offer_use_case: Arc::new(MakeOfferUseCase::new(alwa_repository.clone())),
         accept_offer_use_case: Arc::new(AcceptOfferUseCase::new(alwa_repository.clone())),
         list_my_offers_use_case: Arc::new(ListMyOffersUseCase::new(alwa_repository.clone())),

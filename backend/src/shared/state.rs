@@ -12,8 +12,8 @@ use crate::{
         alwa::app::use_cases::{
             AcceptOfferUseCase, BrowseListingsUseCase, CancelListingUseCase, ListDealsUseCase,
             ListMarketsUseCase, ListMyListingsUseCase, ListMyOffersUseCase, MakeOfferUseCase,
-            PostListingUseCase, RecordPriceUseCase, ViewListingUseCase, ViewMarketPricesUseCase,
-            ViewPriceHistoryUseCase,
+            MarkListingSoldUseCase, PostListingUseCase, RecordPriceUseCase, ViewListingUseCase,
+            ViewMarketPricesUseCase, ViewPriceHistoryUseCase,
         },
         briefs::app::use_cases::{
             CorrectBriefUseCase, DeleteBriefUseCase, ListBriefsUseCase, ListStoredBriefsUseCase,
@@ -207,6 +207,7 @@ pub struct AlwaFeature {
     pub post_listing_use_case: Arc<PostListingUseCase>,
     pub list_my_listings_use_case: Arc<ListMyListingsUseCase>,
     pub cancel_listing_use_case: Arc<CancelListingUseCase>,
+    pub mark_listing_sold_use_case: Arc<MarkListingSoldUseCase>,
     pub make_offer_use_case: Arc<MakeOfferUseCase>,
     pub accept_offer_use_case: Arc<AcceptOfferUseCase>,
     pub list_my_offers_use_case: Arc<ListMyOffersUseCase>,

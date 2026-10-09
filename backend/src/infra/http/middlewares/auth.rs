@@ -24,6 +24,60 @@ impl TryFrom<JwtClaims> for User {
     }
 }
 
+/// The farmer who is asking, on a route that also answers without a login
+/// and shows a signed-in farmer more. The token is checked exactly as
+/// `auth` checks it; one that is missing, wrong, expired, not the app's, or
+/// of a farmer who was removed or blocked is no token at all, so the answer
+/// is the public one rather than a refusal.
+pub struct OptionalAuth(pub Option<AuthContext>);
+
+impl FromRequestParts<AppState> for OptionalAuth {
+    type Rejection = AppError;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let Ok(TypedHeader(Authorization(bearer))) =
+            TypedHeader::<Authorization<Bearer>>::from_request_parts(parts, state).await
+        else {
+            return Ok(Self(None));
+        };
+
+        let Ok(claims) = crate::shared::validate_jwt(
+            bearer.token(),
+            &state.config.auth.jwt_secret,
+            &state.config.auth.issuer,
+            &state.config.auth.audience,
+        ) else {
+            return Ok(Self(None));
+        };
+
+        let Ok(user) = User::try_from(claims) else {
+            return Ok(Self(None));
+        };
+
+        match state
+            .features
+            .farmer
+            .identify_farmer_use_case
+            .execute(user.phone())
+            .await
+        {
+            Ok(_) => Ok(Self(Some(AuthContext::new(
+                user,
+                bearer.token().to_string(),
+            )))),
+            Err(error) => match error.to_error_info().kind {
+                // A fault of ours is not a reason to quietly hide what the
+                // farmer may see.
+                ErrorKind::Persistence | ErrorKind::Internal => Err(AppError::InternalServerError),
+                _ => Ok(Self(None)),
+            },
+        }
+    }
+}
+
 /// Guards the farmer routes. It accepts only a token issued for the app,
 /// then asks the farmers feature whether that farmer still exists and is
 /// still let in, on every request, so the token of a farmer staff have

@@ -28,8 +28,10 @@ pub(super) async fn assemble_cards(
     for listing in &listings {
         listing_ids.push(listing.id().unwrap_or_default());
 
-        if !market_ids.contains(listing.market_id()) {
-            market_ids.push(*listing.market_id());
+        if let Some(market_id) = *listing.market_id()
+            && !market_ids.contains(&market_id)
+        {
+            market_ids.push(market_id);
         }
 
         if !crops.contains(listing.crop()) {

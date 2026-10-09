@@ -113,13 +113,13 @@ pub async fn update_market(
     WithRejection(Path(slug), _): WithRejection<Path<String>, WebError>,
     ValidatedJson(params): ValidatedJson<UpdateAlwaMarketParams>,
 ) -> Result<ApiResponse<AlwaOneMarketResponse>, WebError> {
-    let (slug, names) = params.into_input(slug)?;
+    let (slug, names, point) = params.into_input(slug)?;
 
     let market = state
         .features
         .alwa
         .update_market_use_case
-        .execute(*staff_context.staff_id(), slug, names)
+        .execute(*staff_context.staff_id(), slug, names, point)
         .await?;
 
     Ok(ApiResponse::ok(AlwaOneMarketResponse::from(&market)))

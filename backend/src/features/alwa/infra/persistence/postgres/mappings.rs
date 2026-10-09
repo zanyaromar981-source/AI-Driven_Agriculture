@@ -4,9 +4,9 @@ use crate::{
     features::alwa::{
         app::AppError,
         domain::{
-            BuyerKind, Crop, DisplayName, Grade, Listing, ListingStatus, Market, MarketSlug,
-            Moderation, Note, Offer, OfferStatus, Pickup, Price, PricePerKg, PriceSource,
-            QuantityKg, ZoneSlug,
+            BuyerKind, Crop, DisplayName, GeoPoint, Grade, Listing, ListingStatus, Market,
+            MarketSlug, Moderation, Note, Offer, OfferStatus, Pickup, Price, PricePerKg,
+            PriceSource, QuantityKg, ZoneSlug,
         },
         infra::persistence::postgres::entities::{
             alwa_listings, alwa_markets, alwa_offers, alwa_prices,
@@ -19,12 +19,15 @@ impl TryFrom<alwa_markets::Model> for Market {
     type Error = AppError;
 
     fn try_from(model: alwa_markets::Model) -> Result<Self, Self::Error> {
+        let point = GeoPoint::from_pair(model.lat, model.lon, GeoPoint::in_region)?;
+
         Ok(Market::rehydrate(
             model.id,
             MarketSlug::new(model.slug)?,
             model.name_en,
             model.name_ku,
-        ))
+        )
+        .located(point))
     }
 }
 
@@ -63,11 +66,15 @@ impl From<&Price> for alwa_prices::ActiveModel {
     }
 }
 
-/// The listing row and the slug of the market it points at.
-impl TryFrom<(alwa_listings::Model, MarketSlug)> for Listing {
+/// The listing row and the slug of the market it points at, if any.
+impl TryFrom<(alwa_listings::Model, Option<MarketSlug>)> for Listing {
     type Error = AppError;
 
-    fn try_from((model, market): (alwa_listings::Model, MarketSlug)) -> Result<Self, Self::Error> {
+    fn try_from(
+        (model, market): (alwa_listings::Model, Option<MarketSlug>),
+    ) -> Result<Self, Self::Error> {
+        let point = GeoPoint::from_pair(model.lat, model.lon, GeoPoint::in_region)?;
+
         let moderation = match model.closed_by_staff_id {
             Some(staff_id) => Some(Moderation::new(
                 staff_id,
@@ -84,7 +91,7 @@ impl TryFrom<(alwa_listings::Model, MarketSlug)> for Listing {
             QuantityKg::new(i64::from(model.quantity_kg))?,
             PricePerKg::new(i64::from(model.asking_price_iqd_per_kg))?,
             model.grade.as_deref().map(Grade::try_from).transpose()?,
-            Pickup::try_from(model.pickup.as_str())?,
+            model.pickup.as_deref().map(Pickup::try_from).transpose()?,
             model.market_id,
             market,
             model.zone_slug.map(ZoneSlug::new).transpose()?,
@@ -93,7 +100,8 @@ impl TryFrom<(alwa_listings::Model, MarketSlug)> for Listing {
             ListingStatus::try_from(model.status.as_str())?,
             model.created_at.and_utc(),
             model.updated_at.and_utc(),
-        );
+        )
+        .placed_at(point);
 
         Ok(match moderation {
             Some(moderation) => listing.moderated(moderation),
@@ -115,7 +123,7 @@ impl From<&Listing> for alwa_listings::ActiveModel {
             quantity_kg: Set(listing.quantity().value()),
             asking_price_iqd_per_kg: Set(listing.asking_price().value()),
             grade: Set(listing.grade().map(Into::into)),
-            pickup: Set((*listing.pickup()).into()),
+            pickup: Set(listing.pickup().map(Into::into)),
             market_id: Set(*listing.market_id()),
             zone_slug: Set(listing.zone_slug().as_ref().map(Into::into)),
             note: Set(listing.note().as_ref().map(Into::into)),
@@ -133,6 +141,8 @@ impl From<&Listing> for alwa_listings::ActiveModel {
                 .moderation()
                 .as_ref()
                 .and_then(|moderation| moderation.note().as_ref().map(Into::into))),
+            lat: Set(listing.point().map(|point| point.lat())),
+            lon: Set(listing.point().map(|point| point.lon())),
         }
     }
 }

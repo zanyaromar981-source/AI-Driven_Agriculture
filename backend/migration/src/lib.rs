@@ -35,6 +35,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20261009_240000_create_crops::Migration),
             Box::new(m20261009_250000_create_farm_plans::Migration),
             Box::new(m20261009_260000_create_alerts::Migration),
+            Box::new(m20261009_270000_simple_alwa::Migration),
         ]
     }
 }
@@ -69,3 +70,4 @@ mod m20261009_240000_create_crops;
 mod m20261009_230000_create_farm_history;
 mod m20261009_250000_create_farm_plans;
 mod m20261009_260000_create_alerts;
+mod m20261009_270000_simple_alwa;

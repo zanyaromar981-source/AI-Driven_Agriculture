@@ -7,5 +7,5 @@ pub mod use_cases;
 
 pub use errors::AppError;
 pub use ports::{
-    AlwaRepository, CropDirectory, ListingFilter, ModerationFilter, StoredPriceFilter,
+    AlwaRepository, CropDirectory, ListingFilter, ModerationFilter, StoredPriceFilter, ZoneLocator,
 };

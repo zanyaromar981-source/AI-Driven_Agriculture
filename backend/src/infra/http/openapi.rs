@@ -172,6 +172,7 @@ impl Modify for BearerAuth {
         alwa_handlers::create_listing,
         alwa_handlers::get_my_listings,
         alwa_handlers::cancel_listing,
+        alwa_handlers::mark_listing_sold,
         alwa_handlers::create_offer,
         alwa_handlers::accept_offer,
         alwa_handlers::get_my_offers,
