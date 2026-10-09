@@ -2,47 +2,43 @@
 
 This file is the contract between the farmer app / dashboards (frontend) and the backend. The frontend writes here what it sends and what it expects back. If the backend needs something from the frontend, it writes `FRONTEND.md`, and the frontend follows that file strictly. Both files live at the repo root and are committed with every change.
 
-Status: v2, 2026-10-08 20:48. Section 0 says exactly what the app still needs, checked against `backend/` at a0ade90 and `FRONTEND.md` v2. Backend: confirm or edit each section; mark changes with your date. Added 2026-10-08 21:46: section 2.11, the Control Room (officer sign-in and `/v1/admin` routes for dashboard screens 11 to 18).
+Status: v3, 2026-10-09 16:20. Section 0 says exactly what the app still needs, checked against `FRONTEND.md` v4 (commit 13ba149). Backend: confirm or edit each section; mark changes with your date. Added 2026-10-08 21:46: section 2.11, the Control Room (officer sign-in and `/v1/admin` routes for dashboard screens 11 to 18).
 
 ## 0. What the app still needs (read this first)
 
-Checked 2026-10-08 20:48 against `backend/` at commit a0ade90 and `FRONTEND.md` v2. The app was also run on Android against a stand-in server with the backend's exact shapes over plain `http://`: sign in, My farms and opening a farm worked; Home then stopped at the missing status call (row 5).
+Checked 2026-10-09 16:20 against `FRONTEND.md` v4 with its section 14 (commit 13ba149). The app follows FRONTEND.md v4 since 2026-10-09 14:41 and is built against the test server `http://95.217.14.92:8790/v1`. The size points of the old 0.2 (cells with `inside_pct`, crop areas from inside areas) are done on the backend side: thank you.
 
 ### 0.1 Calls the app makes, in the order a farmer hits them
 
-| # | Call | Backend today | Still needed |
+| # | Call | Backend today | What the app needs from the backend |
 |---|---|---|---|
-| 1 | Sign in: `POST /v1/auth/otp/send`, `/v1/auth/otp/verify` (2.1) | built; for the demo, one fixed code (`AUTH__FIXED_SIGN_IN_CODE`) | Nothing for the demo. An SMS provider before real farmers (open point 2). |
-| 2 | My farms: `GET /v1/farms` (2.2) | built | Nothing. |
-| 3 | Save a farm: `POST /v1/farms` (2.2) | built, `Idempotency-Key` honoured, area from the outline | Cells and crop areas in 0.2 (sizes only, not blocking). |
-| 4 | Open a farm: `GET /v1/farms/{id}` (2.2) | built | `inside_pct` on cells, 0.2 (not blocking). |
-| 5 | Farm from space: `GET /v1/farms/{id}/status` (2.3) | not built | **This blocks Home.** Home loads a farm and its status together; today the `404` makes every farm show "Could not load this farm (not_found)". Fastest fix: the stub answer in 2.3 until the satellite job exists. |
-| 6 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built | Home still opens without it ("Weather forecast not available right now"). Then serve the stored plan (2.4). |
-| 7 | Edit a farm: `PUT /v1/farms/{id}` (2.2, added 21:10) | not built (only `PUT /v1/farms/{id}/cells`) | Needed to change a farm's border, crops and name (the app's edit screen is being built). Changing the border needs the outline, which `PUT .../cells` cannot take. |
-| 8 | Delete a farm: `DELETE /v1/farms/{id}` (2.2) | built | Nothing. The app calls it from the farm's menu (since 21:33); `404` counts as already deleted. |
-| 9 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5, added 2026-10-09) | built (`FRONTEND.md` section 13) | Nothing for the route. Real answers need the Doctor service running next to the server with `GEMINI_API_KEY`; without the key the app shows "not switched on yet". |
+| 1 | Sign in: `POST /v1/auth/otp/send`, `/v1/auth/otp/verify` (2.1) | built, real codes through OTPIQ on the test server | Nothing. |
+| 2 | My farms, save, open, edit, delete: `/v1/farms` (2.2) | built, edit with `PUT /v1/farms/{id}` | Nothing. |
+| 3 | Farm from space: `GET /v1/farms/{id}/status` (2.3) | placeholder, every measured field `null` | **Blocks the main picture on Home.** See 0.2, answer to FRONTEND.md 13.1. |
+| 4 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built (`404`) | **The most wanted route for farmers.** The 10-day plan from the forecast with the Weather Planner rules in 2.4. The app shows "10-day plan coming soon" until it exists. It goes through the server only: the app does not call Open-Meteo itself. |
+| 5 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5) | route built | Please check that the Doctor service runs next to the test server (`curl 127.0.0.1:8090/health` on that machine). If it does, `GEMINI_API_KEY` must be in its `farm_doctor/.env` there: until now it was only set up in the Codespace. Without it every question fails. |
+| 6 | Insights: `GET /v1/farms/{id}/insights` | built, groundwater filled daily | Nothing for the route. Other topics wait for the per-farm analysis job (FRONTEND.md 13.4). |
+| 7 | Daily brief: `GET /v1/farms/{id}/brief` | built | Nothing. The app card is next. |
+| 8 | Profile: `GET`/`PUT /v1/me` | built | Nothing. The Settings screen is next. |
+| 9 | Alwa market, farmer routes (FRONTEND.md 5) | built | Nothing for the routes. The app screens are being designed (2026-10-09). |
 
-Not needed yet, because their screens are not built: reports (2.6), alerts and devices (2.7), `DELETE /v1/account`.
+Needed next, because their screens are being built now:
+- `DELETE /v1/account` for Settings ("Delete my account and farms").
+- Alerts list and `POST /v1/devices` for push (2.7).
+- Reports (2.6).
 
-### 0.2 Sizes: cells and crop areas (not blocking, but numbers disagree until fixed)
+### 0.2 Answers to FRONTEND.md section 13
 
-| Topic | Backend today | The app needs | Why |
-|---|---|---|---|
-| Farm `cells` | cells whose centre is inside the outline | every 10 m cell the outline touches, each with `inside_pct` (0 to 100) | The app sends every touched cell (the edge ones come back in `dropped_cells`, which is harmless). Home adds up `inside_pct` for the weak and measured m²; without it, edge cells count as whole. |
-| `crops[].dunam` | painted cells / 25 | the sum of its cells' inside areas | Crops then add up to `area_dunam`. Today the crop list and the farm total disagree by the edge cells, up to 30 to 50% on plots under half a dunam (user decision 2026-10-08, section 1, Area). |
+1. Farm status: answer pending (user decision, 2026-10-09).
+2. Alwa: the app is designed against today's behaviour (any signed-in phone may offer, accepting sells the whole listing). Final answer pending (user decision).
+3. Protected mode: for the website team (2.12).
+4. Per-farm analysis job: answer pending.
+5. Missing from `backend/API.md`: nothing found for the app so far.
 
-The app's clipping code can be ported: `cellsTouching` in `app/lib/geo.dart` returns each touched cell with its m² inside.
+### 0.3 Reaching the server
 
-### 0.3 Answers to FRONTEND.md section 7
-
-1. `PUT /v1/farms/{id}/cells` changing only the listed cells: fine, but the app will not use it. Editing a farm sends the whole farm (outline and every cell) through `PUT /v1/farms/{id}` (2.2).
-2. 50,000 cells (2,000 dunam) per farm: fine. The app refuses outlines over 1,000 dunam (2,500,000 m²) before sending.
-3. `GET`/`PUT /v1/me`: the Settings screen is not built yet. Its design shows the language, the phone number, the number of farms, two notification switches and "Delete my account and farms". So `phone` and `lang` are enough now. `name` can stay empty: the app never asks for a name ("No password, no name"). The switches belong to `POST /v1/devices` (2.7), the number of farms comes from `GET /v1/farms`, and delete is `DELETE /v1/account`.
-
-### 0.4 Reaching the server
-
-- Build the app with `--dart-define=API_URL=http://<server>:3000/v1`. From the Android emulator the Mac is `10.0.2.2`; a phone on the same Wi-Fi uses the Mac's address on that network.
-- Plain `http://` works: tested on Android 2026-10-08 (Flutter's own network code is not held back by Android's cleartext rule). Use `https://` before real farmers.
+- The app is built with `--dart-define=API_URL=http://95.217.14.92:8790/v1`. Plain `http` is allowed in the app for that address only (`app/android/app/src/main/res/xml/network_security_config.xml`).
+- The app no longer uses the Codespace server. The three test farms made there from the user's phone are not on the test server.
 
 ## 1. Shared definitions (both sides must use exactly these)
 
