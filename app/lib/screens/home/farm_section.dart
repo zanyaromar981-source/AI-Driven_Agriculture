@@ -362,45 +362,7 @@ class _FarmSectionState extends State<FarmSection> {
     final s = AppScope.of(context).s;
     final st = _status;
     final whole = st?.greennessPctOfNormal;
-    final sum = _farm!.summary;
     switch (_view) {
-      case FarmView.farm:
-        final measuredDunam = (st?.crops ?? const <CropReading>[])
-            .where((c) => c.greennessPctOfNormal != null)
-            .fold(0.0, (a, c) => a + c.dunam);
-        final all = measuredDunam >= sum.areaDunam * 0.95;
-        return IgnorePointer(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 2,
-            children: [
-              Text(
-                whole == null ? s.notMeasured : s.pctOfNormal(whole),
-                style: jText(
-                  false,
-                  size: whole == null ? 18 : 26,
-                  weight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                [
-                  s.wholeFarmLabel,
-                  '${fmtM2(sum.areaDunam * 2500)} ${s.m2}',
-                  if (whole != null) s.levelName(levelFromPct(whole)),
-                ].join(' · '),
-                style: jText(false, size: 12.5, color: JColors.muted),
-              ),
-              if (whole != null && !all)
-                Text(
-                  s.measuredOn(
-                    fmtM2(measuredDunam * 2500),
-                    fmtM2(sum.areaDunam * 2500),
-                  ),
-                  style: jText(false, size: 12, color: JColors.muted),
-                ),
-            ],
-          ),
-        );
       case FarmView.cells:
         final k = _cell;
         if (k == null) return null;
@@ -494,7 +456,6 @@ class _ViewToggle extends StatelessWidget {
                     switch (v) {
                       FarmView.cells => s.viewCells,
                       FarmView.crops => s.viewCrops,
-                      FarmView.farm => s.viewFarm,
                     },
                     style: jText(
                       false,
