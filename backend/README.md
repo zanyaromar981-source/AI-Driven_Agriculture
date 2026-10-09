@@ -67,7 +67,7 @@ cargo test
 
 ## What is here today
 
-About 140 operations under `/v1` (71 of them under `/v1/dashboard`) plus `/status` and `/health`; the full list with shapes is at `/api-docs`. By slice:
+75 paths in the API docs (`/status` and `/health` included), with 71 operations under `/v1/dashboard`; the full list with shapes is at `/api-docs`. By slice:
 
 | Slice | Routes | For |
 |---|---|---|
