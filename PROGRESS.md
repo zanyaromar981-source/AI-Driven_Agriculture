@@ -59,6 +59,7 @@ Last update: 2026-10-09 11:44
 - `PUT /v1/farms/{id}` to edit a farm's border, crops and name (needed by the edit screen in progress)
 
 ## Needs from the user
+- Keep the Mac on and awake (lid open) on pitch day: it runs the job that keeps the cloud server awake
 - Gemini API key from Google AI Studio (decided: Gemini is the Doctor)
 - Sorani speaker to check the Doctor's text
 - Organizer confirmation that pre-built work is allowed
