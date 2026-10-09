@@ -135,3 +135,12 @@ The same rules everywhere:
 - Lists that can grow take `page` and `rows_per_page` and answer with `count`, `page`, `rows_per_page`.
 - A reading changed by hand looks like any other; the next data-job push for the same key replaces it.
 - The public read routes of section 2 are unchanged and still need no login.
+
+## 12. Daily briefs
+
+A job writes a short brief each night (Sorani and English): one for the region and one per district that has farms. Until that job is running these routes answer with nothing.
+
+- `GET /v1/farms/{id}/brief` (farmer token) answers `{"farm_id", "zone_slug", "brief"}`: the newest brief of the farm's district, or the region brief if the district has none. `brief` is `null` when nothing is stored yet: show "no brief yet", it is not an error.
+- `GET /v1/briefs/latest?scope=` and `GET /v1/briefs?scope=&from=&to=` (no login): `scope` is `region` (default) or a district slug.
+- A brief is `{"day", "scope", "headline_en", "headline_ku", "summary_en", "summary_ku", "points": [{"level": "info|watch|alarm", "text_en", "text_ku"}], "sources": [{"title", "url"}], "author", "generated_at", "updated_at"}`.
+- The text is written by an AI agent from our stored numbers plus a web search. Show `sources` and `author`, and treat it as a draft that staff can correct (`/v1/dashboard/briefs`, permission `briefs:*`).

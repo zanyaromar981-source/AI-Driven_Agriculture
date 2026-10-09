@@ -321,6 +321,39 @@ class FakeApi implements Api {
     );
   }
 
+  /// A fixed sample answer, so the screens can be tried without the real
+  /// Doctor. It says it is a sample, so nobody mistakes it for advice.
+  @override
+  Future<DoctorAnswer> askDoctor(String farmId, DoctorQuestion q) async {
+    await _online();
+    await _load();
+    _ownFarm(farmId);
+    if (q.isEmpty) throw ApiException(422, 'empty_question');
+    await Future<void>.delayed(const Duration(seconds: 3));
+    return const DoctorAnswer(
+      likely: 'Sample answer: yellow rust starting in the north-east corner',
+      confidence: 'likely',
+      why: [
+        'Field eye -> 12 cells 22% less green than normal since 25 Sep',
+        'Weather -> cool wet nights Tue to Thu, rust weather',
+        'Your photo -> yellow stripes along the veins',
+      ],
+      actions: [
+        'Walk to the north-east corner today and check the flag leaves',
+        'If you see yellow stripes, call the plant-protection office before spraying',
+        'Do not spread urea until the Friday rain',
+      ],
+      cannotTell: [
+        'Which fungicide or how much',
+        'The exact day the rust started',
+      ],
+      referToOfficer: true,
+      ku: 'وەڵامی نموونە: لەوانەیە زەنگی زەرد لە گۆشەی باکووری ڕۆژهەڵاتی کێڵگەکەت دەستی پێکردبێت. ئەمڕۆ گەڵاکان بپشکنە و پێش هەر دەرمانێک پەیوەندی بە فەرمانگەی پاراستنی ڕووەکەوە بکە.',
+      en: 'Sample answer: yellow rust may be starting in the north-east corner of your field. Check the leaves today and call the plant-protection office before any spraying.',
+      inputsUsed: ['field_eye', 'weather_planner', 'photos'],
+    );
+  }
+
   @override
   Future<FarmPlan> getPlan(String id) async {
     await _online();

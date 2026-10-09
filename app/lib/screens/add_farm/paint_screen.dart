@@ -16,11 +16,24 @@ import 'farm_ready_screen.dart';
 
 /// Add farm, step 2 of 3: swipe over the 10 m cells, then pick what grows there.
 class PaintScreen extends StatefulWidget {
-  const PaintScreen({super.key, required this.points, this.edit});
+  const PaintScreen({
+    super.key,
+    required this.points,
+    this.edit,
+    this.crops,
+    this.onCrops,
+  });
   final List<GeoPoint> points;
 
   /// Set when editing a farm: its crops are painted in from the start.
   final FarmEdit? edit;
+
+  /// Crops painted earlier on this visit (the farmer went back to move a
+  /// corner); used instead of [edit]'s crops when set.
+  final Map<CellKey, String>? crops;
+
+  /// Told after every change, so going back to the edge keeps the painting.
+  final ValueChanged<Map<CellKey, String>>? onCrops;
 
   @override
   State<PaintScreen> createState() => _PaintScreenState();
@@ -31,9 +44,12 @@ class _PaintScreenState extends State<PaintScreen> {
     for (final p in widget.points) LatLng(p.lat, p.lon),
   ];
 
-  /// m² of each cell inside the border (edge cells are cut along it).
-  late final Map<CellKey, double> _inside = cellsTouching(_outline);
-  late final List<CellKey> _cells = _inside.keys.toList();
+  /// The cells the server keeps: those whose centre is inside the border.
+  /// Each counts as a whole 10 m square, as on the server, so the crop areas
+  /// here are the ones the farm shows after saving, and no painted cell is
+  /// dropped by the server.
+  late final List<CellKey> _cells = cellsInside(_outline);
+  late final Map<CellKey, double> _inside = {for (final c in _cells) c: 100.0};
   late final double _totalM2 = polygonAreaM2(_outline);
   late final Set<CellKey> _cellSet = _cells.toSet();
   late final Map<CellKey, List<LatLng>> _corners = {
@@ -43,7 +59,9 @@ class _PaintScreenState extends State<PaintScreen> {
   /// Crops painted so far; when editing, the farm's crops for every cell
   /// that is still inside the (maybe changed) border.
   late final Map<CellKey, String> _crops = {
-    for (final e in (widget.edit?.crops ?? const <CellKey, String>{}).entries)
+    for (final e
+        in (widget.crops ?? widget.edit?.crops ?? const <CellKey, String>{})
+            .entries)
       if (_cellSet.contains(e.key)) e.key: e.value,
   };
   final Set<CellKey> _selected = {};
@@ -93,6 +111,7 @@ class _PaintScreenState extends State<PaintScreen> {
       _selected.clear();
       _lastCrop = crop;
     });
+    widget.onCrops?.call(Map.of(_crops));
   }
 
   void _selectAll() => setState(

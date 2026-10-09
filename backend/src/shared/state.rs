@@ -15,6 +15,11 @@ use crate::{
             PostListingUseCase, RecordPriceUseCase, ViewListingUseCase, ViewMarketPricesUseCase,
             ViewPriceHistoryUseCase,
         },
+        briefs::app::use_cases::{
+            CorrectBriefUseCase, DeleteBriefUseCase, ListBriefsUseCase, ListStoredBriefsUseCase,
+            RecordBriefUseCase, RecordFarmZonesUseCase, RemoveBriefUseCase, ViewFarmBriefUseCase,
+            ViewLatestBriefUseCase,
+        },
         dams::app::use_cases::{
             CreateDamReadingUseCase, DeleteDamReadingUseCase, ListDamReadingsUseCase,
             ListDamsUseCase, ListReferenceDamsUseCase, RecordDamReadingUseCase,
@@ -218,6 +223,19 @@ pub struct StaffFeature {
 }
 
 #[derive(Clone)]
+pub struct BriefFeature {
+    pub view_latest_brief_use_case: Arc<ViewLatestBriefUseCase>,
+    pub list_briefs_use_case: Arc<ListBriefsUseCase>,
+    pub view_farm_brief_use_case: Arc<ViewFarmBriefUseCase>,
+    pub record_brief_use_case: Arc<RecordBriefUseCase>,
+    pub record_farm_zones_use_case: Arc<RecordFarmZonesUseCase>,
+    pub delete_brief_use_case: Arc<DeleteBriefUseCase>,
+    pub list_stored_briefs_use_case: Arc<ListStoredBriefsUseCase>,
+    pub correct_brief_use_case: Arc<CorrectBriefUseCase>,
+    pub remove_brief_use_case: Arc<RemoveBriefUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -229,6 +247,7 @@ pub struct Features {
     pub water: WaterFeature,
     pub alwa: AlwaFeature,
     pub staff: StaffFeature,
+    pub brief: BriefFeature,
 }
 
 #[derive(Clone)]

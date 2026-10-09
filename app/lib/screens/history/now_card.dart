@@ -21,7 +21,6 @@ class NowCard extends StatefulWidget {
 
 class _NowCardState extends State<NowCard> {
   FarmInsights? _data;
-  bool _loaded = false;
   Timer? _poll;
 
   @override
@@ -46,10 +45,11 @@ class _NowCardState extends State<NowCard> {
     } on ApiException {
       // The copy on the phone (or the waiting state) stays.
     }
-    if (mounted) setState(() => _loaded = true);
     _poll?.cancel();
-    if (mounted &&
-        nowView(_data, today: DateTime.now()).kind == NowKind.waiting) {
+    // The latest picture comes with the greenness topic. Once that topic is
+    // in without it, it will not come later (the farm is read once), so
+    // checking again only makes sense while the greenness is still read.
+    if (mounted && _data?.topic('greenness') == null && loader.keepChecking) {
       _poll = Timer(const Duration(seconds: 30), () {
         if (mounted) _load();
       });
@@ -59,6 +59,9 @@ class _NowCardState extends State<NowCard> {
   @override
   Widget build(BuildContext context) {
     final v = nowView(_data, today: DateTime.now());
+    // No latest picture for this farm: show nothing rather than a card that
+    // says "Reading" for ever. The Field history card shows the progress.
+    if (v.kind == NowKind.waiting) return const SizedBox.shrink();
     final (soft, color, icon) = switch (v.kind) {
       NowKind.waiting => (
         JColors.accentSoft,
@@ -177,9 +180,7 @@ class _NowCardState extends State<NowCard> {
             ],
           ),
           Text(
-            !_loaded && _data == null
-                ? 'Loading the latest picture of this field…'
-                : v.line,
+            v.line,
             style: latText(size: 14, weight: FontWeight.w500, height: 1.45),
           ),
           if (v.chips.isNotEmpty)

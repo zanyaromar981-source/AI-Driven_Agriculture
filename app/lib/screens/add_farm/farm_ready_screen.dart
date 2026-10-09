@@ -154,20 +154,30 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
       lat: centre.latitude,
       lon: centre.longitude,
     );
-    await Outbox.instance.add(request, summary, farmId: edit?.id);
+    final pending = await Outbox.instance.add(
+      request,
+      summary,
+      farmId: edit?.id,
+    );
     // Keep the map around this farm on the phone, for viewing it offline later.
     prefetchFarmMap(widget.outline);
-    if (edit == null) await Draft.clear();
     final result = await Outbox.instance.flush(scope.api);
-    if (!mounted) return;
-    if (result.rejected.contains(name)) {
-      showToast(context, s.crosses);
-      setState(() => _busy = false);
+    // Matched by upload key, not name: many farms are called "New farm".
+    final refused = result.rejected
+        .where((r) => r.item.key == pending.key)
+        .firstOrNull;
+    if (refused != null) {
+      // The walked edge stays as the draft; the farmer is told the real reason.
+      if (mounted) {
+        showToast(context, s.refusedWhy(refused.code), long: true);
+        setState(() => _busy = false);
+      }
       return;
     }
-    final uploaded = !Outbox.instance.items.any(
-      (i) => i.request.name == name && i.farmId == edit?.id,
-    );
+    // Saved on the phone (and maybe uploaded): the draft is no longer needed.
+    if (edit == null) await Draft.clear();
+    if (!mounted) return;
+    final uploaded = !Outbox.instance.items.any((i) => i.key == pending.key);
     if (edit == null) {
       showToast(context, uploaded ? s.saved : s.savedOffline);
       Navigator.of(context).popUntil((r) => r.isFirst);

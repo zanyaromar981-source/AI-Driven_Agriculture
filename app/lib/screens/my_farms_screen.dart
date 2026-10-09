@@ -32,7 +32,6 @@ class MyFarmsScreen extends StatefulWidget {
 
 class _MyFarmsScreenState extends State<MyFarmsScreen> {
   static const _cacheName = 'farms_cache';
-  int _waiting = Outbox.instance.items.length;
 
   /// What is on screen: the copy saved on the phone first, then fresh data.
   _FarmList? _list;
@@ -56,14 +55,25 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
     super.dispose();
   }
 
-  /// A waiting farm went up (or a new one was saved): show the fresh list.
+  /// A waiting farm went up or was refused (or a new one was saved): tell
+  /// the farmer what really happened, then show the fresh list.
   void _outboxChanged() {
     if (!mounted) return;
-    final now = Outbox.instance.items.length;
-    if (now < _waiting) {
-      showToast(context, AppScope.read(context).s.uploaded(_waiting - now));
+    final s = AppScope.read(context).s;
+    final news = Outbox.instance.takeNews();
+    if (news.refused.isNotEmpty) {
+      final r = news.refused.first;
+      final name = r.item.request.name;
+      showToast(
+        context,
+        r.edgeBack
+            ? '${s.refused(name, r.code)} ${s.edgeBack}'
+            : s.refused(name, r.code),
+        long: true,
+      );
+    } else if (news.sent > 0) {
+      showToast(context, s.uploaded(news.sent));
     }
-    _waiting = now;
     _reload();
   }
 

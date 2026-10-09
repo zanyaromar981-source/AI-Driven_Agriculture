@@ -92,6 +92,10 @@ fn main() {
                     "staff,roles,role_permissions,staff_roles",
                     "src/features/staff/infra/persistence/postgres/entities",
                 ),
+                (
+                    "daily_briefs,farm_brief_zones",
+                    "src/features/briefs/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'api.dart';
 
@@ -53,13 +54,16 @@ class HttpApi implements Api {
     String path, {
     Map<String, dynamic>? body,
     String? idempotencyKey,
+    ({String type, List<int> bytes})? raw,
+    Duration? wait,
   }) async {
+    final limit = wait ?? timeout;
     final uri = _base.resolve(path);
     final sentToken = _token;
     final int status;
     final String text;
     try {
-      final req = await _client.openUrl(method, uri).timeout(timeout);
+      final req = await _client.openUrl(method, uri).timeout(limit);
       req.headers.set(HttpHeaders.acceptHeader, 'application/json');
       if (sentToken != null) {
         req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $sentToken');
@@ -72,10 +76,14 @@ class HttpApi implements Api {
         req.headers.contentType = ContentType.json;
         req.contentLength = bytes.length;
         req.add(bytes);
+      } else if (raw != null) {
+        req.headers.set(HttpHeaders.contentTypeHeader, raw.type);
+        req.contentLength = raw.bytes.length;
+        req.add(raw.bytes);
       }
-      final res = await req.close().timeout(timeout);
+      final res = await req.close().timeout(limit);
       status = res.statusCode;
-      text = await res.transform(utf8.decoder).join().timeout(timeout);
+      text = await res.transform(utf8.decoder).join().timeout(limit);
     } on SocketException {
       throw ApiException(0, 'offline');
     } on TimeoutException {
@@ -210,4 +218,46 @@ class HttpApi implements Api {
   @override
   Future<FarmPlan> getPlan(String id) async =>
       FarmPlan.fromJson(await _call('GET', '${_farm(id)}/plan'));
+
+  /// Multipart by hand (no extra package): question, lang, cell, photos.
+  /// The Doctor reads the field and the weather first, so it waits longer.
+  @override
+  Future<DoctorAnswer> askDoctor(String farmId, DoctorQuestion q) async {
+    final boundary = 'jutyar${DateTime.now().microsecondsSinceEpoch}';
+    final out = BytesBuilder(copy: false);
+    void field(String name, String value) => out.add(
+      utf8.encode(
+        '--$boundary\r\nContent-Disposition: form-data; name="$name"'
+        '\r\n\r\n$value\r\n',
+      ),
+    );
+    final text = q.text?.trim() ?? '';
+    if (text.isNotEmpty) field('question', text);
+    field('lang', q.lang);
+    if (q.cellE != null && q.cellN != null) {
+      field('cell', jsonEncode({'e': q.cellE, 'n': q.cellN}));
+    }
+    for (final (i, p) in q.photos.indexed) {
+      final ext = p.mime == 'image/png' ? 'png' : 'jpg';
+      out.add(
+        utf8.encode(
+          '--$boundary\r\nContent-Disposition: form-data; name="photos"; '
+          'filename="photo_${i + 1}.$ext"\r\nContent-Type: ${p.mime}\r\n\r\n',
+        ),
+      );
+      out.add(p.bytes);
+      out.add(utf8.encode('\r\n'));
+    }
+    out.add(utf8.encode('--$boundary--\r\n'));
+    final j = await _call(
+      'POST',
+      '${_farm(farmId)}/ask',
+      raw: (
+        type: 'multipart/form-data; boundary=$boundary',
+        bytes: out.takeBytes(),
+      ),
+      wait: const Duration(seconds: 120),
+    );
+    return DoctorAnswer.fromJson(j);
+  }
 }

@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 11:47
+Last update: 2026-10-09 12:12
 
 ## Done
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -14,8 +14,8 @@ Last update: 2026-10-09 11:47
 - Design in Pencil, one file `design/jutyar_app.pen`, 14 screens: Sign in (phone, code, my farms), Add farm (corners, paint the grid, farm ready), Farm (home with stacked farms, cell card, crop view, farm view, ask, reading, answer), More (report, alerts, settings); Grain Sun logo
 - Control Room website in Pen, `design/web/jutyar_control_room.pen`: 48 frames measured from the live page (motion spec, opening sequence, 19 sections, 10 states), rebuilt by `design/web/build_web_pen.py`
 - Dashboard design in Pencil, `design/dashboard/jutyar_dashboard.pen`, 23 frames: Ministry dashboard by district (33 KRG districts on real borders, the map is one reusable component also saved as `kri_map_component.pen`, latitude / longitude rulers, zoom into Chamchamal's real sub-districts), Water, The Doctor, Fire alerts, Compare years, Sorani version, farmer phone view, Alwa market (dashboard + phone), and the Control Room (8 screens, protected mode: farmers and farms, crop register, send an alert, inbox, rules, Alwa control, data health, officers and history; builder `build_control_room.py`). Sample numbers only
-- Flutter app `app/` (Jutyar): Sign in (phone, code, my farms) and Add farm (walk the corners with GPS, paint crops on the 10 m grid, farm ready, save; map styles Satellite with Kurdish place names, Map, Terrain; walk mode; exact area; works offline with upload later) working on a fake server with BACKEND.md shapes; 8 tests; runs on the user's phone
-- Flutter: each farm opens on its own screen; Edit (move border dots, live m², crops kept) and Delete farm, both work offline
+- Flutter app `app/` (Jutyar): Sign in (phone, code, my farms) and Add farm (walk the corners with GPS, paint crops on the 10 m grid, farm ready, save; map styles Satellite with Kurdish place names, Map, Terrain; walk mode; exact farm area, crop areas in whole 10 m cells as the server counts them; a refused farm is never lost; works offline with upload later) working on a fake server with BACKEND.md shapes; 8 tests; runs on the user's phone
+- Flutter: each farm opens on its own screen; Edit (move border dots, live m², crops kept, Field history kept on the phone until the new analysis is in) and Delete farm, both work offline; Field history says "Not read" after 20 min instead of waiting for ever
 - Flutter Home (open a farm): a tap in My farms opens Home with all farms stacked, scrolled to that farm. Per farm: Cells / Crops / Farm views drawn from the outline (works offline), cell card on tap, weak-cell line counted by area, This week from the live Open-Meteo forecast with the Weather Planner rules, last copy kept on the phone. Tab bar in place (only Home works). English labels for now
 - App icon: Grain Sun on the cream tile, Android (adaptive) and iOS, replaces the default Flutter logo
 - Pitch deck in Pencil, `design/pitch_deck.pen`, 8 slides, v2 after user review (cover, problem and gap, app design, app features, calculations, water map of Dukan and Darbandikhan on the team zone map with real numbers, live demo, summary), name Khor (خۆر), olive and ochre palette, photo-led
@@ -30,7 +30,7 @@ Last update: 2026-10-09 11:47
 
 ## In progress
 - Backend: hosted on a test server with a 12-hourly rain-against-normal job for the 33 districts; next are role-based dashboard routes, more data jobs (dams, fires, soil), touched cells with `inside_pct`, weekly plan
-- Flutter app, one screen at a time: next is Ask the Doctor (the tab bar is in place)
+- Flutter app: Ask the Doctor screens done (2026-10-09); backend route `POST /v1/farms/{id}/ask` and the Doctor service in the Codespace in progress; needs `GEMINI_API_KEY`
 - Review of the full farmer app design in Pencil (all 4 jobs done)
 - Ministry dashboard: wire `web/now.json` into the template (paused until the template is settled)
 
@@ -43,7 +43,7 @@ Last update: 2026-10-09 11:47
 - Map source: user dislikes the current map (asked for Google, then Leaflet). Leaflet map demo built in `web/map_demo/` for review
 
 ## Next
-- Flutter: Ask the Doctor, Report, Alerts, Settings (Home done; its Ask and Report buttons say "not built yet")
+- Flutter: Report, Alerts, Settings (Home and Ask the Doctor done; the Report button says "not built yet")
 - Flutter: Home labels to Sorani after a native speaker check
 - Flutter: set `kTestMode` to false before any release
 - Pitch deck: swap the AI satellite picture on slide 5 for a real Sentinel-2 capture, add team names, refresh the lake numbers on demo morning

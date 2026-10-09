@@ -20,8 +20,9 @@ Checked 2026-10-08 20:48 against `backend/` at commit a0ade90 and `FRONTEND.md` 
 | 6 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built | Home still opens without it ("Weather forecast not available right now"). Then serve the stored plan (2.4). |
 | 7 | Edit a farm: `PUT /v1/farms/{id}` (2.2, added 21:10) | not built (only `PUT /v1/farms/{id}/cells`) | Needed to change a farm's border, crops and name (the app's edit screen is being built). Changing the border needs the outline, which `PUT .../cells` cannot take. |
 | 8 | Delete a farm: `DELETE /v1/farms/{id}` (2.2) | built | Nothing. The app calls it from the farm's menu (since 21:33); `404` counts as already deleted. |
+| 9 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5, added 2026-10-09) | being built | The app's Ask and Answer screens call it (Ask tab on a farm, and "Ask about this spot" on a tapped square). Until it exists the app shows "The Doctor could not answer this time". |
 
-Not needed yet, because their screens are not built: Ask the Doctor (2.5), reports (2.6), alerts and devices (2.7), `DELETE /v1/account`.
+Not needed yet, because their screens are not built: reports (2.6), alerts and devices (2.7), `DELETE /v1/account`.
 
 ### 0.2 Sizes: cells and crop areas (not blocking, but numbers disagree until fixed)
 
@@ -180,6 +181,7 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 - `POST /farms/{id}/ask` multipart: `question` (text, optional), `voice` (DEFERRED: not in v1, decided 2026-10-08; field reserved), `photos[]` (jpeg, 1–6, ≤ 4 MB each, optional), `cell` (optional `{"e","n"}` the farmer tapped), `lang` (`ku|en`).
   → `200 {"likely": "...", "confidence": "sure|likely|unsure", "why": ["field_eye -> ...", "weather -> ..."], "actions_this_week": ["..."] (max 3), "cannot_tell": ["..."], "refer_to_officer": true|false, "ku": "...", "en": "...", "transcript": "..." (if voice), "case_id": "c_..."}`
   Rules (hard): no pesticide or fertilizer doses, no product names; only numbers from the AIs; `unsure` + `refer_to_officer: true` when inputs conflict. Response time target ≤ 25 s; the app shows "reading the field" meanwhile.
+- What the app does (2026-10-09): sends `question` (trimmed, max 1000 characters), `lang`, `cell` as JSON text when the farmer asked from a tapped square, and each photo as a repeated `photos` part (JPEG, made 1600 px and 80% quality on the phone, so well under 4 MB; PNG only if the gallery gives one). It waits up to 120 s. It reads `likely`, `confidence`, `why` (shown as "Input: conclusion", with an icon chosen from the input's name), `actions_this_week` (first 3), `cannot_tell`, `refer_to_officer` (shows "show this to the office"), `ku` and `en` (a Sorani / English switch). It does not use `case_id` or `transcript` yet. Error codes it words for the farmer: `doctor_not_ready` ("not switched on yet"), `bad_photo`, `empty_question`, `404`, offline; anything else is "could not answer this time".
 
 ### 2.6 Reports (Neighbour Watch)
 - `POST /reports` body `{"farm_id": "f_...", "cell": {"e","n"}|null, "type": "yellow_stripes|insects|wilting|flood|hail|fire|animal_disease|other", "note": "...", "photo_id": "..."|null, "lat", "lon", "t"}` → `201 {"report_id": "r_..."}`

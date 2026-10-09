@@ -1,0 +1,14 @@
+[Unit]
+Description=Farm Doctor fires runner: satellite fire detections without gas flares
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/farm-doctor/backend/jobs
+EnvironmentFile=/opt/farm-doctor/backend/deploy/.env
+Environment=FARM_DOCTOR_API=http://127.0.0.1:8790/v1
+Environment=FIRES_RUNNER_CACHE=/opt/farm-doctor/cache
+ExecStart=/usr/bin/python3 /opt/farm-doctor/backend/jobs/fires_runner.py
+Nice=10
+TimeoutStartSec=900

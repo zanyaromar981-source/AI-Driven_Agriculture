@@ -36,3 +36,37 @@ INGEST__SERVICE_KEY=... FARM_DOCTOR_API=http://localhost:8790/v1 python3 daily_b
 ```
 
 On the server it runs from `farm-doctor-daily-brief.timer`. See its last run with `journalctl -u farm-doctor-daily-brief -n 50`.
+
+## fires_runner.py
+
+Satellite fire detections inside the 33 districts, every 3 hours, with gas flares removed. Source: NASA FIRMS files for three VIIRS satellites and MODIS (the last 7 days, no key).
+
+- **Inside a district:** tested against the district outlines in `district_shapes.json` (made from `web/map_demo/kri_map_data.js`). Detections outside every district are dropped.
+- **Flares:** a flare burns at one spot day and night for weeks; a crop fire moves and is over in hours. The job remembers each spot of about 1 km and the days it was hot (`cache/fire_cells.json`, 30 days). A spot hot on 3 or more days, at night on at least 2 of them, counts as a flare, with the cells touching it. Its detections are not pushed. Every run logs how many were removed.
+- **What this gets wrong:** a real fire that burns in one place for 3 days and nights is hidden from its third day; a new flare shows as a fire for its first two days; on the first run the memory holds only 7 days, so some flares get through.
+- **Grouping:** detections within about 2 km on the same day are pushed as one fire, with the time of the latest detection and the number of farms within 5 km.
+- **Other limits:** a detection reaches NASA's files about 3 hours after the satellite passed; a short fire between passes is never seen; burned area is not measured.
+
+First dry run, 9 Oct 2026: 3,048 detections in the box, 1,063 inside the districts, 284 of those removed as flares, 128 fires in the last 48 hours, most in Makhmur, Sumel, Qushtapa, Shekhan and Erbil. Whether those 128 are all real fires has not been checked by a person.
+
+```sh
+python3 fires_runner.py --dry-run
+```
+
+## groundwater_runner.py
+
+Once a day: for each farm, how wet the ground is around it, deep and shallow, against its own history. Source: NASA's weekly GRACE-DA maps of groundwater storage, root-zone soil moisture and surface soil moisture, as percentiles (50 is normal for the time of year; 10 means only 10% of past years were this dry). Pushed as the farm's `groundwater` topic with confidence `unsure`.
+
+- **It is not a well depth and not measured at the farm.** One value covers a square of about 25 km, so every farm in that square gets the same number. It is a model fed with satellite gravity readings.
+- **It cannot see local pumping.** A village whose wells are falling looks the same as its neighbours.
+- **Nothing better exists for free.** No source gives groundwater depth at farm scale in Iraq.
+- New farms get their value on the next daily run. NASA changes the maps once a week.
+
+First read, 9 Oct 2026 (maps of 6 Oct), at the 33 district centres: groundwater between the 4th and 18th percentile everywhere (mean 11), while root-zone soil moisture sits between the 46th and 95th. So after a wet year the top of the soil is wet, but the model's deep storage is still low.
+
+It needs one package that the other jobs do not:
+
+```sh
+python3 -m venv /opt/farm-doctor/venv && /opt/farm-doctor/venv/bin/pip install rasterio
+/opt/farm-doctor/venv/bin/python groundwater_runner.py --dry-run
+```

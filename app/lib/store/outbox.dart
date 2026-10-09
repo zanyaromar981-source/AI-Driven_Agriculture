@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 
 import '../api/api.dart';
+import 'draft.dart';
+import 'insights_copy.dart';
 import 'local_store.dart';
 
 /// A farm saved on the phone, waiting to be sent to the server.
@@ -43,6 +45,17 @@ class PendingFarm {
   );
 }
 
+/// A farm the server will not take, with the server's reason
+/// (`bad_polygon`, `farm_too_large`, `too_many_farms`, ...).
+class Refused {
+  const Refused(this.item, this.code, {this.edgeBack = false});
+  final PendingFarm item;
+  final String code;
+
+  /// The farm's walked edge was put back as the Add farm draft.
+  final bool edgeBack;
+}
+
 /// What one upload try did.
 class FlushResult {
   const FlushResult({
@@ -51,7 +64,7 @@ class FlushResult {
     this.offline = false,
   });
   final int sent;
-  final List<String> rejected;
+  final List<Refused> rejected;
   final bool offline;
 }
 
@@ -83,6 +96,19 @@ class Outbox extends ChangeNotifier {
   List<String> get deletes => List.unmodifiable(_deletes);
   bool _loaded = false;
   bool _flushing = false;
+
+  /// Uploads and refusals not yet shown to the farmer (see [takeNews]).
+  int _newSent = 0;
+  final List<Refused> _newRefused = [];
+
+  /// What went up or was refused since the last call, so My farms tells the
+  /// farmer once, with the real count and reason.
+  ({int sent, List<Refused> refused}) takeNews() {
+    final news = (sent: _newSent, refused: List.of(_newRefused));
+    _newSent = 0;
+    _newRefused.clear();
+    return news;
+  }
 
   List<PendingFarm> get items => List.unmodifiable(_items);
 
@@ -158,23 +184,39 @@ class Outbox extends ChangeNotifier {
     _flushing = true;
     var sent = 0;
     var changed = false;
-    final rejected = <String>[];
+    final rejected = <Refused>[];
     var offline = false;
+    // Our server answers a refusal with its JSON error code. A Wi-Fi login
+    // page or a used-up data bundle answers with a redirect, a 403 or a web
+    // page instead: that is not our server, so nothing is decided by it.
+    bool fromServer(ApiException e) =>
+        e.extra != null ||
+        !(const {
+              'bad_request',
+              'not_found',
+              'invalid',
+              'bad_response',
+            }).contains(e.code) &&
+            !e.code.startsWith('http_');
     // Keep and try later: no internet, not signed in, timeout, too many
-    // requests (429) or a server error. Losing a walked farm because the
-    // server was busy would be far worse than waiting.
+    // requests (429), a server error, or an answer that is not our server.
+    // Losing a walked farm because the server was busy would be far worse
+    // than waiting.
     // 405/501: the server does not have this call yet (e.g. editing a
     // farm's border before the backend adds PUT /farms/{id}): keep it too.
     bool later(ApiException e) =>
         e.isOffline ||
-        const {401, 405, 408, 429, 501}.contains(e.status) ||
-        e.status >= 500;
+        e.status < 400 ||
+        const {401, 403, 405, 408, 429, 501}.contains(e.status) ||
+        e.status >= 500 ||
+        !fromServer(e);
     try {
       for (final id in List.of(_deletes)) {
         try {
           await api.deleteFarm(id);
         } on ApiException catch (e) {
-          if (later(e)) {
+          // 404 is "already gone", whatever sent it: deleting is done.
+          if (e.status != 404 && later(e)) {
             offline = e.isOffline;
             return FlushResult(
               sent: sent,
@@ -182,7 +224,7 @@ class Outbox extends ChangeNotifier {
               offline: offline,
             );
           }
-          // 404: already gone. Any other refusal will not change on retry.
+          // Any other refusal will not change on retry.
         }
         _deletes.remove(id);
         changed = true;
@@ -205,8 +247,10 @@ class Outbox extends ChangeNotifier {
             } on ApiException catch (e) {
               if (e.status == 404) _deletes.remove(oldId);
             }
-            // The old farm's copies on the phone are no longer needed.
-            for (final name in ['farm_$oldId', 'insights_$oldId']) {
+            // The field's history stays on show while the new farm is
+            // analysed; the old farm's copies are then no longer needed.
+            await InsightsCopy.carry(oldId, made.farm.summary.id);
+            for (final name in ['farm_$oldId', InsightsCopy.name(oldId)]) {
               try {
                 await LocalStore.delete(name);
               } catch (_) {}
@@ -220,14 +264,20 @@ class Outbox extends ChangeNotifier {
             offline = e.isOffline;
             break;
           }
-          // The server refused it (e.g. bad_polygon): sending again will not help.
+          // The server refused it (e.g. bad_polygon): sending again will not
+          // help. A new farm's walked border goes back to Add farm, so the
+          // walk is not lost; an edit leaves the farm as it was on the server.
           _items.remove(item);
-          rejected.add(item.request.name);
+          final edgeBack = item.farmId == null && await Draft.load() == null;
+          if (edgeBack) await Draft.save(item.request.points, walk: false);
+          rejected.add(Refused(item, e.code, edgeBack: edgeBack));
           changed = true;
         }
       }
     } finally {
       _flushing = false;
+      _newSent += sent;
+      _newRefused.addAll(rejected);
       if (changed) {
         await _persist();
         notifyListeners();

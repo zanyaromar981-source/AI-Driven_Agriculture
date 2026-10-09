@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jutyar/api/api.dart';
+import 'package:jutyar/store/draft.dart';
 import 'package:jutyar/store/outbox.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -14,24 +15,26 @@ class _TempPaths extends PathProviderPlatform with MockPlatformInterfaceMixin {
   Future<String?> getApplicationSupportPath() async => dir;
 }
 
-/// An Api whose createFarm always fails with the given status.
+/// An Api whose createFarm always fails with the given status. [extra] is
+/// what the server's JSON error carried besides its code (null: no JSON).
 class _Failing implements Api {
-  _Failing(this.status, this.code);
+  _Failing(this.status, this.code, [this.extra]);
   final int status;
   final String code;
+  final Map<String, dynamic>? extra;
 
   @override
   Future<CreateFarmResult> createFarm(
     NewFarmRequest request, {
     String? idempotencyKey,
-  }) => Future.error(ApiException(status, code));
+  }) => Future.error(ApiException(status, code, extra));
 
   @override
   Future<CreateFarmResult> updateFarm(
     String id,
     NewFarmRequest request, {
     String? idempotencyKey,
-  }) => Future.error(ApiException(status, code));
+  }) => Future.error(ApiException(status, code, extra));
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -133,17 +136,63 @@ void main() {
   );
 
   test(
-    'a farm the server can never accept (422) is dropped and reported',
+    'a Wi-Fi login page or a used-up data bundle never drops a farm',
     () async {
       final box = Outbox.instance;
-      final before = box.items.length;
-      await box.add(_req('Bad farm'), _summary);
-      final r = await box.flush(_Failing(422, 'bad_polygon'));
-      expect(r.rejected, contains('Bad farm'));
-      expect(box.items.map((i) => i.request.name), isNot(contains('Bad farm')));
-      expect(box.items.length, lessThanOrEqualTo(before));
+      await box.add(_req('Portal farm'), _summary);
+      // What HttpApi makes of answers that are not our server's JSON.
+      for (final (status, code) in [
+        (200, 'bad_response'), // a web page instead of JSON
+        (302, 'http_302'), // a redirect to a login page
+        (403, 'http_403'),
+        (422, 'invalid'), // a 422 with no JSON error body
+        (404, 'not_found'),
+      ]) {
+        final r = await box.flush(_Failing(status, code));
+        expect(r.rejected, isEmpty, reason: '$status $code is not a refusal');
+        expect(
+          box.items.map((i) => i.request.name),
+          contains('Portal farm'),
+          reason: '$status $code must keep the farm',
+        );
+      }
     },
   );
+
+  test('a farm the server can never accept (422) is reported with its reason '
+      'and its walked edge goes back to Add farm', () async {
+    final box = Outbox.instance;
+    await box.flush(_Failing(422, 'x')); // clear what earlier tests left
+    await Draft.clear();
+    final before = box.items.length;
+    final bad = await box.add(_req('Bad farm'), _summary);
+    box.takeNews();
+    final r = await box.flush(
+      _Failing(422, 'bad_polygon', {'detail': 'encloses no cells'}),
+    );
+    final mine = r.rejected.where((x) => x.item.key == bad.key).single;
+    expect(mine.code, 'bad_polygon');
+    expect(mine.edgeBack, isTrue);
+    expect(box.items.map((i) => i.request.name), isNot(contains('Bad farm')));
+    expect(box.items.length, lessThanOrEqualTo(before));
+    final draft = await Draft.load();
+    expect(draft?.points.length, 3, reason: 'the walk is not lost');
+    final news = box.takeNews();
+    expect(news.sent, 0, reason: 'a refusal is not an upload');
+    expect(news.refused.map((x) => x.item.key), contains(bad.key));
+    await Draft.clear();
+  });
+
+  test('only farms that really went up count as uploaded', () async {
+    final box = Outbox.instance;
+    await box.flush(_Failing(422, 'x')); // clear what earlier tests left
+    await box.add(_req('Good farm'), _summary);
+    box.takeNews();
+    final r = await box.flush(_Recorder());
+    expect(r.sent, 1);
+    expect(box.takeNews().sent, 1);
+    expect(box.takeNews().sent, 0, reason: 'told once');
+  });
 
   test(
     'an edit is sent as an edit, and a newer edit replaces an older one',

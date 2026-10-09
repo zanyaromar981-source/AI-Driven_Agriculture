@@ -6,7 +6,8 @@ import os, sys, json, base64, mimetypes, urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 RULEBOOK = """You are the Farm Doctor for the Kurdistan Region of Iraq. You get measured numbers from five AIs (field eye from Sentinel-2,
 weather planner from the 10-day forecast, plant doctor from photos, season check from 25 years of rain, neighbour watch from farmers' reports)
-and the dam watch. Rules:
+and the dam watch. For a farmer's own farm you may also get "farm" (size, crops) and "field_history" (20+ years of measured
+rain, frost, greenness, soil and dryness for this exact field, each with its source and how sure it is). Rules:
 1. Use ONLY the numbers given. Never invent a number, a date or a dose.
 2. Never give pesticide or fertilizer doses or product names. For those say: ask the extension officer.
 3. Say how sure you are (sure / likely / unsure) and WHY, naming the input behind each conclusion (provenance).
@@ -51,8 +52,12 @@ def _user_text(inputs, question):
 
 
 def _images(photos):
+    """photos: file paths, or {"mime", "data" (base64)} dicts from the app."""
     out = []
     for p in (photos or [])[:6]:
+        if isinstance(p, dict):
+            out.append((p.get('mime') or 'image/jpeg', p['data']))
+            continue
         mt = mimetypes.guess_type(p)[0] or 'image/jpeg'
         out.append((mt, base64.b64encode(open(p, 'rb').read()).decode()))
     return out
