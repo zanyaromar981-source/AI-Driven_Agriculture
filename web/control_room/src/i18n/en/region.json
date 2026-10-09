@@ -46,7 +46,7 @@
   "f_note": "Note (optional)",
   "pct_range": "Percent full must be 0 to 100.",
   "day_bad": "Choose a day.",
-  "day_exists": "There is already a reading for this day. Correct it in the list instead.",
+  "day_exists": "There is already a reading for this day. You can replace it with these values.",
   "del_title": "Delete this reading?",
   "del_text": "The reading of {day} is removed for everyone.",
   "dam_source": "Lake area from Sentinel-2 satellite pictures; percent full is the lake area against the full lake.",
@@ -78,5 +78,6 @@
   "c_send": "Send (million m³)",
   "c_note": "Note",
   "urgent": "Urgent",
-  "no_reading_yet": "This district has no reading for this month yet. Saving creates one."
+  "no_reading_yet": "This district has no reading for this month yet. Saving creates one.",
+  "day_replace": "Replace that reading"
 }

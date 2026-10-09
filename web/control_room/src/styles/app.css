@@ -196,9 +196,9 @@ table.t td.act { text-align: end; white-space: nowrap; }
 [dir=rtl] .drawer { animation-name: drawerInRtl; }
 .drawer-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .drawer-head h2 { flex: 1; min-width: 0; }
-.modal-wrap { position: fixed; inset: 0; z-index: 320; display: grid; place-items: center; padding: 16px; overflow-y: auto; }
-.modal { background: var(--surface); border-radius: var(--radius); width: 520px; max-width: 100%; padding: 20px; box-shadow: 0 20px 60px #14201A44; animation: pop .25s var(--ease); }
-.modal.wide { width: 760px; }
+.modal-wrap { position: fixed; inset: 0; z-index: 320; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; padding: 16px; overflow-y: auto; }
+.modal { background: var(--surface); border-radius: var(--radius); width: min(520px, 100%); padding: 20px; box-shadow: 0 20px 60px #14201A44; animation: pop .25s var(--ease); }
+.modal.wide { width: min(760px, 100%); }
 .modal h2 { margin-bottom: 6px; }
 .modal .foot, .drawer .foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
 @media (max-width: 640px) { .drawer { padding: 16px 16px 40px; } .modal { padding: 16px; } }

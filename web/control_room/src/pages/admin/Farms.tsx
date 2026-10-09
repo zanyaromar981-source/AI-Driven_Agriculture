@@ -1,7 +1,7 @@
 // Farmers and farms (design HWGis, kMILR, nsu3f). Both lists are paged, filtered and sorted by the
 // server; totals come from /dashboard/stats/farms. Drawers open from ?farmer= and ?farm= so a search
 // hit or a link lands on them.
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Users, Map as MapIcon, Ruler, Ban, Download, FileText, UserPlus, Search, Scale, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 import { useI18n } from '../../i18n';
@@ -43,7 +43,9 @@ export default function Farms() {
   const [pg, setPg] = useState({ k: filterKey, n: 1 });
   const page = pg.k === filterKey ? pg.n : 1;
   const setPage = (n: number) => setPg({ k: filterKey, n });
-  const [form, setForm] = useState<Farmer | null | undefined>(undefined); // undefined = closed, null = new
+  // undefined = closed, null = new; ?new=farmer (Overview's button) opens the empty form once
+  const [form, setForm] = useState<Farmer | null | undefined>(() => (params.get('new') === 'farmer' && can('farmers', 'create') ? null : undefined));
+  useEffect(() => { if (params.get('new')) { const p = new URLSearchParams(params); p.delete('new'); setParams(p, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [exporting, setExporting] = useState(false);
   const [more, setMore] = useState(false); // phone: the export and report actions behind one button
   const [del, setDel] = useState<{ kind: 'farmer'; row: Farmer } | { kind: 'farm'; row: FarmSummary } | null>(null);
@@ -75,6 +77,9 @@ export default function Farms() {
   const closeDrawer = () => setParams(p => { p.delete('farmer'); p.delete('farm'); return p; });
 
   const T = stats.data?.totals;
+  // farmer count from the register itself: stats totals leave out farmers with no farm yet
+  const allFarmers = useApi<{ count: number }>(can('farmers') ? '/dashboard/farmers' + qs({ governorate: govSlug, zone, rows_per_page: 1 }) : null, ['farmers'], { auth: true });
+  const nFarmers = allFarmers.data?.count ?? T?.farmers;
   const farmerCols: Col<Farmer>[] = useMemo(() => [
     { key: 'name', label: t('farms.c_farmer'), serverSort: true, cell: f => <div><b><bdi>{f.name || t('farms.no_name')}</bdi></b><div className="muted small tabular">#{f.id}</div></div> },
     { key: 'phone', label: t('farms.c_phone'), cell: f => <Phone value={f.phone} /> },
@@ -85,7 +90,7 @@ export default function Farms() {
     { key: 'joined', label: t('farms.joined'), serverSort: true, cell: f => <span className="nowrap">{date(f.created_at, 'short')}</span> },
     { key: 'status', label: t('common.status'), cell: f => f.blocked ? <span className="pill danger">{t('common.blocked')}</span> : <span className="pill good">{t('common.active')}</span> },
     { key: 'actions', label: '', cell: f => <div className="row-acts" onClick={e => e.stopPropagation()}>
-      {can('farmers', 'create') && <a className="btn ghost sm icon" href={'#/print/letter/' + f.id} title={t('farms.letter')} aria-label={t('farms.letter')}><FileText /></a>}
+      {can('farmers') && <a className="btn ghost sm icon" href={'#/print/letter/' + f.id} title={t('farms.letter')} aria-label={t('farms.letter')}><FileText /></a>}
       {can('farmers', 'update') && <button className="btn ghost sm icon" onClick={() => setForm(f)} title={t('farms.edit_farmer')} aria-label={t('farms.edit_farmer')}><Pencil /></button>}
       {can('farmers', 'delete') && <button className="btn ghost sm icon danger" disabled={deleting} onClick={() => setDel({ kind: 'farmer', row: f })} title={t('common.delete')} aria-label={t('common.delete')}><Trash2 /></button>}
     </div> },
@@ -108,8 +113,9 @@ export default function Farms() {
     setDeleting(true);
     try {
       await api.del((del.kind === 'farmer' ? '/dashboard/farmers/' : '/dashboard/farms/') + del.row.id).catch(e => { if (!(e instanceof ApiErr && e.status === 404)) throw e; });
-      invalidate('farmers', 'farms');
+      // close the drawer first so the refresh does not ask again for the record that is gone
       if ((del.kind === 'farmer' && farmerId === del.row.id) || (del.kind === 'farm' && farmId === del.row.id)) closeDrawer();
+      invalidate('farmers', 'farms');
       toast(t('common.deleted'), 'good');
     } catch (e) { toast(errText(e as ApiError), 'danger'); } finally { setDeleting(false); }
   };
@@ -157,14 +163,14 @@ export default function Farms() {
         {can('farmers', 'create') && <button className="btn primary farms-add" onClick={() => setForm(null)} aria-label={t('farms.add_farmer')}><UserPlus /><span className="lbl">{t('farms.add_farmer')}</span></button>}
       </>} />
       <div className="grid farms-kpis mb">
-        <Kpi label={t('common.farmers')} icon={<Users />} value={T ? num(T.farmers) : '-'} note={blockedCount.data ? t('farms.n_blocked', { n: num(blockedCount.data.count) }) : ' '} />
+        <Kpi label={t('common.farmers')} icon={<Users />} value={nFarmers != null ? num(nFarmers) : '-'} note={blockedCount.data ? t('farms.n_blocked', { n: num(blockedCount.data.count) }) : ' '} />
         <Kpi label={t('common.farms')} icon={<MapIcon />} value={T ? num(T.farms) : '-'} note={T && T.farmers ? t('farms.per_farmer', { n: num(T.farms / T.farmers, 1) }) : ' '} />
         <Kpi label={t('farms.k_dunam')} icon={<Ruler />} value={T ? num(T.dunam, 1) : '-'} note={T && T.farms ? t('farms.avg_farm', { n: num(T.dunam / T.farms, 1) }) : ' '} />
         <Kpi label={t('farms.k_crops')} icon={<Scale />} value={stats.data ? num(stats.data.by_crop.filter(c => c.crop !== 'empty').length) : '-'} note={t('farms.k_crops_note')} />
         <Kpi label={t('farms.k_blocked')} icon={<Ban />} tone={blockedCount.data?.count ? 'danger' : ''} value={blockedCount.data ? num(blockedCount.data.count) : '-'} note={t('farms.k_blocked_note')} />
       </div>
       <Tabs<Tab> value={tab} onChange={k => { setTab(k); setSort(null); }} items={[
-        ...(can('farmers') ? [['farmers', t('farms.tab_farmers') + (T ? ` (${num(T.farmers)})` : '')] as [Tab, string]] : []),
+        ...(can('farmers') ? [['farmers', t('farms.tab_farmers') + (nFarmers != null ? ` (${num(nFarmers)})` : '')] as [Tab, string]] : []),
         ...(can('farms') ? [['farms', t('farms.tab_farms') + (T ? ` (${num(T.farms)})` : '')] as [Tab, string]] : []),
       ]} />
       <div className="card">

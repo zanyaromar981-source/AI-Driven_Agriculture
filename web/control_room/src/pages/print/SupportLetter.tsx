@@ -6,7 +6,7 @@
 // tempting staff to issue a second one.
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Printer, ArrowRight, Stamp, RotateCcw, Search } from 'lucide-react';
+import { Printer, ArrowLeft, Stamp, RotateCcw, Search } from 'lucide-react';
 import { useI18n, EN, KU } from '../../i18n';
 import { useAuth } from '../../auth/auth';
 import { api, qs, ApiError } from '../../api/client';
@@ -105,7 +105,7 @@ export default function SupportLetter() {
     const r = record.data?.letter;
     return (
       <div className="print-desk">
-        <div className="print-bar"><a className="btn" href={back}><ArrowRight className="flip-rtl" />{siteT('letter.back')}</a><span className="grow" /></div>
+        <div className="print-bar"><a className="btn" href={back}><ArrowLeft className="flip-rtl" />{siteT('letter.back')}</a><span className="grow" /></div>
         <div className="print-page" style={{ minHeight: 0 }}>
           <h1>{siteT('letter.check_title')}</h1>
           {record.loading && <div className="sk-rows">{[0, 1, 2].map(i => <i key={i} className="sk" />)}</div>}
@@ -130,7 +130,7 @@ export default function SupportLetter() {
   return (
     <div className="print-desk" dir={lang === 'ku' ? 'rtl' : 'ltr'}>
       <div className="print-bar" dir={siteLang === 'ku' ? 'rtl' : 'ltr'}>
-        <a className="btn" href={back}><ArrowRight className="flip-rtl" />{siteT('letter.back')}</a>
+        <a className="btn" href={back}><ArrowLeft className="flip-rtl" />{siteT('letter.back')}</a>
         <div className="lang" role="group" aria-label={siteT('letter.letter_lang')}>
           <button className={'ku' + (lang === 'ku' ? ' on' : '')} disabled={done} onClick={() => setLang('ku')}>کوردی</button>
           <button className={lang === 'en' ? 'on' : ''} disabled={done} onClick={() => setLang('en')}>EN</button>

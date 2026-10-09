@@ -111,7 +111,8 @@ export function DistrictMap({ fill, styleKey, onDistrict, focus, onBack, points,
   }, [ready, points]);
 
   return (
-    <div style={{ position: 'relative' }}>
+    // isolate: Leaflet's controls (z-index 800) and the back button stay under the sticky header
+    <div style={{ position: 'relative', isolation: 'isolate' }}>
       <div ref={el} className={'map ' + size} role="img" aria-label={t('map.aria')}>{!ready && <i className="sk block" style={{ minHeight: '100%' }} />}</div>
       {focus && onBack && (
         <button className="btn sm" style={{ position: 'absolute', top: 10, insetInlineEnd: 10, zIndex: 500 }} onClick={onBack}>{t('map.back')}</button>

@@ -39,6 +39,7 @@ export function FarmerForm({ farmer, onClose, onSaved }: { farmer: Farmer | null
   }));
   const [problems, setProblems] = useState<Problems>({});
   const [busy, setBusy] = useState(false);
+  const saving = useRef(false); // two clicks in the same instant see the same busy state; the ref stops the second
   const [err, setErr] = useState('');
   // one key per form, and the farmer once created: a retry after a failed details save only redoes the PUT
   const key = useRef(newKey());
@@ -61,10 +62,10 @@ export function FarmerForm({ farmer, onClose, onSaved }: { farmer: Farmer | null
   };
 
   const save = async () => {
-    if (busy) return;
+    if (busy || saving.current) return;
     const p = check(); setProblems(p); setErr('');
     if (Object.keys(p).length) return;
-    setBusy(true);
+    setBusy(true); saving.current = true;
     try {
       let base: Farmer;
       // PUT replaces the whole farmer, so it is built from a fresh read, never from the copy the form
@@ -101,7 +102,7 @@ export function FarmerForm({ farmer, onClose, onSaved }: { farmer: Farmer | null
       const code = e instanceof ApiError ? e.code : '';
       setErr(code === 'already_exists' ? t('farms.phone_taken') : errText(e as ApiError));
       if (e instanceof ApiError && e.field) setProblems(pp => ({ ...pp, [e.field!]: 'v.needed' }));
-    } finally { setBusy(false); }
+    } finally { setBusy(false); saving.current = false; }
   };
 
   return (
@@ -152,7 +153,7 @@ export function FarmerDrawer({ id, onClose, onOpenFarm, onEdit }: { id: string; 
     if (!f || busy) return;
     setBusy(true);
     try {
-      if (what === 'delete') { await api.del('/dashboard/farmers/' + f.id).catch(e => { if (!(e instanceof ApiError && e.status === 404)) throw e; }); invalidate('farmers', 'farms'); toast(t('common.deleted'), 'good'); onClose(); }
+      if (what === 'delete') { await api.del('/dashboard/farmers/' + f.id).catch(e => { if (!(e instanceof ApiError && e.status === 404)) throw e; }); onClose(); invalidate('farmers', 'farms'); toast(t('common.deleted'), 'good'); }
       else { const fresh = (await api.get<{ farmer: Farmer }>('/dashboard/farmers/' + f.id)).farmer; await api.put('/dashboard/farmers/' + f.id, farmerBody(fresh, { blocked: !f.blocked })); invalidate('farmers'); toast(f.blocked ? t('farms.unblocked') : t('farms.blocked_done'), 'good'); }
     } catch (e) { toast(errText(e as ApiError), 'danger'); } finally { setBusy(false); }
   };
@@ -231,7 +232,7 @@ export function FarmDrawer({ id, onClose, onOpenFarmer }: { id: string; onClose:
   const doDelete = async () => {
     if (!farm || busy) return;
     setBusy(true);
-    try { await api.del('/dashboard/farms/' + farm.id).catch(e => { if (!(e instanceof ApiError && e.status === 404)) throw e; }); invalidate('farms', 'farmers'); toast(t('common.deleted'), 'good'); onClose(); }
+    try { await api.del('/dashboard/farms/' + farm.id).catch(e => { if (!(e instanceof ApiError && e.status === 404)) throw e; }); onClose(); invalidate('farms', 'farmers'); toast(t('common.deleted'), 'good'); }
     catch (e) { toast(errText(e as ApiError), 'danger'); } finally { setBusy(false); }
   };
 

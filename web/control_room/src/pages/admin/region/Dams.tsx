@@ -94,31 +94,36 @@ function ReadingForm({ slug, reading, onClose }: { slug: string; reading?: DamRe
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  // a reading for this day exists but may be outside the list's window (older than 400 days): offer to
+  // replace it here instead of sending the user to a list where it cannot be found
+  const [clash, setClash] = useState(false);
   const n = (s: string) => (s.trim() === '' ? null : Number(s));
 
-  const save = async () => {
+  const save = async (replace = false) => {
     const p = Number(pct);
     if (!(p >= 0 && p <= 100) || pct.trim() === '') { setErr(t('region.pct_range')); return; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) { setErr(t('region.day_bad')); return; }
     setBusy(true); setErr('');
     const body = { pct_full: p, lake_area_km2: n(area), volume_bn_m3: n(vol), farm_supply_bn_m3: reading?.farm_supply_bn_m3 ?? null, source: `${HAND}${me?.name ?? ''}${note.trim() ? ': ' + note.trim() : ''}`.slice(0, 100) };
     try {
-      if (reading) await api.put(`/dashboard/dams/${slug}/readings/${reading.day}`, body);
+      if (reading || replace) await api.put(`/dashboard/dams/${slug}/readings/${reading?.day ?? day}`, body);
       else await api.post(`/dashboard/dams/${slug}/readings`, { day, ...body });
       invalidate('dams');
       toast(t('common.saved'), 'good');
       onClose();
     } catch (e) {
-      if (e instanceof ApiError && e.code === 'already_exists') setErr(t('region.day_exists'));
+      if (e instanceof ApiError && e.code === 'already_exists') { setClash(true); setErr(t('region.day_exists')); }
       else setErr(e instanceof ApiError ? errText(e) : t('err.generic'));
     } finally { setBusy(false); }
   };
 
   return (
     <Modal title={reading ? t('region.edit_reading') : t('region.add_reading')} onClose={onClose}
-      foot={<><button className="btn" onClick={onClose}>{t('common.cancel')}</button><button className="btn primary" disabled={busy} onClick={save}>{t('common.save')}</button></>}>
+      foot={<><button className="btn" onClick={onClose}>{t('common.cancel')}</button>{clash
+        ? <button className="btn primary" disabled={busy} onClick={() => save(true)}>{t('region.day_replace')}</button>
+        : <button className="btn primary" disabled={busy} onClick={() => save()}>{t('common.save')}</button>}</>}>
       <div className="form-grid">
-        <Field label={t('region.c_day')}><input type="date" value={day} disabled={!!reading} onChange={e => setDay(e.target.value)} /></Field>
+        <Field label={t('region.c_day')}><input type="date" value={day} disabled={!!reading} max={new Date().toISOString().slice(0, 10)} onChange={e => { setDay(e.target.value); setClash(false); setErr(''); }} /></Field>
         <Field label={t('region.f_pct')} hint="0 - 100"><input type="number" min={0} max={100} step="0.1" value={pct} onChange={e => setPct(e.target.value)} /></Field>
         <Field label={t('region.lake_area') + ' (km²)'}><input type="number" min={0} value={area} onChange={e => setArea(e.target.value)} /></Field>
         <Field label={t('region.volume')}><input type="number" min={0} step="0.01" value={vol} onChange={e => setVol(e.target.value)} /></Field>

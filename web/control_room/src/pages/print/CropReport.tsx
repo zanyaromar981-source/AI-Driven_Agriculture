@@ -2,7 +2,7 @@
 // area. From GET /dashboard/stats/farms; a crop's land per area is read from each area's crop list.
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Printer, ArrowRight } from 'lucide-react';
+import { Printer, ArrowLeft } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { qs } from '../../api/client';
 import { useApi } from '../../api/cache';
@@ -44,7 +44,7 @@ export default function CropReport() {
   return (
     <div className="print-desk">
       <div className="print-bar">
-        <a className="btn" href="#/admin/crops"><ArrowRight className="flip-rtl" />{t('common.back')}</a>
+        <a className="btn" href="#/admin/crops"><ArrowLeft className="flip-rtl" />{t('common.back')}</a>
         <Select value={crop} onChange={v => setP('crop', v)} options={[['', t('common.all_crops')], ...CROPS.filter(c => c.code !== 'empty').map(c => [c.code, lang === 'ku' ? c.ku : c.en] as [string, string])]} aria-label={t('cropreport.crop')} style={{ width: 'auto' }} />
         <Select value={gov} onChange={v => setP('governorate', v)} options={[['', t('common.all_govs')], ...GOVERNORATES.map(g => [g.en, nm(g)] as [string, string])]} aria-label={t('common.governorate')} style={{ width: 'auto' }} />
         <Select value={zone} onChange={v => setP('zone', v)} options={[['', t('common.all_dists')], ...DISTRICTS.filter(d => !gov || d.gov === gov).map(d => [d.slug, nm(d)] as [string, string])]} aria-label={t('common.district')} style={{ width: 'auto' }} />

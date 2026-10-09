@@ -67,6 +67,8 @@ export default function Overview() {
   const Chevron = dir === 'rtl' ? ChevronLeft : ChevronRight;
   const b = brief.data?.brief;
   const tot = stats.data?.totals;
+  const allFarmers = useApi<{ count: number }>(can('farmers') ? '/dashboard/farmers?rows_per_page=1' : null, ['farmers'], { auth: true });
+  const nFarmers = allFarmers.data?.count ?? tot?.farmers;
 
   return (
     <div className="ov">
@@ -83,7 +85,7 @@ export default function Overview() {
       </div>
 
       <div className="grid g4 mb">
-        {can('farms') && <Kpi icon={<Users />} label={t('overview.k_farmers')} value={tot ? num(tot.farmers) : '-'} note={t('overview.k_farmers_n')} />}
+        {can('farms') && <Kpi icon={<Users />} label={t('overview.k_farmers')} value={nFarmers != null ? num(nFarmers) : '-'} note={t('overview.k_farmers_n')} />}
         {can('farms') && <Kpi icon={<MapIcon />} label={t('overview.k_farms')} value={tot ? num(tot.farms) : '-'} note={tot ? t('overview.k_farms_n', { du: num(tot.dunam, 1) }) : ''} />}
         {can('messages') && <Kpi icon={<Inbox />} tone={(counts.data?.new ?? 0) > 0 ? 'warn' : ''} label={t('overview.k_msgs')} value={counts.data ? num(counts.data.new) : '-'} note={counts.data ? t('overview.k_msgs_n', { n: num(counts.data.new + counts.data.read + counts.data.replied + counts.data.closed) }) : ''} />}
         <Kpi icon={<Flame />} tone={(fires.data?.fires.length ?? 0) > 0 ? 'danger' : ''} label={t('overview.k_fires')} value={fires.data ? num(fires.data.fires.length) : '-'} note={fires.data ? t('overview.k_fires_n', { z: num(firesByZone.size) }) : ''} />
