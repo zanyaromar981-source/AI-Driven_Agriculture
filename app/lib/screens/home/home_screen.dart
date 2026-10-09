@@ -31,9 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
   /// After the editor closes: fresh name and size from the server, or the
   /// waiting change on the phone when there is no internet.
   Future<void> _afterEdit() async {
+    // A saved edit becomes a new farm (with a new id and a fresh 20-year
+    // analysis); follow it so the screen shows the new border and history.
+    final newId = Outbox.instance.replacedBy(_farm.id);
     try {
       final list = await AppScope.read(context).api.getFarms();
-      final f = list.where((x) => x.id == _farm.id);
+      final f = list.where((x) => x.id == (newId ?? _farm.id));
       if (f.isNotEmpty) _farm = f.first;
     } on ApiException {
       // Offline: fall through to the waiting change below.

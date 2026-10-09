@@ -47,7 +47,21 @@ class _Recorder implements Api {
     String? idempotencyKey,
   }) {
     calls.add('create ${request.name}');
-    return Future.error(ApiException(0, 'offline'));
+    final id = 'new_${calls.length}';
+    return Future.value(
+      CreateFarmResult(
+        farm: Farm.fromJson({
+          'id': id,
+          'name': request.name,
+          'area_dunam': 1,
+          'crops': const [],
+          'status': 'none',
+          'outline': const [],
+          'cells': const [],
+        }),
+        droppedCells: 0,
+      ),
+    );
   }
 
   @override
@@ -141,7 +155,10 @@ void main() {
       expect(box.items.where((i) => i.farmId == 'f_7').length, 1);
       final rec = _Recorder();
       await box.flush(rec);
-      expect(rec.calls.first, 'update f_7 Edit 2');
+      // No edit call on the server yet: the farm is made again, the old one deleted.
+      expect(rec.calls, ['create Edit 2', 'delete f_7']);
+      expect(box.replacedBy('f_7'), 'new_1');
+      expect(box.deletes, isNot(contains('f_7')));
     },
   );
 

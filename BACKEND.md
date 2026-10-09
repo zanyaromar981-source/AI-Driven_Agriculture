@@ -230,6 +230,8 @@ Design: `design/dashboard/jutyar_dashboard.pen`, screens 11 to 18 (builder `desi
 
 New tables: `officers (id, phone, name, role, areas, totp_secret, created_at, disabled_at)`, `audit_log (id, at, officer_id or job, action, target_kind, target_id, reason, before_json, after_json)` (insert only), `alerts (id, draft_by, approved_by, area_json, type, day, level, confidence, texts_json, state, sent_at)`, `rule_values (code, value_json, version, source, changed_by, approved_by, at)`, `inbox_actions (item_id, officer_id, action, note, at)`, `farmer_blocks (farmer_id, by, reason, at)`.
 
+- Edit until `PUT /v1/farms/{id}` exists (decided 2026-10-09, user option A): the app saves an edited farm as `POST /v1/farms` (new id, same name, new outline and crops) and then `DELETE /v1/farms/{old id}`. The new farm gets the full 20-year analysis again; the old id disappears. When the backend adds PUT, the app switches back to one call.
+
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
 - The app keeps the last farms list and, per farm, the last farm, `status` and `plan`. On opening it shows that copy at once, asks the server, and swaps in the fresh answer; if the server fails or there is no internet, the copy stays on screen with its date (since 2026-10-08 21:44). So every open still makes the normal calls. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).

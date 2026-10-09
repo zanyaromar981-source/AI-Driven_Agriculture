@@ -66,6 +66,20 @@ class Outbox extends ChangeNotifier {
 
   /// Farms deleted on the phone, waiting to be deleted on the server.
   final List<String> _deletes = [];
+
+  /// An edited farm is saved as a new farm (the server has no edit call yet,
+  /// and a new farm gets its 20-year analysis again): old id -> new id.
+  final Map<String, String> _replaced = {};
+
+  /// The farm that replaced [id] after an edit (follows chains of edits).
+  String? replacedBy(String id) {
+    var cur = _replaced[id];
+    for (var i = 0; i < 20 && cur != null && _replaced[cur] != null; i++) {
+      cur = _replaced[cur];
+    }
+    return cur;
+  }
+
   List<String> get deletes => List.unmodifiable(_deletes);
   bool _loaded = false;
   bool _flushing = false;
@@ -76,6 +90,9 @@ class Outbox extends ChangeNotifier {
     if (_loaded) return;
     _loaded = true;
     final j = await LocalStore.read(_name);
+    (j?['replaced'] as Map?)?.forEach(
+      (k, v) => _replaced[k as String] = v as String,
+    );
     _deletes.addAll([
       for (final d in (j?['deletes'] as List? ?? const [])) d as String,
     ]);
@@ -90,6 +107,7 @@ class Outbox extends ChangeNotifier {
   Future<void> _persist() => LocalStore.write(_name, {
     'items': [for (final i in _items) i.toJson()],
     'deletes': _deletes,
+    'replaced': _replaced,
   });
 
   static String newKey() {
@@ -171,11 +189,28 @@ class Outbox extends ChangeNotifier {
       }
       for (final item in List.of(_items)) {
         try {
-          final id = item.farmId;
-          if (id == null) {
-            await api.createFarm(item.request, idempotencyKey: item.key);
-          } else {
-            await api.updateFarm(id, item.request, idempotencyKey: item.key);
+          final oldId = item.farmId;
+          final made = await api.createFarm(
+            item.request,
+            idempotencyKey: item.key,
+          );
+          if (oldId != null) {
+            // An edit: the new farm replaces the old one, which is deleted
+            // now or, without internet, on the next try (deletes go first).
+            _replaced[oldId] = made.farm.summary.id;
+            if (!_deletes.contains(oldId)) _deletes.add(oldId);
+            try {
+              await api.deleteFarm(oldId);
+              _deletes.remove(oldId);
+            } on ApiException catch (e) {
+              if (e.status == 404) _deletes.remove(oldId);
+            }
+            // The old farm's copies on the phone are no longer needed.
+            for (final name in ['farm_$oldId', 'insights_$oldId']) {
+              try {
+                await LocalStore.delete(name);
+              } catch (_) {}
+            }
           }
           _items.remove(item);
           sent++;
