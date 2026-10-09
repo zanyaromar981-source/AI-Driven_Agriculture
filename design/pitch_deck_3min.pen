@@ -610,7 +610,7 @@
                       "id": "UWUk0",
                       "name": "Feature Text",
                       "fill": "#FFFFFF",
-                      "content": "Walk the field",
+                      "content": "Map your field",
                       "fontFamily": "$font-lat",
                       "fontSize": 26,
                       "fontWeight": "700"
@@ -718,13 +718,13 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "pitch_assets/screen_alerts.png",
+                    "url": "pitch_assets/screen_answer.png",
                     "mode": "cover",
                     "transform": [
                       1,
                       0,
                       0,
-                      1.217,
+                      1.418,
                       0,
                       0
                     ]
@@ -778,7 +778,7 @@
                       "id": "FG0c6",
                       "name": "Feature Text",
                       "fill": "#FFFFFF",
-                      "content": "Alerts and plan",
+                      "content": "Ask in Sorani",
                       "fontFamily": "$font-lat",
                       "fontSize": 26,
                       "fontWeight": "700"
@@ -806,13 +806,13 @@
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "pitch_assets/screen_answer.png",
+                    "url": "pitch_assets/market_home.png",
                     "mode": "cover",
                     "transform": [
                       1,
                       0,
                       0,
-                      1.418,
+                      1.56,
                       0,
                       0
                     ]
@@ -866,7 +866,7 @@
                       "id": "U0bCVV",
                       "name": "Feature Text",
                       "fill": "#FFFFFF",
-                      "content": "Ask in Sorani",
+                      "content": "Sell in the Marketplace",
                       "fontFamily": "$font-lat",
                       "fontSize": 26,
                       "fontWeight": "700"
@@ -1950,10 +1950,450 @@
     },
     {
       "type": "frame",
-      "id": "RU9ku",
+      "id": "B3ZcNO",
       "x": 8160,
       "y": 0,
-      "name": "05 Website",
+      "name": "05 Feasibility",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$deep",
+      "layout": "vertical",
+      "gap": 60,
+      "padding": [
+        110,
+        120
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "P6m5M",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Topo Texture",
+          "opacity": 0.5,
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-6.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "text",
+          "id": "O2onTq",
+          "name": "Brand",
+          "fill": "$gold",
+          "content": "FEASIBILITY",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "sgndk",
+          "name": "Title Row",
+          "width": "fill_container",
+          "gap": 36,
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "text",
+              "id": "RKHiP",
+              "name": "Headline",
+              "fill": "#FFFFFF",
+              "content": "Ready to grow.",
+              "lineHeight": 1,
+              "fontFamily": "$font-lat",
+              "fontSize": 112,
+              "fontWeight": "800",
+              "letterSpacing": -3
+            },
+            {
+              "type": "text",
+              "id": "b0EX9",
+              "name": "Secondary",
+              "fill": "$gold",
+              "content": "Small cost. Clear partner.",
+              "fontFamily": "$font-lat",
+              "fontSize": 42,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kVAKi",
+          "name": "Facts",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 28,
+          "children": [
+            {
+              "type": "frame",
+              "id": "UMRCV",
+              "name": "Fact Free",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "kDFuh",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "satellite",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "ij8DB",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Free",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "hNhq4",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "satellite and weather data",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dBoRV",
+              "name": "Fact Live",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "C3Y0s",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "server",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "O5pizO",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Live",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "u2F9i9",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "server hosted, about 2,000 tests",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gJWPd",
+              "name": "Fact ½ cent",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "j21DZl",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "coins",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "dLdqj",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "½ cent",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "F5ahe",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "per AI answer",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "i66Mg",
+              "name": "Fact Partner",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "VDHCz",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "landmark",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "OUoDS",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Partner",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "L7lXh",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "the Ministry, through our website",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "XxvPB",
+      "x": 10200,
+      "y": 0,
+      "name": "06 Close",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$ink",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "bJ6Ga",
+          "x": 0,
+          "y": 0,
+          "name": "Closing Photo",
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-7.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "RV8Bv",
+          "x": 0,
+          "y": 0,
+          "name": "Overlay",
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 270,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#16200FF2",
+                "position": 0
+              },
+              {
+                "color": "#16200F99",
+                "position": 0.45
+              },
+              {
+                "color": "#16200F00",
+                "position": 0.9
+              }
+            ]
+          },
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "type": "frame",
+          "id": "m5nt5",
+          "x": 120,
+          "y": 0,
+          "name": "Closing Block",
+          "width": 1150,
+          "height": 1080,
+          "layout": "vertical",
+          "gap": 40,
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "u1moT",
+              "name": "Headline",
+              "fill": "#FFFFFF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "From one farm to a smarter Kurdistan.",
+              "lineHeight": 1.04,
+              "fontFamily": "$font-lat",
+              "fontSize": 112,
+              "fontWeight": "800",
+              "letterSpacing": -3
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pxBya",
+          "x": 120,
+          "y": 920,
+          "name": "Footer",
+          "gap": 16,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Xwpgj",
+              "name": "Grain Sun",
+              "width": 52,
+              "height": 52,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "path",
+                  "id": "AxrCr",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Rays",
+                  "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
+                  "viewBox": [
+                    0,
+                    0,
+                    100,
+                    100
+                  ],
+                  "fill": "$gold",
+                  "width": 52,
+                  "height": 52
+                },
+                {
+                  "type": "ellipse",
+                  "id": "MuHOV",
+                  "x": 18.72,
+                  "y": 18.72,
+                  "name": "Core",
+                  "fill": "$gold",
+                  "width": 14.560000000000002,
+                  "height": 14.560000000000002
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "gv1Au",
+              "name": "Team",
+              "fill": "$on-dark-muted",
+              "content": "Jutyar · جوتیار",
+              "fontFamily": "$font-ku",
+              "fontSize": 26,
+              "fontWeight": "500"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "RU9ku",
+      "x": 0,
+      "y": 1300,
+      "name": "Backup for questions · Website",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -2307,9 +2747,9 @@
     {
       "type": "frame",
       "id": "HIPSy",
-      "x": 10200,
-      "y": 0,
-      "name": "06 Marketplace",
+      "x": 2040,
+      "y": 1300,
+      "name": "Backup for questions · Marketplace",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -2656,446 +3096,6 @@
                   ]
                 }
               ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "B3ZcNO",
-      "x": 12240,
-      "y": 0,
-      "name": "07 Feasibility",
-      "clip": true,
-      "width": 1920,
-      "height": 1080,
-      "fill": "$deep",
-      "layout": "vertical",
-      "gap": 60,
-      "padding": [
-        110,
-        120
-      ],
-      "children": [
-        {
-          "type": "frame",
-          "id": "P6m5M",
-          "layoutPosition": "absolute",
-          "x": 0,
-          "y": 0,
-          "name": "Topo Texture",
-          "opacity": 0.5,
-          "width": 1920,
-          "height": 1080,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "generated-6.png",
-            "mode": "cover"
-          }
-        },
-        {
-          "type": "text",
-          "id": "O2onTq",
-          "name": "Brand",
-          "fill": "$gold",
-          "content": "FEASIBILITY",
-          "fontFamily": "$font-lat",
-          "fontSize": 24,
-          "fontWeight": "700",
-          "letterSpacing": 3
-        },
-        {
-          "type": "frame",
-          "id": "sgndk",
-          "name": "Title Row",
-          "width": "fill_container",
-          "gap": 36,
-          "alignItems": "end",
-          "children": [
-            {
-              "type": "text",
-              "id": "RKHiP",
-              "name": "Headline",
-              "fill": "#FFFFFF",
-              "content": "Ready to grow.",
-              "lineHeight": 1,
-              "fontFamily": "$font-lat",
-              "fontSize": 112,
-              "fontWeight": "800",
-              "letterSpacing": -3
-            },
-            {
-              "type": "text",
-              "id": "b0EX9",
-              "name": "Secondary",
-              "fill": "$gold",
-              "content": "Small cost. Clear partner.",
-              "fontFamily": "$font-lat",
-              "fontSize": 42,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "kVAKi",
-          "name": "Facts",
-          "width": "fill_container",
-          "height": "fill_container",
-          "gap": 28,
-          "children": [
-            {
-              "type": "frame",
-              "id": "UMRCV",
-              "name": "Fact Free",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#FFFFFF12",
-              "cornerRadius": 24,
-              "stroke": "#FFFFFF26",
-              "strokeWidth": 2,
-              "layout": "vertical",
-              "gap": 18,
-              "padding": 36,
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "kDFuh",
-                  "name": "Icon",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "satellite",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "text",
-                  "id": "ij8DB",
-                  "name": "Big",
-                  "fill": "$gold",
-                  "content": "Free",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 84,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
-                },
-                {
-                  "type": "text",
-                  "id": "hNhq4",
-                  "name": "Fact Label",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "satellite and weather data",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 30,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "dBoRV",
-              "name": "Fact Live",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#FFFFFF12",
-              "cornerRadius": 24,
-              "stroke": "#FFFFFF26",
-              "strokeWidth": 2,
-              "layout": "vertical",
-              "gap": 18,
-              "padding": 36,
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "C3Y0s",
-                  "name": "Icon",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "server",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "text",
-                  "id": "O5pizO",
-                  "name": "Big",
-                  "fill": "$gold",
-                  "content": "Live",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 84,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
-                },
-                {
-                  "type": "text",
-                  "id": "u2F9i9",
-                  "name": "Fact Label",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "server hosted, about 2,000 tests",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 30,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "gJWPd",
-              "name": "Fact ½ cent",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#FFFFFF12",
-              "cornerRadius": 24,
-              "stroke": "#FFFFFF26",
-              "strokeWidth": 2,
-              "layout": "vertical",
-              "gap": 18,
-              "padding": 36,
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "j21DZl",
-                  "name": "Icon",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "coins",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "text",
-                  "id": "dLdqj",
-                  "name": "Big",
-                  "fill": "$gold",
-                  "content": "½ cent",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 84,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
-                },
-                {
-                  "type": "text",
-                  "id": "F5ahe",
-                  "name": "Fact Label",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "per AI answer",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 30,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "i66Mg",
-              "name": "Fact Partner",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#FFFFFF12",
-              "cornerRadius": 24,
-              "stroke": "#FFFFFF26",
-              "strokeWidth": 2,
-              "layout": "vertical",
-              "gap": 18,
-              "padding": 36,
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "VDHCz",
-                  "name": "Icon",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "landmark",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "text",
-                  "id": "OUoDS",
-                  "name": "Big",
-                  "fill": "$gold",
-                  "content": "Partner",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 84,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
-                },
-                {
-                  "type": "text",
-                  "id": "L7lXh",
-                  "name": "Fact Label",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "the Ministry's extension offices",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 30,
-                  "fontWeight": "600"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "XxvPB",
-      "x": 14280,
-      "y": 0,
-      "name": "08 Vision and scale",
-      "clip": true,
-      "width": 1920,
-      "height": 1080,
-      "fill": "$ink",
-      "layout": "none",
-      "children": [
-        {
-          "type": "frame",
-          "id": "bJ6Ga",
-          "x": 0,
-          "y": 0,
-          "name": "Closing Photo",
-          "width": 1920,
-          "height": 1080,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "generated-7.png",
-            "mode": "cover"
-          }
-        },
-        {
-          "type": "rectangle",
-          "id": "RV8Bv",
-          "x": 0,
-          "y": 0,
-          "name": "Overlay",
-          "fill": {
-            "type": "gradient",
-            "gradientType": "linear",
-            "enabled": true,
-            "rotation": 270,
-            "size": {
-              "height": 1
-            },
-            "colors": [
-              {
-                "color": "#16200FF2",
-                "position": 0
-              },
-              {
-                "color": "#16200F99",
-                "position": 0.45
-              },
-              {
-                "color": "#16200F00",
-                "position": 0.9
-              }
-            ]
-          },
-          "width": 1920,
-          "height": 1080
-        },
-        {
-          "type": "frame",
-          "id": "m5nt5",
-          "x": 120,
-          "y": 0,
-          "name": "Closing Block",
-          "width": 1150,
-          "height": 1080,
-          "layout": "vertical",
-          "gap": 40,
-          "justifyContent": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "u1moT",
-              "name": "Headline",
-              "fill": "#FFFFFF",
-              "textGrowth": "fixed-width",
-              "width": "fill_container",
-              "content": "From one farm to a smarter Kurdistan.",
-              "lineHeight": 1.04,
-              "fontFamily": "$font-lat",
-              "fontSize": 112,
-              "fontWeight": "800",
-              "letterSpacing": -3
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "pxBya",
-          "x": 120,
-          "y": 920,
-          "name": "Footer",
-          "gap": 16,
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "Xwpgj",
-              "name": "Grain Sun",
-              "width": 52,
-              "height": 52,
-              "layout": "none",
-              "children": [
-                {
-                  "type": "path",
-                  "id": "AxrCr",
-                  "x": 0,
-                  "y": 0,
-                  "name": "Rays",
-                  "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
-                  "viewBox": [
-                    0,
-                    0,
-                    100,
-                    100
-                  ],
-                  "fill": "$gold",
-                  "width": 52,
-                  "height": 52
-                },
-                {
-                  "type": "ellipse",
-                  "id": "MuHOV",
-                  "x": 18.72,
-                  "y": 18.72,
-                  "name": "Core",
-                  "fill": "$gold",
-                  "width": 14.560000000000002,
-                  "height": 14.560000000000002
-                }
-              ]
-            },
-            {
-              "type": "text",
-              "id": "gv1Au",
-              "name": "Team",
-              "fill": "$on-dark-muted",
-              "content": "Jutyar · جوتیار",
-              "fontFamily": "$font-ku",
-              "fontSize": 26,
-              "fontWeight": "500"
             }
           ]
         }
