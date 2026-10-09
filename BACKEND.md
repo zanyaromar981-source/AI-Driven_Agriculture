@@ -20,7 +20,7 @@ Checked 2026-10-09 16:20 against `FRONTEND.md` v4 with its section 14 (commit 13
 | 6 | Insights: `GET /v1/farms/{id}/insights` | built, groundwater filled daily | Nothing for the route. Other topics wait for the per-farm analysis job (FRONTEND.md 13.4). |
 | 7 | Daily brief: `GET /v1/farms/{id}/brief` | built | Nothing. The app card is next. |
 | 8 | Profile: `GET`/`PUT /v1/me` | built | Nothing. The Settings screen is next. |
-| 9 | Alwa market, farmer routes (FRONTEND.md 5) | built | Nothing for the routes. The app screens are being designed (2026-10-09). |
+| 9 | Alwa market, farmer routes (FRONTEND.md 5) | built, with offers, grade, pickup, market and hidden phones | **Simpler Alwa (user decision 2026-10-09): see 2.14.** GPS point on each listing, phones shown, nearest first, mark as sold, markets with a point. |
 
 Needed next, because their screens are being built now:
 - `DELETE /v1/account` for Settings ("Delete my account and farms").
@@ -30,7 +30,7 @@ Needed next, because their screens are being built now:
 ### 0.2 Answers to FRONTEND.md section 13
 
 1. Farm status: answer pending (user decision, 2026-10-09).
-2. Alwa: the app is designed against today's behaviour (any signed-in phone may offer, accepting sells the whole listing). Final answer pending (user decision).
+2. Alwa: the app has no offers (user decision 2026-10-09). Buyers call the seller, whose phone is shown from the start. See 2.14.
 3. Protected mode: for the website team (2.12).
 4. Per-farm analysis job: answer pending.
 5. Missing from `backend/API.md`: nothing found for the app so far.
@@ -327,6 +327,24 @@ Goal: the site opens from its cache at once, shows skeletons only for what is mi
 6. Until `/v1/versions` exists: time limits per topic (fires 10 min; Alwa 15 min; zones, dams, briefs 1 h; crops, rules, app config 6 h; staff lists 5 min), plus `ETag` when the server sends one.
 
 **Loading (user decision 2026-10-09):** the branded intro (the Grain Sun drawing itself, 00 to 100) plays only on the first visit, when the cache is empty, and its counter follows the real calls. Later visits open straight from the cache; anything not cached yet shows a skeleton shaped like its content. The news bar stays hidden until its data is cached.
+
+### 2.14 Alwa market in the app: simple listings (user decision, 2026-10-09)
+
+The farmer app uses a simpler Alwa than the one built (FRONTEND.md 5). A listing is only: crop, quantity, asking price, where it is (the phone's GPS), the seller's phone, when it was posted and when it closes. Buyers call the seller directly. There are no offers in the app.
+
+Keep as built: the 16 crop codes, `quantity_kg`, `asking_price_iqd_per_kg`, `closes_at` (at most 14 days; the app sends 14 days unless the farmer picks fewer), at most 20 open listings per phone (`too_many_listings`), cancel with `DELETE /v1/alwa/listings/{id}`, the price board (`/v1/alwa/markets/{slug}/prices`) with its empty state.
+
+What the app needs changed or added:
+
+| # | Change | Why |
+|---|---|---|
+| 1 | `POST /v1/alwa/listings` takes `lat` and `lon` (the phone's GPS, WGS84). `market`, `pickup` and `grade` become optional; the app does not send them. The backend may fill `zone_slug` from the point. | No market or area picker: the place is where the farmer stands. |
+| 2 | Every listing answer (`GET /v1/alwa/listings`, `/{id}`, `/mine`) carries `lat`, `lon` and `seller_phone`, visible to anyone signed in. | User decision: farmers sign in with their phone, so phones are shown from the start. |
+| 3 | `GET /v1/alwa/listings?lat=&lon=&crop=` sorts open listings by distance from that point and adds `distance_km` to each. | Buyers see the nearest first. |
+| 4 | `POST /v1/alwa/listings/{id}/sold` (seller only): marks the listing sold without an offer. | Today a listing is sold only by accepting an offer; the app has no offers. |
+| 5 | Each market (`AlwaMarketResponse`) carries `lat` and `lon`. | The app shows the price board of the market nearest the phone. |
+
+Not used by the app: the offer and accept routes, `/v1/alwa/offers/mine`, `/v1/alwa/deals`, `grade`, `pickup`, `buyer_kind`. They can stay for the website.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
