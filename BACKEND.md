@@ -184,6 +184,7 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 - `POST /reports` body `{"farm_id": "f_...", "cell": {"e","n"}|null, "type": "yellow_stripes|insects|wilting|flood|hail|fire|animal_disease|other", "note": "...", "photo_id": "..."|null, "lat", "lon", "t"}` → `201 {"report_id": "r_..."}`
 - `GET /reports/nearby?lat=&lon=&km=20&days=14` → `200 {"count": 3, "by_type": {"yellow_stripes": 2}, "closest": [{"type","km","days_ago"}]}`. Used by the Doctor and the Ministry only: **farmers do not see other farmers' reports** (decided 2026-10-08). Never return another farmer's phone or exact location; round to 1 km.
 - `GET /reports/mine` → `200 {"reports": [{"report_id","farm_id","cell","type","note","t","status": "sent|seen_by_officer"}]}`: the farmer's own reports list.
+- What the app does now (2026-10-09), until these routes exist: the Report screen (opened from a square's card) sends `POST /v1/messages` (FRONTEND.md 4) with `kind` `report`, `farm_id`, up to 4 `photos`, and `text` = `"<type>, square <label>: <note>"` (for example `"Yellow stripes, square E12: since Monday"`), with an `Idempotency-Key`. "My reports" is `GET /v1/messages/mine` filtered to `kind` `report`: `new` shows as "Sent", any other state as "Seen by officer". When `POST /reports` is built, the app moves to it and sends `type` and `cell` as fields.
 
 ### 2.7 Alerts (push)
 - `POST /devices` body `{"push_token": "...", "platform": "android|ios", "lang": "ku"}` → `204`.
@@ -191,6 +192,7 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 - `GET /farms/{id}/alerts?days=30` → `200 {"alerts": [{"alert_id","type","day","level","confidence","ku","en","action_ku","action_en","pushed": true|false,"done": true|false}]}`; `POST /alerts/{id}/done` → `204`.
 - `POST /devices` also takes `"notify": {"red_alerts": true, "weekly_plan": true}`.
 - `DELETE /account` → `204` (removes the phone, farms, reports and cases).
+- What the app does now (2026-10-09): the Alerts tab calls `GET /v1/farms/{id}/alerts?days=30` for the open farm and groups them by day (today, yesterday, last week); a `404` shows "Alerts are coming soon". The done tick is kept on the phone until `POST /alerts/{id}/done` exists. Settings keeps the two notification switches on the phone until `POST /devices` takes `notify`, and "Delete my account and farms" calls `DELETE /v1/account`; a `404` says nothing was deleted and to call the office.
 
 ### 2.8 Dashboard (Ministry, no login)
 - `GET /region/now` → the structure of `web/now.json` (zones with field_eye, weather, season, neighbours; dams; summary; brief). Keep that shape; the dashboard already reads it.

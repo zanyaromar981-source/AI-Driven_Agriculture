@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 17:18
+Last update: 2026-10-09 17:31
 
 ## Done
 - Website design in pen.dev, `design/web/jutyar_website.pen`: 30 frames (flow, intro, public View, login, 15 admin pages, states, phone, tablet, English), Kurdish first, real server data where it exists
@@ -31,6 +31,7 @@ Last update: 2026-10-09 17:18
 - Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
 - Backend in Rust + axum, `backend/` (clean architecture + vertical slices): slices `farmers` (sign in with phone and code, profile) and `farms` (list, create from walked corners and painted cells, get, repaint, delete, repeat-safe upload); answers in the BACKEND.md shapes so the app's `HttpApi` works unchanged; 138 tests, checked against a real Postgres; `FRONTEND.md` v3 says what is built. Also slices for the dashboard (`zones` with 33 districts, `dams`, `outlooks`, `water`, `fires`), the Alwa market, per-farm insights and farm status: 43 routes, 625 tests, critic pass done
+- Flutter: 5-tab bar (Home, Alerts, Ask the Doctor, Alwa, Settings), Alerts, Settings, Report (to the Ministry inbox) and the Alwa market (simple listings), from Pencil; view toggle Cells | Crops (2026-10-09)
 - Backend: Ask the Doctor `POST /v1/farms/{id}/ask` (slice `doctor`): question, up to 6 photos, tapped cell, language; checks the farm is the farmer's, passes the farm, its insights and the question to the local Doctor service (`DOCTOR_URL`) and returns its checked answer; proven end to end with a fake Doctor (`FRONTEND.md` section 13)
 
 ## In progress
@@ -53,7 +54,6 @@ Last update: 2026-10-09 17:18
 ## Next
 - Flutter: Alwa market screens from `design/jutyar_app.pen` (simple listings, design done 2026-10-09; backend changes in BACKEND.md 2.14)
 - Write the Kurdish in `Desktop/Jutyar_Translation/jutyar_texts.xlsx`, then `npm run texts:import` in `web/control_room`
-- Flutter: Report, Alerts, Settings (Home and Ask the Doctor done; the Report button says "not built yet")
 - Flutter: Home labels to Sorani after a native speaker check
 - Flutter: set `kTestMode` to false before any release
 - Pitch deck: swap the AI satellite picture on slide 5 for a real Sentinel-2 capture, add team names, refresh the lake numbers on demo morning
