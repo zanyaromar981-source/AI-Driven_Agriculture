@@ -1,3 +1,4 @@
+import { CROP } from '../../../data/crops';
 // Shapes and helpers for the farmers, farms, letter and report pages (backend/API.md, API 1.6.0).
 
 export type FarmerLang = 'ku' | 'kmr' | 'ar' | 'en';
@@ -25,14 +26,18 @@ export interface IssuedLetter {
 export interface LetterRecord { number: string; purpose: string; lang: 'ku' | 'en'; created_at: string; farmer_id: string; farmer_name?: string | null; staff_id: string }
 
 /**
- * Typical harvest in kg per dunam (1 dunam = 2,500 m2). Used only for the "expected harvest"
- * estimate on reports, always labelled as an estimate. Rough figures for the Kurdistan Region.
+ * Expected harvest in tonnes from the server's yield for this crop (GET /v1/crops, yield_kg_per_dunam).
+ * null when the server has no yield for it: the site never invents one, the cell shows "-".
  */
-export const YIELD_KG_PER_DUNAM: Record<string, number> = {
-  wheat: 450, barley: 350, chickpea: 150, tomato: 5000, cucumber: 4000, potato: 3500, onion: 4000, watermelon: 4000,
-  grape: 2000, olive: 600, sunflower: 250, pomegranate: 2500, okra: 1500, eggplant: 4000, pepper: 3000, apple: 2500,
+export const expectedTonnes = (crop: string, dunam: number): number | null => {
+  const y = CROP.get(crop)?.yieldKgPerDunam;
+  return y ? y * dunam / 1000 : null;
 };
-export const expectedTonnes = (crop: string, dunam: number) => (YIELD_KG_PER_DUNAM[crop] ?? 0) * dunam / 1000;
+/** Sum of known expected harvests; null when none of the crops has a yield. */
+export const sumTonnes = (rows: { crop: string; dunam: number }[]) => {
+  const v = rows.map(r => expectedTonnes(r.crop, r.dunam)).filter((x): x is number => x != null);
+  return v.length ? v.reduce((a, b) => a + b, 0) : null;
+};
 
 /** Fresh key per create form, reused on retries of the same form (FRONTEND.md 3). */
 export const newKey = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));

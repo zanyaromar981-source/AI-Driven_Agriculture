@@ -11,10 +11,10 @@ import type { FarmStats } from '../../api/types';
 import { PageHead, Kpi, Tabs, Card, Modal, Select, Field } from '../../components/ui';
 import { HBars } from '../../components/charts';
 import { DistrictMap, ramp, GOLD_RAMP } from '../../components/DistrictMap';
-import { StateBox, cropColor, cropName, useErrorText } from '../../components/domain';
+import { StateBox, cropColor, cropName, useErrorText, useCrops } from '../../components/domain';
 import { CROPS } from '../../data/crops';
 import { GOVERNORATES, DISTRICTS, DISTRICT_BY_EN } from '../../data/places';
-import { YIELD_KG_PER_DUNAM, expectedTonnes } from './farms/common';
+import { expectedTonnes, sumTonnes } from './farms/common';
 import './crops.css';
 
 type Tab = 'overview' | 'list';
@@ -31,7 +31,9 @@ export default function Crops() {
   const s = q.data;
   const crops = useMemo(() => (s ? s.by_crop.filter(c => c.crop !== 'empty').sort((a, b) => b.dunam - a.dunam) : []), [s]);
   const planted = crops.reduce((a, c) => a + c.dunam, 0);
-  const harvest = crops.reduce((a, c) => a + expectedTonnes(c.crop, c.dunam), 0);
+  const harvest = sumTonnes(crops);
+  const tonnes = (v: number | null) => (v == null ? '-' : num(v, 1));
+  useCrops();
   const top = crops[0];
   // land of the picked crop (or all planted land) per district, read in one pass over by_zone
   const perZone = useMemo(() => {
@@ -54,7 +56,7 @@ export default function Crops() {
         <Kpi label={t('crops.k_active')} icon={<Sprout />} value={s ? num(crops.length) : '-'} note={t('crops.k_active_note', { n: num(CROPS.length - 1) })} />
         <Kpi label={t('crops.k_planted')} icon={<Ruler />} value={s ? num(planted, 1) : '-'} note={s ? t('crops.k_planted_note', { n: num(s.totals.farms) }) : ' '} />
         <Kpi label={t('crops.k_top')} icon={<Wheat />} value={top ? cropName(top.crop, lang) : '-'} note={top && planted ? t('crops.k_top_note', { p: num(top.dunam / planted * 100) }) : ' '} />
-        <Kpi label={t('crops.k_harvest')} icon={<Scale />} value={s ? num(harvest, 1) + ' ' + t('common.tonnes') : '-'} note={t('crops.k_harvest_note')} />
+        <Kpi label={t('crops.k_harvest')} icon={<Scale />} value={s && harvest != null ? num(harvest, 1) + ' ' + t('common.tonnes') : '-'} note={t('crops.k_harvest_note')} />
       </div>
       <Tabs<Tab> value={tab} onChange={setTab} items={[['overview', t('crops.tab_overview')], ['list', t('crops.tab_list')]]} />
       {q.error && !s ? <StateBox kind="error" text={errText(q.error)} action={<button className="btn" onClick={q.reload}>{t('common.retry')}</button>} /> : !s ? <div className="card"><div className="sk-rows">{[0, 1, 2, 3, 4].map(i => <i key={i} className="sk" />)}</div></div> : tab === 'overview' ? (
@@ -84,7 +86,7 @@ export default function Crops() {
                 <tbody>{crops.map(c => <tr key={c.crop}>
                   <td data-label={t('crops.crop')}><span className="dotc" style={{ background: cropColor(c.crop) }} />{cropName(c.crop, lang)}</td>
                   <td className="num" data-label={t('common.farms')}>{num(c.farms)}</td><td className="num" data-label={t('common.farmers')}>{num(c.farmers)}</td>
-                  <td className="num" data-label={t('common.dunam')}><b>{num(c.dunam, 1)}</b></td><td className="num" data-label={t('crops.harvest_t')}>{num(expectedTonnes(c.crop, c.dunam), 1)}</td>
+                  <td className="num" data-label={t('common.dunam')}><b>{num(c.dunam, 1)}</b></td><td className="num" data-label={t('crops.harvest_t')}>{tonnes(expectedTonnes(c.crop, c.dunam))}</td>
                 </tr>)}</tbody>
               </table></div>
               <p className="muted small">{t('crops.estimate_note')}</p>
@@ -112,7 +114,7 @@ export default function Crops() {
                   <td data-label={t('crops.crop')}><span className="dotc" style={{ background: c.color }} /><b>{lang === 'ku' ? c.ku : c.en}</b></td>
                   <td data-label={t('crops.code')} className="mono">{c.code}</td>
                   <td data-label={t('crops.name_other')}>{lang === 'ku' ? c.en : <span className="ku-text">{c.ku}</span>}</td>
-                  <td data-label={t('crops.yield')} className="num">{YIELD_KG_PER_DUNAM[c.code] ? num(YIELD_KG_PER_DUNAM[c.code]) + ' ' + t('common.kg') : '-'}</td>
+                  <td data-label={t('crops.yield')} className="num">{c.yieldKgPerDunam ? num(c.yieldKgPerDunam) + ' ' + t('common.kg') : '-'}</td>
                   <td data-label={t('common.dunam')} className="num">{used ? num(used.dunam, 1) : '0'}</td>
                   <td data-label={t('common.status')}>{used ? <span className="pill good">{t('crops.in_use')}</span> : <span className="pill">{t('crops.not_used')}</span>}</td>
                 </tr>;

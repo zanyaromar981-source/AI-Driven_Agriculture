@@ -20,5 +20,14 @@
   "bad_reason": "Write a reason of 3 to 500 characters.",
   "missing_text": "Write the Kurdish text first.",
   "no_reply": "Write a reply first.",
-  "market_in_use": "This market is still in use."
+  "market_in_use": "This market is still in use.",
+  "bad_request": "The request could not be read.",
+  "unknown_role": "This role does not exist any more.",
+  "unknown_crop": "This crop is unknown or switched off.",
+  "crop_in_use": "Farms still use this crop. Switch it off instead.",
+  "reserved_code": "This code is reserved.",
+  "listing_has_deal": "This listing already has a deal.",
+  "listing_not_open": "This listing is not open any more.",
+  "bad_month": "The month is not valid.",
+  "bad_credentials": "The email or password is wrong."
 }

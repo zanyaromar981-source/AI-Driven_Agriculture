@@ -1,18 +1,27 @@
 // Small pieces that know Jutyar data: crops, places, dryness bands, phones, empty states.
 import type { ReactNode } from 'react';
 import { CloudOff, Inbox, Lock } from 'lucide-react';
-import { CROP } from '../data/crops';
+import { CROP, setServerCrops } from '../data/crops';
+import { useApi } from '../api/cache';
 import { DISTRICT_BY_SLUG, GOV_BY_NAME, SUB_BY_SLUG, GOVERNORATES, DISTRICTS, slugify } from '../data/places';
 import type { Band } from '../api/types';
 import type { ApiError } from '../api/client';
 import { useI18n } from '../i18n';
 import { Pill, type Tone } from './ui';
 
+/** Load the server's crop table once per page view (cached, topic crops) and use it everywhere. */
+export function useCrops() {
+  const q = useApi<{ crops: { code: string; name_en: string; name_ku?: string | null; color: string; yield_kg_per_dunam?: number | null; active?: boolean }[] }>('/crops', ['crops']);
+  if (q.data?.crops?.length) setServerCrops(q.data.crops);
+  return q;
+}
+
 export function cropName(code: string, lang: 'ku' | 'en') { const c = CROP.get(code); return c ? (lang === 'ku' ? c.ku : c.en) : code; }
 export const cropColor = (code: string) => CROP.get(code)?.color ?? '#B9C2B5';
 
 export function CropTag({ code }: { code: string }) {
   const { lang } = useI18n();
+  useCrops();
   return <span className="nowrap"><span className="dotc" style={{ background: cropColor(code) }} />{cropName(code, lang)}</span>;
 }
 

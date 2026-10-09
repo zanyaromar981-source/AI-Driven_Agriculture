@@ -15,7 +15,7 @@ export const NAV: { group: string; items: NavItem[] }[] = [
     { key: 'roles', path: '/admin/roles', icon: ShieldCheck, needs: 'roles' },
   ] },
   { group: 'fields', items: [
-    { key: 'crops', path: '/admin/crops', icon: Wheat, needs: 'farms' },
+    { key: 'crops', path: '/admin/crops', icon: Wheat, needs: 'crops' },
     { key: 'region', path: '/admin/region', icon: Map, needs: 'zones' },
   ] },
   { group: 'act', items: [

@@ -9,11 +9,11 @@ import { useApi } from '../../api/cache';
 import type { FarmStats } from '../../api/types';
 import { Select } from '../../components/ui';
 import { HBars } from '../../components/charts';
-import { StateBox, cropColor, cropName, useErrorText } from '../../components/domain';
+import { StateBox, cropColor, cropName, useErrorText, useCrops } from '../../components/domain';
 import { GrainSun } from '../../motion/GrainSun';
 import { GOVERNORATES, DISTRICTS, DISTRICT_BY_SLUG, GOV_BY_NAME } from '../../data/places';
 import { CROPS } from '../../data/crops';
-import { expectedTonnes } from '../admin/farms/common';
+import { expectedTonnes, sumTonnes } from '../admin/farms/common';
 import './print.css';
 
 export default function CropReport() {
@@ -37,7 +37,9 @@ export default function CropReport() {
     return s.by_crop.filter(c => c.crop !== 'empty').map(c => ({ key: c.crop, label: cropName(c.crop, lang), farms: c.farms, farmers: c.farmers as number | null, dunam: c.dunam, crop: c.crop })).sort((a, b) => b.dunam - a.dunam);
   }, [s, crop, zone, lang, t]);
   const total = rows.reduce((a, r) => ({ farms: a.farms + r.farms, dunam: a.dunam + r.dunam }), { farms: 0, dunam: 0 });
-  const harvest = rows.reduce((a, r) => a + expectedTonnes(r.crop, r.dunam), 0);
+  const harvest = sumTonnes(rows);
+  const tonnes = (v: number | null) => (v == null ? '-' : num(v, 1));
+  useCrops();
 
   return (
     <div className="print-desk">
@@ -62,7 +64,7 @@ export default function CropReport() {
             <div><small>{crop ? t('cropreport.plots') : t('common.farms')}</small><b>{num(crop ? total.farms : s.totals.farms)}</b></div>
             <div><small>{t('common.farmers')}</small><b>{num(crop ? s.by_crop.find(c => c.crop === crop)?.farmers ?? 0 : s.totals.farmers)}</b></div>
             <div><small>{t('govreport.dunam')}</small><b>{num(total.dunam, 1)}</b></div>
-            <div><small>{t('govreport.harvest')}</small><b>{num(harvest, 1)} {t('common.tonnes')}</b></div>
+            <div><small>{t('govreport.harvest')}</small><b>{harvest != null ? num(harvest, 1) + ' ' + t('common.tonnes') : '-'}</b></div>
           </div>
           {!rows.length ? <StateBox kind="empty" title={t('cropreport.none')} /> : <>
             <h2>{crop ? t('cropreport.by_area') : t('govreport.land_per_crop')}</h2>
@@ -71,8 +73,8 @@ export default function CropReport() {
             <div className="print-scroll"><table className="pt">
               <thead><tr><th>{crop ? (zone ? t('common.subdistrict') : t('common.district')) : t('govreport.crop')}</th><th className="num">{crop ? t('cropreport.plots') : t('common.farms')}</th>{!crop && <th className="num">{t('common.farmers')}</th>}<th className="num">{t('govreport.dunam')}</th><th className="num">{t('govreport.harvest_t')}</th></tr></thead>
               <tbody>
-                {rows.map(r => <tr key={r.key}><td>{r.label}</td><td className="num">{num(r.farms)}</td>{!crop && <td className="num">{num(r.farmers ?? 0)}</td>}<td className="num">{num(r.dunam, 1)}</td><td className="num">{num(expectedTonnes(r.crop, r.dunam), 1)}</td></tr>)}
-                <tr className="total"><td>{t('govreport.total')}</td><td className="num">{num(total.farms)}</td>{!crop && <td />}<td className="num">{num(total.dunam, 1)}</td><td className="num">{num(harvest, 1)}</td></tr>
+                {rows.map(r => <tr key={r.key}><td>{r.label}</td><td className="num">{num(r.farms)}</td>{!crop && <td className="num">{num(r.farmers ?? 0)}</td>}<td className="num">{num(r.dunam, 1)}</td><td className="num">{tonnes(expectedTonnes(r.crop, r.dunam))}</td></tr>)}
+                <tr className="total"><td>{t('govreport.total')}</td><td className="num">{num(total.farms)}</td>{!crop && <td />}<td className="num">{num(total.dunam, 1)}</td><td className="num">{harvest != null ? num(harvest, 1) : '-'}</td></tr>
               </tbody>
             </table></div>
             <p className="print-note">{t('govreport.estimate_note')}</p>
