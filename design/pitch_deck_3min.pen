@@ -258,7 +258,7 @@
               "fill": "#FFFFFF",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "50,000 farmers.\n215 advisers.",
+              "content": "Thousands of farmers.\nToo little advice.",
               "lineHeight": 1.02,
               "fontFamily": "$font-lat",
               "fontSize": 108,

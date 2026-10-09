@@ -245,7 +245,7 @@
           "x": 120,
           "y": 0,
           "name": "Title Block",
-          "width": 900,
+          "width": 1000,
           "height": 1080,
           "layout": "vertical",
           "gap": 28,
@@ -258,10 +258,10 @@
               "fill": "#FFFFFF",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "50,000 farmers.\n215 advisers.",
+              "content": "Thousands of farmers.\nToo little advice.",
               "lineHeight": 1.02,
               "fontFamily": "$font-lat",
-              "fontSize": 108,
+              "fontSize": 84,
               "fontWeight": "800",
               "letterSpacing": -4
             },
@@ -3294,7 +3294,7 @@
         },
         {
           "type": "frame",
-          "id": "xl63W",
+          "id": "QxFtN",
           "name": "Title Row",
           "width": "fill_container",
           "gap": 36,
@@ -3302,7 +3302,7 @@
           "children": [
             {
               "type": "text",
-              "id": "BUAnJ",
+              "id": "Oip3J",
               "name": "Headline",
               "fill": "#FFFFFF",
               "content": "Safe by design.",
@@ -3311,16 +3311,6 @@
               "fontSize": 112,
               "fontWeight": "800",
               "letterSpacing": -3
-            },
-            {
-              "type": "text",
-              "id": "w6LZTz",
-              "name": "Secondary",
-              "fill": "$gold",
-              "content": "Little data. Honest answers.",
-              "fontFamily": "$font-lat",
-              "fontSize": 42,
-              "fontWeight": "500"
             }
           ]
         },

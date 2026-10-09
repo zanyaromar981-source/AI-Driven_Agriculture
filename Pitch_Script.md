@@ -26,11 +26,11 @@ From the organizers' message: doors open at 7:00, be at the table by 7:30, test 
 
 ### The script
 
-228 words in total, about 1 minute 50 seconds spoken, which leaves about 40 seconds for handling the phone. The organizers say: start as soon as the judges arrive and show what you built straight away, so the demo starts after one sentence. Slide 1 (the title) is on the screen before they arrive.
+231 words in total, about 1 minute 50 seconds spoken, which leaves about 40 seconds for handling the phone. The organizers say: start as soon as the judges arrive and show what you built straight away, so the demo starts after one sentence. Slide 1 (the title) is on the screen before they arrive.
 
 | Time | Criterion | Show | Say | Words |
 |---|---|---|---|---|
-| 0:00 to 0:10 | Problem and local impact | Slide 2 | "Kurdistan has about 50,000 wheat farmers and only about 215 advisers. Jutyar puts an adviser in every farmer's pocket. Let me show you." | 23 |
+| 0:00 to 0:10 | Problem and local impact | Slide 2 | "Kurdistan has tens of thousands of farmers, but access to extension advice is limited. Jutyar puts an adviser in every farmer's pocket. Let me show you." | 26 |
 | 0:10 to 1:15 | Build and Demo (double) | Slide 3, phone in your hand | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm. I walked its corners and marked my crops. The app cuts it into 10 metre squares, the size of one satellite pixel. Here is my 10-day plan from the live forecast. I asked a question with a photo, and this is the answer, in Sorani. And this is Alwa, the marketplace: my tomatoes are on sale, and other farmers see them on their phones." | 87 |
 | 1:15 to 1:50 | AI Integration and Use (double) | Slide 4 | "AI is the translator. The satellite, the forecast and the field's history are only numbers. An AI model turns them, with the farmer's photo, into advice in Sorani, and it says when it is unsure. Every night another AI agent writes the daily brief for the region. And we built all of this with AI: Claude, Codex and Pencil." | 59 |
 | 1:50 to 2:30 | Feasibility and scope, then close | Slide 5 | "Is it realistic? The data is free. The server is live, with about 2,000 tests. One AI answer costs half a cent. The Ministry gets its own website, with the farms, the alerts and the region on one map. We start with wheat farmers in Slemani. App, server and website, built in two days. This is Jutyar. Thank you." | 59 |
@@ -45,6 +45,7 @@ If the phone or the network fails: say "the network is against us" once, stay on
 | Build and Demo | "What did you have before the hackathon?" | Research and tests of the method on past seasons, done on 5 to 7 October. Every line of the app, the server and the website was written on 8 and 9 October. The repo history shows it. |
 | AI | "Where exactly is the AI? Is the satellite part AI?" | No. The satellite and weather numbers are calculations, and we say so. AI is the translator: it turns those numbers and the farmer's photo into Sorani advice, and it writes the nightly brief. |
 | AI | "How do you stop it giving wrong advice?" | It answers only from our rulebook and the measured data, never gives a chemical dose, shows how sure it is, and says "see an officer" when the inputs disagree. Photo diagnosis is not yet tested in Kurdistan: next step is 100 local photos with the plant-protection office. |
+| Problem | "How many advisers are there?" | We do not have a reliable total. A 2024 study covered 215 staff across extension, research and the directorates, and they described the extension service as weak. |
 | Problem | "Was Slemani really hit?" | 57 percent of normal rain in 2024/25 on our 8 Slemani points. Erbil and Duhok were hit harder. Dukan fell to 24 percent of capacity in June 2025 (AFP). |
 | Feasibility | "Who pays? Who runs it?" | Running cost is small: free data, a small server, about half a cent per AI answer on Gemini (our estimate). It needs a partner for trust and reach, and the Ministry's extension offices are the obvious one. We have not signed anyone yet. |
 | Feasibility | "Is the scope too big?" | The core is small: one farm, one view, one message. The Marketplace and the website use the same server. We would launch the core first. |
@@ -58,12 +59,12 @@ If the phone or the network fails: say "the network is against us" once, stay on
 
 ## Round 2 on stage: if we reach the final
 
-Six finalists pitch on stage: 5 minutes, then questions. Round 2 is scored fresh on five criteria of equal weight: Public Value and Impact, Innovation and Differentiation, Scalability and Adoption, Business Model and Investment Readiness, Trust and Responsible Use. Use `design/Jutyar_Pitch_Round2.pptx` (10 slides; the design is `design/pitch_deck_round2.pen`). The lines below are 457 words, about 3 minutes 40 seconds spoken, which leaves about a minute for the demo and pauses, with a target finish of 4:50.
+Six finalists pitch on stage: 5 minutes, then questions. Round 2 is scored fresh on five criteria of equal weight: Public Value and Impact, Innovation and Differentiation, Scalability and Adoption, Business Model and Investment Readiness, Trust and Responsible Use. Use `design/Jutyar_Pitch_Round2.pptx` (10 slides; the design is `design/pitch_deck_round2.pen`). The lines below are 470 words, about 3 minutes 40 seconds spoken, which leaves about a minute for the demo and pauses, with a target finish of 4:50.
 
 | Time | Criterion | Slide | Say |
 |---|---|---|---|
 | 0:00 to 0:10 |  | 1 | "We are AI-Driven Agriculture, and this is Jutyar." |
-| 0:10 to 0:45 | Public Value and Impact | 2 | "Kurdistan has about 50,000 wheat farmers and about 215 advisers: one for every 230 farmers. In the 2025 drought the region lost about 800,000 tonnes of wheat. That winter Slemani got 57 percent of its normal rain, and most farmers learned it from their own fields. Jutyar gives every farmer advice for his own field, every week, in his own language, and gives the Ministry the same picture for the whole region." |
+| 0:10 to 0:45 | Public Value and Impact | 2 | "Kurdistan has tens of thousands of farmers, but access to extension advice is limited. In a 2024 study, the region's own extension staff described the service as weak. In the 2025 drought the region lost about 800,000 tonnes of wheat. That winter Slemani got 57 percent of its normal rain, and most farmers learned it from their own fields. Jutyar gives every farmer advice for his own field, every week, in his own language, and gives the Ministry the same picture for the whole region." |
 | 0:45 to 1:30 | (demo) | 3 | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm. I walked its corners and marked my crops. The app cuts it into 10 metre squares, the size of one satellite pixel. Here is my 10-day plan from the live forecast. I asked a question with a photo, and this is the answer, in Sorani. And this is Alwa, the marketplace: my tomatoes are on sale, and other farmers see them on their phones." |
 | 1:30 to 2:05 | Innovation and Differentiation | 4 | "What is new? Our research found no farm AI in Kurdish anywhere. Jutyar maps a field in 10 metre squares, reads it from space, and answers in Sorani, in one message of five parts, including what it cannot tell. And the farmer and the Ministry work on the same data." |
 | 2:05 to 2:35 | Innovation (AI) | 5 | "AI is the translator. The satellite, the forecast and the field's history are only numbers. An AI model turns them, with the farmer's photo, into advice in Sorani, and it says when it is unsure. Every night another AI agent writes the daily brief for the region. And we built all of this with AI: Claude, Codex and Pencil." |
@@ -77,7 +78,7 @@ Six finalists pitch on stage: 5 minutes, then questions. Round 2 is scored fresh
 
 | Criterion | Likely question | Answer |
 |---|---|---|
-| Public value | "How many people does this reach?" | About 50,000 wheat farmers in the Kurdistan Region and the Ministry offices that serve them. The 2025 drought cost about 800,000 tonnes of wheat (Peregraf), so even a small share saved is large. |
+| Public value | "How many people does this reach?" | Tens of thousands of farmers in the Kurdistan Region and the Ministry offices that serve them. We do not quote an exact count of farmers or advisers. The 2025 drought cost about 800,000 tonnes of wheat (Peregraf), so even a small share saved is large. |
 | Innovation | "FAO and others already do satellite monitoring. What is different?" | Those tools are for experts and are not in Kurdish. Our research found no farm AI in Kurdish at all. Jutyar goes down to one farmer's field and answers in Sorani. |
 | Scalability | "Can it work outside Slemani?" | It already holds all 33 districts in four governorates. The satellite and weather data cover the whole of Iraq, so a new area needs district borders and local crop rules, not new sensors. |
 | Business model | "Who pays, and can it keep running?" | The plan is a yearly licence for the Ministry's website, free for farmers. Running cost is small: free data, a small server, and about half a cent per AI answer on Gemini (our estimate; the test server answers through Codex today). No contract exists yet. We need one pilot district. |
@@ -97,7 +98,7 @@ To settle before the final:
 | # | Slide | Criterion | What it shows |
 |---|---|---|---|
 | 1 | AI-Driven Agriculture | | Title and sun logo. On screen while the judges arrive |
-| 2 | 50,000 farmers. 215 advisers. | Problem and local impact | "Help comes too late." and Slemani at 57% of normal rain |
+| 2 | Thousands of farmers. Too little advice. | Problem and local impact | "Help comes too late." and Slemani at 57% of normal rain |
 | 3 | Built in two days. | Build and Demo | Five app screens: sign in by SMS, map your field, see it in 10 m squares, ask in Sorani, sell in the Marketplace |
 | 4 | AI is the translator. | AI | The Sorani answer with its five parts, the nightly AI brief, built with Claude, Codex and Pencil AI |
 | 5 | Ready to grow. | Feasibility and scope | Free data, live server, half a cent per AI answer, the Ministry through our website. The pitch ends here |
@@ -131,7 +132,7 @@ Checked against `FRONTEND.md` section 11 and 14 on 10 October. Say only the left
 
 | Number | Where | Source |
 |---|---|---|
-| About 50,000 wheat farmers, about 215 advisers | Problem slide | `reports/What_AI_Can_Do_For_KRI_Agriculture.md`. A figure for the Kurdistan Region, not Sulaimani alone |
+| "Tens of thousands of farmers", "advice is limited" | Problem slide | No exact count is used on purpose. The 215 in our reports is the research population of a 2024 study (extension, research and directorate staff; UHD Journal of Science and Technology 8(1)), not a total of advisers. The same study has the staff describing extension work as weak. The 50,000 wheat farmers figure in our reports has no source next to it |
 | 57% of normal rain, Slemani, winter 2024/25 | Problem slide | `evidence/past_seasons/FINDINGS.md` (381 mm on 8 Slemani points) |
 | About 800,000 tonnes of wheat lost in 2025 | Round 2, spoken | `reports/AI in agriculture investigation.md`, citing Peregraf |
 | 10 metre squares | Demo, innovation slide | The app's grid, one Sentinel-2 pixel (`BACKEND.md`) |
