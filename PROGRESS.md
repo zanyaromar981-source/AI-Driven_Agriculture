@@ -2,9 +2,10 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 16:36
+Last update: 2026-10-09 16:45
 
 ## Done
+- Website design in pen.dev, `design/web/jutyar_website.pen`: 30 frames (flow, intro, public View, login, 15 admin pages, states, phone, tablet, English), Kurdish first, real server data where it exists
 - Alwa market design in Pencil (2026-10-09), `design/jutyar_app.pen` section "Alwa market": 8 phone screens (home with price board and listings, listing, make an offer, my offers, sell a crop, my listings, my listing with Accept, deal done) and a board of empty and error states; Alwa is now a tab in the Tab Bar. Previews `design/jutyar_alwa_*_preview.png`. The user saves the .pen with Cmd+S
 - Flutter app follows FRONTEND.md v4 (2026-10-09): the phone number is always checked before a code is sent, also in test mode; sign-in errors in words (429 countdown from retry_after_s, 503 try again, 422 check the number); Home shows a calm "10-day plan coming soon" for the plan route's 404; Ask the Doctor sends each photo as the type its bytes are (timeout of 120 s and per-part types were already right); Field history shows the groundwater topic as the wider area with source and as_of; an outline that touches itself at one point is refused with the existing message; area and inside_pct rounding checked (already rounded everywhere)
 - Control Room website `web/control_room/` (React + Vite): public View page and Admin behind a login, Kurdish (right to left) and English, phone to desktop; farmers and farms with create, edit, delete, support letter and government report; crop register and crop report; region data with hand corrections; alerts to everyone; inbox and news bar; the Doctor review, answer bank and problems map; Alwa read only with average prices; rules explained; app control; every text editable; data jobs status; settings. Sample data in the browser behind one data layer
