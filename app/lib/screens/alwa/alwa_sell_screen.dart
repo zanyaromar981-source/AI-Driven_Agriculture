@@ -153,6 +153,7 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
           lat: fix.lat,
           lon: fix.lon,
           days: _days,
+          sellerPhone: _phone,
         ),
         idempotencyKey: _key,
       );
@@ -451,11 +452,17 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
           loading: _sending,
           onPressed: _submit,
         ),
-        HintLine(
+        Text(
           _openCount == null
               ? 'Up to $kAlwaMaxOpen open listings per phone.'
               : 'Up to $kAlwaMaxOpen open listings per phone. You have $_openCount open.',
-          icon: Icons.checklist_rounded,
+          textAlign: TextAlign.center,
+          style: latText(
+            size: 12,
+            weight: FontWeight.w500,
+            color: JColors.muted,
+            height: 1.4,
+          ),
         ),
       ],
     );
@@ -672,20 +679,20 @@ class _StepButton extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     button: true,
     label: label,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: JColors.bg,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: onTap == null ? JColors.levelNone : JColors.ink,
+    child: Opacity(
+      // A step that cannot be taken is faded whole (design: 40%).
+      opacity: onTap == null ? 0.4 : 1,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: JColors.bg,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: JColors.ink),
         ),
       ),
     ),

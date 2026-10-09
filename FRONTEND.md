@@ -2,22 +2,41 @@
 
 For everyone building the farmer app and the website (public View page and staff Admin). The backend in `backend/` is the one source of data: the app and the website read and write everything through it and keep no numbers of their own.
 
-Status: v5, 2026-10-09, API version 1.6.0. Three places describe the API, from short to complete:
+Status: v7, 2026-10-10, API version 1.7.0. Three places describe the API, from short to complete:
 
 1. **This file**: how things work, which screen calls what, the rules, what is empty today.
-2. **`backend/API.md`**: every route (155 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
+2. **`backend/API.md`**: every route (189 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
 3. **`/api-docs` on the server**: the same, clickable, with a "try it" button.
 
 `BACKEND.md` is where the frontend writes what it needs. Where the two files disagree, say so in the files and we fix one of them.
 
-Contents: 1 where it is, 2 who calls what, 3 rules for every route, 4 the farmer app, 5 Alwa market, 6 Ask the Doctor, 7 public data, 8 website sign-in and roles, 9 website data routes, 10 caching, 11 what has real data today, 12 things that trip you up, 13 error codes, 14 not built yet, 15 open questions.
+## 0. What changed, and what you need to do
+
+Newest first. Each line says what to change on your side. Details are in the sections named.
+
+| What is new | App team | Website team |
+|---|---|---|
+| **Workers for hire** (section 5B) | New screens: "Find workers" (`GET /v1/workers`, nearest first, tap to call) and "Offer my work" (`PUT /v1/workers/me` with name and cost; the phone is the signed-in one). | A staff list with remove: `GET /v1/dashboard/workers`, `DELETE /v1/dashboard/workers/{id}` (uses `farmers:read` and `farmers:delete`). |
+| **Simpler Alwa** (section 5) | Drop the workaround: stop fetching markets to pick one and stop sending `pickup: "farm"`; send only crop, kg, price, `lat`, `lon`, `closes_at`. Send the token on the listing reads to get `seller_phone`. Pass `lat` and `lon` to `GET /v1/alwa/listings` for nearest first and `distance_km`. Use `POST /v1/alwa/listings/{id}/sold`. | Listings may have `market`, `pickup` and `grade` null. Markets have `lat` and `lon` to edit. |
+| **Alerts and push** (section 4) | Alerts screen: `GET /v1/alerts`, `POST /v1/alerts/{id}/done`. Add Firebase messaging and call `POST /v1/devices` at every start. Settings: `DELETE /v1/account`. | Alerts of a farm: `GET /v1/dashboard/farms/{id}/alerts`. |
+| **10-day plan** (section 4) | Nothing to change: `GET /v1/farms/{id}/plan` now answers. Treat `404 plan_not_ready` and `plan_stale` as "coming soon". `ku` equals `en` for now: build the Sorani from `type` and `code`. | The Rules page now changes the next plans. Plan of a farm: `GET /v1/dashboard/farms/{id}/plan`. |
+| **Field history** (section 4) | Nothing to change: `/insights` is filled on the server for every farm. Read `fire_detections_7d` instead of `fire_detections`. Optional new chart data: `GET /v1/farms/{id}/history`. | Readings of a farm: `GET /v1/dashboard/farms/{id}/insights` and `/history`. |
+| **Ask the Doctor** (section 6) | Nothing to change: it answers through Codex on the test server (about 40 s). Keep the 90 s timeout. | Nothing. |
+| **Crops from the server** (section 4) | Read names and colours from `GET /v1/crops` instead of the built-in list. Handle `422 unknown_crop`. | Crops page: `/v1/dashboard/crops`. |
+| **App settings and update gate** (section 4) | Read `GET /v1/app/config` at start; send `X-App-Version` on every call; show the update screen on `426`. Show "blocked" on `403 blocked`. | App control page: `/v1/dashboard/app/config`, `/app/versions`. |
+| **Messages to the Ministry** (section 4) | `POST /v1/messages`, `GET /v1/messages/mine`. | Inbox: `/v1/dashboard/messages...`. |
+| **A place on every farm** | Farm answers carry `governorate`, `zone_slug`, `sub_zone_slug`: show them, nothing to send. | Farm filters and the totals routes (section 9). |
+| **Dams, district history, fire wind** (sections 7, 11) | Region screens now have data: dams since 2008, change against last year, wind at fires. | The same. Label dam `pct_full` as "lake area, % of full". |
+| **Being built:** the Marketplace of `BACKEND.md` 2.16 (products with units) | Keep selling crops by the kg until this table says it is in. | Nothing yet. |
+
+Contents: 0 what changed and what to do, 1 where it is, 2 who calls what, 3 rules for every route, 4 the farmer app, 5 Alwa market, 5B workers for hire, 6 Ask the Doctor, 7 public data, 8 website sign-in and roles, 9 website data routes, 10 caching, 11 what has real data today, 12 things that trip you up, 13 error codes, 14 not built yet, 15 open questions.
 
 ## 1. Where it is
 
 - **Test server:** `http://95.217.14.92:8790`. Everything is under `/v1`, so the app is built with `--dart-define=API_URL=http://95.217.14.92:8790/v1`. It is a small shared server for the competition, plain `http`, not for real farmers' data.
 - **Clickable docs:** `http://95.217.14.92:8790/api-docs`.
 - **Is it up?** `GET /status` (the process) and `GET /health` (the database).
-- **Which version is it?** Every answer under `/v1` carries the header `X-Api-Version`. This file describes 1.6.0.
+- **Which version is it?** Every answer under `/v1` carries the header `X-Api-Version`. This file describes 1.7.0.
 - **A staff account for testing the website:** there is one with the `Owner` role (every permission) on the test server. Ask Arya for its email and password; they are not written in this public repo.
 - **A farmer account:** sign in with any real Iraqi mobile number; the code is really sent.
 - **Run your own:** `backend/README.md` (Rust, Docker, three commands).
@@ -28,7 +47,7 @@ There are four kinds of callers. Each has its own way in, and none works on anot
 
 | Caller | Gets in with | Routes |
 |---|---|---|
-| The farmer app | a farmer token: `POST /v1/auth/otp/send`, then `/verify` | `/v1/me`, `/v1/farms...`, `/v1/messages...`, `/v1/alwa...` |
+| The farmer app | a farmer token: `POST /v1/auth/otp/send`, then `/verify` | `/v1/me`, `/v1/farms...`, `/v1/alerts...`, `/v1/devices`, `/v1/messages...`, `/v1/alwa...`, `/v1/workers...`, `/v1/account` |
 | The website's Admin part | a staff token: `POST /v1/dashboard/auth/login` | everything under `/v1/dashboard` |
 | Anyone, no login (the View page, the app before sign-in) | nothing | read-only: `/v1/region...`, `/v1/zones...`, `/v1/dams...`, `/v1/fires`, `/v1/outlooks...`, `/v1/water/plan`, `/v1/briefs...`, `/v1/stats/farms`, `/v1/app/config`, `/v1/versions`, and the Alwa market's public pages |
 | Our data jobs | a service key | `/v1/ingest...`. Not for the app or the website. |
@@ -79,7 +98,7 @@ Send a token as `Authorization: Bearer <token>`. JSON in and out, UTF-8, field n
               "max_corners": 50, "gps_meters": 10},
    "help_phone": null, "public_farm_totals": true, "updated_at": "..."}
   ```
-- Hide a part of the app whose switch in `features` is `false`. `plan`, `reports` and `push` are off because the server does not have them yet.
+- Hide a part of the app whose switch in `features` is `false`. `plan`, `reports` and `push` start switched off; the plan and alerts now exist on the server, so staff can switch `plan` on, and `push` once Firebase is set up.
 - Show the maintenance screen while `maintenance` is `true`, and the announcement while `announcement_on` is `true`.
 - **Send `X-App-Version` on every call.** When it is below `min_version`, every farmer route and both sign-in routes answer `426 {"error": "update_required"}`: show the update screen with `update_message_*`. `GET /v1/app/config` is never refused, so an old app can still learn it must update. A call without the header is let through.
 - Honest limit: the server does not yet enforce `limits` or `features` from these settings; they are what the app reads. The server's own limits are the same numbers today.
@@ -111,15 +130,33 @@ What to know:
 | Call | What comes back | State today |
 |---|---|---|
 | `GET /v1/farms/{id}/status` | the farm from space: picture date, greenness, per-cell levels | a placeholder: every measured field is `null`, `cells` is empty, `crops` lists the real crop plots with `level: "none"`. There is no store for satellite readings yet. |
-| `GET /v1/farms/{id}/insights` | what is known about the farm, topic by topic | groundwater is filled daily; other topics wait for the per-farm analysis job |
+| `GET /v1/farms/{id}/plan` | **the 10-day plan**: the JSON of `BACKEND.md` 2.4 exactly (`from`, `days`, `rain_mm`, `tmin`, `tmax`, `alerts`, `decisions`, `source`, `issued`) | built; a job makes a plan for every farm every 6 hours, and for a new farm within about 10 minutes. `404 plan_not_ready` until the first one, `404 plan_stale` if the newest is over 2 days old: show "10-day plan coming soon" for both. Days already past are left out. |
+| `GET /v1/farms/{id}/history?metrics=&from=&to=` | **ten years, month by month**: rain, highest and lowest temperature, evaporation, soil moisture, greenness | built; see "History" below |
+| `GET /v1/farms/{id}/insights` | **Field history**: what is known about the farm, topic by topic | all topics are filled by a job on the server, within minutes of a farm being saved: rain and weather since 1981, soil, greenness, dryness, and groundwater |
 | `GET /v1/farms/{id}/brief` | the nightly brief for the farm's district | filled each night; `brief` is `null` for a district with none yet |
 | `POST /v1/farms/{id}/ask` | Ask the Doctor | section 6 |
 
 **Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
 
+The topics `rain`, `weather`, `soil`, `greenness` and `dryness` carry the measure codes of the app's fixture (`app/test/fixtures/insights_farm2_measures.json`), with three differences: fires are `fire_detections_7d` (the server keeps 7 days of detections, so a long count would be wrong), and `summer_surface_c_normal` and `trend_peak_ndvi_per_decade` are not produced. Greenness is measured on a square of the farm's area at its centre, from Sentinel-2 (2016 on) and Landsat (1984 to 2015).
+
 The `groundwater` topic is **not** a well depth. It is a percentile (50 is normal for the time of year; 10 means only 10% of past years were this dry) from a NASA model for a square of about 25 km, so every farm in that square gets the same number, and it cannot see local pumping. It comes with `confidence: "unsure"`. Say "the wider area", never "your well". Its measure codes are `groundwater_percentile`, `root_zone_moisture_percentile` and `surface_moisture_percentile`.
 
 **Brief.** `{"farm_id", "zone_slug", "brief"}`. A brief is `{"day", "scope", "headline_en", "headline_ku", "summary_en", "summary_ku", "points": [{"level": "info|watch|alarm", "text_en", "text_ku"}], "sources": [{"title", "url"}], "author", "generated_at"}`. It is written by an AI agent from our stored numbers and a web search. Show the `sources`, and treat it as a draft, not as checked advice.
+
+**Plan.** The forecast is Open-Meteo at the farm's centre; the rules are those of `farm_doctor/weather_planner.py`, with their thresholds read from the website's Rules page (so changing `frost_c`, `heat_c`, `sowing_rain_mm`, `dust_pm10` and the others there changes the next plan). Honest limits: **`ku` is the same text as `en` for now**, because the repo has no Sorani for these sentences (build the Sorani in the app from `type` and `code`, or give us the sentences); wheat is assumed for every farm; the alert types `heavy_rain`, `dry_spell`, `spray_window` and `sunn_pest` are never raised because the reference rules never raise them.
+
+**History.** `GET /v1/farms/{id}/history` answers `{"farm_id", "series": [{"metric", "unit", "source", "as_of", "months": [{"month": "2016-10", "value": 13.4}], "years": [{"year": 2025, "value": 558.1, "months": 12}], "normal": [12 numbers, January first]}]}`. Metrics: `rain_mm`, `temp_max_c`, `temp_min_c`, `et0_mm`, `soil_moisture`, `greenness` (NDVI 0 to 1). Default: every metric, the last 120 months; `metrics` is a comma list, `from` and `to` are `YYYY-MM`, a window over 120 months is `422 bad_window`. A metric with nothing stored yet is simply absent: show "collecting". A new farm has the weather metrics within about 10 minutes; greenness takes up to half an hour. Always show `source`: rain comes from a 25 km grid and temperature from a 9 km grid, far larger than a farm.
+
+### Alerts and push
+
+- `GET /v1/alerts?days=30` (all the farmer's farms, each alert with `farm_id`) and `GET /v1/farms/{id}/alerts?days=30` answer `{"alerts": [{"alert_id", "type", "day", "level": "watch|alarm", "confidence": "sure|likely|unsure", "ku", "en", "action_ku", "action_en", "pushed", "done"}]}`, newest day first; `days` is 1 to 90.
+- `POST /v1/alerts/{id}/done` answers `204`, also when it was already done.
+- Where alerts come from, every 30 minutes: a **satellite fire detection within 5 km** of a farm (type `fire`; `alarm` within 2 km, else `watch`; always `confidence: "unsure"`, because nobody has checked it and it may be a gas flare or a controlled burn), and the **alerts of the farm's 10-day plan** (types `frost`, `heat`, `dust` and the others of the plan; confidence `likely`).
+- **Register the phone:** `POST /v1/devices` with `{"push_token", "platform": "android|ios", "lang", "notify": {"red_alerts": true, "weekly_plan": true}}` answers `204`; call it at every app start and when the token changes. `DELETE /v1/devices/{push_token}` on sign-out.
+- **Push:** only `alarm` alerts are pushed, at most one per farm per day, through Firebase. The notification has a title and text in the phone's language, and the data fields `farm_id`, `alert_id`, `type`, `day`, `level`, `confidence`, `ku`, `en`, `action_ku`, `action_en`. The sender is built; it starts sending once the Firebase service account file is on the server. The app needs the Firebase messaging library and the project's `google-services.json`.
+- Honest limits: the fire alert sentences have no Sorani yet (`ku` repeats the English); the weekly plan message on Sunday morning is not sent yet.
+- **`DELETE /v1/account`** answers `204`: removes the farmer, their farms, alerts and phones, and signs them out at once. Their Alwa listings and messages stay, as with a delete by staff.
 
 ### Messages to the Ministry (inbox)
 
@@ -135,16 +172,29 @@ The `groundwater` topic is **not** a well depth. It is a percentile (50 is norma
 
 ## 5. The Alwa market
 
-Sellers set their own price on each listing. There is no automatic price feed: the "price at the alwa today" board only shows what Ministry staff have typed in.
+Sellers set their own price on each listing and buyers call them. There is no automatic price feed: the "price at the alwa today" board only shows what Ministry staff have typed in. This is the simpler Alwa of `BACKEND.md` 2.14; the offer routes are still there for the website.
 
-- **No login:** `GET /v1/alwa/markets`, `/v1/alwa/markets/{slug}/prices`, `/prices/{crop}/history`, `GET /v1/alwa/listings` (filters `market`, `crop`, `status`; `page`, `rows_per_page`), `GET /v1/alwa/listings/{id}` (with its offers), `GET /v1/alwa/deals`.
-- **With the farmer token:** `POST /v1/alwa/listings`, `GET /v1/alwa/listings/mine`, `DELETE /v1/alwa/listings/{id}` (cancel), `POST /v1/alwa/listings/{id}/offers`, `POST /v1/alwa/listings/{id}/offers/{offer_id}/accept`, `GET /v1/alwa/offers/mine`.
-- **Phones are hidden** until a deal. After the seller accepts, the seller's answer shows the buyer's phone and the buyer's answer shows the seller's.
-- **Rules:** at most 20 open listings per phone; a listing closes at `closes_at` (at most 14 days ahead); you cannot offer on your own listing; a buyer has one open offer per listing (a new one replaces it); accepting any offer sells the whole listing and declines the others.
+- **Post a listing** (farmer token): `POST /v1/alwa/listings` with `{"crop", "quantity_kg", "asking_price_iqd_per_kg", "lat", "lon", "closes_at"}` and an `Idempotency-Key`. `lat` and `lon` are the phone's GPS (both or neither, inside the region). `market`, `pickup`, `grade` and `note` are optional. Without a `market`, the nearest market that has a point is filled in; `zone_slug` is filled from the point. The app's old workaround (sending `market` and `pickup: "farm"`) keeps working.
+- **Every listing answer** carries `lat`, `lon`, `seller_phone`, `created_at` and `sold_at`. `grade`, `pickup` and `market` may be `null`. **`seller_phone` is shown only when the call carries a valid farmer token**; without one it is `null`, so send the token on `GET /v1/alwa/listings` and `/{id}` too.
+- **Nearest first:** `GET /v1/alwa/listings?lat=&lon=&crop=` sorts by distance from that point and adds `distance_km` (not rounded) to each; listings without a point come last with `distance_km: null`. Other filters: `market`, `status`; `page`, `rows_per_page`.
+- **Mine, cancel, sold:** `GET /v1/alwa/listings/mine`; `DELETE /v1/alwa/listings/{id}` cancels; `POST /v1/alwa/listings/{id}/sold` (the seller only) marks it sold and declines any open offers. A repeat of either answers the same success; another farmer's listing is `404`; a cancelled or closed one is `409 listing_not_open`.
+- **Markets:** `GET /v1/alwa/markets` gives each market's `lat` and `lon` (the town centre for the four seeded markets, not the market's gate); `GET /v1/alwa/markets/{slug}/prices` and `/prices/{crop}/history` are the price board. No login needed.
+- **Rules:** at most 20 open listings per phone (`too_many_listings`); a listing closes at `closes_at`, at most 14 days ahead (`bad_closes_at`).
 - **`fair_price`** on a listing is `fair`, `high`, `low` or `unknown`. It is `unknown` unless staff have entered a price for that crop at that market in the last 7 days.
-- **Codes:** `too_many_listings`, `own_listing`, `listing_not_open`, `offer_not_open`, `offer_too_large`, `bad_closes_at`.
-- Crop codes: the same table, `GET /v1/crops` (16 crops seeded: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple).
-- **The simpler Alwa the app asked for in `BACKEND.md` 2.14** (a GPS point on each listing, the seller's phone shown from the start, nearest first, mark as sold, markets with a point) is **not built yet**. It is next after crops; see section 14. Until then the routes behave as written here.
+- Crop codes: the crops table, `GET /v1/crops` (16 seeded: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple).
+- **Still there for the website, not used by the app:** `POST /v1/alwa/listings/{id}/offers`, `.../offers/{offer_id}/accept`, `GET /v1/alwa/offers/mine`, `GET /v1/alwa/deals`. Their rules: no offer on your own listing (`own_listing`), one open offer per buyer per listing, accepting sells the whole listing; codes `offer_not_open`, `offer_too_large`.
+- Known rough edge: staff cannot delete a listing that was marked sold (`listing_has_deal`).
+
+## 5B. Workers for hire
+
+People who do farm work put up a card with their name and their cost; farmers browse the cards and call. A worker signs in with their phone exactly like a farmer (the same sign-in, the same token). There is no booking, rating or chat.
+
+- **Offer my work:** `PUT /v1/workers/me` with `{"name", "cost_iqd", "cost_per": "day" | "hour", "note", "zone_slug", "lat", "lon", "available"}` creates or replaces the caller's one card and answers `{"worker": {...}}`. Only `name` (1 to 80 characters) and `cost_iqd` (1,000 to 10,000,000, a whole number) are required; `cost_per` defaults to `day`; `note` is up to 200 characters (what work they do); `lat` and `lon` go together and must be inside the region. **Do not send a phone:** the card always carries the signed-in phone, and a `phone` field in the body is refused (`400`).
+- `GET /v1/workers/me` answers `{"worker": {...} | null}`. `DELETE /v1/workers/me` answers `204`. To pause without deleting, put the card again with `"available": false`.
+- **Find workers:** `GET /v1/workers?lat=&lon=&zone=&q=&max_cost_iqd=&cost_per=&page=&rows_per_page=` answers `{"workers": [{"id", "name", "phone", "cost_iqd", "cost_per", "note", "zone_slug", "lat", "lon", "distance_km", "created_at", "updated_at"}], "count", "page", "rows_per_page"}`. With `lat` and `lon` the nearest come first with `distance_km` (not rounded; cards without a point come last); without them the most recently updated come first. `q` searches the name and the note. **This route needs the token** (`401` without): phone numbers are only shown to signed-in people. Show a "Call" button that opens the dialler with `phone`.
+- A blocked or deleted account's card disappears from the list.
+- Staff: `GET /v1/dashboard/workers` (all cards, also paused ones; same filters plus `available=`) and `DELETE /v1/dashboard/workers/{id}`, with the permissions `farmers:read` and `farmers:delete`.
+- Cache topic: `farmers`.
 
 ## 6. Ask the Doctor
 
@@ -171,18 +221,18 @@ Answer `200`, no outer wrapper:
 - `inputs_used` is extra to `BACKEND.md` 2.5: which sources the Doctor read.
 - Not in this version: `case_id` (nothing is stored yet) and `transcript` (voice is deferred).
 - The Doctor takes 10 to 25 s and the backend waits up to 90 s for it. Give this call its own answer timeout of at least 90 s.
-- **On the test server the Doctor service is not running yet** (checked 2026-10-09: nothing answers on its port and the server has no address for it), so every question there answers `502 doctor_failed`. It needs the Doctor code and its AI key put on that server.
+- **On the test server the Doctor answers through Codex** (the `codex exec` program signed in there; no AI key). A real question took 39 s. If it answers `502 doctor_failed`, Codex took over 75 s or answered outside the JSON: ask again.
 
 Errors, in the order they are checked:
 
 | Status | Code | When |
 |---|---|---|
-| 404 | `not_found` | The id is not a number. |
+| 404 | `not_found`, `plan_not_ready`, `plan_stale` | The id is not a number. |
 | 400 | `bad_request` | The body is not a multipart form, `cell` is not the JSON above, or a text field is not UTF-8. |
 | 422 | `bad_photo` | A seventh photo, a photo over 4 MB, a type other than JPEG or PNG, or bytes that are not the declared type. |
 | 422 | `empty_question` | No question and no photo. |
 | 422 | `invalid` | A question over 1000 characters, or `lang` other than `ku` or `en`. |
-| 404 | `not_found` | The farm is another phone's or does not exist (the same answer; the Doctor is not asked). |
+| 404 | `not_found`, `plan_not_ready`, `plan_stale` | The farm is another phone's or does not exist (the same answer; the Doctor is not asked). |
 | 502 | `doctor_failed` | The Doctor service is down, took over 90 s, failed, or answered something that cannot be used. |
 | 503 | `doctor_not_ready` | The Doctor service is up but cannot answer yet (it has no AI key). Try later. |
 
@@ -302,7 +352,7 @@ The same rules everywhere:
 - 15 rules are seeded with the numbers in the code today: nine weather planner rules (frost 0, hard frost -2, heat 31, heavy rain 12 mm, sowing rain 20 mm, rust weather 24 h, spray window 6 h, sunn pest 84 degree-days, dust PM10 150), four dryness band edges (25, 45, 60, 80), and two Field Eye rules.
 - **Field Eye differs from the list in `BACKEND.md`.** `farm_doctor/field_eye.py` has no "watch below 85%" or "alarm below 70% of normal", and its cloud limit is 60%, not 30%. What it has was seeded: `field_eye_max_cloud_pct` 60 and `field_eye_weak_pixel_pct` 70. Tell us if the 85 / 70 / 30 numbers live somewhere else.
 - Sorani names and meanings of the rules are null: they need a native speaker. Show the English until then.
-- **Honest limit: changing a rule changes nothing yet.** The weather planner, the dryness bands and Field Eye still use their built-in numbers. Say so on the Rules page, or hide the save button, until this line is removed.
+- **What a rule change does today:** the nine weather planner rules are read by the 10-day plan job, so a change shows in each farm's next plan (within 6 hours). The four dryness band edges and the two Field Eye rules are not read by anything yet: say so next to them.
 
 ### App control (`app`)
 
@@ -318,7 +368,7 @@ The same rules everywhere:
 
 ## 10. Caching (for the website)
 
-- `GET /v1/versions` (no login) answers `{"api": "1.6.0", "versions": {"zones": 41, "dams": 7, ...}, "server_time"}` for the public topics: `zones, sub_zones, dams, fires, outlooks, water, alwa_prices, alwa_listings, crops, rules, briefs, app_config`.
+- `GET /v1/versions` (no login) answers `{"api": "1.7.0", "versions": {"zones": 41, "dams": 7, ...}, "server_time"}` for the public topics: `zones, sub_zones, dams, fires, outlooks, water, alwa_prices, alwa_listings, crops, rules, briefs, app_config`.
 - `GET /v1/dashboard/versions` (any signed-in staff) adds the private ones: `farmers, farms, messages, jobs, staff_roles`.
 - A topic's number goes up whenever anything of that kind is written, by anyone (website, data job, farmer app). The database does it itself inside the write, so it cannot be forgotten. It may go up by more than one for a single action: only compare "is it higher than what I have".
 - Topic to routes: `zones` district readings and `/v1/region...`; `sub_zones` sub-district readings; `dams`; `fires`; `outlooks` (outlooks and outlook runs); `water`; `alwa_prices` (markets and prices); `alwa_listings` (listings, offers, deals); `briefs`; `rules`; `app_config` (the settings, not the versions-in-use list); `farmers` (farmers and letters); `farms` (farms, cells, per-farm readings, and both totals routes); `messages`; `jobs`; `staff_roles` (staff, roles and their permissions). `crops` is the crops table.
@@ -331,8 +381,9 @@ Be honest on screen about this.
 
 | Data | State | Where it comes from |
 |---|---|---|
-| District rain and `dryness` | **live**, all 33 districts, refreshed every 12 hours | rain of the last 365 days against the 10 years before (Open-Meteo, ERA5). `dryness` is only that rain figure on a 0 to 100 scale (50 = normal rain, lower = wetter). It is **not** soil moisture or crop condition: label it "rain against normal". `greenness`, `water_need`, `best_crops` are empty. |
-| Fires | **live**, refreshed every 3 hours | NASA satellite detections inside the 33 districts, gas flares removed by a rule. About 3 hours behind the satellite. Nobody has checked the list by hand: call them "satellite fire detections", not confirmed fires. `area_ha`, wind and `farmers_alerted` are empty. |
+| District rain and `dryness` | **live**, all 33 districts, 37 months of history, refreshed every 12 hours | rain of the last 365 days against the 10 years before (Open-Meteo, ERA5). `dryness` is only that rain figure on a 0 to 100 scale (50 = normal rain, lower = wetter). It is **not** soil moisture or crop condition: label it "rain against normal". `change_vs_last_year`, the earlier years of a district and `/v1/region/compare` now have data. `water_need` and `best_crops` are empty. |
+| District `greenness` | being filled (a slow satellite service) | MODIS NDVI at 250 m inside the district, against the same 16 days of the 10 previous years, all land, not only cropland. Null until a district's picture has been fetched. |
+| Fires | **live**, refreshed every 3 hours, with wind | NASA satellite detections inside the 33 districts, gas flares removed by a rule. About 3 hours behind the satellite. Nobody has checked the list by hand: call them "satellite fire detections", not confirmed fires. `wind_kmh` and `wind_direction` (where the wind blows to) are from a weather model at the hour of detection; `farms_within_5km` counts registered farms. `area_ha` and `farmers_alerted` are empty. |
 | Nightly brief | **live** for the region and for districts that have farms | an AI agent reads our stored numbers and searches the web; show its sources |
 | Groundwater per farm | **live**, daily | section 4; the wider area, not a well |
 | Farmers and farms | the few test accounts people have made | the app |
@@ -343,7 +394,10 @@ Be honest on screen about this.
 | App settings | the starting values | section 4 |
 | Messages | empty until a farmer sends one | the app |
 | Farm status from space | placeholder | no store yet |
-| Per-farm history (ten years of rain, heat, greenness) | not on the server yet | being built; section 14 |
+| 10-day plan per farm | filled for every farm every 6 hours | Open-Meteo forecast and the weather planner rules |
+| Per-farm history (ten years, monthly) | filled for every farm | ERA5 through Open-Meteo, MODIS greenness |
+| Field history topics (`/insights`) | **live** for every farm | ERA5 since 1981, SoilGrids, Sentinel-2 and Landsat |
+| Alerts | **live**: fires near a farm and plan alerts, every 30 minutes | our stored fires and plans; push waits for the Firebase file |
 
 ## 12. Things that will trip you up
 
@@ -366,9 +420,9 @@ Be honest on screen about this.
 | 400 | `bad_request` (the body or a parameter cannot be read) |
 | 401 | `unauthorized`, `bad_code`, `bad_credentials` |
 | 403 | `forbidden`, `cannot_grant`, `blocked` (a blocked farmer), `wrong_password` |
-| 404 | `not_found` |
+| 404 | `not_found`, `plan_not_ready`, `plan_stale` |
 | 409 | `already_exists`, `crop_in_use`, `listing_not_open`, `offer_not_open`, `listing_has_deal`, `market_in_use`, `system_role`, `role_in_use`, `role_name_taken`, `email_taken`, `own_account`, `last_owner` |
-| 422 | `invalid` (with `field` when one field is at fault), `bad_polygon`, `farm_too_large`, `too_many_farms`, `too_many_listings`, `own_listing`, `offer_too_large`, `bad_closes_at`, `bad_month`, `bad_range`, `bad_reason`, `empty_question`, `bad_photo`, `no_reply`, `missing_text`, `unknown_crop`, `reserved_code`, `unknown_role`, and other `bad_...` codes that name the field |
+| 422 | `invalid` (with `field` when one field is at fault), `bad_polygon`, `farm_too_large`, `too_many_farms`, `too_many_listings`, `own_listing`, `offer_too_large`, `bad_closes_at`, `bad_month`, `bad_range`, `bad_window`, `bad_reason`, `empty_question`, `bad_photo`, `no_reply`, `missing_text`, `unknown_crop`, `reserved_code`, `unknown_role`, and other `bad_...` codes that name the field |
 | 426 | `update_required` (the app is older than `min_version`) |
 | 429 | `rate_limited` (with `retry_after_s`) |
 | 500 | `server_error` (the detail is always "An unexpected error occurred") |
@@ -381,13 +435,10 @@ These answer `404` today. Build the screens so that a `404` or an empty answer s
 
 | Thing | State |
 |---|---|
-| Per-farm history: ten years of monthly rain, heat, evaporation, soil moisture and greenness (`GET /v1/farms/{id}/history`) | being built now |
-| The simpler Alwa of `BACKEND.md` 2.14 (GPS point, phones shown, nearest first, mark as sold) | next |
-| `GET /v1/farms/{id}/plan`, the 10-day weather plan | not started |
 | Real data in `GET /v1/farms/{id}/status` | not started; needs a satellite job and a store |
-| `DELETE /v1/account`, alerts, `POST /v1/devices` (push), reports | not started |
+| Reports (`BACKEND.md` 2.6); the Sunday weekly-plan push | not started |
 | Protected mode for phones and farm positions (`BACKEND.md` 2.11) | not started; the website team said it is not needed for now |
-| Rules read by the jobs; limits and feature switches enforced by the server | not started |
+| Dryness and Field Eye rules read by their jobs; limits and feature switches enforced by the server | not started |
 
 ## 15. Open questions for the frontend
 

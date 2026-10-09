@@ -40,6 +40,10 @@ use farm_doctor_api::{
             dashboard_routes as fire_dashboard_routes, ingest_routes as fire_ingest_routes,
             public_routes as fire_public_routes,
         },
+        history::web::{
+            dashboard_routes as history_dashboard_routes, ingest_routes as history_ingest_routes,
+            routes as history_routes,
+        },
         insights::web::{
             dashboard_routes as insight_dashboard_routes, ingest_routes as insight_ingest_routes,
             routes as insight_routes,
@@ -49,6 +53,10 @@ use farm_doctor_api::{
         outlooks::web::{
             dashboard_routes as outlook_dashboard_routes, ingest_routes as outlook_ingest_routes,
             public_routes as outlook_public_routes,
+        },
+        plans::web::{
+            dashboard_routes as plan_dashboard_routes, ingest_routes as plan_ingest_routes,
+            routes as plan_routes,
         },
         rules::web::{
             dashboard_routes as rule_dashboard_routes, ingest_routes as rule_ingest_routes,
@@ -140,12 +148,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(farm_routes())
                 .merge(farmer_routes())
                 .merge(insight_routes())
+                .merge(plan_routes())
                 .merge(alwa_routes())
                 .merge(brief_routes())
                 .merge(doctor_routes())
                 .merge(message_routes())
+                .merge(farm_doctor_api::features::workers::web::routes())
+                .merge(farm_doctor_api::features::alerts::web::routes())
                 // Inside `auth`, so it knows which farmer is asking.
                 .layer(middleware::from_fn_with_state(state.clone(), app_version))
+                .merge(history_routes())
                 .layer(middleware::from_fn_with_state(state.clone(), auth))
                 .merge(
                     farmer_public_routes()
@@ -167,6 +179,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     Router::new()
                         .merge(fire_ingest_routes())
                         .merge(insight_ingest_routes())
+                        .merge(plan_ingest_routes())
                         .merge(zone_ingest_routes())
                         .merge(dam_ingest_routes())
                         .merge(outlook_ingest_routes())
@@ -175,12 +188,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(brief_ingest_routes())
                         .merge(rule_ingest_routes())
                         .merge(job_ingest_routes())
+                        .merge(history_ingest_routes())
+                        .merge(farm_doctor_api::features::alerts::web::ingest_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), service_key)),
                 )
                 .nest(
                     "/dashboard",
                     Router::new()
                         .merge(staff_dashboard_routes())
+                        .merge(farm_doctor_api::features::alerts::web::dashboard_routes())
                         .merge(alwa_dashboard_routes())
                         .merge(app_config_dashboard_routes())
                         .merge(brief_dashboard_routes())
@@ -189,10 +205,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(farm_dashboard_routes())
                         .merge(farmer_dashboard_routes())
                         .merge(fire_dashboard_routes())
+                        .merge(history_dashboard_routes())
                         .merge(insight_dashboard_routes())
                         .merge(job_dashboard_routes())
                         .merge(message_dashboard_routes())
+                        .merge(farm_doctor_api::features::workers::web::dashboard_routes())
                         .merge(outlook_dashboard_routes())
+                        .merge(plan_dashboard_routes())
                         .merge(rule_dashboard_routes())
                         .merge(version_dashboard_routes())
                         .merge(water_dashboard_routes())

@@ -21,6 +21,7 @@ Checked 2026-10-09 16:20 against `FRONTEND.md` v4 with its section 14 (commit 13
 | 7 | Daily brief: `GET /v1/farms/{id}/brief` | built | Nothing. The app card is next. |
 | 8 | Profile: `GET`/`PUT /v1/me` | built | Nothing. The Settings screen is next. |
 | 9 | Alwa market, farmer routes (FRONTEND.md 5) | built, with offers, grade, pickup, market and hidden phones | **Simpler Alwa (user decision 2026-10-09): see 2.14.** GPS point on each listing, phones shown, nearest first, mark as sold, markets with a point. |
+| 10 | **Marketplace (was Alwa): more than crops** (2.16, user decision 2026-10-09 18:29) | crops only, priced per kg | **New.** Fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit, each with its own unit (kg, tray of 30, litre, head). A `products` list with group and unit, and listings that carry `product`, `quantity` and a price per unit. |
 
 Needed next, because their screens are being built now:
 - `DELETE /v1/account` for Settings ("Delete my account and farms").
@@ -348,6 +349,8 @@ What the app needs changed or added:
 
 Not used by the app: the offer and accept routes, `/v1/alwa/offers/mine`, `/v1/alwa/deals`, `grade`, `pickup`, `buyer_kind`. They can stay for the website.
 
+- What the app does now (2026-10-09 18:00), until rows 1 to 3 are built: it sends `market` (the first market) and `pickup: "farm"` so the post is not refused, sends `quantity_kg` and the price as whole numbers, and puts the seller's sign-in phone in `seller_name` (any text up to 60 characters, already shown to buyers). It reads `seller_phone` first, else a phone-shaped `seller_name`. List rows have no `created_at` today, so the posted date is left out there. "Call the seller" opens the phone app with the number typed in. When `seller_phone` exists, the app stops writing the phone into `seller_name`.
+
 ### 2.15 Ask the Doctor on the test server: Codex reads the photos and the farm's data (user decision, 2026-10-09)
 
 The app's centre button (Ask the Doctor) already sends `POST /v1/farms/{id}/ask` exactly as FRONTEND.md 6 says and already shows the `200` answer. On the test server every question answers `502 doctor_failed` because nothing runs behind the route. To make the button work, the server must do this for every question:
@@ -359,7 +362,65 @@ The app's centre button (Ask the Doctor) already sends `POST /v1/farms/{id}/ask`
 
 The fastest way, already tested on a Mac: run `farm_doctor/doctor_service.py` next to the backend on the test server (`DOCTOR_URL=http://127.0.0.1:8090`). It already does steps 1 and 3 and today calls Gemini or Claude in step 2 (`FARM_DOCTOR_PROVIDER`). A `codex` provider that runs `codex exec` with the photos is the only missing piece; it lives in `farm_doctor/` and the app side can add it. The other way is for the backend to call `codex exec` itself, as `backend/jobs/daily_brief.py` does.
 
-### 2.16 Found while building the website against build 1.6.0 (2026-10-09)
+**Steps for Arya (user, 2026-10-09 18:05: "tell Arya what to do").** Checked today: on the test server every question still answers `502 doctor_failed`. The app side is done and needs no change. About 30 minutes:
+
+1. **Add a Codex provider to `farm_doctor/doctor.py`** (stdlib only, like the rest):
+   - `_provider()`: also accept `codex`.
+   - New `ask_codex(inputs, question=None, photos=None)`:
+     - Make a temp folder and write each photo from `_images(photos)` (base64) to it as `photo_1.jpg`, `photo_2.png` and so on.
+     - Run `codex exec --skip-git-repo-check --ephemeral -s read-only -o <tmp>/answer.txt --image <tmp>/photo_1.jpg --image <tmp>/photo_2.png` with `RULEBOOK + "\n\n" + _user_text(inputs, question)` piped on stdin (no prompt argument, so Codex reads stdin). Use `subprocess.run(..., input=prompt, text=True, timeout=75)`.
+     - Read `<tmp>/answer.txt` and return `_parse(text)`. On a timeout or a non-zero exit, return `dict(error='codex: <short reason>')`. Delete the temp folder in both cases.
+   - `ask()`: send `codex` to `ask_codex`.
+2. **`farm_doctor/doctor_service.py`, `has_key()`:** return `True` when the provider is `codex` (Codex is already signed in, no key). Otherwise every question answers `503 doctor_not_ready`.
+3. **Start it next to the backend on the test server**, as the same user that runs Codex for the nightly brief:
+   `cd farm_doctor && FARM_DOCTOR_PROVIDER=codex nohup python3 -I doctor_service.py >> doctor.log 2>&1 &`
+   It listens on `127.0.0.1:8090`, the backend's default `DOCTOR_URL`; set `DOCTOR_URL=http://127.0.0.1:8090` if the backend's env has something else. Add it to whatever restarts the backend.
+4. **Check:**
+   - `curl -s 127.0.0.1:8090/health` answers `{"ok": true, "key": true}`.
+   - Then ask from the app (Ask the Doctor, a question and a photo): a `200` answer within 90 s. `doctor.log` shows one line per question (`farm N: likely, 1 photos, 34 s, used ...`), and each case is saved in `farm_doctor/cases/` (git-ignored).
+   - If the answer is `502`, the reason is in `doctor.log`. Most often Codex took longer than 75 s or answered outside the JSON.
+5. **Two farmers at once:** the service is threaded, so each question runs its own `codex exec`; both fit in 90 s.
+
+### 2.16 Marketplace: the Alwa grows into a market for farm products (user decision, 2026-10-09 18:29)
+
+The farmer app's Alwa becomes the **Marketplace** (Sorani: بازاڕ). It works the same way as 2.14: a seller posts what they have, where it is (GPS), the price, and buyers call the seller. What changes is **what can be sold**: not only the 16 crops, but also fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit. Some of these are not sold by the kg, so **every product has a unit**.
+
+**Keep as built:** the `/v1/alwa/...` routes and their paths (no rename needed; "Marketplace" is only the name people see), GPS point, `seller_phone`, nearest first, mark as sold, cancel, 20 open listings per phone, at most 14 days, the price board staff type in.
+
+**1. A products list** (no login): `GET /v1/products` answers `{"products": [{"code", "group", "unit", "name_en", "name_ku"}]}`. Staff can add and rename products like crops (the crops table may simply become this table with `group` and `unit` added). The 16 crops stay with group `crops` and unit `kg`; painting a farm still uses only group `crops`.
+
+| group | code | unit | name_en | name_ku |
+|---|---|---|---|---|
+| `crops` | the 16 crop codes of today | `kg` | as today | as today |
+| `fish_meat_eggs` | `fish` | `kg` | Fish | ماسی |
+| `fish_meat_eggs` | `chicken` | `kg` | Chicken | مریشک |
+| `fish_meat_eggs` | `eggs` | `tray_30` | Eggs (tray of 30) | هێلکە (تەبەقەی ٣٠) |
+| `honey_dairy` | `honey` | `kg` | Honey | هەنگوین |
+| `honey_dairy` | `milk` | `litre` | Milk | شیر |
+| `honey_dairy` | `yogurt` | `kg` | Yogurt | ماست |
+| `honey_dairy` | `cheese` | `kg` | Cheese | پەنیر |
+| `animals` | `sheep` | `head` | Sheep | مەڕ |
+| `animals` | `goat` | `head` | Goat | بزن |
+| `animals` | `cow` | `head` | Cow | مانگا |
+| `nuts_dried` | `walnut` | `kg` | Walnuts | گوێز |
+| `nuts_dried` | `almond` | `kg` | Almonds | بادەم |
+| `nuts_dried` | `raisin` | `kg` | Raisins | مێوژ |
+| `nuts_dried` | `dried_fig` | `kg` | Dried figs | هەنجیری وشک |
+
+Units: `kg`, `tray_30` (a tray of 30 eggs), `litre`, `head` (one animal). The Sorani names wait for the native speaker check like the rest of the app.
+
+**2. Listings carry a product and a unit.**
+- `POST /v1/alwa/listings` takes `product` (a code from the list), `quantity` (a whole number, in the product's unit) and `asking_price_iqd` (per one unit), with `lat`, `lon`, `closes_at` as today. The server fills `unit` from the product; the app never sends it.
+- Old bodies keep working: `crop`, `quantity_kg` and `asking_price_iqd_per_kg` are still accepted for kg products, so nothing breaks while the app moves over.
+- Limits per unit: `kg` 1 to 1,000,000; `tray_30` 1 to 10,000; `litre` 1 to 100,000; `head` 1 to 1,000. Outside them: `422 invalid` with `field`.
+- **Every listing answer** adds `product`, `group`, `unit`, `quantity` and `asking_price_iqd` (and keeps `crop`, `quantity_kg`, `asking_price_iqd_per_kg` filled for kg products until the app has moved).
+- `GET /v1/alwa/listings` takes `group=` and `product=` filters next to today's ones (`crop=` stays as an alias of `product=`).
+
+**3. The price board** (`/v1/alwa/markets/{slug}/prices`) works per product and per unit: each row adds `product` and `unit`, and staff can type a price for any product, not only crops. `fair_price` compares like for like (same product, same unit).
+
+**4. What the app will do** (next, after this section is built): the tab and screens are renamed Marketplace; "For sale near you" gets group chips (Crops, Fish, meat and eggs, Honey and dairy, Animals, Nuts and dried fruit); Sell asks for the group, then the product, and shows the unit everywhere ("12 trays", "3 head", "40 litres", "IQD per head"). Until the backend has 1 and 2, the app keeps selling crops by the kg as today.
+
+### 2.17 Found while building the website against build 1.6.0 (2026-10-09)
 1. **CORS:** add the site's address to `HTTP__CORS_ORIGINS`, plus `http://localhost:5173` and `http://127.0.0.1:5173` for development. Today the site only works through the Vite proxy.
 2. **Idempotency-Key on POST /dashboard/farmers** is ignored: a retry after a lost answer gets `409 already_exists`. The site recovers by reading `?phone=`, but please honour the key like the other POSTs.
 3. **Second DELETE** of a staff member or role answers 404. The site treats it as done; fine to keep, noted here so it stays that way.

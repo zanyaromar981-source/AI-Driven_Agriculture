@@ -291,6 +291,7 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
             if (more > 0)
               AlwaGhostButton(
                 label: 'Show $more more',
+                filled: false,
                 icon: Icons.keyboard_double_arrow_down_rounded,
                 onPressed: () => setState(() => _shown += 10),
               ),
@@ -462,7 +463,10 @@ class _FilterChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: selected ? JColors.accentSoft : JColors.card,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: selected ? JColors.accent : JColors.line),
+        border: Border.all(
+          color: selected ? JColors.accent : JColors.line,
+          width: selected ? 1.5 : 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -590,7 +594,7 @@ class _ListingCard extends StatelessWidget {
                   button: true,
                   label: 'Call the seller',
                   child: InkWell(
-                    onTap: () => copyPhone(context, phone),
+                    onTap: () => callPhone(context, phone),
                     customBorder: const CircleBorder(),
                     child: Container(
                       width: 44,

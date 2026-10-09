@@ -12,8 +12,10 @@ import '../tabs.dart';
 /// The server has no alerts yet (FRONTEND.md 14): its 404 shows a calm
 /// "coming soon", never made-up alerts.
 class AlertsScreen extends StatefulWidget {
-  const AlertsScreen({super.key, required this.farm});
-  final FarmSummary farm;
+  const AlertsScreen({super.key, this.farm});
+
+  /// The open farm, or null for all the farmer's farms (from My farms).
+  final FarmSummary? farm;
 
   @override
   State<AlertsScreen> createState() => _AlertsScreenState();
@@ -22,6 +24,10 @@ class AlertsScreen extends StatefulWidget {
 class _AlertsScreenState extends State<AlertsScreen> {
   List<FarmAlert>? _alerts;
   ApiException? _error;
+
+  /// The farms shown, and each alert's farm name when there are several.
+  List<FarmSummary> _farms = const [];
+  final Map<FarmAlert, String> _farmOf = {};
 
   /// Ticked as done on this phone (the server has no "done" route yet).
   final Set<String> _done = {};
@@ -33,18 +39,41 @@ class _AlertsScreenState extends State<AlertsScreen> {
   }
 
   Future<void> _load() async {
+    final api = AppScope.read(context).api;
     try {
-      final a = await AppScope.read(context).api.getAlerts(widget.farm.id);
+      final farms = widget.farm == null ? await api.getFarms() : [widget.farm!];
+      final lists = await Future.wait(farms.map((f) => api.getAlerts(f.id)));
+      _farms = farms;
+      _farmOf.clear();
+      final a = <FarmAlert>[];
+      for (final (i, l) in lists.indexed) {
+        for (final x in l) {
+          a.add(x);
+          if (farms.length > 1) _farmOf[x] = farms[i].name;
+        }
+      }
       a.sort((x, y) => (y.day ?? DateTime(0)).compareTo(x.day ?? DateTime(0)));
       if (mounted) {
         setState(() {
           _alerts = a;
           _error = null;
         });
+        _publishCount();
       }
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e);
     }
+  }
+
+  /// The badge on the bell counts what is not ticked done.
+  void _publishCount() {
+    final a = _alerts ?? const <FarmAlert>[];
+    openAlerts.value = {
+      ...openAlerts.value,
+      widget.farm?.id ?? kAllFarms: a
+          .where((x) => !x.done && !_done.contains(x.id))
+          .length,
+    };
   }
 
   @override
@@ -65,12 +94,21 @@ class _AlertsScreenState extends State<AlertsScreen> {
                 children: [
                   Text(
                     'Alerts',
-                    style: latText(size: 24, weight: FontWeight.w700),
+                    style: latText(
+                      size: 24,
+                      weight: FontWeight.w700,
+                      letterSpacing: -0.4,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Red was sent to your phone. Yellow is only here.',
-                    style: latText(size: 15, color: JColors.muted),
+                    style: latText(
+                      size: 15,
+                      weight: FontWeight.w400,
+                      color: JColors.muted,
+                      height: 1.45,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (e != null)
@@ -96,9 +134,11 @@ class _AlertsScreenState extends State<AlertsScreen> {
                   else if (alerts.isEmpty)
                     _Empty(
                       icon: Icons.notifications_off_outlined,
-                      text: 'No alerts for ${widget.farm.name}',
+                      text: widget.farm == null
+                          ? 'No alerts for your farms'
+                          : 'No alerts for ${widget.farm!.name}',
                     )
-                  else
+                  else ...[
                     for (final (label, group) in _byDay(alerts)) ...[
                       Text(
                         label,
@@ -106,23 +146,40 @@ class _AlertsScreenState extends State<AlertsScreen> {
                           size: 12,
                           weight: FontWeight.w700,
                           color: JColors.muted,
+                          letterSpacing: 0.6,
                         ),
                       ),
                       const SizedBox(height: 8),
                       for (final a in group) ...[
                         _AlertRow(
                           alert: a,
+                          farmName: _farmOf[a],
                           done: a.done || _done.contains(a.id),
-                          onDone: () => setState(
-                            () => _done.contains(a.id)
-                                ? _done.remove(a.id)
-                                : _done.add(a.id),
-                          ),
+                          onDone: () {
+                            setState(
+                              () => _done.contains(a.id)
+                                  ? _done.remove(a.id)
+                                  : _done.add(a.id),
+                            );
+                            _publishCount();
+                          },
                         ),
                         const SizedBox(height: 8),
                       ],
                       const SizedBox(height: 8),
                     ],
+                    // All farms: say which farms have nothing (design:
+                    // "No alerts for Tomato plot").
+                    if (_farms.length > 1)
+                      for (final f in _farms)
+                        if (!_farmOf.containsValue(f.name)) ...[
+                          _Empty(
+                            icon: Icons.notifications_off_outlined,
+                            text: 'No alerts for ${f.name}',
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                  ],
                 ],
               ),
             ),
@@ -169,8 +226,12 @@ class _AlertRow extends StatelessWidget {
     required this.alert,
     required this.done,
     required this.onDone,
+    this.farmName,
   });
   final FarmAlert alert;
+
+  /// Shown when the list holds several farms.
+  final String? farmName;
   final bool done;
   final VoidCallback onDone;
 
@@ -199,7 +260,7 @@ class _AlertRow extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: JColors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -229,7 +290,11 @@ class _AlertRow extends StatelessWidget {
                         children: [
                           Text(
                             a.en,
-                            style: latText(size: 14, weight: FontWeight.w700),
+                            style: latText(
+                              size: 14,
+                              weight: FontWeight.w700,
+                              height: 1.3,
+                            ),
                           ),
                           if (a.actionEn.isNotEmpty)
                             Text(
@@ -263,9 +328,12 @@ class _AlertRow extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                if (when.isNotEmpty)
+                                if (when.isNotEmpty || farmName != null)
                                   Text(
-                                    when,
+                                    [
+                                      if (when.isNotEmpty) when,
+                                      ?farmName,
+                                    ].join(' · '),
                                     style: latText(
                                       size: 12,
                                       weight: FontWeight.w500,
@@ -286,27 +354,24 @@ class _AlertRow extends StatelessWidget {
                       child: InkWell(
                         onTap: onDone,
                         customBorder: const CircleBorder(),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: done ? JColors.accent : null,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: done ? JColors.accent : JColors.line,
-                                width: 1.5,
-                              ),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: done ? JColors.accent : null,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: done ? JColors.accent : JColors.line,
+                              width: 1.5,
                             ),
-                            child: done
-                                ? const Icon(
-                                    Icons.check_rounded,
-                                    size: 14,
-                                    color: Colors.white,
-                                  )
-                                : null,
                           ),
+                          child: done
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  size: 14,
+                                  color: Colors.white,
+                                )
+                              : null,
                         ),
                       ),
                     ),
@@ -332,6 +397,7 @@ class _Empty extends StatelessWidget {
     painter: const DashedBorderPainter(color: Color(0x805E6E64), radius: 12),
     child: Container(
       width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 56),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: const Color(0x66FFFFFF),

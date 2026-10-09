@@ -85,6 +85,10 @@ fn main() {
                     "src/features/water/infra/persistence/postgres/entities",
                 ),
                 (
+                    "alerts,devices",
+                    "src/features/alerts/infra/persistence/postgres/entities",
+                ),
+                (
                     "alwa_markets,alwa_prices,alwa_listings,alwa_offers",
                     "src/features/alwa/infra/persistence/postgres/entities",
                 ),
@@ -119,6 +123,18 @@ fn main() {
                 (
                     "crops",
                     "src/features/crops/infra/persistence/postgres/entities",
+                ),
+                (
+                    "farm_history,farm_history_series",
+                    "src/features/history/infra/persistence/postgres/entities",
+                ),
+                (
+                    "farm_plans",
+                    "src/features/plans/infra/persistence/postgres/entities",
+                ),
+                (
+                    "workers",
+                    "src/features/workers/infra/persistence/postgres/entities",
                 ),
             ];
 

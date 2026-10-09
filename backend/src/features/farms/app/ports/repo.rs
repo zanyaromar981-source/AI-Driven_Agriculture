@@ -41,6 +41,14 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
     /// Creates a new entity with its cells, its place and the area inside
     /// its outline. `entity.id()` must be `None`; the database assigns the
     /// ids.
+    /// The same list, each farm with the moment it was registered, for a
+    /// job that fills a farm's past from the day the farm appears.
+    async fn find_all_locations_with_created_at(
+        &self,
+    ) -> Result<Vec<(FarmLocation, DateTime<Utc>)>, AppError>;
+
+    /// Creates a new entity with its cells. `entity.id()` must be `None`; the
+    /// database assigns the ids.
     async fn create(&self, entity: &Farm) -> Result<Farm, AppError>;
 
     /// Stores a repaint: the crop on the cells it changed, and nothing else

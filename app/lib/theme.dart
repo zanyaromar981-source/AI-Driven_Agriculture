@@ -52,6 +52,7 @@ TextStyle latText({
   FontWeight weight = FontWeight.w500,
   Color color = JColors.ink,
   double? height,
+  double? letterSpacing,
 }) => TextStyle(
   fontFamily: kFontLat,
   fontFamilyFallback: const [kFontKu],
@@ -59,6 +60,7 @@ TextStyle latText({
   fontWeight: weight,
   color: color,
   height: height,
+  letterSpacing: letterSpacing,
 );
 
 ThemeData jutyarTheme() => ThemeData(

@@ -5,10 +5,10 @@ use chrono::{DateTime, Duration, NaiveDate, NaiveTime, Utc};
 use sea_orm::{
     ActiveModelTrait,
     ActiveValue::{NotSet, Set},
-    ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait,
+    ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, SqlErr, TransactionTrait,
     TryInsertResult,
-    sea_query::{Expr, OnConflict, Query},
+    sea_query::{Expr, NullOrdering, OnConflict, Query, SimpleExpr},
 };
 
 use crate::{
@@ -16,8 +16,8 @@ use crate::{
     features::alwa::{
         app::{AlwaRepository, AppError, ListingFilter, ModerationFilter, StoredPriceFilter},
         domain::{
-            AlwaError, Crop, Deal, IdempotencyKey, Listing, ListingStatus, Market, MarketNames,
-            MarketSlug, Offer, OfferStatus, Price,
+            AlwaError, Crop, Deal, GeoPoint, IdempotencyKey, Listing, ListingStatus, Market,
+            MarketNames, MarketSlug, Offer, OfferStatus, Price,
         },
         infra::persistence::postgres::entities::{
             alwa_listings, alwa_markets, alwa_offers, alwa_prices,
@@ -69,6 +69,19 @@ fn seen_as(status: ListingStatus, now: DateTime<Utc>) -> Condition {
     }
 }
 
+/// The kilometres from `from` to a listing's point, by the haversine formula
+/// with the radius `GeoPoint::km_to` uses, so the order of the page and the
+/// distance written on each card agree. Null for a listing without a point.
+fn km_from(from: &GeoPoint) -> SimpleExpr {
+    Expr::cust_with_values(
+        "2 * 6371.0 * asin(least(1.0, sqrt(\
+            power(sin(radians(alwa_listings.lat - $1) / 2), 2) \
+            + cos(radians($2)) * cos(radians(alwa_listings.lat)) \
+            * power(sin(radians(alwa_listings.lon - $3) / 2), 2))))",
+        [from.lat(), from.lat(), from.lon()],
+    )
+}
+
 #[derive(Debug)]
 pub struct AlwaPostgresRepository {
     conn: DatabaseConnection,
@@ -106,12 +119,15 @@ impl AlwaPostgresRepository {
         models
             .into_iter()
             .map(|model| {
-                let market = slugs.get(&model.market_id).cloned().ok_or_else(|| {
-                    GlobalAppError::MissingValue(format!(
-                        "Listing {} points at a market that is gone",
-                        model.id
-                    ))
-                })?;
+                let market = match model.market_id {
+                    Some(market_id) => Some(slugs.get(&market_id).cloned().ok_or_else(|| {
+                        GlobalAppError::MissingValue(format!(
+                            "Listing {} points at a market that is gone",
+                            model.id
+                        ))
+                    })?),
+                    None => None,
+                };
 
                 Listing::try_from((model, market))
             })
@@ -262,6 +278,7 @@ impl AlwaRepository for AlwaPostgresRepository {
     async fn find_listings(
         &self,
         filter: &ListingFilter,
+        near: Option<&GeoPoint>,
         now: DateTime<Utc>,
         pagination: &Pagination,
     ) -> Result<(Vec<Listing>, u64), AppError> {
@@ -280,6 +297,13 @@ impl AlwaRepository for AlwaPostgresRepository {
             .count(&self.conn)
             .await
             .map_err(database_error)?;
+
+        // The distance is worked out by the database so that the pages cut
+        // the whole board in one order. The id ends every order, so no
+        // listing can fall between two pages.
+        if let Some(from) = near {
+            query = query.order_by_with_nulls(km_from(from), Order::Asc, NullOrdering::Last);
+        }
 
         let models = query
             .order_by_desc(alwa_listings::Column::CreatedAt)
@@ -395,6 +419,50 @@ impl AlwaRepository for AlwaPostgresRepository {
         if result.rows_affected == 0 {
             return Err(AlwaError::ListingNotOpen.into());
         }
+
+        Ok(())
+    }
+
+    async fn sell_listing(&self, entity: &Listing) -> Result<(), AppError> {
+        let id = persisted_id(*entity.id(), "a listing")?;
+        let at = entity.updated_at().naive_utc();
+
+        // Leaving early drops the transaction, which rolls it back.
+        let transaction = self.conn.begin().await.map_err(database_error)?;
+
+        // The same lock an accept, an offer and a staff close take, so of
+        // two writers on one listing the later finds it no longer open.
+        Self::lock_open_listing(&transaction, id).await?;
+
+        let sold = alwa_listings::Entity::update_many()
+            .col_expr(
+                alwa_listings::Column::Status,
+                Expr::value(stored(*entity.status())),
+            )
+            .col_expr(alwa_listings::Column::UpdatedAt, Expr::value(at))
+            .filter(alwa_listings::Column::Id.eq(id))
+            .filter(alwa_listings::Column::SellerPhone.eq(entity.seller_phone().as_str()))
+            .exec(&transaction)
+            .await
+            .map_err(database_error)?;
+
+        if sold.rows_affected == 0 {
+            return Err(GlobalAppError::NotFound.into());
+        }
+
+        alwa_offers::Entity::update_many()
+            .col_expr(
+                alwa_offers::Column::Status,
+                Expr::value(String::from(OfferStatus::Declined)),
+            )
+            .col_expr(alwa_offers::Column::UpdatedAt, Expr::value(at))
+            .filter(alwa_offers::Column::ListingId.eq(id))
+            .filter(alwa_offers::Column::Status.eq(String::from(OfferStatus::Open)))
+            .exec(&transaction)
+            .await
+            .map_err(database_error)?;
+
+        transaction.commit().await.map_err(database_error)?;
 
         Ok(())
     }
@@ -564,6 +632,7 @@ impl AlwaRepository for AlwaPostgresRepository {
         &self,
         slug: &MarketSlug,
         names: &MarketNames,
+        point: Option<&GeoPoint>,
     ) -> Result<Option<Market>, AppError> {
         // The slug is unique, so of two creates sent at once one inserts and
         // the other does nothing.
@@ -572,6 +641,8 @@ impl AlwaRepository for AlwaPostgresRepository {
             slug: Set(slug.into()),
             name_en: Set((&names.name_en).into()),
             name_ku: Set((&names.name_ku).into()),
+            lat: Set(point.map(|point| point.lat())),
+            lon: Set(point.map(|point| point.lon())),
         })
         .on_conflict_do_nothing_on([alwa_markets::Column::Slug])
         .exec_with_returning_many(&self.conn)
@@ -591,8 +662,9 @@ impl AlwaRepository for AlwaPostgresRepository {
         &self,
         slug: &MarketSlug,
         names: &MarketNames,
+        point: Option<&GeoPoint>,
     ) -> Result<Option<Market>, AppError> {
-        alwa_markets::Entity::update_many()
+        let mut update = alwa_markets::Entity::update_many()
             .col_expr(
                 alwa_markets::Column::NameEn,
                 Expr::value(String::from(&names.name_en)),
@@ -600,7 +672,17 @@ impl AlwaRepository for AlwaPostgresRepository {
             .col_expr(
                 alwa_markets::Column::NameKu,
                 Expr::value(String::from(&names.name_ku)),
-            )
+            );
+
+        // Only what was sent is written: a rename from a page that knows
+        // nothing of the place must not wipe it.
+        if let Some(point) = point {
+            update = update
+                .col_expr(alwa_markets::Column::Lat, Expr::value(point.lat()))
+                .col_expr(alwa_markets::Column::Lon, Expr::value(point.lon()));
+        }
+
+        update
             .filter(alwa_markets::Column::Slug.eq(slug.as_str()))
             .exec_with_returning(&self.conn)
             .await

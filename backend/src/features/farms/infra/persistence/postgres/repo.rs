@@ -374,6 +374,25 @@ impl FarmRepository for FarmPostgresRepository {
         models.into_iter().map(FarmLocation::try_from).collect()
     }
 
+    async fn find_all_locations_with_created_at(
+        &self,
+    ) -> Result<Vec<(FarmLocation, DateTime<Utc>)>, AppError> {
+        let models = farms::Entity::find()
+            .order_by_asc(farms::Column::Id)
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        models
+            .into_iter()
+            .map(|model| {
+                let created_at = model.created_at.and_utc();
+
+                Ok((FarmLocation::try_from(model)?, created_at))
+            })
+            .collect()
+    }
+
     async fn create(&self, entity: &Farm) -> Result<Farm, AppError> {
         let transaction = self.conn.begin().await.map_err(database_error)?;
 

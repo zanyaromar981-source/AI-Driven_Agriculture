@@ -25,6 +25,10 @@ services:
       args:
         CARGO_BUILD_JOBS: ${CARGO_BUILD_JOBS:-2}
     restart: unless-stopped
+    # Lets the API reach services on the host itself (the Doctor service)
+    # as host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy

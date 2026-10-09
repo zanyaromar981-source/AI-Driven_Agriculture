@@ -242,137 +242,148 @@ class _MyCard extends StatelessWidget {
     final l = listing;
     final crop = alwaCrop(l.crop);
     final left = timeLeft(l.closesAt);
-    final days = (l.closesAt.difference(l.createdAt).inHours / 24).round();
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: JColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: JColors.cardLine),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 12,
-        children: [
-          Row(
-            spacing: 10,
-            children: [
-              CropTile(crop: l.crop, size: 40, radius: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 2,
-                  children: [
-                    Text(
-                      '${crop.en} · ${fmtInt(l.quantityKg)} kg',
-                      style: latText(size: 15, weight: FontWeight.w700),
-                    ),
-                    Text(
-                      '${fmtInt(l.priceIqdPerKg)} IQD/kg · posted ${fmtDay(l.createdAt)}',
-                      style: latText(
-                        size: 12,
-                        weight: FontWeight.w500,
-                        color: JColors.muted,
+    final posted = l.createdAt;
+    final days = posted == null
+        ? null
+        : (l.closesAt.difference(posted).inHours / 24).round();
+    // Sold and closed listings are faded (design: 85%).
+    return Opacity(
+      opacity: l.isOpen ? 1 : 0.85,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: JColors.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: JColors.cardLine),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 12,
+          children: [
+            Row(
+              spacing: 10,
+              children: [
+                CropTile(crop: l.crop, size: 40, radius: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 2,
+                    children: [
+                      Text(
+                        '${crop.en} · ${fmtInt(l.quantityKg)} kg',
+                        style: latText(size: 15, weight: FontWeight.w700),
                       ),
+                      Text(
+                        posted == null
+                            ? '${fmtInt(l.priceIqdPerKg)} IQD/kg'
+                            : '${fmtInt(l.priceIqdPerKg)} IQD/kg · posted ${fmtDay(posted)}',
+                        style: latText(
+                          size: 12,
+                          weight: FontWeight.w500,
+                          color: JColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                StatusPill(l.status),
+              ],
+            ),
+            if (l.isOpen) ...[
+              Row(
+                spacing: 6,
+                children: [
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 14,
+                    color: left.soon ? JColors.gold : JColors.muted,
+                  ),
+                  Expanded(
+                    child: Text(
+                      left.soon
+                          ? left.text
+                          : '${left.text}, closes ${fmtDay(l.closesAt)}',
+                      style: latText(
+                        size: 13,
+                        weight: left.soon ? FontWeight.w700 : FontWeight.w500,
+                        color: left.soon ? JColors.gold : JColors.muted,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.only(top: 12),
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: JColors.line)),
+                ),
+                child: Row(
+                  spacing: 10,
+                  children: [
+                    Expanded(
+                      child: _CardButton(
+                        icon: Icons.check_circle_outline_rounded,
+                        label: 'Mark as sold',
+                        color: JColors.accent,
+                        fill: JColors.accentSoft,
+                        bold: true,
+                        onTap: busy ? null : onSold,
+                      ),
+                    ),
+                    _CardButton(
+                      icon: Icons.delete_outline_rounded,
+                      label: 'Delete',
+                      color: JColors.levelAlarm,
+                      onTap: busy ? null : onDelete,
                     ),
                   ],
                 ),
               ),
-              StatusPill(l.status),
-            ],
-          ),
-          if (l.isOpen) ...[
-            Row(
-              spacing: 6,
-              children: [
-                Icon(
-                  Icons.timer_outlined,
-                  size: 14,
-                  color: left.soon ? JColors.gold : JColors.muted,
+            ] else
+              Container(
+                padding: const EdgeInsets.only(top: 12),
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: JColors.line)),
                 ),
-                Expanded(
-                  child: Text(
-                    left.soon
-                        ? left.text
-                        : '${left.text}, closes ${fmtDay(l.closesAt)}',
-                    style: latText(
-                      size: 13,
-                      weight: left.soon ? FontWeight.w700 : FontWeight.w500,
-                      color: left.soon ? JColors.gold : JColors.muted,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.only(top: 12),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: JColors.line)),
-              ),
-              child: Row(
-                spacing: 10,
-                children: [
-                  Expanded(
-                    child: _CardButton(
-                      icon: Icons.check_circle_outline_rounded,
-                      label: 'Mark as sold',
-                      color: JColors.accent,
-                      fill: JColors.accentSoft,
-                      bold: true,
-                      onTap: busy ? null : onSold,
-                    ),
-                  ),
-                  _CardButton(
-                    icon: Icons.delete_outline_rounded,
-                    label: 'Delete',
-                    color: JColors.levelAlarm,
-                    onTap: busy ? null : onDelete,
-                  ),
-                ],
-              ),
-            ),
-          ] else
-            Container(
-              padding: const EdgeInsets.only(top: 12),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: JColors.line)),
-              ),
-              child: Row(
-                spacing: 8,
-                children: [
-                  Icon(
-                    l.status == 'sold'
-                        ? Icons.check_circle_outline_rounded
-                        : Icons.timer_off_outlined,
-                    size: 14,
-                    color: JColors.muted,
-                  ),
-                  Expanded(
-                    child: Text(
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    Icon(
                       l.status == 'sold'
-                          ? l.soldAt == null
-                                ? 'Sold. Buyers no longer see it.'
-                                : 'You marked it sold on ${fmtDay(l.soldAt!)}. Buyers no longer see it.'
-                          : 'Closed by itself on ${fmtDay(l.closesAt)}, after $days ${days == 1 ? 'day' : 'days'}.',
-                      style: latText(
-                        size: 12,
-                        weight: FontWeight.w500,
-                        color: JColors.muted,
-                        height: 1.4,
+                          ? Icons.check_circle_outline_rounded
+                          : Icons.timer_off_outlined,
+                      size: 14,
+                      color: JColors.muted,
+                    ),
+                    Expanded(
+                      child: Text(
+                        l.status == 'sold'
+                            ? l.soldAt == null
+                                  ? 'Sold. Buyers no longer see it.'
+                                  : 'You marked it sold on ${fmtDay(l.soldAt!)}. Buyers no longer see it.'
+                            : days == null
+                            ? 'Closed by itself on ${fmtDay(l.closesAt)}.'
+                            : 'Closed by itself on ${fmtDay(l.closesAt)}, after $days ${days == 1 ? 'day' : 'days'}.',
+                        style: latText(
+                          size: 12,
+                          weight: FontWeight.w500,
+                          color: JColors.muted,
+                          height: 1.4,
+                        ),
                       ),
                     ),
-                  ),
-                  _CardButton(
-                    icon: Icons.delete_outline_rounded,
-                    label: 'Delete',
-                    color: JColors.levelAlarm,
-                    small: true,
-                    onTap: busy ? null : onDelete,
-                  ),
-                ],
+                    _CardButton(
+                      icon: Icons.delete_outline_rounded,
+                      label: 'Delete',
+                      color: JColors.levelAlarm,
+                      small: true,
+                      onTap: busy ? null : onDelete,
+                    ),
+                  ],
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -408,7 +419,7 @@ class _CardButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: small ? 10 : 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(small ? 10 : 12),
-          border: Border.all(color: color),
+          border: Border.all(color: color, width: 1.5),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -13,7 +13,7 @@ pub use errors::{ErrorBody, HttpErrorResponse};
 pub use extractors::ValidatedJson;
 pub use health::routes as health_routes;
 pub use middlewares::app_version::app_version;
-pub use middlewares::auth::auth;
+pub use middlewares::auth::{OptionalAuth, auth};
 pub use middlewares::etag::{API_VERSION, etag};
 pub use middlewares::permission::check_permission;
 pub use middlewares::service_key::service_key;

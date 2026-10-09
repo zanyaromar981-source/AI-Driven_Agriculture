@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the Farm Doctor farm history job every 10 minutes
+
+[Timer]
+# A run that is still going is not started again; the job also holds a lock
+# file. The daily refresh is the first run after 02:00 UTC, decided by the
+# job itself.
+OnCalendar=*-*-* *:03/10:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

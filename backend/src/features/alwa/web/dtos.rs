@@ -14,7 +14,7 @@ use crate::{
             },
         },
         domain::{
-            self, Deal, DealsSummary, DisplayName, HistoryDays, IdempotencyKey, Listing,
+            self, Deal, DealsSummary, DisplayName, GeoPoint, HistoryDays, IdempotencyKey, Listing,
             ListingCard, ListingDraft, Market, MarketSlug, Note, Offer, OfferDraft, PlacedOffer,
             Price, PricePerKg, PriceSource, QuantityKg, ZoneSlug,
         },
@@ -221,6 +221,9 @@ pub struct AlwaMarketResponse {
     pub slug: String,
     pub name_en: String,
     pub name_ku: String,
+    /// Where the alwa is, WGS84. `null` until staff have said.
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
 }
 
 impl From<&Market> for AlwaMarketResponse {
@@ -229,6 +232,8 @@ impl From<&Market> for AlwaMarketResponse {
             slug: market.slug().into(),
             name_en: market.name_en().clone(),
             name_ku: market.name_ku().clone(),
+            lat: market.point().map(|point| point.lat()),
+            lon: market.point().map(|point| point.lon()),
         }
     }
 }
@@ -406,6 +411,24 @@ pub struct AlwaListingsQuery {
     pub crop: Option<String>,
     /// `open` (the default), `sold`, `closed` or `cancelled`.
     pub status: Option<String>,
+    /// Where the reader stands, WGS84. With `lon`, the listings come
+    /// nearest first, each with its `distance_km`.
+    pub lat: Option<String>,
+    /// Given together with `lat` or not at all.
+    pub lon: Option<String>,
+}
+
+/// A coordinate in a query. Sent empty, as in `?lat=&lon=`, it is not set.
+fn coordinate(name: &str, value: Option<String>) -> Result<Option<f64>, AppError> {
+    given(value)
+        .map(|raw| {
+            raw.parse::<f64>().map_err(|_| {
+                AppError::from(DomainError::InvalidValue(format!(
+                    "{name} must be a number, got {raw}"
+                )))
+            })
+        })
+        .transpose()
 }
 
 impl AlwaListingsQuery {
@@ -424,13 +447,17 @@ impl AlwaListingsQuery {
                 .map(domain::ListingStatus::try_from)
                 .transpose()?
                 .unwrap_or(domain::ListingStatus::Open),
+            near: GeoPoint::from_pair(
+                coordinate("lat", self.lat)?,
+                coordinate("lon", self.lon)?,
+                GeoPoint::anywhere,
+            )?,
             pagination,
         })
     }
 }
 
-/// A listing on the public board. The id is an opaque string to the app. The
-/// seller's phone is never part of it.
+/// A listing on the public board. The id is an opaque string to the app.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaListingSummaryResponse {
     pub id: String,
@@ -438,11 +465,26 @@ pub struct AlwaListingSummaryResponse {
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
     pub grade: Option<AlwaGrade>,
-    pub pickup: AlwaPickup,
-    /// Market slug.
-    pub market: String,
+    /// `null` when the seller did not say.
+    pub pickup: Option<AlwaPickup>,
+    /// Market slug. `null` for a listing posted with neither an alwa nor a
+    /// point.
+    pub market: Option<String>,
     pub zone_slug: Option<String>,
+    /// Where the crop is, WGS84. `null` for a listing posted without a
+    /// point.
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
+    /// Kilometres from the `lat` and `lon` of the request, not rounded.
+    /// `null` when the request named no point or the listing has none.
+    pub distance_km: Option<f64>,
     pub seller_name: Option<String>,
+    /// The phone buyers call. `null` unless the request carries a farmer's
+    /// token.
+    pub seller_phone: Option<String>,
+    pub created_at: DateTime<Utc>,
+    /// When it was sold, `null` while it is not.
+    pub sold_at: Option<DateTime<Utc>>,
     pub closes_at: DateTime<Utc>,
     /// `closed` once `closes_at` has passed with no deal.
     pub status: AlwaListingStatus,
@@ -454,10 +496,10 @@ pub struct AlwaListingSummaryResponse {
     pub fair_price: AlwaFairPrice,
 }
 
-impl TryFrom<&ListingCard> for AlwaListingSummaryResponse {
-    type Error = AppError;
-
-    fn try_from(card: &ListingCard) -> Result<Self, Self::Error> {
+impl AlwaListingSummaryResponse {
+    /// `viewer` is the signed-in phone, or `None` for a reader without a
+    /// login, who is not shown the seller's phone.
+    pub fn new(card: &ListingCard, viewer: Option<&Phone>) -> Result<Self, AppError> {
         let listing = card.listing();
 
         Ok(Self {
@@ -466,10 +508,16 @@ impl TryFrom<&ListingCard> for AlwaListingSummaryResponse {
             quantity_kg: listing.quantity().value(),
             asking_price_iqd_per_kg: listing.asking_price().value(),
             grade: listing.grade().map(Into::into),
-            pickup: (*listing.pickup()).into(),
-            market: listing.market().into(),
+            pickup: listing.pickup().map(Into::into),
+            market: listing.market().as_ref().map(Into::into),
             zone_slug: listing.zone_slug().as_ref().map(Into::into),
+            lat: listing.point().map(|point| point.lat()),
+            lon: listing.point().map(|point| point.lon()),
+            distance_km: *card.distance_km(),
             seller_name: listing.seller_name().as_ref().map(Into::into),
+            seller_phone: listing.seller_phone_seen_by(viewer).map(Into::into),
+            created_at: *listing.created_at(),
+            sold_at: listing.sold_at(),
             closes_at: *listing.closes_at(),
             status: (*card.status()).into(),
             offers: card.open_offers(),
@@ -568,11 +616,17 @@ pub struct PostAlwaListingParams {
     pub quantity_kg: i64,
     pub asking_price_iqd_per_kg: i64,
     pub grade: Option<AlwaGrade>,
-    pub pickup: AlwaPickup,
-    /// Market slug, for example `sulaymaniyah`.
-    pub market: String,
-    /// Where the crop comes from: lower-case letters and hyphens.
+    pub pickup: Option<AlwaPickup>,
+    /// Market slug, for example `sulaymaniyah`. Left out: the alwa nearest
+    /// to `lat` and `lon`, or none when those are left out too.
+    pub market: Option<String>,
+    /// Where the crop comes from: lower-case letters and hyphens. Left out:
+    /// the district `lat` and `lon` lie in.
     pub zone_slug: Option<String>,
+    /// Where the crop is, WGS84, inside the Kurdistan Region. Given
+    /// together with `lon` or not at all.
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
     /// Up to 200 characters.
     pub note: Option<String>,
     /// In the future, at most 14 days ahead.
@@ -585,15 +639,16 @@ impl PostAlwaListingParams {
     pub fn into_input(self, idempotency_key: Option<String>) -> Result<PostListingInput, AppError> {
         Ok(PostListingInput {
             idempotency_key: idempotency_key.map(IdempotencyKey::new).transpose()?,
-            market: MarketSlug::new(self.market)?,
+            market: self.market.map(MarketSlug::new).transpose()?,
             draft: ListingDraft {
                 seller_name: self.seller_name.map(DisplayName::new).transpose()?,
                 crop: domain::Crop::new(&self.crop)?,
                 quantity: QuantityKg::new(self.quantity_kg)?,
                 asking_price: PricePerKg::new(self.asking_price_iqd_per_kg)?,
                 grade: self.grade.map(Into::into),
-                pickup: self.pickup.into(),
+                pickup: self.pickup.map(Into::into),
                 zone_slug: self.zone_slug.map(ZoneSlug::new).transpose()?,
+                point: GeoPoint::from_pair(self.lat, self.lon, GeoPoint::in_region)?,
                 note: self.note.map(Note::new).transpose()?,
                 closes_at: self.closes_at,
             },
@@ -610,11 +665,22 @@ pub struct AlwaListingResponse {
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
     pub grade: Option<AlwaGrade>,
-    pub pickup: AlwaPickup,
-    /// Market slug.
-    pub market: String,
+    /// `null` when the seller did not say.
+    pub pickup: Option<AlwaPickup>,
+    /// Market slug. `null` for a listing posted with neither an alwa nor a
+    /// point.
+    pub market: Option<String>,
     pub zone_slug: Option<String>,
+    /// Where the crop is, WGS84. `null` for a listing posted without a
+    /// point.
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
     pub seller_name: Option<String>,
+    /// The phone buyers call. `null` unless the request carries a farmer's
+    /// token.
+    pub seller_phone: Option<String>,
+    /// When it was sold, `null` while it is not.
+    pub sold_at: Option<DateTime<Utc>>,
     pub closes_at: DateTime<Utc>,
     /// `closed` once `closes_at` has passed with no deal.
     pub status: AlwaListingStatus,
@@ -626,11 +692,12 @@ pub struct AlwaListingResponse {
 }
 
 impl AlwaListingResponse {
-    /// `viewer` is the signed-in phone, or `None` on the public routes. It
-    /// decides only whether the accepted buyer's phone is shown.
+    /// `viewer` is the signed-in phone, or `None` for a reader without a
+    /// login. It decides whether the seller's phone is shown, and to the
+    /// seller the accepted buyer's.
     pub fn new(card: &ListingCard, viewer: Option<&Phone>) -> Result<Self, AppError> {
         let listing = card.listing();
-        let summary = AlwaListingSummaryResponse::try_from(card)?;
+        let summary = AlwaListingSummaryResponse::new(card, viewer)?;
 
         let offers = card
             .offers()
@@ -652,7 +719,11 @@ impl AlwaListingResponse {
             pickup: summary.pickup,
             market: summary.market,
             zone_slug: summary.zone_slug,
+            lat: summary.lat,
+            lon: summary.lon,
             seller_name: summary.seller_name,
+            seller_phone: summary.seller_phone,
+            sold_at: summary.sold_at,
             closes_at: summary.closes_at,
             status: summary.status,
             best_offer_iqd_per_kg: summary.best_offer_iqd_per_kg,
@@ -700,8 +771,8 @@ pub struct AlwaOfferListingResponse {
     pub crop: String,
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
-    /// Market slug.
-    pub market: String,
+    /// Market slug, `null` for a listing at no alwa.
+    pub market: Option<String>,
     pub seller_name: Option<String>,
     pub closes_at: DateTime<Utc>,
     pub status: AlwaListingStatus,
@@ -741,7 +812,7 @@ impl AlwaMyOfferResponse {
                 crop: (*listing.crop()).into(),
                 quantity_kg: listing.quantity().value(),
                 asking_price_iqd_per_kg: listing.asking_price().value(),
-                market: listing.market().into(),
+                market: listing.market().as_ref().map(Into::into),
                 seller_name: listing.seller_name().as_ref().map(Into::into),
                 closes_at: *listing.closes_at(),
                 status: (*placed.listing_status()).into(),
@@ -878,33 +949,219 @@ mod tests {
     }
 
     #[test]
-    fn a_public_listing_shows_no_phone_at_all() {
+    fn a_reader_without_a_login_is_shown_no_phone_at_all() {
         let open = an_open_listing(7);
         let offers = [an_open_offer(1, &open, BUYER, 950)];
         let open_card = ListingCard::assemble(open, &offers, &[], Utc::now());
 
         for card in [open_card, a_sold_card()] {
-            let body = json(&AlwaOneListingResponse::new(&card, None).expect("body")).to_string();
+            let body = json(&AlwaOneListingResponse::new(&card, None).expect("body"));
 
-            assert!(!body.contains("phone"), "{body}");
-            assert!(!body.contains("+964"), "{body}");
+            assert!(
+                body["listing"]["seller_phone"].is_null(),
+                "the field is there and empty: {body}"
+            );
+            assert!(!body.to_string().contains("+964"), "{body}");
         }
     }
 
     #[test]
-    fn the_board_summary_has_no_phone_and_counts_offers() {
+    fn the_board_summary_counts_offers_and_shows_no_phone_without_a_login() {
         let open = an_open_listing(7);
         let offers = [an_open_offer(1, &open, BUYER, 950)];
         let card = ListingCard::assemble(open, &offers, &[], Utc::now());
 
-        let body = json(&AlwaListingSummaryResponse::try_from(&card).expect("body"));
+        let body = json(&AlwaListingSummaryResponse::new(&card, None).expect("body"));
 
         assert_eq!(body["id"], "7");
         assert_eq!(body["offers"], 1);
         assert_eq!(body["best_offer_iqd_per_kg"], 950);
         assert_eq!(body["fair_price"], "unknown");
         assert_eq!(body["market"], "sulaymaniyah");
+        assert_eq!(body["pickup"], "farm");
+        assert!(body["seller_phone"].is_null());
+        assert!(
+            body["created_at"].is_string(),
+            "the app shows the day posted"
+        );
+        assert!(body["sold_at"].is_null());
+        assert!(body["lat"].is_null() && body["lon"].is_null());
+        assert!(body["distance_km"].is_null());
         assert!(!body.to_string().contains("+964"));
+    }
+
+    #[test]
+    fn a_signed_in_reader_sees_the_sellers_phone_the_place_and_the_distance() {
+        let from = GeoPoint::in_region(36.1911, 44.0092).expect("point");
+        let open = an_open_listing(7)
+            .placed_at(Some(GeoPoint::in_region(35.5572, 45.4356).expect("point")));
+        let offers = [an_open_offer(1, &open, BUYER, 950)];
+        let card = ListingCard::assemble(open, &offers, &[], Utc::now()).seen_from(&from);
+
+        let row =
+            json(&AlwaListingSummaryResponse::new(&card, Some(&phone(OTHER_BUYER))).expect("row"));
+
+        assert_eq!(row["seller_phone"], SELLER, "no deal is needed");
+        assert_eq!(row["lat"], 35.5572);
+        assert_eq!(row["lon"], 45.4356);
+        assert!(
+            row["distance_km"]
+                .as_f64()
+                .is_some_and(|km| (145.0..150.0).contains(&km)),
+            "{row}"
+        );
+        assert!(
+            !row.to_string().contains(BUYER),
+            "a buyer's phone is still shown only on a deal"
+        );
+
+        let one =
+            json(&AlwaOneListingResponse::new(&card, Some(&phone(OTHER_BUYER))).expect("one"));
+
+        assert_eq!(one["listing"]["seller_phone"], SELLER);
+        assert_eq!(one["listing"]["lat"], 35.5572);
+        assert!(one["listing"]["created_at"].is_string());
+        assert!(!one.to_string().contains(BUYER));
+    }
+
+    #[test]
+    fn a_listing_with_no_market_pickup_or_grade_says_so_with_nulls() {
+        let now = Utc::now();
+        let bare = Listing::rehydrate(
+            9,
+            phone(SELLER),
+            None,
+            domain::Crop::of("tomato"),
+            QuantityKg::new(4_000).expect("quantity"),
+            PricePerKg::new(750).expect("price"),
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            now + chrono::Duration::days(14),
+            domain::ListingStatus::Open,
+            now,
+            now,
+        );
+        let card = ListingCard::assemble(bare, &[], &[], now);
+
+        let body = json(&AlwaOneListingResponse::new(&card, None).expect("body"));
+        let listing = &body["listing"];
+
+        assert_eq!(listing["id"], "9");
+        assert!(listing["market"].is_null());
+        assert!(listing["pickup"].is_null());
+        assert!(listing["grade"].is_null());
+        assert_eq!(listing["fair_price"], "unknown");
+    }
+
+    #[test]
+    fn a_sold_listing_tells_when_it_was_sold() {
+        let body = json(&AlwaOneListingResponse::new(&a_sold_card(), None).expect("body"));
+
+        assert_eq!(body["listing"]["status"], "sold");
+        assert!(body["listing"]["sold_at"].is_string());
+    }
+
+    #[test]
+    fn the_app_s_listing_body_needs_no_market_pickup_or_grade() {
+        let closes_at = Utc::now() + chrono::Duration::days(14);
+        let params: PostAlwaListingParams = serde_json::from_value(serde_json::json!({
+            "crop": "tomato",
+            "quantity_kg": 4000,
+            "asking_price_iqd_per_kg": 750,
+            "closes_at": closes_at,
+            "lat": 35.5572,
+            "lon": 45.4356,
+        }))
+        .expect("the app's body");
+
+        let input = params.into_input(None).expect("input");
+
+        assert_eq!(input.market, None);
+        assert_eq!(input.draft.pickup, None);
+        assert_eq!(input.draft.grade, None);
+        assert_eq!(
+            input.draft.point,
+            Some(GeoPoint::in_region(35.5572, 45.4356).expect("point"))
+        );
+    }
+
+    #[test]
+    fn the_body_the_app_sent_before_with_a_market_and_a_pickup_still_works() {
+        let params: PostAlwaListingParams = serde_json::from_value(serde_json::json!({
+            "crop": "tomato",
+            "quantity_kg": 4000,
+            "asking_price_iqd_per_kg": 750,
+            "closes_at": Utc::now() + chrono::Duration::days(14),
+            "lat": 35.5572,
+            "lon": 45.4356,
+            "market": "sulaymaniyah",
+            "pickup": "farm",
+        }))
+        .expect("body");
+
+        let input = params.into_input(None).expect("input");
+
+        assert_eq!(
+            input.market.as_ref().map(MarketSlug::as_str),
+            Some("sulaymaniyah")
+        );
+        assert_eq!(input.draft.pickup, Some(domain::Pickup::Farm));
+    }
+
+    #[test]
+    fn a_listing_point_is_both_numbers_inside_the_region_or_nothing() {
+        let body = |lat: Option<f64>, lon: Option<f64>| {
+            serde_json::from_value::<PostAlwaListingParams>(serde_json::json!({
+                "crop": "tomato",
+                "quantity_kg": 10,
+                "asking_price_iqd_per_kg": 750,
+                "closes_at": Utc::now() + chrono::Duration::days(1),
+                "lat": lat,
+                "lon": lon,
+            }))
+            .expect("body")
+            .into_input(None)
+        };
+
+        assert!(body(None, None).is_ok_and(|input| input.draft.point.is_none()));
+        assert!(body(Some(35.5), Some(45.4)).is_ok());
+        assert!(body(Some(35.5), None).is_err());
+        assert!(body(None, Some(45.4)).is_err());
+        assert!(
+            body(Some(51.5), Some(-0.12)).is_err(),
+            "London is no farm here"
+        );
+    }
+
+    #[test]
+    fn the_board_is_asked_from_a_point_given_as_both_numbers_or_not_at_all() {
+        let pagination = crate::app::Pagination::new(1, 20);
+        let query = |lat: Option<&str>, lon: Option<&str>| {
+            AlwaListingsQuery {
+                market: None,
+                crop: None,
+                status: None,
+                lat: lat.map(str::to_string),
+                lon: lon.map(str::to_string),
+            }
+            .into_input(pagination)
+        };
+
+        assert!(query(None, None).is_ok_and(|input| input.near.is_none()));
+        assert!(query(Some(""), Some("")).is_ok_and(|input| input.near.is_none()));
+        assert!(query(Some("35.5572"), Some("45.4356")).is_ok_and(|input| input.near.is_some()));
+        assert!(
+            query(Some("33.3"), Some("44.4")).is_ok(),
+            "a buyer may look from outside the region"
+        );
+        assert!(query(Some("35.5"), None).is_err());
+        assert!(query(None, Some("45.4")).is_err());
+        assert!(query(Some("north"), Some("45.4")).is_err());
+        assert!(query(Some("95"), Some("45.4")).is_err());
     }
 
     #[test]
@@ -920,16 +1177,18 @@ mod tests {
             offers[1].get("buyer_phone").is_none(),
             "a declined buyer's phone stays private"
         );
-        assert!(body["listing"].get("seller_phone").is_none());
+        assert_eq!(body["listing"]["seller_phone"], SELLER);
     }
 
     #[test]
-    fn a_stranger_with_a_token_sees_no_phone_on_a_sold_listing() {
+    fn a_stranger_with_a_token_sees_the_sellers_phone_but_no_buyers() {
         let body = json(
             &AlwaOneListingResponse::new(&a_sold_card(), Some(&phone(OTHER_BUYER))).expect("body"),
         );
 
-        assert!(!body.to_string().contains("+964"));
+        assert_eq!(body["listing"]["seller_phone"], SELLER);
+        assert!(!body.to_string().contains(BUYER));
+        assert!(!body.to_string().contains(OTHER_BUYER));
     }
 
     #[test]
@@ -986,6 +1245,8 @@ mod tests {
             market: Some(String::new()),
             crop: Some(String::new()),
             status: None,
+            lat: None,
+            lon: None,
         }
         .into_input(crate::app::Pagination::new(1, 20))
         .expect("input");
@@ -1001,6 +1262,8 @@ mod tests {
             market: None,
             crop: crop.map(str::to_string),
             status: status.map(str::to_string),
+            lat: None,
+            lon: None,
         };
         let pagination = crate::app::Pagination::new(1, 20);
 
@@ -1018,6 +1281,8 @@ mod tests {
             market: None,
             crop: Some("rice".to_string()),
             status: None,
+            lat: None,
+            lon: None,
         }
         .into_input(pagination)
         .expect("input");
@@ -1037,6 +1302,8 @@ mod tests {
                 market: None,
                 crop: Some(bad.to_string()),
                 status: None,
+                lat: None,
+                lon: None,
             }
             .into_input(pagination)
             .err()

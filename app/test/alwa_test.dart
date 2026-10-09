@@ -144,7 +144,7 @@ void main() {
     expect(find.text('Closes'), findsOneWidget);
     expect(rich('9 days left'), findsOneWidget);
     expect(find.text('+964 771 987 6543'), findsOneWidget);
-    expect(find.text('Copy the number to call'), findsOneWidget);
+    expect(find.text('Call the seller'), findsOneWidget);
     expect(find.text('open'), findsOneWidget);
   });
 
@@ -213,7 +213,7 @@ void main() {
     expect(made.quantityKg, 4000);
     expect(made.priceIqdPerKg, 700);
     expect(made.lat, _here.lat);
-    expect(made.closesAt.difference(made.createdAt).inDays, 13);
+    expect(made.closesAt.difference(made.createdAt!).inDays, 13);
   });
 
   testWidgets('sell: 20 open listings shows the too-many banner', (t) async {

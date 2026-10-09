@@ -93,7 +93,9 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
                       StatusPill(l.status),
                       Flexible(
                         child: Text(
-                          'Posted ${fmtDay(l.createdAt)}',
+                          l.createdAt == null
+                              ? 'Posted'
+                              : 'Posted ${fmtDay(l.createdAt!)}',
                           style: latText(
                             size: 13,
                             weight: FontWeight.w500,
@@ -207,7 +209,7 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
               _Fact(
                 icon: Icons.calendar_today_outlined,
                 label: 'Posted',
-                value: fmtDayTime(l.createdAt),
+                value: l.createdAt == null ? '-' : fmtDayTime(l.createdAt!),
               ),
               _Fact(
                 icon: Icons.timer_outlined,
@@ -229,6 +231,7 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
             AlwaCard(
               radius: 16,
               border: JColors.accent,
+              borderWidth: 1.5,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 14,
@@ -241,12 +244,11 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
                         weight: FontWeight.w800,
                       ).copyWith(letterSpacing: 0.3),
                     ),
-                    // No url_launcher in the app yet: copy the number instead
-                    // of opening the phone app.
+                    // Opens the phone app with the number typed in.
                     AlwaButton(
-                      label: 'Copy the number to call',
-                      icon: Icons.copy_rounded,
-                      onPressed: () => copyPhone(context, l.sellerPhone!),
+                      label: 'Call the seller',
+                      icon: Icons.phone_rounded,
+                      onPressed: () => callPhone(context, l.sellerPhone!),
                     ),
                   ] else
                     Text(

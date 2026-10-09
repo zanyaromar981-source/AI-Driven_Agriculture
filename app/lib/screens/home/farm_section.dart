@@ -432,9 +432,10 @@ class _ViewToggle extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: JColors.toggleBg,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
+        spacing: 2,
         children: [
           for (final v in FarmView.values)
             Expanded(
@@ -446,11 +447,11 @@ class _ViewToggle extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: v == view ? JColors.card : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(999),
                     boxShadow: v == view
                         ? const [
                             BoxShadow(
-                              color: Color(0x1A000000),
+                              color: Color(0x14162019),
                               blurRadius: 3,
                               offset: Offset(0, 1),
                             ),
@@ -464,8 +465,8 @@ class _ViewToggle extends StatelessWidget {
                     },
                     style: jText(
                       false,
-                      size: 13.5,
-                      weight: v == view ? FontWeight.w700 : FontWeight.w500,
+                      size: 13,
+                      weight: v == view ? FontWeight.w700 : FontWeight.w600,
                       color: v == view ? JColors.ink : JColors.muted,
                     ),
                   ),

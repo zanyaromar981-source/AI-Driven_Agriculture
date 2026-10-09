@@ -12,8 +12,8 @@ use crate::{
         alwa::app::use_cases::{
             AcceptOfferUseCase, BrowseListingsUseCase, CancelListingUseCase, ListDealsUseCase,
             ListMarketsUseCase, ListMyListingsUseCase, ListMyOffersUseCase, MakeOfferUseCase,
-            PostListingUseCase, RecordPriceUseCase, ViewListingUseCase, ViewMarketPricesUseCase,
-            ViewPriceHistoryUseCase,
+            MarkListingSoldUseCase, PostListingUseCase, RecordPriceUseCase, ViewListingUseCase,
+            ViewMarketPricesUseCase, ViewPriceHistoryUseCase,
         },
         briefs::app::use_cases::{
             CorrectBriefUseCase, DeleteBriefUseCase, ListBriefsUseCase, ListStoredBriefsUseCase,
@@ -41,6 +41,10 @@ use crate::{
         fires::app::use_cases::{
             CorrectFireUseCase, CreateFireUseCase, ListFiresUseCase, ListStoredFiresUseCase,
             RecordFireUseCase, RemoveFireUseCase, ViewStoredFireUseCase,
+        },
+        history::app::use_cases::{
+            ClearFarmHistoryUseCase, ListHistoryCoverageUseCase, RecordFarmHistoryUseCase,
+            ViewFarmHistoryUseCase, ViewStoredFarmHistoryUseCase,
         },
         insights::app::use_cases::{
             CorrectFarmInsightUseCase, CreateFarmInsightUseCase, ListFarmCoverageUseCase,
@@ -203,6 +207,7 @@ pub struct AlwaFeature {
     pub post_listing_use_case: Arc<PostListingUseCase>,
     pub list_my_listings_use_case: Arc<ListMyListingsUseCase>,
     pub cancel_listing_use_case: Arc<CancelListingUseCase>,
+    pub mark_listing_sold_use_case: Arc<MarkListingSoldUseCase>,
     pub make_offer_use_case: Arc<MakeOfferUseCase>,
     pub accept_offer_use_case: Arc<AcceptOfferUseCase>,
     pub list_my_offers_use_case: Arc<ListMyOffersUseCase>,
@@ -315,6 +320,60 @@ pub struct CropFeature {
 }
 
 #[derive(Clone)]
+pub struct HistoryFeature {
+    pub view_farm_history_use_case: Arc<ViewFarmHistoryUseCase>,
+    pub record_farm_history_use_case: Arc<RecordFarmHistoryUseCase>,
+    pub list_history_coverage_use_case: Arc<ListHistoryCoverageUseCase>,
+    pub view_stored_farm_history_use_case: Arc<ViewStoredFarmHistoryUseCase>,
+    pub clear_farm_history_use_case: Arc<ClearFarmHistoryUseCase>,
+}
+
+#[derive(Clone)]
+pub struct PlanFeature {
+    pub view_farm_plan_use_case: Arc<crate::features::plans::app::use_cases::ViewFarmPlanUseCase>,
+    pub record_farm_plan_use_case:
+        Arc<crate::features::plans::app::use_cases::RecordFarmPlanUseCase>,
+    pub list_plan_coverage_use_case:
+        Arc<crate::features::plans::app::use_cases::ListPlanCoverageUseCase>,
+    pub view_stored_farm_plan_use_case:
+        Arc<crate::features::plans::app::use_cases::ViewStoredFarmPlanUseCase>,
+}
+
+#[derive(Clone)]
+pub struct AlertFeature {
+    pub list_farm_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ListFarmAlertsUseCase>,
+    pub list_my_alerts_use_case: Arc<crate::features::alerts::app::use_cases::ListMyAlertsUseCase>,
+    pub mark_alert_done_use_case:
+        Arc<crate::features::alerts::app::use_cases::MarkAlertDoneUseCase>,
+    pub record_alert_use_case: Arc<crate::features::alerts::app::use_cases::RecordAlertUseCase>,
+    pub list_unpushed_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ListUnpushedAlertsUseCase>,
+    pub mark_alert_pushed_use_case:
+        Arc<crate::features::alerts::app::use_cases::MarkAlertPushedUseCase>,
+    pub view_stored_farm_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ViewStoredFarmAlertsUseCase>,
+    pub remove_alert_use_case: Arc<crate::features::alerts::app::use_cases::RemoveAlertUseCase>,
+    pub register_device_use_case:
+        Arc<crate::features::alerts::app::use_cases::RegisterDeviceUseCase>,
+    pub remove_device_use_case: Arc<crate::features::alerts::app::use_cases::RemoveDeviceUseCase>,
+    pub remove_dead_device_use_case:
+        Arc<crate::features::alerts::app::use_cases::RemoveDeadDeviceUseCase>,
+}
+
+#[derive(Clone)]
+pub struct WorkerFeature {
+    pub put_my_card_use_case: Arc<crate::features::workers::app::use_cases::PutMyCardUseCase>,
+    pub view_my_card_use_case: Arc<crate::features::workers::app::use_cases::ViewMyCardUseCase>,
+    pub remove_my_card_use_case: Arc<crate::features::workers::app::use_cases::RemoveMyCardUseCase>,
+    pub browse_workers_use_case:
+        Arc<crate::features::workers::app::use_cases::BrowseWorkersUseCase>,
+    pub list_all_workers_use_case:
+        Arc<crate::features::workers::app::use_cases::ListAllWorkersUseCase>,
+    pub delete_worker_use_case: Arc<crate::features::workers::app::use_cases::DeleteWorkerUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -334,6 +393,10 @@ pub struct Features {
     pub message: MessageFeature,
     pub app_config: AppConfigFeature,
     pub crop: CropFeature,
+    pub history: HistoryFeature,
+    pub plan: PlanFeature,
+    pub alert: AlertFeature,
+    pub worker: WorkerFeature,
 }
 
 #[derive(Clone)]

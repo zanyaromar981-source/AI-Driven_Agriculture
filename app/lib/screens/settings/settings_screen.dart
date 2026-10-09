@@ -15,8 +15,7 @@ import '../tabs.dart';
 /// are not on the server yet (FRONTEND.md 14): the switches are kept on the
 /// phone and delete says so instead of pretending.
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required this.farm});
-  final FarmSummary farm;
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -203,14 +202,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Text(
                   'Settings',
-                  style: latText(size: 24, weight: FontWeight.w700),
+                  style: latText(
+                    size: 24,
+                    weight: FontWeight.w700,
+                    letterSpacing: -0.4,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: JColors.card,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Column(
                     children: [
@@ -227,7 +230,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: jText(
                                   true,
                                   size: 13,
-                                  color: scope.ku ? JColors.ink : JColors.muted,
+                                  color: JColors.muted,
                                 ),
                               ),
                             ),
@@ -238,7 +241,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 overflow: TextOverflow.ellipsis,
                                 style: latText(
                                   size: 13,
-                                  color: scope.ku ? JColors.muted : JColors.ink,
+                                  weight: FontWeight.w400,
+                                  color: JColors.muted,
                                 ),
                               ),
                             ),
@@ -256,7 +260,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Text(
                               _phone == null ? '-' : _fmtPhone(_phone!),
                               textDirection: TextDirection.ltr,
-                              style: latText(size: 13, color: JColors.muted),
+                              style: latText(
+                                size: 13,
+                                weight: FontWeight.w400,
+                                color: JColors.muted,
+                              ),
                             ),
                             Text(
                               'Change number',
@@ -277,12 +285,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           farms == null
                               ? '-'
                               : '$farms ${farms == 1 ? 'farm' : 'farms'}',
-                          style: latText(size: 13, color: JColors.muted),
+                          style: latText(
+                            size: 13,
+                            weight: FontWeight.w400,
+                            color: JColors.muted,
+                          ),
                         ),
-                        // Back past the farm screen to My farms.
-                        onTap: () => Navigator.of(context)
-                          ..pop()
-                          ..maybePop(),
+                        // My farms is always the first page after sign-in.
+                        onTap: () =>
+                            Navigator.of(context).popUntil((r) => r.isFirst),
                       ),
                       const _Row(
                         icon: Icons.notifications_none_rounded,
@@ -310,7 +321,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: Text(
                           'v0.1 · data from satellites and weather',
                           textAlign: TextAlign.end,
-                          style: latText(size: 13, color: JColors.muted),
+                          style: latText(
+                            size: 13,
+                            weight: FontWeight.w400,
+                            color: JColors.muted,
+                          ),
                         ),
                         onTap: _about,
                         last: true,
@@ -323,9 +338,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   height: 48,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      backgroundColor: JColors.card,
+                      backgroundColor: Colors.transparent,
                       foregroundColor: JColors.levelAlarm,
-                      side: const BorderSide(color: JColors.levelAlarm),
+                      side: const BorderSide(
+                        color: JColors.levelAlarm,
+                        width: 1.5,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -368,9 +386,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text(
                   'Removes your phone number, farms, reports and questions.',
                   textAlign: TextAlign.center,
-                  style: latText(size: 12, color: JColors.muted),
+                  style: latText(
+                    size: 12,
+                    weight: FontWeight.w400,
+                    color: JColors.muted,
+                  ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 const JutyarFooter(),
               ],
             ),
@@ -381,7 +403,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-/// One settings row: icon tile, label, value on the right, chevron.
+/// One settings row: icon tile, label, value on the right, chevron. A
+/// line under every row but the last (design: Settings Card).
 class _Row extends StatelessWidget {
   const _Row({
     required this.icon,
@@ -403,33 +426,33 @@ class _Row extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 56),
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        border: last || onTap == null
+        border: last
             ? null
-            : const Border(bottom: BorderSide(color: JColors.cardLine)),
+            : const Border(bottom: BorderSide(color: JColors.line)),
       ),
       child: Row(
         spacing: 12,
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: JColors.accentSoft,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 18, color: JColors.accent),
+            child: Icon(icon, size: 16, color: JColors.accent),
           ),
+          Text(label, style: latText(size: 15, weight: FontWeight.w600)),
           Expanded(
-            child: Text(
-              label,
-              style: latText(size: 15, weight: FontWeight.w600),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: value ?? const SizedBox.shrink(),
             ),
           ),
-          if (value != null) Flexible(child: value!),
           if (onTap != null)
             const Icon(
               Icons.chevron_right_rounded,
-              size: 20,
+              size: 16,
               color: JColors.muted,
             ),
         ],
@@ -450,21 +473,50 @@ class _Toggle extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(left: 44, bottom: 6),
-    child: Row(
-      spacing: 12,
-      children: [
-        Expanded(
-          child: Text(label, style: latText(size: 14, weight: FontWeight.w500)),
+  Widget build(BuildContext context) => Semantics(
+    toggled: value,
+    label: label,
+    excludeSemantics: true,
+    child: InkWell(
+      onTap: () => onChanged(!value),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.only(left: 40),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: JColors.line)),
         ),
-        Switch(
-          value: value,
-          onChanged: onChanged,
-          activeThumbColor: Colors.white,
-          activeTrackColor: JColors.accent,
+        child: Row(
+          spacing: 12,
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: latText(size: 14, weight: FontWeight.w500),
+              ),
+            ),
+            // Design: 44 x 26 track, 20 px white knob.
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 44,
+              height: 26,
+              padding: const EdgeInsets.all(3),
+              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+              decoration: BoxDecoration(
+                color: value ? JColors.accent : JColors.levelNone,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     ),
   );
 }

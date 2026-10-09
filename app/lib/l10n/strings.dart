@@ -178,6 +178,12 @@ class S {
   String get sheetTitle => t('ئەم خانانە چین؟', 'What are these cells?');
   String get selectAll => t('هەمووی', 'Select all');
   String get selectFirst => t('سەرەتا خانەکان هەڵبژێرە', 'Select cells first');
+  String fillFarm(String crop) =>
+      t('هەموو کێڵگەکە بکە بە $crop', 'Fill the whole farm with $crop');
+  String get tapOrFill => t(
+    'خانەکان هەڵبژێرە، یان هەموو کێڵگەکە پڕبکەرەوە',
+    'Tap squares to paint, or fill the whole farm',
+  );
   String get cells => t('خانە', 'cells');
   String get wholeFarm => t('هەموو کێڵگە', 'Whole farm');
   String get next => t('دواتر', 'Next');

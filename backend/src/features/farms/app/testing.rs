@@ -45,6 +45,7 @@ pub enum RepositoryCall {
     Exists {
         id: i32,
     },
+    FindAllLocationsWithCreatedAt,
     Create,
     Update,
     Replace {
@@ -282,6 +283,26 @@ impl FarmRepository for FakeFarmRepository {
                 vec![FarmLocation::rehydrate(
                     one.id().unwrap_or_default(),
                     one.outline(),
+                )]
+            })
+            .unwrap_or_default())
+    }
+
+    async fn find_all_locations_with_created_at(
+        &self,
+    ) -> Result<Vec<(FarmLocation, chrono::DateTime<chrono::Utc>)>, AppError> {
+        self.record(RepositoryCall::FindAllLocationsWithCreatedAt);
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .existing
+            .as_ref()
+            .map(|one| {
+                vec![(
+                    FarmLocation::rehydrate(one.id().unwrap_or_default(), one.outline()),
+                    *one.created_at(),
                 )]
             })
             .unwrap_or_default())

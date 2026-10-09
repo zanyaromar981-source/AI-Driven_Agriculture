@@ -8,6 +8,7 @@ import '../../app_scope.dart';
 import '../../geo.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
+import '../../widgets/farm_card.dart';
 import 'doctor_answer_screen.dart';
 import 'doctor_widgets.dart';
 
@@ -340,6 +341,7 @@ class PhotoRow extends StatelessWidget {
     required this.onRemove,
     this.onGallery,
     this.max = kMaxPhotos,
+    this.compact = false,
   });
   final List<DoctorPhoto> photos;
   final bool enabled;
@@ -350,11 +352,14 @@ class PhotoRow extends StatelessWidget {
   final void Function(int) onRemove;
   final int max;
 
+  /// 72 px tiles with a dashed Camera tile (design: Report, Photo Row).
+  final bool compact;
+
   @override
   Widget build(BuildContext context) {
     final full = photos.length >= max;
     return SizedBox(
-      height: 84,
+      height: compact ? 72 : 84,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -363,6 +368,7 @@ class PhotoRow extends StatelessWidget {
               icon: Icons.photo_camera_outlined,
               label: 'Camera',
               onTap: enabled ? onCamera : null,
+              compact: compact,
             ),
             if (onGallery != null) ...[
               const SizedBox(width: 10),
@@ -379,6 +385,7 @@ class PhotoRow extends StatelessWidget {
               photo: p,
               onRemove: enabled ? () => onRemove(i) : null,
               label: 'Photo ${i + 1}',
+              compact: compact,
             ),
           ],
         ],
@@ -388,60 +395,86 @@ class PhotoRow extends StatelessWidget {
 }
 
 class _AddTile extends StatelessWidget {
-  const _AddTile({required this.icon, required this.label, this.onTap});
+  const _AddTile({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.compact = false,
+  });
   final IconData icon;
   final String label;
   final VoidCallback? onTap;
+  final bool compact;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    label: label,
-    excludeSemantics: true,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: 84,
-        decoration: BoxDecoration(
-          color: JColors.card,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: JColors.accent.withValues(alpha: 0.45)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 4,
-          children: [
-            Icon(icon, size: 24, color: JColors.accent),
-            Text(
-              label,
-              style: latText(
-                size: 12,
-                weight: FontWeight.w600,
-                color: JColors.accent,
-              ),
-            ),
-          ],
-        ),
+  Widget build(BuildContext context) {
+    final r = compact ? 12.0 : 14.0;
+    final body = Container(
+      width: compact ? 72 : 84,
+      decoration: BoxDecoration(
+        color: compact ? const Color(0x66FFFFFF) : JColors.card,
+        borderRadius: BorderRadius.circular(r),
+        border: compact
+            ? null
+            : Border.all(color: JColors.accent.withValues(alpha: 0.45)),
       ),
-    ),
-  );
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 4,
+        children: [
+          Icon(icon, size: compact ? 22 : 24, color: JColors.accent),
+          Text(
+            label,
+            style: latText(
+              size: compact ? 11 : 12,
+              weight: FontWeight.w600,
+              color: JColors.accent,
+            ),
+          ),
+        ],
+      ),
+    );
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(r),
+        child: compact
+            ? CustomPaint(
+                painter: DashedBorderPainter(
+                  color: JColors.accent.withValues(alpha: 0.5),
+                  radius: r,
+                ),
+                child: body,
+              )
+            : body,
+      ),
+    );
+  }
 }
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({required this.photo, required this.label, this.onRemove});
+  const _Thumb({
+    required this.photo,
+    required this.label,
+    this.onRemove,
+    this.compact = false,
+  });
   final DoctorPhoto photo;
   final String label;
   final VoidCallback? onRemove;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: 84,
+    width: compact ? 72 : 84,
     child: Stack(
       children: [
         Positioned.fill(
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(compact ? 12 : 14),
             child: Image.memory(
               photo.bytes is Uint8List
                   ? photo.bytes as Uint8List
@@ -463,15 +496,15 @@ class _Thumb extends StatelessWidget {
               onTap: onRemove,
               customBorder: const CircleBorder(),
               child: Container(
-                width: 26,
-                height: 26,
-                decoration: const BoxDecoration(
-                  color: JColors.ink,
+                width: compact ? 18 : 26,
+                height: compact ? 18 : 26,
+                decoration: BoxDecoration(
+                  color: compact ? const Color(0xB3162019) : JColors.ink,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.close_rounded,
-                  size: 16,
+                  size: compact ? 11 : 16,
                   color: Colors.white,
                 ),
               ),
