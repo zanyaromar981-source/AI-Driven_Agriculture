@@ -93,7 +93,10 @@ Kurdistan Region of Iraq. Follow every rule:
    DISTRICTS_TO_COVER, using that district's slug as the scope. A district
    brief says what is different or specific there; do not repeat the region
    brief.
-8. Answer with the JSON object only, in the required shape."""
+8. Fire entries are satellite hot spots that nobody has checked on the ground;
+   some may be gas flares or controlled burning. Call them "satellite fire
+   detections", never confirmed fires, and give them the level "watch".
+9. Answer with the JSON object only, in the required shape."""
 
 SCHEMA = {
     "type": "object",
