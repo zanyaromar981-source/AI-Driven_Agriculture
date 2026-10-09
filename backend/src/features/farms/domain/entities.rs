@@ -219,6 +219,21 @@ impl FarmSummary {
     }
 }
 
+/// A farm's summary together with whose farm it is. Only Ministry staff see
+/// farms across owners, so only their listing carries the owner.
+#[derive(Clone, Debug, Getters)]
+#[getset(get = "pub")]
+pub struct OwnedFarmSummary {
+    owner: Phone,
+    summary: FarmSummary,
+}
+
+impl OwnedFarmSummary {
+    pub fn new(owner: Phone, summary: FarmSummary) -> Self {
+        Self { owner, summary }
+    }
+}
+
 /// Where one farm is and how large, for the data jobs that compute readings
 /// per farm. It carries no owner: a job never needs to know whose farm it is.
 #[derive(Clone, Debug, Getters)]

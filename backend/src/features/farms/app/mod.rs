@@ -5,4 +5,4 @@ pub mod testing;
 pub mod use_cases;
 
 pub use errors::AppError;
-pub use ports::FarmRepository;
+pub use ports::{FarmRepository, FarmerDirectory};

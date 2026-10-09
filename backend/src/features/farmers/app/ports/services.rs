@@ -40,3 +40,11 @@ pub trait TokenIssuer: Send + Sync + std::fmt::Debug {
 pub trait FarmCounter: Send + Sync + std::fmt::Debug {
     async fn count_for(&self, phone: &Phone) -> Result<u64, AppError>;
 }
+
+/// Removes every farm a phone has, with their cells. Owned by the farms
+/// feature; removing a farmer must not leave their farms behind.
+#[async_trait]
+pub trait FarmRemover: Send + Sync + std::fmt::Debug {
+    /// Returns how many farms were removed.
+    async fn remove_all_for(&self, phone: &Phone) -> Result<u64, AppError>;
+}

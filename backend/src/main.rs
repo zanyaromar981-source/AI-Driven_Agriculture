@@ -13,8 +13,11 @@ use farm_doctor_api::{
             routes as alwa_routes,
         },
         dams::web::{ingest_routes as dam_ingest_routes, public_routes as dam_public_routes},
-        farmers::web::{public_routes as farmer_public_routes, routes as farmer_routes},
-        farms::web::routes as farm_routes,
+        farmers::web::{
+            dashboard_routes as farmer_dashboard_routes, public_routes as farmer_public_routes,
+            routes as farmer_routes,
+        },
+        farms::web::{dashboard_routes as farm_dashboard_routes, routes as farm_routes},
         fires::web::{
             dashboard_routes as fire_dashboard_routes, ingest_routes as fire_ingest_routes,
             public_routes as fire_public_routes,
@@ -123,10 +126,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     "/dashboard",
                     Router::new()
                         .merge(staff_dashboard_routes())
+                        .merge(farm_dashboard_routes())
+                        .merge(farmer_dashboard_routes())
                         .merge(fire_dashboard_routes())
                         .merge(insight_dashboard_routes())
-                        // Other slices add their dashboard routes here, above
-                        // the layer: .merge(their_dashboard_routes())
                         .merge(zone_dashboard_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), staff_auth))
                         .merge(staff_dashboard_public_routes()),

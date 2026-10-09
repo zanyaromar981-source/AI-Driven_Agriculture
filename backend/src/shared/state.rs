@@ -12,12 +12,14 @@ use crate::{
         },
         dams::app::use_cases::{ListDamsUseCase, RecordDamReadingUseCase, ViewDamHistoryUseCase},
         farmers::app::use_cases::{
-            EditProfileUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
-            ViewProfileUseCase,
+            EditFarmerUseCase, EditProfileUseCase, ListFarmersUseCase, RegisterFarmerUseCase,
+            RemoveFarmerUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
+            ViewFarmerUseCase, ViewProfileUseCase,
         },
         farms::app::use_cases::{
-            ListFarmsUseCase, RegisterFarmUseCase, RemoveFarmUseCase, RepaintFarmCellsUseCase,
-            ViewFarmUseCase,
+            ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
+            RegisterFarmUseCase, RemoveAnyFarmUseCase, RemoveFarmUseCase, RenameFarmUseCase,
+            RepaintFarmCellsUseCase, ViewAnyFarmUseCase, ViewFarmUseCase,
         },
         fires::app::use_cases::{
             CorrectFireUseCase, CreateFireUseCase, ListFiresUseCase, ListStoredFiresUseCase,
@@ -58,6 +60,11 @@ pub struct FarmFeature {
     pub view_farm_use_case: Arc<ViewFarmUseCase>,
     pub remove_farm_use_case: Arc<RemoveFarmUseCase>,
     pub repaint_farm_cells_use_case: Arc<RepaintFarmCellsUseCase>,
+    pub list_all_farms_use_case: Arc<ListAllFarmsUseCase>,
+    pub view_any_farm_use_case: Arc<ViewAnyFarmUseCase>,
+    pub register_farm_for_farmer_use_case: Arc<RegisterFarmForFarmerUseCase>,
+    pub rename_farm_use_case: Arc<RenameFarmUseCase>,
+    pub remove_any_farm_use_case: Arc<RemoveAnyFarmUseCase>,
 }
 
 #[derive(Clone)]
@@ -66,6 +73,11 @@ pub struct FarmerFeature {
     pub verify_sign_in_code_use_case: Arc<VerifySignInCodeUseCase>,
     pub view_profile_use_case: Arc<ViewProfileUseCase>,
     pub edit_profile_use_case: Arc<EditProfileUseCase>,
+    pub list_farmers_use_case: Arc<ListFarmersUseCase>,
+    pub view_farmer_use_case: Arc<ViewFarmerUseCase>,
+    pub register_farmer_use_case: Arc<RegisterFarmerUseCase>,
+    pub edit_farmer_use_case: Arc<EditFarmerUseCase>,
+    pub remove_farmer_use_case: Arc<RemoveFarmerUseCase>,
 }
 
 #[derive(Clone)]

@@ -32,6 +32,9 @@ pub enum AppError {
 
     #[error(transparent)]
     GlobalAppError(#[from] GlobalAppError),
+
+    #[error("A farmer with this phone already exists")]
+    FarmerAlreadyExists,
 }
 
 impl ToErrorInfo for AppError {
@@ -40,6 +43,9 @@ impl ToErrorInfo for AppError {
             AppError::Farmer(err) => err.to_error_info(),
             AppError::Domain(err) => err.to_error_info(),
             AppError::GlobalAppError(err) => err.to_error_info(),
+            AppError::FarmerAlreadyExists => {
+                ErrorInfo::with_code(ErrorKind::Conflict, "already_exists", self.to_string())
+            }
         }
     }
 }
@@ -56,6 +62,14 @@ mod tests {
             assert_eq!(info.kind, ErrorKind::Authentication);
             assert_eq!(info.code, "bad_code");
         }
+    }
+
+    #[test]
+    fn a_phone_that_already_has_a_farmer_is_a_conflict_the_dashboard_can_read() {
+        let info = AppError::FarmerAlreadyExists.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Conflict);
+        assert_eq!(info.code, "already_exists");
     }
 
     #[test]

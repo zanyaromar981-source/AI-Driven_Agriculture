@@ -26,29 +26,33 @@ use crate::{
         },
         farmers::{
             app::{
-                FarmCounter, FarmerRepository, SignInChallengeRepository, SignInCodeGenerator,
-                SignInCodeHasher, SignInCodeSender, TokenIssuer,
+                FarmCounter, FarmRemover, FarmerRepository, SignInChallengeRepository,
+                SignInCodeGenerator, SignInCodeHasher, SignInCodeSender, TokenIssuer,
                 use_cases::{
-                    EditProfileUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
-                    ViewProfileUseCase,
+                    EditFarmerUseCase, EditProfileUseCase, ListFarmersUseCase,
+                    RegisterFarmerUseCase, RemoveFarmerUseCase, RequestSignInCodeUseCase,
+                    VerifySignInCodeUseCase, ViewFarmerUseCase, ViewProfileUseCase,
                 },
             },
             domain::SignInCode,
             infra::{
-                FarmerPostgresRepository, FarmsFeatureFarmCounter, FixedSignInCodeGenerator,
-                JwtTokenIssuer, LogSignInCodeSender, RandomSignInCodeGenerator,
-                Sha256SignInCodeHasher, SignInChallengePostgresRepository,
+                FarmerPostgresRepository, FarmsFeatureFarmCounter, FarmsFeatureFarmRemover,
+                FixedSignInCodeGenerator, JwtTokenIssuer, LogSignInCodeSender,
+                RandomSignInCodeGenerator, Sha256SignInCodeHasher,
+                SignInChallengePostgresRepository,
             },
         },
         farms::{
             app::{
-                FarmRepository,
+                FarmRepository, FarmerDirectory,
                 use_cases::{
-                    ListFarmsUseCase, RegisterFarmUseCase, RemoveFarmUseCase,
-                    RepaintFarmCellsUseCase, ViewFarmUseCase,
+                    ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
+                    RegisterFarmUseCase, RemoveAnyFarmUseCase, RemoveFarmUseCase,
+                    RenameFarmUseCase, RepaintFarmCellsUseCase, ViewAnyFarmUseCase,
+                    ViewFarmUseCase,
                 },
             },
-            infra::FarmPostgresRepository,
+            infra::{FarmPostgresRepository, FarmersFeatureFarmerDirectory},
         },
         fires::{
             app::{
@@ -149,6 +153,20 @@ pub async fn di_init(
             farm_repository.clone(),
         )),
         remove_farm_use_case: Arc::new(RemoveFarmUseCase::new(farm_repository.clone())),
+        list_all_farms_use_case: Arc::new(ListAllFarmsUseCase::new(farm_repository.clone())),
+        view_any_farm_use_case: Arc::new(ViewAnyFarmUseCase::new(farm_repository.clone())),
+        register_farm_for_farmer_use_case: Arc::new(RegisterFarmForFarmerUseCase::new(
+            Arc::new(FarmersFeatureFarmerDirectory::new(Arc::new(
+                FarmerPostgresRepository::new(db_context.conn_clone()),
+            ))) as Arc<dyn FarmerDirectory>,
+            Arc::new(RegisterFarmUseCase::new(
+                farm_repository.clone(),
+                config.farm.max_farms_per_user,
+                config.farm.max_cells_per_farm,
+            )),
+        )),
+        rename_farm_use_case: Arc::new(RenameFarmUseCase::new(farm_repository.clone())),
+        remove_any_farm_use_case: Arc::new(RemoveAnyFarmUseCase::new(farm_repository.clone())),
     };
 
     let fire_repository: Arc<dyn FireRepository> =
@@ -206,6 +224,11 @@ pub async fn di_init(
         Arc::new(Sha256SignInCodeHasher::new(config.auth.jwt_secret.clone()));
     let code_sender: Arc<dyn SignInCodeSender> = Arc::new(LogSignInCodeSender);
     let token_issuer: Arc<dyn TokenIssuer> = Arc::new(JwtTokenIssuer::new(config.auth.clone()));
+    let dashboard_farm_counter: Arc<dyn FarmCounter> =
+        Arc::new(FarmsFeatureFarmCounter::new(farm_repository.clone()));
+    let dashboard_farm_remover: Arc<dyn FarmRemover> =
+        Arc::new(FarmsFeatureFarmRemover::new(farm_repository.clone()));
+    let dashboard_farmer_repository = farmer_repository.clone();
     let farm_counter: Arc<dyn FarmCounter> =
         Arc::new(FarmsFeatureFarmCounter::new(farm_repository));
 
@@ -242,6 +265,26 @@ pub async fn di_init(
         )),
         view_profile_use_case: Arc::new(ViewProfileUseCase::new(farmer_repository.clone())),
         edit_profile_use_case: Arc::new(EditProfileUseCase::new(farmer_repository)),
+        list_farmers_use_case: Arc::new(ListFarmersUseCase::new(
+            dashboard_farmer_repository.clone(),
+            dashboard_farm_counter.clone(),
+        )),
+        view_farmer_use_case: Arc::new(ViewFarmerUseCase::new(
+            dashboard_farmer_repository.clone(),
+            dashboard_farm_counter.clone(),
+        )),
+        register_farmer_use_case: Arc::new(RegisterFarmerUseCase::new(
+            dashboard_farmer_repository.clone(),
+            dashboard_farm_counter.clone(),
+        )),
+        edit_farmer_use_case: Arc::new(EditFarmerUseCase::new(
+            dashboard_farmer_repository.clone(),
+            dashboard_farm_counter,
+        )),
+        remove_farmer_use_case: Arc::new(RemoveFarmerUseCase::new(
+            dashboard_farmer_repository,
+            dashboard_farm_remover,
+        )),
     };
 
     let zone_repository: Arc<dyn ZoneRepository> =

@@ -1,21 +1,24 @@
 use axum::{
     Extension,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{HeaderMap, StatusCode},
 };
 use axum_extra::extract::WithRejection;
 
 use super::{
     dtos::{
-        CreateFarmParams, FarmStatusResponse, FarmSummaryResponse, FarmsResponse, OneFarmResponse,
-        RepaintFarmCellsParams, SavedFarmResponse,
+        CreateFarmParams, DashboardCreateFarmParams, DashboardFarmSummaryResponse,
+        DashboardFarmsQuery, DashboardFarmsResponse, DashboardOneFarmResponse,
+        DashboardRenameFarmParams, DashboardSavedFarmResponse, FarmStatusResponse,
+        FarmSummaryResponse, FarmsResponse, OneFarmResponse, RepaintFarmCellsParams,
+        SavedFarmResponse,
     },
     errors::WebError,
 };
 
 use crate::{
-    app::AuthContext,
-    infra::http::{ApiResponse, ErrorBody, ValidatedJson},
+    app::{AuthContext, Pagination, StaffContext},
+    infra::http::{ApiResponse, ErrorBody, PaginationQueryDto, ValidatedJson},
     shared::AppState,
 };
 
@@ -221,6 +224,184 @@ pub async fn delete_farm(
         .farm
         .remove_farm_use_case
         .execute(&auth_context, farm_id(&id)?)
+        .await?;
+
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// List every farmer's farms, newest first
+#[utoipa::path(
+    get,
+    path = "/v1/dashboard/farms",
+    tag = "farms",
+    params(DashboardFarmsQuery, PaginationQueryDto),
+    responses(
+        (status = 200, description = "List of farms retrieved successfully", body = DashboardFarmsResponse),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs farms:read", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_get_farms(
+    State(state): State<AppState>,
+    WithRejection(Query(query), _): WithRejection<Query<DashboardFarmsQuery>, WebError>,
+    WithRejection(Query(page), _): WithRejection<Query<PaginationQueryDto>, WebError>,
+) -> Result<ApiResponse<DashboardFarmsResponse>, WebError> {
+    let pagination = Pagination::from(&page);
+    let input = query.into_input(pagination)?;
+
+    let (farms, count) = state
+        .features
+        .farm
+        .list_all_farms_use_case
+        .execute(input)
+        .await?;
+
+    Ok(ApiResponse::ok(DashboardFarmsResponse {
+        farms: farms
+            .iter()
+            .map(DashboardFarmSummaryResponse::from)
+            .collect(),
+        count,
+        page: *pagination.page(),
+        rows_per_page: *pagination.rows_per_page(),
+    }))
+}
+
+/// Register a farm on behalf of a farmer
+#[utoipa::path(
+    post,
+    path = "/v1/dashboard/farms",
+    tag = "farms",
+    request_body = DashboardCreateFarmParams,
+    params(("Idempotency-Key" = Option<String>, Header, description = "Repeat it on a retry to get the farm already created")),
+    responses(
+        (status = 201, description = "Farm created successfully", body = DashboardSavedFarmResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs farms:create", body = ErrorBody),
+        (status = 404, description = "No farmer has that phone", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_create_farm(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    headers: HeaderMap,
+    ValidatedJson(params): ValidatedJson<DashboardCreateFarmParams>,
+) -> Result<ApiResponse<DashboardSavedFarmResponse>, WebError> {
+    let idempotency_key = headers
+        .get(IDEMPOTENCY_KEY)
+        .and_then(|value| value.to_str().ok())
+        .map(str::to_string);
+
+    let (owner, input) = params.into_input(idempotency_key)?;
+
+    let (farm, dropped_cells) = state
+        .features
+        .farm
+        .register_farm_for_farmer_use_case
+        .execute(&staff_context, owner, input)
+        .await?;
+
+    Ok(ApiResponse::created(DashboardSavedFarmResponse::try_from(
+        (&farm, dropped_cells.as_slice()),
+    )?))
+}
+
+/// Get one farm with its outline, cells and owner
+#[utoipa::path(
+    get,
+    path = "/v1/dashboard/farms/{id}",
+    tag = "farms",
+    params(("id" = String, Path, description = "Farm ID")),
+    responses(
+        (status = 200, description = "Farm retrieved successfully", body = DashboardOneFarmResponse),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs farms:read", body = ErrorBody),
+        (status = 404, description = "Farm not found", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_get_farm(
+    State(state): State<AppState>,
+    WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
+) -> Result<ApiResponse<DashboardOneFarmResponse>, WebError> {
+    let farm = state
+        .features
+        .farm
+        .view_any_farm_use_case
+        .execute(farm_id(&id)?)
+        .await?;
+
+    Ok(ApiResponse::ok(DashboardOneFarmResponse::try_from(&farm)?))
+}
+
+/// Rename a farm
+#[utoipa::path(
+    put,
+    path = "/v1/dashboard/farms/{id}",
+    tag = "farms",
+    params(("id" = String, Path, description = "Farm ID")),
+    request_body = DashboardRenameFarmParams,
+    responses(
+        (status = 200, description = "Farm renamed successfully", body = DashboardOneFarmResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs farms:update", body = ErrorBody),
+        (status = 404, description = "Farm not found", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_rename_farm(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
+    ValidatedJson(params): ValidatedJson<DashboardRenameFarmParams>,
+) -> Result<ApiResponse<DashboardOneFarmResponse>, WebError> {
+    let input = params.into_input()?;
+
+    let farm = state
+        .features
+        .farm
+        .rename_farm_use_case
+        .execute(&staff_context, farm_id(&id)?, input)
+        .await?;
+
+    Ok(ApiResponse::ok(DashboardOneFarmResponse::try_from(&farm)?))
+}
+
+/// Delete any farmer's farm
+#[utoipa::path(
+    delete,
+    path = "/v1/dashboard/farms/{id}",
+    tag = "farms",
+    params(("id" = String, Path, description = "Farm ID")),
+    responses(
+        (status = 204, description = "Delete was successful, also when the farm was already gone"),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "Needs farms:delete", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn dashboard_delete_farm(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
+) -> Result<StatusCode, WebError> {
+    state
+        .features
+        .farm
+        .remove_any_farm_use_case
+        .execute(&staff_context, farm_id(&id)?)
         .await?;
 
     Ok(StatusCode::NO_CONTENT)

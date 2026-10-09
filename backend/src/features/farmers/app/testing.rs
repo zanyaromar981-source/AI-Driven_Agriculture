@@ -3,13 +3,13 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 
 use crate::{
-    app::{AuthContext, User},
+    app::{Action, AuthContext, Pagination, Permission, Resource, StaffContext, User},
     features::farmers::{
         app::{
-            AppError, FarmCounter, FarmerRepository, SignInChallengeRepository,
+            AppError, FarmCounter, FarmRemover, FarmerRepository, SignInChallengeRepository,
             SignInCodeGenerator, SignInCodeHasher, SignInCodeSender, TokenIssuer,
         },
-        domain::{Farmer, Language, SignInChallenge, SignInCode},
+        domain::{Farmer, FarmerName, Language, SignInChallenge, SignInCode},
     },
     shared::Phone,
 };
@@ -28,6 +28,12 @@ pub enum Call {
     SendCode { phone: String, code: String },
     IssueToken,
     CountFarms { phone: String },
+    FindFarmerById { id: i32 },
+    FindFarmersPage { phone: Option<String>, page: u64 },
+    CreateFarmer { phone: String },
+    UpdateFarmerById { id: i32 },
+    DeleteFarmerWithChallenge { id: i32 },
+    RemoveFarms { phone: String },
 }
 
 #[derive(Debug, Default)]
@@ -36,6 +42,7 @@ struct Script {
     challenge: Option<SignInChallenge>,
     fail_to_send: bool,
     lose_the_race_to_consume: bool,
+    fail_to_remove_farms: bool,
 }
 
 /// One fake standing in for every port of the feature, so a test can read
@@ -77,6 +84,15 @@ impl Fakes {
             .lock()
             .expect("script lock")
             .lose_the_race_to_consume = true;
+        self
+    }
+
+    /// The farms feature cannot remove the farmer's farms.
+    pub fn failing_to_remove_farms(self) -> Self {
+        self.script
+            .lock()
+            .expect("script lock")
+            .fail_to_remove_farms = true;
         self
     }
 
@@ -167,6 +183,135 @@ impl FarmerRepository for Fakes {
         self.record(Call::UpdateFarmer);
 
         Ok(entity.clone())
+    }
+
+    async fn find_by_id(&self, id: i32) -> Result<Option<Farmer>, AppError> {
+        self.record(Call::FindFarmerById { id });
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .farmer
+            .clone()
+            .filter(|farmer| *farmer.id() == Some(id)))
+    }
+
+    async fn find_page(
+        &self,
+        phone: Option<&Phone>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<Farmer>, u64), AppError> {
+        self.record(Call::FindFarmersPage {
+            phone: phone.map(String::from),
+            page: *pagination.page(),
+        });
+
+        let script = self.script.lock().expect("script lock");
+
+        let farmers: Vec<Farmer> = script
+            .farmer
+            .iter()
+            .filter(|farmer| phone.is_none_or(|phone| farmer.phone() == phone))
+            .cloned()
+            .collect();
+        let count = farmers.len() as u64;
+
+        Ok((farmers, count))
+    }
+
+    async fn create(&self, entity: &Farmer) -> Result<Option<Farmer>, AppError> {
+        self.record(Call::CreateFarmer {
+            phone: String::from(entity.phone()),
+        });
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script.farmer.is_some() {
+            return Ok(None);
+        }
+
+        let created = Farmer::rehydrate(
+            1,
+            entity.phone().clone(),
+            entity.name().clone(),
+            *entity.language(),
+            *entity.created_at(),
+            *entity.updated_at(),
+        );
+        script.farmer = Some(created.clone());
+
+        Ok(Some(created))
+    }
+
+    async fn update_by_id(
+        &self,
+        id: i32,
+        name: Option<&FarmerName>,
+        language: Language,
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Option<Farmer>, AppError> {
+        self.record(Call::UpdateFarmerById { id });
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(stored) = script
+            .farmer
+            .clone()
+            .filter(|farmer| *farmer.id() == Some(id))
+        else {
+            return Ok(None);
+        };
+
+        let updated = Farmer::rehydrate(
+            id,
+            stored.phone().clone(),
+            name.cloned(),
+            language,
+            *stored.created_at(),
+            now,
+        );
+        script.farmer = Some(updated.clone());
+
+        Ok(Some(updated))
+    }
+
+    async fn delete_with_challenge(&self, id: i32) -> Result<bool, AppError> {
+        self.record(Call::DeleteFarmerWithChallenge { id });
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script
+            .farmer
+            .as_ref()
+            .is_none_or(|farmer| *farmer.id() != Some(id))
+        {
+            return Ok(false);
+        }
+
+        script.farmer = None;
+        script.challenge = None;
+
+        Ok(true)
+    }
+}
+
+#[async_trait]
+impl FarmRemover for Fakes {
+    async fn remove_all_for(&self, phone: &Phone) -> Result<u64, AppError> {
+        if self
+            .script
+            .lock()
+            .expect("script lock")
+            .fail_to_remove_farms
+        {
+            return Err(crate::app::AppError::InternalServerError.into());
+        }
+
+        self.record(Call::RemoveFarms {
+            phone: String::from(phone),
+        });
+
+        Ok(2)
     }
 }
 
@@ -352,5 +497,19 @@ pub fn a_farmer() -> Farmer {
         Language::Sorani,
         chrono::Utc::now(),
         chrono::Utc::now(),
+    )
+}
+
+pub const STAFF_ID: i32 = 3;
+
+/// A staff member holding every permission on farmers.
+pub fn staff_context() -> StaffContext {
+    StaffContext::new(
+        STAFF_ID,
+        "officer@example.org".to_string(),
+        Action::ALL
+            .into_iter()
+            .map(|action| Permission::new(Resource::Farmers, action))
+            .collect(),
     )
 }

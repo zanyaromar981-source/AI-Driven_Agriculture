@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr, EntityTrait,
     FromQueryResult, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
@@ -8,10 +9,12 @@ use sea_orm::{
 };
 
 use crate::{
-    app::AppError as GlobalAppError,
+    app::{AppError as GlobalAppError, Pagination},
     features::farms::{
         app::{AppError, FarmRepository},
-        domain::{Cell, Crop, Farm, FarmLocation, FarmSummary, IdempotencyKey},
+        domain::{
+            Cell, Crop, Farm, FarmLocation, FarmName, FarmSummary, IdempotencyKey, OwnedFarmSummary,
+        },
         infra::persistence::postgres::{
             entities::{farm_cells, farms},
             mappings::cell_active_model,
@@ -58,20 +61,12 @@ impl FarmPostgresRepository {
 
         Farm::try_from((model, cells))
     }
-}
 
-#[async_trait]
-impl FarmRepository for FarmPostgresRepository {
-    async fn find_all_by_owner(&self, owner: &Phone) -> Result<Vec<FarmSummary>, AppError> {
-        let models = farms::Entity::find()
-            .filter(farms::Column::Phone.eq(owner.as_str()))
-            .order_by_asc(farms::Column::Id)
-            .all(&self.conn)
-            .await
-            .map_err(database_error)?;
-
-        let farm_ids: Vec<i32> = models.iter().map(|model| model.id).collect();
-
+    /// How many cells each of the farms has under each crop.
+    async fn cells_per_crop(
+        &self,
+        farm_ids: Vec<i32>,
+    ) -> Result<HashMap<i32, Vec<(String, usize)>>, AppError> {
         let counts = farm_cells::Entity::find()
             .select_only()
             .column(farm_cells::Column::FarmId)
@@ -93,6 +88,24 @@ impl FarmRepository for FarmPostgresRepository {
                 .or_default()
                 .push((count.crop, usize::try_from(count.cells).unwrap_or_default()));
         }
+
+        Ok(cells_per_crop)
+    }
+}
+
+#[async_trait]
+impl FarmRepository for FarmPostgresRepository {
+    async fn find_all_by_owner(&self, owner: &Phone) -> Result<Vec<FarmSummary>, AppError> {
+        let models = farms::Entity::find()
+            .filter(farms::Column::Phone.eq(owner.as_str()))
+            .order_by_asc(farms::Column::Id)
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        let mut cells_per_crop = self
+            .cells_per_crop(models.iter().map(|model| model.id).collect())
+            .await?;
 
         models
             .into_iter()
@@ -252,6 +265,108 @@ impl FarmRepository for FarmPostgresRepository {
         }
 
         Ok(())
+    }
+
+    async fn find_page(
+        &self,
+        owner: Option<&Phone>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<OwnedFarmSummary>, u64), AppError> {
+        let mut query = farms::Entity::find();
+
+        if let Some(owner) = owner {
+            query = query.filter(farms::Column::Phone.eq(owner.as_str()));
+        }
+
+        let count = query
+            .clone()
+            .count(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        let models = query
+            .order_by_desc(farms::Column::CreatedAt)
+            .order_by_desc(farms::Column::Id)
+            .offset(pagination.skip())
+            .limit(*pagination.rows_per_page())
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        let mut cells_per_crop = self
+            .cells_per_crop(models.iter().map(|model| model.id).collect())
+            .await?;
+
+        let farms = models
+            .into_iter()
+            .map(|model| {
+                let owner = Phone::new(model.phone.clone())?;
+                let cells = cells_per_crop.remove(&model.id).unwrap_or_default();
+
+                Ok(OwnedFarmSummary::new(
+                    owner,
+                    FarmSummary::try_from((model, cells))?,
+                ))
+            })
+            .collect::<Result<Vec<_>, AppError>>()?;
+
+        Ok((farms, count))
+    }
+
+    async fn find_by_id(&self, id: i32) -> Result<Option<Farm>, AppError> {
+        let model = farms::Entity::find_by_id(id)
+            .one(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        match model {
+            Some(model) => Ok(Some(Self::load(&self.conn, model).await?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn rename(
+        &self,
+        id: i32,
+        name: &FarmName,
+        now: DateTime<Utc>,
+    ) -> Result<Option<Farm>, AppError> {
+        // One statement decides whether there is a farm to rename, and it
+        // writes the name only: a repaint by the farmer at the same moment
+        // is not undone.
+        let renamed = farms::Entity::update_many()
+            .col_expr(farms::Column::Name, Expr::value(name.as_str()))
+            .col_expr(farms::Column::UpdatedAt, Expr::value(now.naive_utc()))
+            .filter(farms::Column::Id.eq(id))
+            .exec_with_returning(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        match renamed.into_iter().next() {
+            Some(model) => Ok(Some(Self::load(&self.conn, model).await?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn delete_by_id(&self, id: i32) -> Result<bool, AppError> {
+        let result = farms::Entity::delete_many()
+            .filter(farms::Column::Id.eq(id))
+            .exec(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        Ok(result.rows_affected > 0)
+    }
+
+    async fn delete_all_by_owner(&self, owner: &Phone) -> Result<u64, AppError> {
+        // The cells go with their farms: the foreign key cascades.
+        let result = farms::Entity::delete_many()
+            .filter(farms::Column::Phone.eq(owner.as_str()))
+            .exec(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        Ok(result.rows_affected)
     }
 }
 

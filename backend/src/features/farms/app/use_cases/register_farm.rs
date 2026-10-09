@@ -8,6 +8,7 @@ use crate::{
         app::{AppError, FarmRepository},
         domain::{Farm, FarmName, GridCell, IdempotencyKey, Outline, PaintedCell},
     },
+    shared::Phone,
 };
 
 pub struct RegisterFarmInput {
@@ -45,8 +46,19 @@ impl RegisterFarmUseCase {
         auth_context: &AuthContext,
         input: RegisterFarmInput,
     ) -> Result<(Farm, Vec<GridCell>), AppError> {
-        let owner = auth_context.user().phone();
+        self.execute_for_owner(auth_context.user().phone(), input)
+            .await
+    }
 
+    /// The same registration with the owner named by the caller. The farmer
+    /// app never comes this way: `execute` takes the owner from the token.
+    /// It exists so that a farm staff register for a farmer passes exactly
+    /// the rules the farmer's own upload passes.
+    pub async fn execute_for_owner(
+        &self,
+        owner: &Phone,
+        input: RegisterFarmInput,
+    ) -> Result<(Farm, Vec<GridCell>), AppError> {
         if let Some(key) = &input.idempotency_key
             && let Some(existing) = self
                 .repository

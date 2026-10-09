@@ -3,12 +3,12 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 
 use crate::{
-    app::{AuthContext, User},
+    app::{Action, AuthContext, Pagination, Permission, Resource, StaffContext, User},
     features::farms::{
-        app::{AppError, FarmRepository},
+        app::{AppError, FarmRepository, FarmerDirectory},
         domain::{
             Cell, Crop, Farm, FarmLocation, FarmName, FarmSummary, GridCell, IdempotencyKey,
-            Outline, PaintedCell, Point,
+            Outline, OwnedFarmSummary, PaintedCell, Point,
         },
     },
     shared::Phone,
@@ -28,6 +28,11 @@ pub enum RepositoryCall {
     Create,
     Update,
     Delete { id: i32, owner: String },
+    FindPage { owner: Option<String>, page: u64 },
+    FindById { id: i32 },
+    Rename { id: i32, name: String },
+    DeleteById { id: i32 },
+    DeleteAllByOwner { owner: String },
 }
 
 #[derive(Debug, Default)]
@@ -206,6 +211,136 @@ impl FarmRepository for FakeFarmRepository {
 
         Ok(())
     }
+
+    async fn find_page(
+        &self,
+        owner: Option<&Phone>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<OwnedFarmSummary>, u64), AppError> {
+        self.record(RepositoryCall::FindPage {
+            owner: owner.map(String::from),
+            page: *pagination.page(),
+        });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        let farms: Vec<OwnedFarmSummary> = script
+            .existing
+            .iter()
+            .filter(|one| owner.is_none_or(|owner| one.is_owned_by(owner)))
+            .map(|one| OwnedFarmSummary::new(one.owner().clone(), summary_of(one)))
+            .collect();
+        let count = farms.len() as u64;
+
+        Ok((farms, count))
+    }
+
+    async fn find_by_id(&self, id: i32) -> Result<Option<Farm>, AppError> {
+        self.record(RepositoryCall::FindById { id });
+        self.guard()?;
+
+        Ok(self.script.lock().expect("script lock").existing.clone())
+    }
+
+    async fn rename(
+        &self,
+        id: i32,
+        name: &FarmName,
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> Result<Option<Farm>, AppError> {
+        self.record(RepositoryCall::Rename {
+            id,
+            name: name.as_str().to_string(),
+        });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script.existing.as_ref().map(|one| {
+            Farm::rehydrate(
+                id,
+                name.clone(),
+                one.owner().clone(),
+                one.outline().clone(),
+                one.cells().clone(),
+                one.idempotency_key().clone(),
+                *one.created_offline_at(),
+                *one.created_at(),
+                now,
+            )
+        }))
+    }
+
+    async fn delete_by_id(&self, id: i32) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeleteById { id });
+        self.guard()?;
+
+        Ok(!self.script.lock().expect("script lock").nothing_to_delete)
+    }
+
+    async fn delete_all_by_owner(&self, owner: &Phone) -> Result<u64, AppError> {
+        self.record(RepositoryCall::DeleteAllByOwner {
+            owner: String::from(owner),
+        });
+        self.guard()?;
+
+        Ok(self.script.lock().expect("script lock").owned_count)
+    }
+}
+
+/// Stands in for the farmers feature: every phone is registered, or none is.
+#[derive(Debug, Clone)]
+pub struct FakeFarmerDirectory {
+    registered: bool,
+    asked: Arc<Mutex<Vec<String>>>,
+}
+
+impl FakeFarmerDirectory {
+    pub fn knowing_everyone() -> Self {
+        Self {
+            registered: true,
+            asked: Arc::default(),
+        }
+    }
+
+    pub fn knowing_no_one() -> Self {
+        Self {
+            registered: false,
+            asked: Arc::default(),
+        }
+    }
+
+    /// The phones it was asked about, in order.
+    pub fn asked(&self) -> Vec<String> {
+        self.asked.lock().expect("asked lock").clone()
+    }
+}
+
+#[async_trait]
+impl FarmerDirectory for FakeFarmerDirectory {
+    async fn is_registered(&self, phone: &Phone) -> Result<bool, AppError> {
+        self.asked
+            .lock()
+            .expect("asked lock")
+            .push(String::from(phone));
+
+        Ok(self.registered)
+    }
+}
+
+pub const STAFF_ID: i32 = 3;
+
+/// A staff member holding every permission on farms.
+pub fn staff_context() -> StaffContext {
+    StaffContext::new(
+        STAFF_ID,
+        "officer@example.org".to_string(),
+        Action::ALL
+            .into_iter()
+            .map(|action| Permission::new(Resource::Farms, action))
+            .collect(),
+    )
 }
 
 fn persisted(entity: &Farm, id: i32) -> Farm {

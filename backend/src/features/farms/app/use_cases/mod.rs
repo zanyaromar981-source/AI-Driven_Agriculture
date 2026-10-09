@@ -1,11 +1,21 @@
+pub mod list_all_farms;
 pub mod list_farms;
 pub mod register_farm;
+pub mod register_farm_for_farmer;
+pub mod remove_any_farm;
 pub mod remove_farm;
+pub mod rename_farm;
 pub mod repaint_farm_cells;
+pub mod view_any_farm;
 pub mod view_farm;
 
+pub use list_all_farms::*;
 pub use list_farms::*;
 pub use register_farm::*;
+pub use register_farm_for_farmer::*;
+pub use remove_any_farm::*;
 pub use remove_farm::*;
+pub use rename_farm::*;
 pub use repaint_farm_cells::*;
+pub use view_any_farm::*;
 pub use view_farm::*;

@@ -4,6 +4,17 @@ use utoipa::{
 };
 use utoipa_swagger_ui::SwaggerUi;
 
+use crate::features::{
+    farmers::web::{
+        DashboardCreateFarmerParams, DashboardFarmerResponse, DashboardFarmersResponse,
+        DashboardOneFarmerResponse, DashboardUpdateFarmerParams,
+    },
+    farms::web::{
+        DashboardCreateFarmParams, DashboardFarmResponse, DashboardFarmSummaryResponse,
+        DashboardFarmsResponse, DashboardOneFarmResponse, DashboardRenameFarmParams,
+        DashboardSavedFarmResponse,
+    },
+};
 use crate::{
     features::alwa::web::{
         AlwaBuyerKind, AlwaCrop, AlwaDealResponse, AlwaDealsResponse, AlwaDealsSummaryResponse,
@@ -170,7 +181,17 @@ impl Modify for BearerAuth {
         zone_handlers::get_dashboard_sub_zone_readings,
         zone_handlers::create_dashboard_sub_zone_reading,
         zone_handlers::update_dashboard_sub_zone_reading,
-        zone_handlers::delete_dashboard_sub_zone_reading
+        zone_handlers::delete_dashboard_sub_zone_reading,
+        farmer_handlers::dashboard_get_farmers,
+        farmer_handlers::dashboard_create_farmer,
+        farmer_handlers::dashboard_get_farmer,
+        farmer_handlers::dashboard_update_farmer,
+        farmer_handlers::dashboard_delete_farmer,
+        farm_handlers::dashboard_get_farms,
+        farm_handlers::dashboard_create_farm,
+        farm_handlers::dashboard_get_farm,
+        farm_handlers::dashboard_rename_farm,
+        farm_handlers::dashboard_delete_farm
     ),
     components(schemas(
         CreateFarmParams,
@@ -323,6 +344,18 @@ impl Modify for BearerAuth {
         ZoneDashboardSubZoneReadingsResponse,
         CreateZoneDashboardReadingParams,
         CreateZoneDashboardSubZoneReadingParams,
+        DashboardCreateFarmerParams,
+        DashboardUpdateFarmerParams,
+        DashboardFarmerResponse,
+        DashboardOneFarmerResponse,
+        DashboardFarmersResponse,
+        DashboardCreateFarmParams,
+        DashboardRenameFarmParams,
+        DashboardFarmSummaryResponse,
+        DashboardFarmsResponse,
+        DashboardFarmResponse,
+        DashboardOneFarmResponse,
+        DashboardSavedFarmResponse,
         ErrorBody
     )),
     modifiers(&BearerAuth),
