@@ -158,8 +158,10 @@ class NewAlwaListing {
 
   Map<String, dynamic> toJson(DateTime now) => {
     'crop': crop,
-    'quantity_kg': quantityKg,
-    'asking_price_iqd_per_kg': priceIqdPerKg,
+    // Whole numbers: the server's quantity_kg and price are integers and
+    // refuse 4000.0.
+    'quantity_kg': quantityKg.round(),
+    'asking_price_iqd_per_kg': priceIqdPerKg.round(),
     'closes_at':
         '${now.add(Duration(days: days)).toUtc().toIso8601String().split('.').first}Z',
     'lat': lat,

@@ -151,6 +151,9 @@ void main() {
       expect(body['crop'], 'tomato');
       expect(body['quantity_kg'], 4000);
       expect(body['asking_price_iqd_per_kg'], 700);
+      // The server's fields are integers: 4000.0 would be refused.
+      expect(body['quantity_kg'], isA<int>());
+      expect(body['asking_price_iqd_per_kg'], isA<int>());
       expect(body['lat'], 35.56);
       expect(body['lon'], 45.43);
       expect(body['market'], 'sulaymaniyah');
