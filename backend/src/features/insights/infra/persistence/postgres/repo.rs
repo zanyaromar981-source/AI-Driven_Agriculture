@@ -9,7 +9,7 @@ use crate::{
     app::AppError as GlobalAppError,
     features::insights::{
         app::{AppError, InsightRepository},
-        domain::{FarmInsight, ReadingStamp},
+        domain::{FarmInsight, ReadingStamp, Topic},
         infra::persistence::postgres::entities::farm_insights,
     },
 };
@@ -102,5 +102,81 @@ impl InsightRepository for InsightPostgresRepository {
             }
             Err(error) => Err(database_error(error)),
         }
+    }
+
+    async fn create(&self, entity: &FarmInsight) -> Result<Option<FarmInsight>, AppError> {
+        // The unique index on farm and topic decides, in this one statement,
+        // which of two creates sent at the same moment wins.
+        let model = farm_insights::Entity::insert(farm_insights::ActiveModel::from(entity))
+            .on_conflict(
+                OnConflict::columns([farm_insights::Column::FarmId, farm_insights::Column::Topic])
+                    .do_nothing()
+                    .to_owned(),
+            )
+            .exec_with_returning(&self.conn)
+            .await;
+
+        match model {
+            Ok(model) => Ok(Some(FarmInsight::try_from(model)?)),
+            Err(DbErr::RecordNotInserted | DbErr::RecordNotFound(_)) => Ok(None),
+            Err(error) => Err(database_error(error)),
+        }
+    }
+
+    async fn update(&self, entity: &FarmInsight) -> Result<Option<FarmInsight>, AppError> {
+        // The entity's own mapping builds the JSON of the measures, so an
+        // update stores them exactly as an insert does.
+        let model = farm_insights::ActiveModel::from(entity);
+
+        // No guard on `as_of` here, unlike the upsert: a person correcting a
+        // reading overrides what is stored on purpose.
+        let models = farm_insights::Entity::update_many()
+            .col_expr(farm_insights::Column::AsOf, Expr::value(*entity.as_of()))
+            .col_expr(
+                farm_insights::Column::Source,
+                Expr::value(String::from(entity.source())),
+            )
+            .col_expr(
+                farm_insights::Column::Confidence,
+                Expr::value(String::from(*entity.confidence())),
+            )
+            .col_expr(
+                farm_insights::Column::SummaryEn,
+                Expr::value(entity.summary_en().as_ref().map(String::from)),
+            )
+            .col_expr(
+                farm_insights::Column::SummaryKu,
+                Expr::value(entity.summary_ku().as_ref().map(String::from)),
+            )
+            .col_expr(
+                farm_insights::Column::Measures,
+                Expr::value(model.measures.unwrap()),
+            )
+            .col_expr(
+                farm_insights::Column::UpdatedAt,
+                Expr::value(entity.updated_at().naive_utc()),
+            )
+            .filter(farm_insights::Column::FarmId.eq(*entity.farm_id()))
+            .filter(farm_insights::Column::Topic.eq(String::from(*entity.topic())))
+            .exec_with_returning(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        models
+            .into_iter()
+            .next()
+            .map(FarmInsight::try_from)
+            .transpose()
+    }
+
+    async fn delete(&self, farm_id: i32, topic: Topic) -> Result<(), AppError> {
+        farm_insights::Entity::delete_many()
+            .filter(farm_insights::Column::FarmId.eq(farm_id))
+            .filter(farm_insights::Column::Topic.eq(String::from(topic)))
+            .exec(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        Ok(())
     }
 }

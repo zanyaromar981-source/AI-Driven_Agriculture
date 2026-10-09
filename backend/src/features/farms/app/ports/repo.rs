@@ -26,6 +26,9 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
 
     async fn count_by_owner(&self, owner: &Phone) -> Result<u64, AppError>;
 
+    /// Whether a farm with that id is stored, whoever owns it.
+    async fn exists(&self, id: i32) -> Result<bool, AppError>;
+
     /// Returns where every farm of every owner is, oldest first, without the
     /// owners.
     async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError>;

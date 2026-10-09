@@ -15,8 +15,14 @@ use farm_doctor_api::{
         dams::web::{ingest_routes as dam_ingest_routes, public_routes as dam_public_routes},
         farmers::web::{public_routes as farmer_public_routes, routes as farmer_routes},
         farms::web::routes as farm_routes,
-        fires::web::{ingest_routes as fire_ingest_routes, public_routes as fire_public_routes},
-        insights::web::{ingest_routes as insight_ingest_routes, routes as insight_routes},
+        fires::web::{
+            dashboard_routes as fire_dashboard_routes, ingest_routes as fire_ingest_routes,
+            public_routes as fire_public_routes,
+        },
+        insights::web::{
+            dashboard_routes as insight_dashboard_routes, ingest_routes as insight_ingest_routes,
+            routes as insight_routes,
+        },
         outlooks::web::{
             ingest_routes as outlook_ingest_routes, public_routes as outlook_public_routes,
         },
@@ -114,6 +120,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     "/dashboard",
                     Router::new()
                         .merge(staff_dashboard_routes())
+                        .merge(fire_dashboard_routes())
+                        .merge(insight_dashboard_routes())
                         // Other slices add their dashboard routes here, above
                         // the layer: .merge(their_dashboard_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), staff_auth))

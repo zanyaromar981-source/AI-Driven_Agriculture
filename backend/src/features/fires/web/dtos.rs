@@ -4,9 +4,12 @@ use utoipa::{IntoParams, ToSchema};
 use validator::Validate;
 
 use crate::{
-    app::AppError as GlobalAppError,
+    app::{AppError as GlobalAppError, Pagination},
     features::fires::{
-        app::{AppError, use_cases::RecordFireInput},
+        app::{
+            AppError,
+            use_cases::{CorrectFireInput, ListStoredFiresInput, RecordFireInput},
+        },
         domain::{
             self, ExternalId, Fire, FireLocation, FireSource, FireSummary, PlaceName, WindowHours,
             ZoneSlug,
@@ -145,6 +148,25 @@ impl RecordFireParams {
             source: FireSource::new(self.source)?,
         })
     }
+
+    /// The same body as a staff member's correction of a stored fire, whose
+    /// external id cannot change.
+    pub fn into_correction_input(self) -> Result<CorrectFireInput, AppError> {
+        Ok(CorrectFireInput {
+            location: FireLocation::new(self.lat, self.lon)?,
+            zone_slug: self.zone_slug.map(ZoneSlug::new).transpose()?,
+            place_en: self.place_en.map(PlaceName::new).transpose()?,
+            place_ku: self.place_ku.map(PlaceName::new).transpose()?,
+            detected_at: self.detected_at,
+            area_ha: self.area_ha,
+            wind_kmh: self.wind_kmh,
+            wind_direction: self.wind_direction.map(Into::into),
+            status: self.status.into(),
+            farms_within_5km: self.farms_within_5km,
+            farmers_alerted: self.farmers_alerted,
+            source: FireSource::new(self.source)?,
+        })
+    }
 }
 
 /// The id is an opaque string to the dashboard.
@@ -242,4 +264,117 @@ impl TryFrom<(WindowHours, &[Fire], &FireSummary)> for FiresResponse {
             summary: summary.into(),
         })
     }
+}
+
+/// Which stored fires the dashboard's editing screen asks for.
+#[derive(Deserialize, Debug, Clone, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct FireDashboardQuery {
+    /// Earliest detection time, inclusive. 30 days before `to` when left out.
+    pub from: Option<DateTime<Utc>>,
+    /// Latest detection time, inclusive. Now when left out.
+    pub to: Option<DateTime<Utc>>,
+    /// `active`, `spreading`, `under_control` or `out`. Every status when
+    /// left out.
+    pub status: Option<String>,
+    /// Zone slug, for example `chamchamal`.
+    pub zone_slug: Option<String>,
+}
+
+impl FireDashboardQuery {
+    pub fn into_input(self, pagination: Pagination) -> Result<ListStoredFiresInput, AppError> {
+        Ok(ListStoredFiresInput {
+            from: self.from,
+            to: self.to,
+            status: self
+                .status
+                .as_deref()
+                .map(domain::FireStatus::try_from)
+                .transpose()?,
+            zone_slug: self.zone_slug.map(ZoneSlug::new).transpose()?,
+            pagination,
+        })
+    }
+}
+
+/// A fire a staff member enters by hand: the ingest body plus the key it is
+/// stored under.
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct FireDashboardCreateParams {
+    /// 1 to 100 printable ASCII characters, unique among the stored fires.
+    pub external_id: String,
+    #[serde(flatten)]
+    pub fire: RecordFireParams,
+}
+
+impl FireDashboardCreateParams {
+    pub fn into_input(self) -> Result<RecordFireInput, AppError> {
+        self.fire.into_input(self.external_id)
+    }
+}
+
+/// A stored fire with every field, for the dashboard's editing screen.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FireDashboardResponse {
+    pub id: String,
+    pub external_id: String,
+    pub lat: f64,
+    pub lon: f64,
+    pub zone_slug: Option<String>,
+    pub place_en: Option<String>,
+    pub place_ku: Option<String>,
+    pub detected_at: DateTime<Utc>,
+    pub area_ha: Option<f64>,
+    pub wind_kmh: Option<f64>,
+    pub wind_direction: Option<WindDirection>,
+    pub status: FireStatus,
+    pub farms_within_5km: Option<i32>,
+    pub farmers_alerted: Option<i32>,
+    pub source: String,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl TryFrom<&Fire> for FireDashboardResponse {
+    type Error = AppError;
+
+    fn try_from(fire: &Fire) -> Result<Self, Self::Error> {
+        let id = fire.id().ok_or_else(|| {
+            AppError::GlobalAppError(GlobalAppError::MissingValue(
+                "Fire is missing its id".to_string(),
+            ))
+        })?;
+
+        Ok(Self {
+            id: id.to_string(),
+            external_id: fire.external_id().into(),
+            lat: fire.location().lat(),
+            lon: fire.location().lon(),
+            zone_slug: fire.zone_slug().as_ref().map(Into::into),
+            place_en: fire.place_en().as_ref().map(Into::into),
+            place_ku: fire.place_ku().as_ref().map(Into::into),
+            detected_at: *fire.detected_at(),
+            area_ha: *fire.area_ha(),
+            wind_kmh: *fire.wind_kmh(),
+            wind_direction: fire.wind_direction().map(Into::into),
+            status: (*fire.status()).into(),
+            farms_within_5km: *fire.farms_within_5km(),
+            farmers_alerted: *fire.farmers_alerted(),
+            source: fire.source().into(),
+            updated_at: *fire.updated_at(),
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FireDashboardOneResponse {
+    pub fire: FireDashboardResponse,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FireDashboardListResponse {
+    pub fires: Vec<FireDashboardResponse>,
+    /// How many fires match in all, not only on this page.
+    pub count: u64,
+    pub page: u64,
+    pub rows_per_page: u64,
 }

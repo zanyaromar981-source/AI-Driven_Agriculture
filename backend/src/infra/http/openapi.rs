@@ -33,13 +33,15 @@ use crate::{
         handlers as farm_handlers,
     },
     features::fires::web::{
-        FireResponse, FireStatus, FireSummaryResponse, FiresResponse, RecordFireParams,
-        WindDirection, handlers as fire_handlers,
+        FireDashboardCreateParams, FireDashboardListResponse, FireDashboardOneResponse,
+        FireDashboardResponse, FireResponse, FireStatus, FireSummaryResponse, FiresResponse,
+        RecordFireParams, WindDirection, handlers as fire_handlers,
     },
     features::insights::web::{
         Confidence, FarmCoverageResponse, FarmInsightsResponse, FarmsCoverageResponse,
-        MeasureParams, MeasureResponse, RecordFarmInsightParams, Topic, TopicInsightResponse,
-        TopicStampResponse, handlers as insight_handlers,
+        InsightDashboardCreateParams, InsightDashboardListResponse, InsightDashboardOneResponse,
+        InsightDashboardResponse, MeasureParams, MeasureResponse, RecordFarmInsightParams, Topic,
+        TopicInsightResponse, TopicStampResponse, handlers as insight_handlers,
     },
     features::outlooks::web::{
         Outlook, OutlookCountsResponse, OutlookRunResponse, RecordOutlookRunParams,
@@ -148,6 +150,15 @@ impl Modify for BearerAuth {
         staff_handlers::delete_staff,
         health::liveness,
         health::readiness,
+        fire_handlers::get_dashboard_fires,
+        fire_handlers::get_dashboard_fire,
+        fire_handlers::create_dashboard_fire,
+        fire_handlers::update_dashboard_fire,
+        fire_handlers::delete_dashboard_fire,
+        insight_handlers::get_dashboard_farm_insights,
+        insight_handlers::create_dashboard_farm_insight,
+        insight_handlers::update_dashboard_farm_insight,
+        insight_handlers::delete_dashboard_farm_insight,
     ),
     components(schemas(
         CreateFarmParams,
@@ -285,7 +296,15 @@ impl Modify for BearerAuth {
         StaffRoleResponse,
         StaffOneRoleResponse,
         StaffRolesResponse,
-        ErrorBody
+        ErrorBody,
+        FireDashboardCreateParams,
+        FireDashboardResponse,
+        FireDashboardOneResponse,
+        FireDashboardListResponse,
+        InsightDashboardCreateParams,
+        InsightDashboardResponse,
+        InsightDashboardOneResponse,
+        InsightDashboardListResponse
     )),
     modifiers(&BearerAuth),
     tags(

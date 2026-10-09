@@ -19,9 +19,14 @@ use crate::{
             ListFarmsUseCase, RegisterFarmUseCase, RemoveFarmUseCase, RepaintFarmCellsUseCase,
             ViewFarmUseCase,
         },
-        fires::app::use_cases::{ListFiresUseCase, RecordFireUseCase},
+        fires::app::use_cases::{
+            CorrectFireUseCase, CreateFireUseCase, ListFiresUseCase, ListStoredFiresUseCase,
+            RecordFireUseCase, RemoveFireUseCase, ViewStoredFireUseCase,
+        },
         insights::app::use_cases::{
-            ListFarmCoverageUseCase, RecordFarmInsightUseCase, ViewFarmInsightsUseCase,
+            CorrectFarmInsightUseCase, CreateFarmInsightUseCase, ListFarmCoverageUseCase,
+            RecordFarmInsightUseCase, RemoveFarmInsightUseCase, ViewFarmInsightsUseCase,
+            ViewStoredFarmInsightsUseCase,
         },
         outlooks::app::use_cases::{
             RecordOutlookRunUseCase, RecordZoneOutlookUseCase, ViewSeasonOutlookUseCase,
@@ -64,6 +69,11 @@ pub struct FarmerFeature {
 pub struct FireFeature {
     pub list_fires_use_case: Arc<ListFiresUseCase>,
     pub record_fire_use_case: Arc<RecordFireUseCase>,
+    pub list_stored_fires_use_case: Arc<ListStoredFiresUseCase>,
+    pub view_stored_fire_use_case: Arc<ViewStoredFireUseCase>,
+    pub create_fire_use_case: Arc<CreateFireUseCase>,
+    pub correct_fire_use_case: Arc<CorrectFireUseCase>,
+    pub remove_fire_use_case: Arc<RemoveFireUseCase>,
 }
 
 #[derive(Clone)]
@@ -71,6 +81,10 @@ pub struct InsightFeature {
     pub view_farm_insights_use_case: Arc<ViewFarmInsightsUseCase>,
     pub record_farm_insight_use_case: Arc<RecordFarmInsightUseCase>,
     pub list_farm_coverage_use_case: Arc<ListFarmCoverageUseCase>,
+    pub view_stored_farm_insights_use_case: Arc<ViewStoredFarmInsightsUseCase>,
+    pub create_farm_insight_use_case: Arc<CreateFarmInsightUseCase>,
+    pub correct_farm_insight_use_case: Arc<CorrectFarmInsightUseCase>,
+    pub remove_farm_insight_use_case: Arc<RemoveFarmInsightUseCase>,
 }
 
 #[derive(Clone)]

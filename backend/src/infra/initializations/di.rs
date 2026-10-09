@@ -53,7 +53,11 @@ use crate::{
         fires::{
             app::{
                 FireRepository,
-                use_cases::{ListFiresUseCase, RecordFireUseCase},
+                use_cases::{
+                    CorrectFireUseCase, CreateFireUseCase, ListFiresUseCase,
+                    ListStoredFiresUseCase, RecordFireUseCase, RemoveFireUseCase,
+                    ViewStoredFireUseCase,
+                },
             },
             infra::FirePostgresRepository,
         },
@@ -61,7 +65,9 @@ use crate::{
             app::{
                 FarmDirectory, FarmOwnership, InsightRepository,
                 use_cases::{
-                    ListFarmCoverageUseCase, RecordFarmInsightUseCase, ViewFarmInsightsUseCase,
+                    CorrectFarmInsightUseCase, CreateFarmInsightUseCase, ListFarmCoverageUseCase,
+                    RecordFarmInsightUseCase, RemoveFarmInsightUseCase, ViewFarmInsightsUseCase,
+                    ViewStoredFarmInsightsUseCase,
                 },
             },
             infra::{
@@ -146,7 +152,12 @@ pub async fn di_init(
 
     let fire = FireFeature {
         list_fires_use_case: Arc::new(ListFiresUseCase::new(fire_repository.clone())),
-        record_fire_use_case: Arc::new(RecordFireUseCase::new(fire_repository)),
+        record_fire_use_case: Arc::new(RecordFireUseCase::new(fire_repository.clone())),
+        list_stored_fires_use_case: Arc::new(ListStoredFiresUseCase::new(fire_repository.clone())),
+        view_stored_fire_use_case: Arc::new(ViewStoredFireUseCase::new(fire_repository.clone())),
+        create_fire_use_case: Arc::new(CreateFireUseCase::new(fire_repository.clone())),
+        correct_fire_use_case: Arc::new(CorrectFireUseCase::new(fire_repository.clone())),
+        remove_fire_use_case: Arc::new(RemoveFireUseCase::new(fire_repository)),
     };
 
     let insight_repository: Arc<dyn InsightRepository> =
@@ -165,9 +176,21 @@ pub async fn di_init(
             insight_repository.clone(),
         )),
         list_farm_coverage_use_case: Arc::new(ListFarmCoverageUseCase::new(
-            insight_repository,
+            insight_repository.clone(),
+            farm_directory.clone(),
+        )),
+        view_stored_farm_insights_use_case: Arc::new(ViewStoredFarmInsightsUseCase::new(
+            insight_repository.clone(),
+            farm_directory.clone(),
+        )),
+        create_farm_insight_use_case: Arc::new(CreateFarmInsightUseCase::new(
+            insight_repository.clone(),
             farm_directory,
         )),
+        correct_farm_insight_use_case: Arc::new(CorrectFarmInsightUseCase::new(
+            insight_repository.clone(),
+        )),
+        remove_farm_insight_use_case: Arc::new(RemoveFarmInsightUseCase::new(insight_repository)),
     };
 
     let farmer_repository: Arc<dyn FarmerRepository> =

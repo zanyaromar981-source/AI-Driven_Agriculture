@@ -8,6 +8,9 @@ pub enum FireError {
     #[error("The window must be between {min} and {max} hours")]
     WindowOutOfRange { min: i64, max: i64 },
 
+    #[error("A fire with this external id is already stored")]
+    AlreadyExists,
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

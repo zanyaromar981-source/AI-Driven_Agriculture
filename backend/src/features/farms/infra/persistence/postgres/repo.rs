@@ -143,6 +143,14 @@ impl FarmRepository for FarmPostgresRepository {
             .map_err(database_error)
     }
 
+    async fn exists(&self, id: i32) -> Result<bool, AppError> {
+        farms::Entity::find_by_id(id)
+            .count(&self.conn)
+            .await
+            .map(|count| count > 0)
+            .map_err(database_error)
+    }
+
     async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError> {
         let models = farms::Entity::find()
             .order_by_asc(farms::Column::Id)

@@ -24,6 +24,7 @@ pub enum RepositoryCall {
     FindByIdAndOwner { id: i32, owner: String },
     CountByOwner { owner: String },
     FindAllLocations,
+    Exists { id: i32 },
     Create,
     Update,
     Delete { id: i32, owner: String },
@@ -146,6 +147,18 @@ impl FarmRepository for FakeFarmRepository {
         self.guard()?;
 
         Ok(self.script.lock().expect("script lock").owned_count)
+    }
+
+    async fn exists(&self, id: i32) -> Result<bool, AppError> {
+        self.record(RepositoryCall::Exists { id });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .existing
+            .as_ref()
+            .is_some_and(|farm| *farm.id() == Some(id)))
     }
 
     async fn find_all_locations(&self) -> Result<Vec<FarmLocation>, AppError> {
