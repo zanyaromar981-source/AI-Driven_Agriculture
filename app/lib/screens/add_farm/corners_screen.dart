@@ -45,6 +45,7 @@ class _CornersScreenState extends State<CornersScreen>
     with WidgetsBindingObserver {
   static const _slemani = LatLng(35.5613, 45.4374);
   static const _maxDunam = 1000;
+  static const _maxCorners = 50;
 
   /// Walk mode tuning: skip bad fixes and standing jitter, close when back at the start.
   static const _maxAccM = 25.0;
@@ -63,6 +64,10 @@ class _CornersScreenState extends State<CornersScreen>
 
   bool _walkMode = false;
   bool _recording = false;
+
+  /// Crops painted on the next screen, kept when the farmer comes back here
+  /// to move a corner, so the painting is not lost.
+  Map<CellKey, String>? _painted;
   final List<_TrackPt> _track = [];
   double _walkedM = 0;
 
@@ -368,14 +373,22 @@ class _CornersScreenState extends State<CornersScreen>
     if (_recording) return showToast(context, s.walkFirst);
     final outline = [for (final p in _points) _ll(p)];
     if (outline.length < 3) return showToast(context, s.needThree);
+    // The same limits as the server (BACKEND.md 2.2), so a farm is never
+    // refused after the farmer has walked and painted it.
+    if (outline.length > _maxCorners) return showToast(context, s.tooManyCorners);
     if (selfIntersects(outline)) return showToast(context, s.crosses);
     if (polygonAreaM2(outline) / 2500 > _maxDunam) {
       return showToast(context, s.tooBig);
     }
+    if (cellsInside(outline).isEmpty) return showToast(context, s.tooSmall);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            PaintScreen(points: List.of(_points), edit: widget.edit),
+        builder: (_) => PaintScreen(
+          points: List.of(_points),
+          edit: widget.edit,
+          crops: _painted,
+          onCrops: (c) => _painted = c,
+        ),
       ),
     );
   }
