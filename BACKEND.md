@@ -361,6 +361,25 @@ The app's centre button (Ask the Doctor) already sends `POST /v1/farms/{id}/ask`
 
 The fastest way, already tested on a Mac: run `farm_doctor/doctor_service.py` next to the backend on the test server (`DOCTOR_URL=http://127.0.0.1:8090`). It already does steps 1 and 3 and today calls Gemini or Claude in step 2 (`FARM_DOCTOR_PROVIDER`). A `codex` provider that runs `codex exec` with the photos is the only missing piece; it lives in `farm_doctor/` and the app side can add it. The other way is for the backend to call `codex exec` itself, as `backend/jobs/daily_brief.py` does.
 
+**Steps for Arya (user, 2026-10-09 18:05: "tell Arya what to do").** Checked today: on the test server every question still answers `502 doctor_failed`. The app side is done and needs no change. About 30 minutes:
+
+1. **Add a Codex provider to `farm_doctor/doctor.py`** (stdlib only, like the rest):
+   - `_provider()`: also accept `codex`.
+   - New `ask_codex(inputs, question=None, photos=None)`:
+     - Make a temp folder and write each photo from `_images(photos)` (base64) to it as `photo_1.jpg`, `photo_2.png` and so on.
+     - Run `codex exec --skip-git-repo-check --ephemeral -s read-only -o <tmp>/answer.txt --image <tmp>/photo_1.jpg --image <tmp>/photo_2.png` with `RULEBOOK + "\n\n" + _user_text(inputs, question)` piped on stdin (no prompt argument, so Codex reads stdin). Use `subprocess.run(..., input=prompt, text=True, timeout=75)`.
+     - Read `<tmp>/answer.txt` and return `_parse(text)`. On a timeout or a non-zero exit, return `dict(error='codex: <short reason>')`. Delete the temp folder in both cases.
+   - `ask()`: send `codex` to `ask_codex`.
+2. **`farm_doctor/doctor_service.py`, `has_key()`:** return `True` when the provider is `codex` (Codex is already signed in, no key). Otherwise every question answers `503 doctor_not_ready`.
+3. **Start it next to the backend on the test server**, as the same user that runs Codex for the nightly brief:
+   `cd farm_doctor && FARM_DOCTOR_PROVIDER=codex nohup python3 -I doctor_service.py >> doctor.log 2>&1 &`
+   It listens on `127.0.0.1:8090`, the backend's default `DOCTOR_URL`; set `DOCTOR_URL=http://127.0.0.1:8090` if the backend's env has something else. Add it to whatever restarts the backend.
+4. **Check:**
+   - `curl -s 127.0.0.1:8090/health` answers `{"ok": true, "key": true}`.
+   - Then ask from the app (Ask the Doctor, a question and a photo): a `200` answer within 90 s. `doctor.log` shows one line per question (`farm N: likely, 1 photos, 34 s, used ...`), and each case is saved in `farm_doctor/cases/` (git-ignored).
+   - If the answer is `502`, the reason is in `doctor.log`. Most often Codex took longer than 75 s or answered outside the JSON.
+5. **Two farmers at once:** the service is threaded, so each question runs its own `codex exec`; both fit in 90 s.
+
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
 - The app keeps the last farms list and, per farm, the last farm, `status` and `plan`. On opening it shows that copy at once, asks the server, and swaps in the fresh answer; if the server fails or there is no internet, the copy stays on screen with its date (since 2026-10-08 21:44). So every open still makes the normal calls. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
