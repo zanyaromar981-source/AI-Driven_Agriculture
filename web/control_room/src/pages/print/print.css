@@ -1,0 +1,63 @@
+/* Printable pages (support letter, government report, crop report). On screen an A4 sheet on a grey desk
+   with a toolbar; on paper only the sheet. Shared by every page under /print. */
+@page { size: A4; margin: 14mm 12mm; }
+.print-desk { min-height: 100vh; background: #E4E8E1; padding: 0 12px 40px; }
+.print-bar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 4px; margin: 0 auto 6px; max-width: 210mm; }
+.print-bar .grow { flex: 1; }
+.print-bar .lang { background: var(--surface); }
+.print-page { background: #fff; color: #111; max-width: 210mm; min-height: 297mm; margin: 0 auto; padding: 16mm 15mm; box-shadow: 0 8px 30px #14201A26; border-radius: 4px; font-size: 13px; line-height: 1.6; }
+.print-page + .print-page { margin-top: 16px; }
+.print-page h1 { font-size: 22px; margin: 0 0 4px; }
+.print-page h2 { font-size: 15px; margin: 18px 0 8px; }
+.print-page p { margin: 0 0 10px; }
+.print-head { display: flex; align-items: flex-start; gap: 14px; padding-bottom: 12px; border-bottom: 2px solid var(--deep); margin-bottom: 16px; }
+.print-head .logo { width: 54px; height: 54px; border-radius: 12px; background: var(--gold-soft); display: grid; place-items: center; flex: none; }
+.print-head .org { flex: 1; min-width: 0; }
+.print-head .org b { display: block; font-size: 15px; line-height: 1.35; }
+.print-head .org span { color: #555; font-size: 12px; }
+.print-head .ref { text-align: end; font-size: 12px; color: #333; flex: none; }
+.print-head .ref b { font-family: ui-monospace, Consolas, monospace; direction: ltr; unicode-bidi: isolate; }
+.print-title { text-align: center; margin: 6px 0 16px; }
+.print-title .eyebrow { color: var(--brand); }
+.print-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 24px; margin: 0 0 12px; }
+.print-facts div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dotted #ccc; padding: 3px 0; }
+.print-facts dt { color: #555; } .print-facts dd { margin: 0; font-weight: 600; text-align: end; }
+table.pt { width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0 12px; }
+table.pt th, table.pt td { border: 1px solid #C9CFC6; padding: 5px 7px; text-align: start; vertical-align: top; }
+table.pt th { background: #EEF2EC; font-weight: 700; }
+table.pt .num { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.pt tr.total td { font-weight: 800; background: #F6F8F4; }
+table.pt tr.group td { font-weight: 700; background: #F3F0E6; }
+.print-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; }
+.print-stats div { border: 1px solid #D6DCD3; border-radius: 8px; padding: 8px 10px; }
+.print-stats small { display: block; color: #555; font-size: 11px; }
+.print-stats b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.print-sign { display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 24px; margin-top: 34px; align-items: end; }
+.print-sign .line { border-top: 1px solid #333; padding-top: 6px; margin-top: 46px; }
+.print-sign .stamp { height: 120px; border: 1.5px dashed #999; border-radius: 50%; display: grid; place-items: center; color: #999; font-size: 11px; text-align: center; padding: 10px; }
+.print-foot { margin-top: 26px; padding-top: 10px; border-top: 1px solid #ddd; color: #666; font-size: 11px; }
+.print-note { font-size: 11.5px; color: #555; }
+.print-input { width: 100%; }
+.print-only { display: none; }
+.avoid-break { break-inside: avoid; }
+.print-page .hbar { grid-template-columns: minmax(80px, 120px) minmax(0, 1fr) auto; margin: 5px 0; font-size: 12px; }
+@media (max-width: 640px) {
+  .print-desk { padding: 0 0 30px; }
+  .print-page { padding: 18px 14px; min-height: 0; border-radius: 0; }
+  .print-facts, .print-sign { grid-template-columns: minmax(0, 1fr); }
+  .print-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .print-head { flex-wrap: wrap; }
+  .print-head .ref { text-align: start; width: 100%; }
+  .print-scroll { overflow-x: auto; }
+}
+@media print {
+  html, body { background: #fff !important; }
+  .print-desk { background: #fff; padding: 0; }
+  .print-bar, .screen-only, .cursor-dot, .cursor-ring, .toasts { display: none !important; }
+  .print-only { display: block; }
+  .print-page { box-shadow: none; margin: 0; padding: 0; max-width: none; min-height: 0; border-radius: 0; }
+  .print-page + .print-page { break-before: page; margin-top: 0; }
+  table.pt tr, .print-sign, .print-stats { break-inside: avoid; }
+  .bar > i { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  table.pt th, table.pt tr.group td, table.pt tr.total td, .print-head .logo { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
