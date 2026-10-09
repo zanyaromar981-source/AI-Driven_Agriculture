@@ -375,7 +375,9 @@ class _CornersScreenState extends State<CornersScreen>
     if (outline.length < 3) return showToast(context, s.needThree);
     // The same limits as the server (BACKEND.md 2.2), so a farm is never
     // refused after the farmer has walked and painted it.
-    if (outline.length > _maxCorners) return showToast(context, s.tooManyCorners);
+    if (outline.length > _maxCorners) {
+      return showToast(context, s.tooManyCorners);
+    }
     if (selfIntersects(outline)) return showToast(context, s.crosses);
     if (polygonAreaM2(outline) / 2500 > _maxDunam) {
       return showToast(context, s.tooBig);

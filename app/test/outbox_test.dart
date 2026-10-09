@@ -159,32 +159,29 @@ void main() {
     },
   );
 
-  test(
-    'a farm the server can never accept (422) is reported with its reason '
-    'and its walked edge goes back to Add farm',
-    () async {
-      final box = Outbox.instance;
-      await box.flush(_Failing(422, 'x')); // clear what earlier tests left
-      await Draft.clear();
-      final before = box.items.length;
-      final bad = await box.add(_req('Bad farm'), _summary);
-      box.takeNews();
-      final r = await box.flush(
-        _Failing(422, 'bad_polygon', {'detail': 'encloses no cells'}),
-      );
-      final mine = r.rejected.where((x) => x.item.key == bad.key).single;
-      expect(mine.code, 'bad_polygon');
-      expect(mine.edgeBack, isTrue);
-      expect(box.items.map((i) => i.request.name), isNot(contains('Bad farm')));
-      expect(box.items.length, lessThanOrEqualTo(before));
-      final draft = await Draft.load();
-      expect(draft?.points.length, 3, reason: 'the walk is not lost');
-      final news = box.takeNews();
-      expect(news.sent, 0, reason: 'a refusal is not an upload');
-      expect(news.refused.map((x) => x.item.key), contains(bad.key));
-      await Draft.clear();
-    },
-  );
+  test('a farm the server can never accept (422) is reported with its reason '
+      'and its walked edge goes back to Add farm', () async {
+    final box = Outbox.instance;
+    await box.flush(_Failing(422, 'x')); // clear what earlier tests left
+    await Draft.clear();
+    final before = box.items.length;
+    final bad = await box.add(_req('Bad farm'), _summary);
+    box.takeNews();
+    final r = await box.flush(
+      _Failing(422, 'bad_polygon', {'detail': 'encloses no cells'}),
+    );
+    final mine = r.rejected.where((x) => x.item.key == bad.key).single;
+    expect(mine.code, 'bad_polygon');
+    expect(mine.edgeBack, isTrue);
+    expect(box.items.map((i) => i.request.name), isNot(contains('Bad farm')));
+    expect(box.items.length, lessThanOrEqualTo(before));
+    final draft = await Draft.load();
+    expect(draft?.points.length, 3, reason: 'the walk is not lost');
+    final news = box.takeNews();
+    expect(news.sent, 0, reason: 'a refusal is not an upload');
+    expect(news.refused.map((x) => x.item.key), contains(bad.key));
+    await Draft.clear();
+  });
 
   test('only farms that really went up count as uploaded', () async {
     final box = Outbox.instance;

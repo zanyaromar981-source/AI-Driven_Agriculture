@@ -124,6 +124,7 @@ class S {
   );
   String uploaded(int n) =>
       t('$n کێڵگە نێردرا', n == 1 ? '1 farm uploaded' : '$n farms uploaded');
+
   /// Why the server would not take a farm, in words the farmer can act on.
   String refusedWhy(String code) => switch (code) {
     'too_many_farms' => t(
@@ -135,7 +136,10 @@ class S {
       'سنوورەکە زۆر بچووکە یان گۆشەی زۆرە. گۆشەکان بپشکنە',
       'The edge is too small or has too many corners. Check the corners.',
     ),
-    _ => t('کێڵگەکە بپشکنە و دووبارە هەوڵ بدەرەوە', 'Check the farm and try again.'),
+    _ => t(
+      'کێڵگەکە بپشکنە و دووبارە هەوڵ بدەرەوە',
+      'Check the farm and try again.',
+    ),
   };
   String refused(String name, String code) => t(
     'سێرڤەر "$name"ی وەرنەگرت. ${refusedWhy(code)}',
