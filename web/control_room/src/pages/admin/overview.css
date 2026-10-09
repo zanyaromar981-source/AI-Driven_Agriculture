@@ -1,0 +1,4 @@
+.ov-hero .sat { overflow: hidden; }
+.ov-hero .sat-grid { position: absolute; left: 50%; top: 50%; width: max(100%, 1100px); transform: translate(-50%, -50%); display: grid; grid-template-columns: repeat(6, 1fr); }
+.ov-hero .sat-grid img { width: 100%; aspect-ratio: 1; display: block; }
+.ov-ellipsis { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
