@@ -88,3 +88,4 @@ Notes for this version:
 - Slide 8 still shows `[team names]`.
 - Slide 5 uses an AI-made satellite picture as its background. Swap it for a real one if there is time.
 - A native Sorani speaker should read the script aloud once if the pitch is given in Sorani.
+- The example message on the message slide is now in Sorani, translated for the slide. A native speaker must check it before the pitch, above all the farming words (yellow rust, flag leaves, plant-protection office, urea).

@@ -2167,25 +2167,12 @@
           "id": "q7nUZP",
           "layoutPosition": "absolute",
           "x": 750,
-          "y": 98,
+          "y": 118,
           "name": "Phone · Answer",
           "clip": true,
           "width": 420,
-          "height": 884,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "pitch_assets/screen_answer.png",
-            "mode": "cover",
-            "transform": [
-              1,
-              0,
-              0,
-              1.46,
-              0,
-              -0.139
-            ]
-          },
+          "height": 846,
+          "fill": "#F2F4EF",
           "cornerRadius": 36,
           "stroke": "#FFFFFF33",
           "strokeWidth": 2,
@@ -2198,14 +2185,571 @@
               "y": 16
             },
             "blur": 48
-          }
+          },
+          "layout": "vertical",
+          "gap": 10,
+          "padding": [
+            18,
+            20,
+            16,
+            20
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "xm23V",
+              "name": "Screen Title",
+              "fill": "#162019",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "خۆر دەڵێت",
+              "lineHeight": 1.2,
+              "textAlign": "right",
+              "fontFamily": "$font-ku",
+              "fontSize": 24,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "mXNs6",
+              "name": "Card Most Likely",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "EeVSm",
+                  "name": "Eyebrow",
+                  "fill": "#5E6E64",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "زۆرترین ئەگەر",
+                  "textAlign": "right",
+                  "fontFamily": "$font-ku",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "C6Ply",
+                  "name": "Finding",
+                  "fill": "#162019",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "ژەنگی زەرد لە گۆشەی باکووری ڕۆژهەڵات دەستی پێکردووە",
+                  "lineHeight": 1.3,
+                  "textAlign": "right",
+                  "fontFamily": "$font-ku",
+                  "fontSize": 20,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "nWtkJ",
+                  "name": "How Sure",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "V0Id5l",
+                      "name": "Sure Label",
+                      "fill": "#162019",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "چەندە دڵنیایە: ئەگەری هەیە",
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 15,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D0Xy8",
+                      "name": "Sure Bar",
+                      "width": "fill_container",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "K4WZP",
+                          "name": "Step",
+                          "fill": "#DDE3DA",
+                          "width": "fill_container",
+                          "height": 8
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "QAAM2",
+                          "name": "Step",
+                          "fill": "#1E7A5A",
+                          "width": "fill_container",
+                          "height": 8
+                        },
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 4,
+                          "id": "A3S8zg",
+                          "name": "Step",
+                          "fill": "#1E7A5A",
+                          "width": "fill_container",
+                          "height": 8
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "P7bfL",
+                      "name": "Scale",
+                      "fill": "#5E6E64",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "دڵنیا · ئەگەری هەیە · نادڵنیا",
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KbTCS",
+              "name": "Card Why",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QVFe2",
+                  "name": "Card Title",
+                  "fill": "#162019",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "بۆچی",
+                  "textAlign": "right",
+                  "fontFamily": "$font-ku",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "nQqXT",
+                  "name": "Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "VdcE5",
+                      "name": "Row Text",
+                      "fill": "#162019",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "سەتەلایت: ١٢ خانە ٢٢٪ لە خوار ئاساییەوەن، لە ٢٥ی ئەیلوولەوە",
+                      "lineHeight": 1.3,
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 14.5,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "m2HZUi",
+                      "name": "Badge",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#E3F0EA",
+                      "cornerRadius": 9,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "E8xH7q",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "satellite",
+                          "library": "lucide",
+                          "fill": "#1E7A5A"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "G6qWJ8",
+                  "name": "Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Z1LjqD",
+                      "name": "Row Text",
+                      "fill": "#162019",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "کەشوهەوا: شەوانی فێنک و شێدار لە سێشەممە تا پێنجشەممە، کەشی ژەنگ",
+                      "lineHeight": 1.3,
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 14.5,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "gFMSK",
+                      "name": "Badge",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#E3F0EA",
+                      "cornerRadius": 9,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "f4ARZ",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "cloud-rain",
+                          "library": "lucide",
+                          "fill": "#1E7A5A"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ykBhL",
+                  "name": "Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "r3jvbG",
+                      "name": "Row Text",
+                      "fill": "#162019",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "وێنەکەت: هێڵی زەرد بە درێژایی دەمارەکانی گەڵا",
+                      "lineHeight": 1.3,
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 14.5,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iEYzs",
+                      "name": "Badge",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#E3F0EA",
+                      "cornerRadius": 9,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "IQe5P",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "camera",
+                          "library": "lucide",
+                          "fill": "#1E7A5A"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "x50BBh",
+                  "name": "Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fYLHY",
+                      "name": "Row Text",
+                      "fill": "#162019",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "ڕاپۆرتەکان: ٢ جووتیاری نزیک هەمان شتیان ڕاپۆرت کردووە ئەم هەفتەیە",
+                      "lineHeight": 1.3,
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 14.5,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "P4nQKD",
+                      "name": "Badge",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#E3F0EA",
+                      "cornerRadius": 9,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "bIvII",
+                          "name": "Icon",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "users",
+                          "library": "lucide",
+                          "fill": "#1E7A5A"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cVEff",
+              "name": "Card This Week",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "bGeky",
+                  "name": "Card Title",
+                  "fill": "#162019",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "ئەم هەفتەیە",
+                  "textAlign": "right",
+                  "fontFamily": "$font-ku",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "frame",
+                  "id": "Lnssy",
+                  "name": "Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Bi6zt",
+                      "name": "Row Text",
+                      "fill": "#162019",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "ئەمڕۆ بچۆ بۆ گۆشەی باکووری ڕۆژهەڵات و سەیری گەڵاکانی سەرەوە بکە",
+                      "lineHeight": 1.3,
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 14.5,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BYtff",
+                      "name": "Badge",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#E3F0EA",
+                      "cornerRadius": 17,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lIJWG",
+                          "name": "Num",
+                          "fill": "#1E7A5A",
+                          "content": "١",
+                          "fontFamily": "$font-ku",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "bxiCt",
+                  "name": "Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "b9Tbs",
+                      "name": "Row Text",
+                      "fill": "#162019",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "ئەگەر هێڵی زەردت بینی، پێش پرژاندن پەیوەندی بە فەرمانگەی پاراستنی ڕووەکەوە بکە",
+                      "lineHeight": 1.3,
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 14.5,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mwJks",
+                      "name": "Badge",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#E3F0EA",
+                      "cornerRadius": 17,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "P8doO",
+                          "name": "Num",
+                          "fill": "#1E7A5A",
+                          "content": "٢",
+                          "fontFamily": "$font-ku",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "W2FIP5",
+                  "name": "Row",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "soEap",
+                      "name": "Row Text",
+                      "fill": "#162019",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "تا بارانی هەینی یوریا بڵاو مەکەوە",
+                      "lineHeight": 1.3,
+                      "textAlign": "right",
+                      "fontFamily": "$font-ku",
+                      "fontSize": 14.5,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wACBg",
+                      "name": "Badge",
+                      "width": 34,
+                      "height": 34,
+                      "fill": "#E3F0EA",
+                      "cornerRadius": 17,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "SwYE9",
+                          "name": "Num",
+                          "fill": "#1E7A5A",
+                          "content": "٣",
+                          "fontFamily": "$font-ku",
+                          "fontSize": 15,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "GerIi",
+              "name": "Card Cannot Tell",
+              "width": "fill_container",
+              "fill": "#E6E9E2",
+              "cornerRadius": 16,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PRp9O",
+                  "name": "Card Title",
+                  "fill": "#162019",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "ئەوەی نایزانم",
+                  "textAlign": "right",
+                  "fontFamily": "$font-ku",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "xFsty",
+                  "name": "Cannot Text",
+                  "fill": "#5E6E64",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "کام دەرمان یان چەند. ڕۆژی دروستی دەستپێکردنی ژەنگەکە.",
+                  "lineHeight": 1.45,
+                  "textAlign": "right",
+                  "fontFamily": "$font-ku",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
         },
         {
           "type": "rectangle",
           "id": "aJgHq",
           "layoutPosition": "absolute",
           "x": 1180,
-          "y": 219,
+          "y": 248,
           "name": "Line 1",
           "fill": "$gold",
           "width": 100,
@@ -2216,7 +2760,7 @@
           "id": "g6tms5",
           "layoutPosition": "absolute",
           "x": 1290,
-          "y": 166,
+          "y": 200,
           "name": "Callout 1",
           "width": 520,
           "gap": 20,
@@ -2281,7 +2825,7 @@
           "id": "ed9Yh",
           "layoutPosition": "absolute",
           "x": 1180,
-          "y": 296,
+          "y": 322.5,
           "name": "Line 2",
           "fill": "$gold",
           "width": 100,
@@ -2292,7 +2836,7 @@
           "id": "gkoQL",
           "layoutPosition": "absolute",
           "x": 1290,
-          "y": 280,
+          "y": 302.5,
           "name": "Callout 2",
           "width": 520,
           "gap": 20,
@@ -2357,7 +2901,7 @@
           "id": "t8weTJ",
           "layoutPosition": "absolute",
           "x": 640,
-          "y": 509,
+          "y": 510,
           "name": "Line 3",
           "fill": "$gold",
           "width": 100,
@@ -2368,7 +2912,7 @@
           "id": "ESVtD",
           "layoutPosition": "absolute",
           "x": 110,
-          "y": 475,
+          "y": 476,
           "name": "Callout 3",
           "width": 520,
           "gap": 20,
@@ -2435,7 +2979,7 @@
           "id": "iq0OG",
           "layoutPosition": "absolute",
           "x": 1180,
-          "y": 767,
+          "y": 743,
           "name": "Line 4",
           "fill": "$gold",
           "width": 100,
@@ -2446,7 +2990,7 @@
           "id": "qU9eX",
           "layoutPosition": "absolute",
           "x": 1290,
-          "y": 733,
+          "y": 709,
           "name": "Callout 4",
           "width": 520,
           "gap": 20,
@@ -2511,7 +3055,7 @@
           "id": "PAbhQ",
           "layoutPosition": "absolute",
           "x": 640,
-          "y": 928,
+          "y": 898,
           "name": "Line 5",
           "fill": "$gold",
           "width": 100,
@@ -2522,7 +3066,7 @@
           "id": "q6VmgR",
           "layoutPosition": "absolute",
           "x": 110,
-          "y": 894,
+          "y": 864,
           "name": "Callout 5",
           "width": 520,
           "gap": 20,
@@ -2594,7 +3138,7 @@
           "fill": "$on-dark-muted",
           "textGrowth": "fixed-width",
           "width": 510,
-          "content": "Example answer from the app design. The farmer can switch it to Sorani.",
+          "content": "Example answer. The farmer can switch between Sorani and English.",
           "lineHeight": 1.3,
           "fontFamily": "$font-lat",
           "fontSize": 20,
