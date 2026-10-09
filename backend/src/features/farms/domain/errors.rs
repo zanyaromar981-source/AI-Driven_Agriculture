@@ -14,6 +14,9 @@ pub enum FarmError {
     #[error("The farm is larger than the allowed {0} cells")]
     TooManyCells(usize),
 
+    #[error("`{0}` is not a crop that can be used: see the crop list")]
+    UnknownCrop(String),
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

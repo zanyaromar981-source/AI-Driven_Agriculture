@@ -262,6 +262,15 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
                                 : _TopicCard(view: views[key]!, icon: icon),
                             const SizedBox(height: 14),
                           ],
+                          // Comes from a daily job, not the field's analysis:
+                          // shown when the server has it, never waited for.
+                          if (views['groundwater'] != null) ...[
+                            _TopicCard(
+                              view: views['groundwater']!,
+                              icon: Icons.waves_outlined,
+                            ),
+                            const SizedBox(height: 14),
+                          ],
                         ],
                       ],
                     ),

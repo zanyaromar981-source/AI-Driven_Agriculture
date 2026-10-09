@@ -57,7 +57,7 @@ fn main() {
                     "src/features/farms/infra/persistence/postgres/entities",
                 ),
                 (
-                    "farmers,sign_in_challenges",
+                    "farmers,sign_in_challenges,letters",
                     "src/features/farmers/infra/persistence/postgres/entities",
                 ),
                 (
@@ -85,6 +85,10 @@ fn main() {
                     "src/features/water/infra/persistence/postgres/entities",
                 ),
                 (
+                    "alerts,devices",
+                    "src/features/alerts/infra/persistence/postgres/entities",
+                ),
+                (
                     "alwa_markets,alwa_prices,alwa_listings,alwa_offers",
                     "src/features/alwa/infra/persistence/postgres/entities",
                 ),
@@ -95,6 +99,38 @@ fn main() {
                 (
                     "daily_briefs,farm_brief_zones",
                     "src/features/briefs/infra/persistence/postgres/entities",
+                ),
+                (
+                    "data_versions",
+                    "src/features/versions/infra/persistence/postgres/entities",
+                ),
+                (
+                    "rules,rule_changes",
+                    "src/features/rules/infra/persistence/postgres/entities",
+                ),
+                (
+                    "jobs,job_runs",
+                    "src/features/jobs/infra/persistence/postgres/entities",
+                ),
+                (
+                    "messages,message_photos",
+                    "src/features/messages/infra/persistence/postgres/entities",
+                ),
+                (
+                    "app_config,app_versions_seen",
+                    "src/features/app_config/infra/persistence/postgres/entities",
+                ),
+                (
+                    "crops",
+                    "src/features/crops/infra/persistence/postgres/entities",
+                ),
+                (
+                    "farm_history,farm_history_series",
+                    "src/features/history/infra/persistence/postgres/entities",
+                ),
+                (
+                    "farm_plans",
+                    "src/features/plans/infra/persistence/postgres/entities",
                 ),
             ];
 

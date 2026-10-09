@@ -11,8 +11,9 @@ import '../../geo.dart';
 import '../../theme.dart';
 import '../../widgets/farm_map.dart';
 
-/// The three ways to look at a farm (design: View Toggle).
-enum FarmView { cells, crops, farm }
+/// The two ways to look at a farm (design: View Toggle, Cells | Crops;
+/// the Farm view was removed by the user on 2026-10-09).
+enum FarmView { cells, crops }
 
 Color levelColor(FarmStatus l) => switch (l) {
   FarmStatus.normal => JColors.levelNormal,
@@ -137,6 +138,8 @@ class FarmDrawing extends StatelessWidget {
     required this.onCell,
     required this.onCrop,
     this.overlay,
+    this.pin = false,
+    this.styleButton = true,
   });
 
   final FarmShape shape;
@@ -147,6 +150,12 @@ class FarmDrawing extends StatelessWidget {
   final ValueChanged<CellKey?> onCell;
   final ValueChanged<String?> onCrop;
   final Widget? overlay;
+
+  /// A map pin on the chosen cell (Report: Where?).
+  final bool pin;
+
+  /// The map style button in the corner (off on the small Report map).
+  final bool styleButton;
 
   static final Expando<_FarmGeo> _geos = Expando();
   _FarmGeo get _geo => _geos[shape] ??= _FarmGeo(shape);
@@ -160,8 +169,6 @@ class FarmDrawing extends StatelessWidget {
         onCrop(
           crop == null || crop == 'empty' || crop == selectedCrop ? null : crop,
         );
-      case FarmView.farm:
-        break;
     }
   }
 
@@ -192,8 +199,7 @@ class FarmDrawing extends StatelessWidget {
         final cardAtTop =
             sel != null &&
             sel.n * 10.0 + 5 - shape.minY < (shape.maxY - shape.minY) / 2;
-        final overlayAtTop =
-            overlay != null && view != FarmView.farm && cardAtTop;
+        final overlayAtTop = overlay != null && cardAtTop;
         return SizedBox(
           width: w,
           height: h,
@@ -220,23 +226,11 @@ class FarmDrawing extends StatelessWidget {
                     ),
                     children: [
                       ...baseLayers(style, ku),
-                      if (view == FarmView.farm)
-                        PolygonLayer(
-                          polygons: [
-                            Polygon(
-                              points: geo.outline,
-                              color: levelSoft(
-                                farmLevel,
-                              ).withValues(alpha: 0.55),
-                            ),
-                          ],
-                        )
-                      else
-                        CellLayer(
-                          corners: geo.corners,
-                          clipTo: geo.outline,
-                          style: _cellColour,
-                        ),
+                      CellLayer(
+                        corners: geo.corners,
+                        clipTo: geo.outline,
+                        style: _cellColour,
+                      ),
                       PolygonLayer(
                         polygons: [
                           Polygon(
@@ -255,6 +249,25 @@ class FarmDrawing extends StatelessWidget {
                               color: Colors.transparent,
                               borderColor: JColors.ink,
                               borderStrokeWidth: 2.4,
+                            ),
+                          ],
+                        ),
+                      if (pin && sel != null)
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: Utm.toLatLng(
+                                sel.e * 10.0 + 5,
+                                sel.n * 10.0 + 5,
+                              ),
+                              width: 20,
+                              height: 20,
+                              alignment: Alignment.topCenter,
+                              child: const Icon(
+                                Icons.location_on_rounded,
+                                size: 20,
+                                color: JColors.ink,
+                              ),
                             ),
                           ],
                         ),
@@ -288,18 +301,16 @@ class FarmDrawing extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (!overlayAtTop)
+                if (!overlayAtTop && styleButton)
                   const Positioned(top: 8, right: 8, child: MapStyleButton()),
                 if (overlay != null)
-                  view == FarmView.farm
-                      ? Positioned.fill(child: Center(child: overlay))
-                      : Positioned(
-                          left: 8,
-                          right: 8,
-                          top: cardAtTop ? 8 : null,
-                          bottom: cardAtTop ? null : 8,
-                          child: overlay!,
-                        ),
+                  Positioned(
+                    left: 8,
+                    right: 8,
+                    top: cardAtTop ? 8 : null,
+                    bottom: cardAtTop ? null : 8,
+                    child: overlay!,
+                  ),
               ],
             ),
           ),

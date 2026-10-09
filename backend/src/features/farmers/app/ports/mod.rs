@@ -1,7 +1,8 @@
 mod repo;
 mod services;
 
-pub use repo::{FarmerRepository, SignInChallengeRepository};
+pub use repo::{FarmerRepository, LetterRepository, SignInChallengeRepository};
 pub use services::{
-    FarmCounter, FarmRemover, SignInCodeGenerator, SignInCodeHasher, SignInCodeSender, TokenIssuer,
+    FarmCounter, FarmHoldings, FarmRemover, FarmerDataRemover, LetterIssuers, SignInCodeGenerator,
+    SignInCodeHasher, SignInCodeSender, TokenIssuer,
 };

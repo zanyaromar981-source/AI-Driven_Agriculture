@@ -260,4 +260,176 @@ class HttpApi implements Api {
     );
     return DoctorAnswer.fromJson(j);
   }
+
+  @override
+  Future<FarmerProfile> getMe() async =>
+      FarmerProfile.fromJson(await _call('GET', 'me'));
+
+  @override
+  Future<List<FarmAlert>> getAlerts(String farmId) async {
+    final j = await _call('GET', '${_farm(farmId)}/alerts?days=30');
+    return [
+      for (final a in j['alerts'] as List? ?? const [])
+        FarmAlert.fromJson(a as Map<String, dynamic>),
+    ];
+  }
+
+  /// Multipart by hand, like [askDoctor]: kind, text, farm_id, photos.
+  @override
+  Future<FarmerMessage> sendReport(
+    NewReport r, {
+    String? idempotencyKey,
+  }) async {
+    final boundary = 'jutyar${DateTime.now().microsecondsSinceEpoch}';
+    final out = BytesBuilder(copy: false);
+    void field(String name, String value) => out.add(
+      utf8.encode(
+        '--$boundary\r\nContent-Disposition: form-data; name="$name"'
+        '\r\n\r\n$value\r\n',
+      ),
+    );
+    field('kind', 'report');
+    field('text', r.text);
+    field('farm_id', r.farmId);
+    for (final (i, p) in r.photos.indexed) {
+      final ext = p.mime == 'image/png' ? 'png' : 'jpg';
+      out.add(
+        utf8.encode(
+          '--$boundary\r\nContent-Disposition: form-data; name="photos"; '
+          'filename="photo_${i + 1}.$ext"\r\nContent-Type: ${p.mime}\r\n\r\n',
+        ),
+      );
+      out.add(p.bytes);
+      out.add(utf8.encode('\r\n'));
+    }
+    out.add(utf8.encode('--$boundary--\r\n'));
+    final j = await _call(
+      'POST',
+      'messages',
+      raw: (
+        type: 'multipart/form-data; boundary=$boundary',
+        bytes: out.takeBytes(),
+      ),
+      idempotencyKey: idempotencyKey,
+      wait: const Duration(seconds: 60),
+    );
+    return FarmerMessage.fromJson(j['message'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<FarmerMessage>> getMyMessages() async {
+    final j = await _call('GET', 'messages/mine');
+    return [
+      for (final m in j['messages'] as List? ?? const [])
+        FarmerMessage.fromJson(m as Map<String, dynamic>),
+    ];
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _call('DELETE', 'account');
+  }
+
+  // ---- Alwa market (FRONTEND.md 5; BACKEND.md 2.14 for what is missing) ----
+
+  static String _listing(String id) =>
+      'alwa/listings/${Uri.encodeComponent(id)}';
+
+  @override
+  Future<List<AlwaListing>> alwaListings({double? lat, double? lon}) async {
+    // Server: not built yet (BACKEND.md 2.14): lat/lon are ignored today, so
+    // the list comes unsorted and without distance_km.
+    final q = <String, String>{
+      'status': 'open',
+      'rows_per_page': '100',
+      if (lat != null && lon != null) ...{'lat': '$lat', 'lon': '$lon'},
+    };
+    final j = await _call(
+      'GET',
+      Uri(path: 'alwa/listings', queryParameters: q).toString(),
+    );
+    return [
+      for (final l in j['listings'] as List? ?? const [])
+        AlwaListing.fromJson(l as Map<String, dynamic>),
+    ];
+  }
+
+  @override
+  Future<AlwaListing> alwaListing(String id) async {
+    final j = await _call('GET', _listing(id));
+    return AlwaListing.fromJson(j['listing'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<AlwaListing> createAlwaListing(
+    NewAlwaListing listing, {
+    String? idempotencyKey,
+  }) async {
+    final body = listing.toJson(DateTime.now());
+    // Server: not built yet (BACKEND.md 2.14): `market` and `pickup` are still
+    // required, so send the alwa the price board uses and "farm" (the crop
+    // is where the farmer stands). Drop both once 2.14 #1 is built.
+    final markets = await _alwaMarkets();
+    final market = AlwaMarket.pick(markets, listing.lat, listing.lon);
+    if (market != null) body['market'] = market.slug;
+    body['pickup'] = 'farm';
+    // Server: not built yet (BACKEND.md 2.14 #3): no seller_phone, so the
+    // phone goes in seller_name, which buyers already see. Drop when built.
+    final phone = listing.sellerPhone;
+    if (phone != null && phone.isNotEmpty) body['seller_name'] = phone;
+    final j = await _call(
+      'POST',
+      'alwa/listings',
+      body: body,
+      idempotencyKey: idempotencyKey,
+    );
+    return AlwaListing.fromJson(j['listing'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<AlwaListing>> myAlwaListings() async {
+    final j = await _call('GET', 'alwa/listings/mine');
+    return [
+      for (final l in j['listings'] as List? ?? const [])
+        AlwaListing.fromJson(l as Map<String, dynamic>),
+    ];
+  }
+
+  @override
+  Future<void> cancelAlwaListing(String id) async {
+    await _call('DELETE', _listing(id));
+  }
+
+  // Server: not built yet (BACKEND.md 2.14 #4): answers 404 today.
+  @override
+  Future<AlwaListing> markAlwaListingSold(String id) async {
+    final j = await _call('POST', '${_listing(id)}/sold');
+    return AlwaListing.fromJson(j['listing'] as Map<String, dynamic>);
+  }
+
+  Future<List<AlwaMarket>> _alwaMarkets() async {
+    final j = await _call('GET', 'alwa/markets');
+    return [
+      for (final m in j['markets'] as List? ?? const [])
+        AlwaMarket.fromJson(m as Map<String, dynamic>),
+    ];
+  }
+
+  @override
+  Future<AlwaPriceBoard?> alwaPriceBoard({double? lat, double? lon}) async {
+    final markets = await _alwaMarkets();
+    final market = AlwaMarket.pick(markets, lat, lon);
+    if (market == null) return null;
+    final j = await _call(
+      'GET',
+      'alwa/markets/${Uri.encodeComponent(market.slug)}/prices',
+    );
+    // Server: not built yet (BACKEND.md 2.14 #5): markets have no point, so
+    // "nearest" is only true once they do.
+    return AlwaPriceBoard.fromJson(
+      j,
+      market,
+      nearest: lat != null && market.lat != null,
+    );
+  }
 }

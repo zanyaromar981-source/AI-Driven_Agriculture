@@ -2,13 +2,11 @@ use std::sync::Arc;
 
 use crate::{
     app::Pagination,
-    features::farmers::app::{AppError, FarmCounter, FarmerRecord, FarmerRepository},
-    shared::Phone,
+    features::farmers::app::{AppError, FarmCounter, FarmerFilter, FarmerRecord, FarmerRepository},
 };
 
 pub struct ListFarmersInput {
-    /// Only the farmer with exactly this phone, when given.
-    pub phone: Option<Phone>,
+    pub filter: FarmerFilter,
     pub pagination: Pagination,
 }
 
@@ -22,14 +20,15 @@ impl ListFarmersUseCase {
         Self { farmers, farms }
     }
 
-    /// Returns the page, newest first, and how many farmers match in all.
+    /// Returns the page, in the filter's order, and how many farmers match
+    /// in all.
     pub async fn execute(
         &self,
         input: ListFarmersInput,
     ) -> Result<(Vec<FarmerRecord>, u64), AppError> {
         let (farmers, count) = self
             .farmers
-            .find_page(input.phone.as_ref(), &input.pagination)
+            .find_page(&input.filter, &input.pagination)
             .await?;
 
         // A page holds at most 100 farmers, so this is a bounded number of
@@ -66,7 +65,7 @@ mod tests {
 
         let (records, count) = use_case(&fakes)
             .execute(ListFarmersInput {
-                phone: None,
+                filter: FarmerFilter::default(),
                 pagination: Pagination::new(2, 20),
             })
             .await
@@ -94,7 +93,10 @@ mod tests {
 
         use_case(&fakes)
             .execute(ListFarmersInput {
-                phone: Some(phone()),
+                filter: FarmerFilter {
+                    phone: Some(phone()),
+                    ..FarmerFilter::default()
+                },
                 pagination: Pagination::new(1, 20),
             })
             .await
@@ -115,7 +117,7 @@ mod tests {
 
         let (records, count) = use_case(&fakes)
             .execute(ListFarmersInput {
-                phone: None,
+                filter: FarmerFilter::default(),
                 pagination: Pagination::new(1, 20),
             })
             .await

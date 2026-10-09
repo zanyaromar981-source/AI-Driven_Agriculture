@@ -2,6 +2,12 @@
 // Screens only talk to [Api]. The demo uses FakeApi; the real server will be
 // another class with the same methods.
 
+import 'alwa_models.dart';
+import 'farmer_models.dart';
+
+export 'alwa_models.dart';
+export 'farmer_models.dart';
+
 enum FarmStatus { normal, watch, alarm, none }
 
 FarmStatus farmStatusFrom(String? s) => switch (s) {
@@ -253,6 +259,9 @@ class ApiException implements Exception {
   /// No internet or server unreachable: keep the data and try again later.
   bool get isOffline => status == 0;
 
+  /// Seconds to wait before asking again (429 rate_limited), when given.
+  int? get retryAfterS => (extra?['retry_after_s'] as num?)?.toInt();
+
   @override
   String toString() => 'ApiException($status $code)';
 }
@@ -306,6 +315,54 @@ abstract class Api {
   /// POST /farms/{id}/ask (multipart): a question and photos for the Doctor.
   /// Slow (about 30 s): the server reads the field and the weather first.
   Future<DoctorAnswer> askDoctor(String farmId, DoctorQuestion question);
+
+  /// GET /me: the farmer's phone, name and language (Settings).
+  Future<FarmerProfile> getMe();
+
+  /// GET /farms/{id}/alerts?days=30 (BACKEND.md 2.7). Not on the server yet
+  /// (FRONTEND.md 14): it answers 404 and the Alerts screen says so calmly.
+  Future<List<FarmAlert>> getAlerts(String farmId);
+
+  /// POST /messages (multipart, kind `report`): a problem seen on a farm,
+  /// with up to 4 photos, to the Ministry inbox.
+  Future<FarmerMessage> sendReport(NewReport report, {String? idempotencyKey});
+
+  /// GET /messages/mine: what the farmer sent, newest first, with replies.
+  Future<List<FarmerMessage>> getMyMessages();
+
+  /// DELETE /account: removes the phone, farms, reports and questions.
+  /// Not on the server yet (FRONTEND.md 14): it answers 404.
+  Future<void> deleteAccount();
+
+  // ---- Alwa market: FRONTEND.md 5 as built, BACKEND.md 2.14 as the app wants ----
+
+  /// GET /alwa/listings?status=open: crops on sale, nearest to ([lat], [lon])
+  /// first when the server can sort by distance (BACKEND.md 2.14 #3).
+  Future<List<AlwaListing>> alwaListings({double? lat, double? lon});
+
+  /// GET /alwa/listings/{id}: one listing.
+  Future<AlwaListing> alwaListing(String id);
+
+  /// POST /alwa/listings: put a crop on sale. [idempotencyKey] goes in the
+  /// `Idempotency-Key` header so a retry does not make a second listing.
+  Future<AlwaListing> createAlwaListing(
+    NewAlwaListing listing, {
+    String? idempotencyKey,
+  });
+
+  /// GET /alwa/listings/mine: the farmer's own listings, every status.
+  Future<List<AlwaListing>> myAlwaListings();
+
+  /// DELETE /alwa/listings/{id}: take an open listing off sale.
+  Future<void> cancelAlwaListing(String id);
+
+  /// POST /alwa/listings/{id}/sold (BACKEND.md 2.14 #4, not on the server
+  /// yet: it answers 404).
+  Future<AlwaListing> markAlwaListingSold(String id);
+
+  /// "Today at the alwa": GET /alwa/markets, then the prices of the market
+  /// nearest ([lat], [lon]). Null when there is no market at all.
+  Future<AlwaPriceBoard?> alwaPriceBoard({double? lat, double? lon});
 }
 
 // ---- Farm Home: BACKEND.md 2.2 (GET /farms/{id}), 2.3 (status), 2.4 (plan) ----
@@ -641,6 +698,26 @@ class FarmInsights {
 }
 
 // ---- Ask the Doctor: BACKEND.md 2.5 ----
+
+/// The photo's real type from its first bytes: `image/jpeg`, `image/png`,
+/// or null for anything else. The server refuses a part whose bytes are not
+/// its declared type (FRONTEND.md 6), and the file name can lie: Android's
+/// picker saves a resized PNG without transparency as JPEG under its .png name.
+String? photoMime(List<int> bytes) {
+  bool starts(List<int> sig) {
+    if (bytes.length < sig.length) return false;
+    for (var i = 0; i < sig.length; i++) {
+      if (bytes[i] != sig[i]) return false;
+    }
+    return true;
+  }
+
+  if (starts(const [0xFF, 0xD8, 0xFF])) return 'image/jpeg';
+  if (starts(const [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
+    return 'image/png';
+  }
+  return null;
+}
 
 /// One photo for the Doctor, already made small on the phone.
 class DoctorPhoto {

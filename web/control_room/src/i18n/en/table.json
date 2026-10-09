@@ -1,0 +1,7 @@
+{
+  "columns": "Columns",
+  "empty": "Nothing matches.",
+  "page": "Page {a} of {b} · {n} rows",
+  "prev": "Previous",
+  "next": "Next"
+}

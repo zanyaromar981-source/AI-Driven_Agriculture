@@ -1,0 +1,20 @@
+{
+  "title": "Admin sign in",
+  "sub": "For the Control Room team only. Farmers use the Jutyar app.",
+  "art": "Every registered farm in the Kurdistan Region, in one place.",
+  "back": "Public site",
+  "email": "Email",
+  "password": "Password",
+  "show": "Show password",
+  "hide": "Hide password",
+  "submit": "Sign in",
+  "fill_both": "Write your email and password.",
+  "bad": "The email or password is wrong.",
+  "inactive": "This account is switched off. Ask another admin.",
+  "forgot": "Forgot your password?",
+  "forgot_sub": "Write your email. We send you a link to choose a new password.",
+  "send_link": "Send the link",
+  "link_sent": "If this email belongs to an admin, a link is on its way.",
+  "supabase_note": "Sample mode: no email is sent. Supabase sends the link once it is connected.",
+  "demo": "Sample mode: sign in as {email} with the password {pw}. Every admin in the list uses this password until Supabase is connected."
+}

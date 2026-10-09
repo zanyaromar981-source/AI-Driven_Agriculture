@@ -1,0 +1,15 @@
+[Unit]
+Description=Farm Doctor farm analysis: rain, weather, soil, greenness and dryness per farm (Field history)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/farm-doctor/backend/jobs
+EnvironmentFile=/opt/farm-doctor/backend/deploy/.env
+Environment=FARM_DOCTOR_API=http://127.0.0.1:8790/v1
+# Not through report_run.py: the job reports itself, and only the runs that
+# pushed or failed, so the status page is not filled with quiet runs.
+ExecStart=/usr/bin/python3 /opt/farm-doctor/backend/jobs/farm_analysis.py
+Nice=10
+TimeoutStartSec=1500

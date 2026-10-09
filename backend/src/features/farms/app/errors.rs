@@ -17,6 +17,9 @@ impl ToErrorInfo for FarmError {
             FarmError::TooManyCells(_) => {
                 ErrorInfo::with_code(ErrorKind::InvalidInput, "farm_too_large", self.to_string())
             }
+            FarmError::UnknownCrop(_) => {
+                ErrorInfo::with_code(ErrorKind::InvalidInput, "unknown_crop", self.to_string())
+            }
             FarmError::DomainError(err) => err.to_error_info(),
         }
     }
@@ -47,5 +50,19 @@ impl ToErrorInfo for AppError {
                 ErrorInfo::with_code(ErrorKind::InvalidInput, "too_many_farms", self.to_string())
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_crop_that_cannot_be_used_is_invalid_input_with_its_own_code_and_its_name() {
+        let info = FarmError::UnknownCrop("rice".to_string()).to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::InvalidInput);
+        assert_eq!(info.code, "unknown_crop");
+        assert!(info.detail.contains("rice"), "{}", info.detail);
     }
 }

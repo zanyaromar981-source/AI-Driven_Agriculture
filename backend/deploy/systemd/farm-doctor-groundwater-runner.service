@@ -8,6 +8,6 @@ Type=oneshot
 WorkingDirectory=/opt/farm-doctor/backend/jobs
 EnvironmentFile=/opt/farm-doctor/backend/deploy/.env
 Environment=FARM_DOCTOR_API=http://127.0.0.1:8790/v1
-ExecStart=/opt/farm-doctor/venv/bin/python /opt/farm-doctor/backend/jobs/groundwater_runner.py
+ExecStart=/usr/bin/python3 /opt/farm-doctor/backend/jobs/report_run.py groundwater /opt/farm-doctor/venv/bin/python /opt/farm-doctor/backend/jobs/groundwater_runner.py
 Nice=10
 TimeoutStartSec=900

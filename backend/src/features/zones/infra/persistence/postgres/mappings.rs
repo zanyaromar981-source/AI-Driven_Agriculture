@@ -1,12 +1,15 @@
-use sea_orm::ActiveValue::{NotSet, Set};
+use sea_orm::{
+    ActiveValue::{NotSet, Set},
+    EntityTrait, FromQueryResult, QuerySelect, Select,
+};
 
 use crate::{
     app::AppError as GlobalAppError,
     features::zones::{
         app::AppError,
         domain::{
-            Crop, Dryness, GreennessPctVsNormal, Month, RainPctOfNormal, ReadingSource, SubZone,
-            SubZoneReading, WaterNeed, Zone, ZoneReading, ZoneSlug,
+            Crop, Dryness, GreennessPctVsNormal, Month, RainPctOfNormal, ReadingSource, Shape,
+            SubZone, SubZoneReading, WaterNeed, Zone, ZoneReading, ZoneSlug,
         },
         infra::persistence::postgres::entities::{
             sub_zone_readings, sub_zones, zone_readings, zones,
@@ -47,18 +50,67 @@ impl TryFrom<zones::Model> for Zone {
     }
 }
 
-impl TryFrom<sub_zones::Model> for SubZone {
+/// A sub-zone as every query but the shapes one reads it: without its
+/// outline, which runs to hundreds of corners and is wanted only to build
+/// the place index.
+#[derive(FromQueryResult)]
+pub struct SubZoneRow {
+    pub id: i32,
+    pub zone_id: i32,
+    pub slug: String,
+    pub name_en: String,
+    pub name_ku: String,
+}
+
+impl SubZoneRow {
+    pub fn select() -> Select<sub_zones::Entity> {
+        sub_zones::Entity::find().select_only().columns([
+            sub_zones::Column::Id,
+            sub_zones::Column::ZoneId,
+            sub_zones::Column::Slug,
+            sub_zones::Column::NameEn,
+            sub_zones::Column::NameKu,
+        ])
+    }
+}
+
+impl TryFrom<SubZoneRow> for SubZone {
     type Error = AppError;
 
-    fn try_from(model: sub_zones::Model) -> Result<Self, Self::Error> {
+    fn try_from(row: SubZoneRow) -> Result<Self, Self::Error> {
         Ok(SubZone::rehydrate(
+            row.id,
+            row.zone_id,
+            ZoneSlug::new(row.slug)?,
+            row.name_en,
+            row.name_ku,
+        ))
+    }
+}
+
+/// A sub-zone with the shape kept in its `outline` JSON column: an array of
+/// rings, each an array of `[lon, lat]`.
+pub fn shaped_sub_zone(
+    model: sub_zones::Model,
+    outline: serde_json::Value,
+) -> Result<(SubZone, Shape), AppError> {
+    let rings: Vec<Vec<(f64, f64)>> = serde_json::from_value(outline).map_err(|error| {
+        GlobalAppError::MissingValue(format!(
+            "Stored outline of sub-zone {} is not readable: {error}",
+            model.slug
+        ))
+    })?;
+
+    Ok((
+        SubZone::rehydrate(
             model.id,
             model.zone_id,
             ZoneSlug::new(model.slug)?,
             model.name_en,
             model.name_ku,
-        ))
-    }
+        ),
+        Shape::new(rings)?,
+    ))
 }
 
 impl TryFrom<zone_readings::Model> for ZoneReading {

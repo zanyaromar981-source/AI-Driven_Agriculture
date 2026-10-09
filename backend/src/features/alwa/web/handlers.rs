@@ -18,14 +18,20 @@ use super::{
 
 use crate::{
     app::{AuthContext, Pagination},
-    infra::http::{ApiResponse, ErrorBody, PaginationQueryDto, ValidatedJson},
-    shared::AppState,
+    infra::http::{ApiResponse, ErrorBody, OptionalAuth, PaginationQueryDto, ValidatedJson},
+    shared::{AppState, Phone},
 };
 
 /// Listing and offer ids travel as opaque strings. One that is not a number
 /// cannot name anything, so it is not found rather than a bad request.
 fn numeric_id(raw: &str) -> Result<i32, WebError> {
     raw.parse().map_err(|_| WebError::not_found())
+}
+
+/// The phone of the farmer who is asking, on a route that also answers
+/// without a login.
+fn viewer_phone(viewer: &Option<AuthContext>) -> Option<&Phone> {
+    viewer.as_ref().map(|viewer| viewer.user().phone())
 }
 
 /// List the alwa markets
@@ -118,6 +124,10 @@ pub async fn get_price_history(
 }
 
 /// Browse the listings on sale
+///
+/// With `lat` and `lon` the listings come nearest first, each with its
+/// `distance_km`. `seller_phone` is filled only for a request that carries
+/// a farmer's token.
 #[utoipa::path(
     get,
     path = "/v1/alwa/listings",
@@ -132,6 +142,7 @@ pub async fn get_price_history(
 )]
 pub async fn get_listings(
     State(state): State<AppState>,
+    OptionalAuth(viewer): OptionalAuth,
     WithRejection(Query(query), _): WithRejection<Query<AlwaListingsQuery>, WebError>,
     WithRejection(Query(page), _): WithRejection<Query<PaginationQueryDto>, WebError>,
 ) -> Result<ApiResponse<AlwaListingsResponse>, WebError> {
@@ -148,7 +159,7 @@ pub async fn get_listings(
     Ok(ApiResponse::ok(AlwaListingsResponse {
         listings: cards
             .iter()
-            .map(AlwaListingSummaryResponse::try_from)
+            .map(|card| AlwaListingSummaryResponse::new(card, viewer_phone(&viewer)))
             .collect::<Result<Vec<_>, _>>()?,
         count,
         page: *pagination.page(),
@@ -157,6 +168,9 @@ pub async fn get_listings(
 }
 
 /// Get one listing with its offers
+///
+/// `seller_phone` is filled only for a request that carries a farmer's
+/// token.
 #[utoipa::path(
     get,
     path = "/v1/alwa/listings/{id}",
@@ -170,6 +184,7 @@ pub async fn get_listings(
 )]
 pub async fn get_listing(
     State(state): State<AppState>,
+    OptionalAuth(viewer): OptionalAuth,
     WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
 ) -> Result<ApiResponse<AlwaOneListingResponse>, WebError> {
     let card = state
@@ -179,8 +194,10 @@ pub async fn get_listing(
         .execute(numeric_id(&id)?)
         .await?;
 
-    // No viewer: this route is public, so it never shows a phone.
-    Ok(ApiResponse::ok(AlwaOneListingResponse::new(&card, None)?))
+    Ok(ApiResponse::ok(AlwaOneListingResponse::new(
+        &card,
+        viewer_phone(&viewer),
+    )?))
 }
 
 /// List the deals made on one day
@@ -225,7 +242,7 @@ pub async fn get_deals(
         (status = 201, description = "Listing created successfully", body = AlwaOneListingResponse),
         (status = 400, description = "Invalid request body", body = ErrorBody),
         (status = 401, description = "Unauthorized", body = ErrorBody),
-        (status = 404, description = "Market not found", body = ErrorBody),
+        (status = 404, description = "The market named was not found", body = ErrorBody),
         (status = 422, description = "Validation error, or too many open listings", body = ErrorBody),
         (status = 500, description = "Internal server error", body = ErrorBody)
     ),
@@ -316,6 +333,42 @@ pub async fn cancel_listing(
         .await?;
 
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// Mark an open listing of the authenticated user as sold
+///
+/// For a crop sold to a buyer who called: no offer is needed, and the
+/// offers still open are declined. A repeat answers the same.
+#[utoipa::path(
+    post,
+    path = "/v1/alwa/listings/{id}/sold",
+    tag = "alwa",
+    params(("id" = String, Path, description = "Listing ID")),
+    responses(
+        (status = 200, description = "The listing is sold", body = AlwaOneListingResponse),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 404, description = "Listing not found, or not the caller's", body = ErrorBody),
+        (status = 409, description = "The listing is not open", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn mark_listing_sold(
+    State(state): State<AppState>,
+    Extension(auth_context): Extension<AuthContext>,
+    WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
+) -> Result<ApiResponse<AlwaOneListingResponse>, WebError> {
+    let card = state
+        .features
+        .alwa
+        .mark_listing_sold_use_case
+        .execute(&auth_context, numeric_id(&id)?)
+        .await?;
+
+    Ok(ApiResponse::ok(AlwaOneListingResponse::new(
+        &card,
+        Some(auth_context.user().phone()),
+    )?))
 }
 
 /// Make an offer on a listing

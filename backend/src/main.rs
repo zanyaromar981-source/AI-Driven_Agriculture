@@ -12,30 +12,54 @@ use farm_doctor_api::{
             dashboard_routes as alwa_dashboard_routes, ingest_routes as alwa_ingest_routes,
             public_routes as alwa_public_routes, routes as alwa_routes,
         },
+        app_config::web::{
+            dashboard_routes as app_config_dashboard_routes,
+            public_routes as app_config_public_routes,
+        },
         briefs::web::{
             dashboard_routes as brief_dashboard_routes, ingest_routes as brief_ingest_routes,
             public_routes as brief_public_routes, routes as brief_routes,
+        },
+        crops::web::{
+            dashboard_routes as crop_dashboard_routes, public_routes as crop_public_routes,
         },
         dams::web::{
             dashboard_routes as dam_dashboard_routes, ingest_routes as dam_ingest_routes,
             public_routes as dam_public_routes,
         },
+        doctor::web::routes as doctor_routes,
         farmers::web::{
             dashboard_routes as farmer_dashboard_routes, public_routes as farmer_public_routes,
             routes as farmer_routes,
         },
-        farms::web::{dashboard_routes as farm_dashboard_routes, routes as farm_routes},
+        farms::web::{
+            dashboard_routes as farm_dashboard_routes, public_routes as farm_public_routes,
+            routes as farm_routes,
+        },
         fires::web::{
             dashboard_routes as fire_dashboard_routes, ingest_routes as fire_ingest_routes,
             public_routes as fire_public_routes,
+        },
+        history::web::{
+            dashboard_routes as history_dashboard_routes, ingest_routes as history_ingest_routes,
+            routes as history_routes,
         },
         insights::web::{
             dashboard_routes as insight_dashboard_routes, ingest_routes as insight_ingest_routes,
             routes as insight_routes,
         },
+        jobs::web::{dashboard_routes as job_dashboard_routes, ingest_routes as job_ingest_routes},
+        messages::web::{dashboard_routes as message_dashboard_routes, routes as message_routes},
         outlooks::web::{
             dashboard_routes as outlook_dashboard_routes, ingest_routes as outlook_ingest_routes,
             public_routes as outlook_public_routes,
+        },
+        plans::web::{
+            dashboard_routes as plan_dashboard_routes, ingest_routes as plan_ingest_routes,
+            routes as plan_routes,
+        },
+        rules::web::{
+            dashboard_routes as rule_dashboard_routes, ingest_routes as rule_ingest_routes,
         },
         staff::{
             app::use_cases::CreateOwnerInput,
@@ -43,6 +67,9 @@ use farm_doctor_api::{
                 dashboard_public_routes as staff_dashboard_public_routes,
                 dashboard_routes as staff_dashboard_routes,
             },
+        },
+        versions::web::{
+            dashboard_routes as version_dashboard_routes, public_routes as version_public_routes,
         },
         water::web::{
             dashboard_routes as water_dashboard_routes, ingest_routes as water_ingest_routes,
@@ -55,7 +82,9 @@ use farm_doctor_api::{
     },
     infra::{
         BootstrappedApp, Config, di_init,
-        http::{auth, health_routes, service_key, staff_auth, swagger_ui},
+        http::{
+            app_version, auth, cors_layer, etag, health_routes, service_key, staff_auth, swagger_ui,
+        },
         postgres_init, telemetry,
     },
     shared::{AppState, Phone, issue_jwt},
@@ -77,6 +106,8 @@ enum Commands {
     /// Run database migrations.
     Migrate,
     /// Print a sign-in token for a phone number, for local work with curl.
+    /// Needs the database: it also creates the farmer if the phone has none,
+    /// because a token whose farmer does not exist is refused.
     Token {
         /// E.164 Iraqi mobile number, for example +9647501234567.
         phone: String,
@@ -89,6 +120,10 @@ enum Commands {
         /// The name other staff see.
         name: String,
     },
+    /// Give every farm that has none its place (governorate, zone and
+    /// sub-zone) and the area of its outline. Run it once after deploying
+    /// the migration that added those columns; running it again is harmless.
+    BackfillFarmPlaces,
 }
 
 #[tokio::main]
@@ -97,8 +132,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     match cli.command {
         Some(Commands::Migrate) => return run_migrations().await,
-        Some(Commands::Token { phone }) => return print_token(phone),
+        Some(Commands::Token { phone }) => return print_token(phone).await,
         Some(Commands::CreateOwner { email, name }) => return create_owner(email, name).await,
+        Some(Commands::BackfillFarmPlaces) => return backfill_farm_places().await,
         Some(Commands::Serve) | None => {}
     }
 
@@ -112,10 +148,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(farm_routes())
                 .merge(farmer_routes())
                 .merge(insight_routes())
+                .merge(plan_routes())
                 .merge(alwa_routes())
                 .merge(brief_routes())
+                .merge(doctor_routes())
+                .merge(message_routes())
+                .merge(farm_doctor_api::features::alerts::web::routes())
+                // Inside `auth`, so it knows which farmer is asking.
+                .layer(middleware::from_fn_with_state(state.clone(), app_version))
+                .merge(history_routes())
                 .layer(middleware::from_fn_with_state(state.clone(), auth))
-                .merge(farmer_public_routes())
+                .merge(
+                    farmer_public_routes()
+                        .layer(middleware::from_fn_with_state(state.clone(), app_version)),
+                )
+                .merge(app_config_public_routes())
+                .merge(version_public_routes())
                 .merge(fire_public_routes())
                 .merge(zone_public_routes())
                 .merge(dam_public_routes())
@@ -123,39 +171,59 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(water_public_routes())
                 .merge(alwa_public_routes())
                 .merge(brief_public_routes())
+                .merge(farm_public_routes())
+                .merge(crop_public_routes())
                 .nest(
                     "/ingest",
                     Router::new()
                         .merge(fire_ingest_routes())
                         .merge(insight_ingest_routes())
+                        .merge(plan_ingest_routes())
                         .merge(zone_ingest_routes())
                         .merge(dam_ingest_routes())
                         .merge(outlook_ingest_routes())
                         .merge(water_ingest_routes())
                         .merge(alwa_ingest_routes())
                         .merge(brief_ingest_routes())
+                        .merge(rule_ingest_routes())
+                        .merge(job_ingest_routes())
+                        .merge(history_ingest_routes())
+                        .merge(farm_doctor_api::features::alerts::web::ingest_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), service_key)),
                 )
                 .nest(
                     "/dashboard",
                     Router::new()
                         .merge(staff_dashboard_routes())
+                        .merge(farm_doctor_api::features::alerts::web::dashboard_routes())
                         .merge(alwa_dashboard_routes())
+                        .merge(app_config_dashboard_routes())
+                        .merge(brief_dashboard_routes())
+                        .merge(crop_dashboard_routes())
                         .merge(dam_dashboard_routes())
                         .merge(farm_dashboard_routes())
                         .merge(farmer_dashboard_routes())
                         .merge(fire_dashboard_routes())
+                        .merge(history_dashboard_routes())
                         .merge(insight_dashboard_routes())
+                        .merge(job_dashboard_routes())
+                        .merge(message_dashboard_routes())
                         .merge(outlook_dashboard_routes())
+                        .merge(plan_dashboard_routes())
+                        .merge(rule_dashboard_routes())
+                        .merge(version_dashboard_routes())
                         .merge(water_dashboard_routes())
                         .merge(zone_dashboard_routes())
-                        .merge(brief_dashboard_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), staff_auth))
                         .merge(staff_dashboard_public_routes()),
                 ),
         )
+        // Outside every /v1 route: tags answers so a client can keep its
+        // copy when nothing changed.
+        .layer(middleware::from_fn(etag))
         .merge(health_routes())
         .merge(swagger_ui())
+        .layer(cors_layer(&state.config.server.cors_origins))
         .layer(telemetry::http_trace_layer())
         .with_state(state.clone());
 
@@ -187,9 +255,18 @@ async fn run_migrations() -> Result<(), Box<dyn std::error::Error + Send + Sync>
     Ok(())
 }
 
-fn print_token(phone: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let config = Config::from_env();
+async fn print_token(phone: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let phone = Phone::new(phone)?;
+
+    let config = Config::from_env();
+    let db_context = postgres_init(&config).await?;
+    let features = di_init(&config, db_context).await?;
+
+    features
+        .farmer
+        .ensure_farmer_use_case
+        .execute(&phone)
+        .await?;
 
     let token = issue_jwt(
         phone.as_str(),
@@ -223,6 +300,26 @@ async fn create_owner(
     } else {
         println!("An account with the email {email} already exists: nothing was changed");
     }
+
+    Ok(())
+}
+
+async fn backfill_farm_places() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let config = Config::from_env();
+    let db_context = postgres_init(&config).await?;
+    let features = di_init(&config, db_context).await?;
+
+    let report = features
+        .farm
+        .backfill_farm_places_use_case
+        .execute()
+        .await?;
+
+    println!(
+        "Farms without a place or an area: {}. Placed: {}. Outside every sub-zone: {}. \
+         Changed meanwhile and left for the next run: {}.",
+        report.examined, report.placed, report.outside, report.skipped
+    );
 
     Ok(())
 }

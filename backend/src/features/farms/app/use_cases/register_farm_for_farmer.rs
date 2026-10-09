@@ -61,8 +61,8 @@ mod tests {
     use super::*;
     use crate::features::farms::{
         app::testing::{
-            FakeFarmRepository, FakeFarmerDirectory, MAX_CELLS, RepositoryCall, an_outline,
-            staff_context,
+            FakeCropDirectory, FakeFarmRepository, FakeFarmerDirectory, FakePlaceLocator,
+            MAX_CELLS, RepositoryCall, an_outline, staff_context, the_place,
         },
         domain::FarmName,
     };
@@ -92,6 +92,8 @@ mod tests {
             Arc::new(farmers.clone()),
             Arc::new(RegisterFarmUseCase::new(
                 Arc::new(repository.clone()),
+                Arc::new(FakePlaceLocator::new()),
+                Arc::new(FakeCropDirectory::seeded()),
                 MAX,
                 MAX_CELLS,
             )),
@@ -110,6 +112,19 @@ mod tests {
 
         assert_eq!(farm.owner().as_str(), FARMER);
         assert_eq!(farmers.asked(), vec![FARMER.to_string()]);
+    }
+
+    #[tokio::test]
+    async fn a_farm_staff_register_gets_its_place_like_the_farmers_own() {
+        let farmers = FakeFarmerDirectory::knowing_everyone();
+        let repository = FakeFarmRepository::new();
+
+        let (farm, _) = use_case(&farmers, &repository)
+            .execute(&staff_context(), farmer(), input())
+            .await
+            .expect("farm");
+
+        assert_eq!(farm.place(), &Some(the_place()));
     }
 
     #[tokio::test]

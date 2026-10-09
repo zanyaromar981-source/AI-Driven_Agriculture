@@ -3,18 +3,19 @@ use std::sync::Arc;
 use crate::{
     app::AppError as GlobalAppError,
     features::alwa::{
-        app::{AlwaRepository, AppError, use_cases::RecordPriceInput},
+        app::{AlwaRepository, AppError, CropDirectory, use_cases::RecordPriceInput},
         domain::{Market, Price},
     },
 };
 
 pub struct UpdatePriceUseCase {
     repository: Arc<dyn AlwaRepository>,
+    crops: Arc<dyn CropDirectory>,
 }
 
 impl UpdatePriceUseCase {
-    pub fn new(repository: Arc<dyn AlwaRepository>) -> Self {
-        Self { repository }
+    pub fn new(repository: Arc<dyn AlwaRepository>, crops: Arc<dyn CropDirectory>) -> Self {
+        Self { repository, crops }
     }
 
     /// A staff member corrects a stored price. Unlike the data job's upsert
@@ -24,6 +25,14 @@ impl UpdatePriceUseCase {
         staff_id: i32,
         input: RecordPriceInput,
     ) -> Result<(Market, Price), AppError> {
+        // A changed price is new data, so its crop must be one staff have
+        // switched on. A price of a crop switched off since stays as it is.
+        self.crops
+            .active()
+            .await?
+            .allow(input.crop)
+            .inspect_err(|error| tracing::info!(%error, "price refused: the crop is not in use"))?;
+
         let Some(market) = self.repository.find_market_by_slug(&input.market).await? else {
             tracing::info!(
                 staff_id,
@@ -75,7 +84,9 @@ mod tests {
 
     use super::*;
     use crate::features::alwa::{
-        app::testing::{FakeAlwaRepository, MARKET, MARKET_ID, a_price, market_slug},
+        app::testing::{
+            FakeAlwaRepository, FakeCropDirectory, MARKET, MARKET_ID, a_price, market_slug,
+        },
         domain::{Crop, PricePerKg, PriceSource},
     };
 
@@ -86,7 +97,7 @@ mod tests {
     fn input(price: i64) -> RecordPriceInput {
         RecordPriceInput {
             market: market_slug(MARKET),
-            crop: Crop::Wheat,
+            crop: Crop::of("wheat"),
             day: day(),
             price: PricePerKg::new(price).expect("price"),
             fixed: false,
@@ -96,9 +107,17 @@ mod tests {
 
     #[tokio::test]
     async fn replaces_every_field_of_the_stored_price_but_its_key() {
-        let repository =
-            FakeAlwaRepository::new().with_price(a_price(MARKET_ID, Crop::Wheat, day(), 850, true));
-        let use_case = UpdatePriceUseCase::new(Arc::new(repository.clone()));
+        let repository = FakeAlwaRepository::new().with_price(a_price(
+            MARKET_ID,
+            Crop::of("wheat"),
+            day(),
+            850,
+            true,
+        ));
+        let use_case = UpdatePriceUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+        );
 
         let (_, price) = use_case.execute(9, input(870)).await.expect("price");
 
@@ -116,7 +135,10 @@ mod tests {
     #[tokio::test]
     async fn a_day_with_no_price_is_not_found_and_gets_none() {
         let repository = FakeAlwaRepository::new();
-        let use_case = UpdatePriceUseCase::new(Arc::new(repository.clone()));
+        let use_case = UpdatePriceUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+        );
 
         let result = use_case.execute(9, input(870)).await;
 
@@ -133,7 +155,10 @@ mod tests {
     #[tokio::test]
     async fn an_unknown_alwa_is_not_found() {
         let repository = FakeAlwaRepository::new();
-        let use_case = UpdatePriceUseCase::new(Arc::new(repository.clone()));
+        let use_case = UpdatePriceUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+        );
 
         let result = use_case
             .execute(
@@ -150,5 +175,39 @@ mod tests {
             Err(AppError::GlobalAppError(GlobalAppError::NotFound))
         ));
         assert!(!repository.wrote());
+    }
+
+    #[tokio::test]
+    async fn a_crop_that_is_unknown_or_switched_off_is_refused_by_name_and_nothing_is_written() {
+        let repository = FakeAlwaRepository::new();
+        // The price is for wheat, and wheat is not in the list.
+        let crops = FakeCropDirectory::with(&["tomato"]);
+        let use_case =
+            UpdatePriceUseCase::new(Arc::new(repository.clone()), Arc::new(crops.clone()));
+
+        let result = use_case.execute(9, input(900)).await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Alwa(crate::features::alwa::domain::AlwaError::UnknownCrop(code)))
+                if code == "wheat"
+        ));
+        assert_eq!(crops.asked(), 1);
+        assert!(
+            repository.calls().is_empty(),
+            "the crop is checked before anything is read or written"
+        );
+    }
+
+    #[tokio::test]
+    async fn when_the_crop_list_cannot_be_read_nothing_is_written() {
+        let repository = FakeAlwaRepository::new();
+        let use_case = UpdatePriceUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::failing()),
+        );
+
+        assert!(use_case.execute(9, input(900)).await.is_err());
+        assert!(repository.calls().is_empty());
     }
 }

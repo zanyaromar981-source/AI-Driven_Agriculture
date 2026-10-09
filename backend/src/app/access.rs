@@ -24,10 +24,15 @@ pub enum Resource {
     Staff,
     Roles,
     Briefs,
+    Crops,
+    Rules,
+    Messages,
+    App,
+    Jobs,
 }
 
 impl Resource {
-    pub const ALL: [Resource; 12] = [
+    pub const ALL: [Resource; 17] = [
         Resource::Zones,
         Resource::Dams,
         Resource::Outlooks,
@@ -40,6 +45,11 @@ impl Resource {
         Resource::Staff,
         Resource::Roles,
         Resource::Briefs,
+        Resource::Crops,
+        Resource::Rules,
+        Resource::Messages,
+        Resource::App,
+        Resource::Jobs,
     ];
 }
 
@@ -58,6 +68,11 @@ impl From<Resource> for String {
             Resource::Staff => "staff".to_string(),
             Resource::Roles => "roles".to_string(),
             Resource::Briefs => "briefs".to_string(),
+            Resource::Crops => "crops".to_string(),
+            Resource::Rules => "rules".to_string(),
+            Resource::Messages => "messages".to_string(),
+            Resource::App => "app".to_string(),
+            Resource::Jobs => "jobs".to_string(),
         }
     }
 }
@@ -79,6 +94,11 @@ impl TryFrom<&str> for Resource {
             "staff" => Ok(Resource::Staff),
             "roles" => Ok(Resource::Roles),
             "briefs" => Ok(Resource::Briefs),
+            "crops" => Ok(Resource::Crops),
+            "rules" => Ok(Resource::Rules),
+            "messages" => Ok(Resource::Messages),
+            "app" => Ok(Resource::App),
+            "jobs" => Ok(Resource::Jobs),
             _ => Err(DomainError::InvalidValue(format!(
                 "Invalid resource: {value}"
             ))),

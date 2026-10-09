@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../api/api.dart';
 import '../app_scope.dart';
-import '../config.dart';
 import '../phone.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
@@ -20,6 +21,10 @@ class _PhoneScreenState extends State<PhoneScreen> {
   final _ctrl = TextEditingController();
   bool _busy = false;
 
+  /// Seconds left before the server takes another request (after a 429).
+  int _wait = 0;
+  Timer? _timer;
+
   String get _digits => digitsOnly(_ctrl.text);
 
   @override
@@ -30,8 +35,21 @@ class _PhoneScreenState extends State<PhoneScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _ctrl.dispose();
     super.dispose();
+  }
+
+  void _countDown(int seconds) {
+    _timer?.cancel();
+    _wait = seconds;
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
+      setState(() {
+        _wait--;
+        if (_wait <= 0) t.cancel();
+      });
+    });
   }
 
   Future<void> _send() async {
@@ -39,15 +57,24 @@ class _PhoneScreenState extends State<PhoneScreen> {
     final digits = _digits;
     setState(() => _busy = true);
     try {
-      await scope.api.sendOtp(phone: toE164(digits), lang: scope.s.code);
+      final res = await scope.api.sendOtp(
+        phone: toE164(digits),
+        lang: scope.s.code,
+      );
       if (!mounted) return;
       showToast(context, scope.s.sent);
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => CodeScreen(digits: digits)),
+        MaterialPageRoute<void>(
+          builder: (_) => CodeScreen(digits: digits, wait: res.retryAfterS),
+        ),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
-      showToast(context, '${scope.s.error} (${e.code})');
+      if (e.code == 'rate_limited') {
+        setState(() => _countDown(e.retryAfterS ?? 60));
+      } else {
+        showToast(context, scope.s.sendError(e.code));
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -89,8 +116,20 @@ class _PhoneScreenState extends State<PhoneScreen> {
         PrimaryButton(
           label: s.send,
           loading: _busy,
-          onPressed: kTestMode || isValidIraqiMobile(_digits) ? _send : null,
+          // Always checked, also in test mode: the server refuses any other
+          // number (422 invalid) now that it sends real codes.
+          onPressed: isValidIraqiMobile(_digits) && _wait <= 0 ? _send : null,
         ),
+        if (_wait > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Center(
+              child: Text(
+                s.askAgainIn(mmss(_wait)),
+                style: jText(ku, size: 13.5, color: JColors.muted),
+              ),
+            ),
+          ),
         const SizedBox(height: 16),
         InfoNote(title: s.noteTitle, body: s.noteBody),
       ],

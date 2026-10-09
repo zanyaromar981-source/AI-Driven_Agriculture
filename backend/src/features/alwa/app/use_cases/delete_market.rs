@@ -87,7 +87,7 @@ mod tests {
     async fn a_market_with_a_price_or_a_listing_stays() {
         let with_price = FakeAlwaRepository::new().with_price(a_price(
             MARKET_ID,
-            Crop::Tomato,
+            Crop::of("tomato"),
             Utc::now().date_naive(),
             900,
             false,

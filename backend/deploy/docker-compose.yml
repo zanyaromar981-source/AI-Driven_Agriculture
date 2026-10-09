@@ -25,6 +25,10 @@ services:
       args:
         CARGO_BUILD_JOBS: ${CARGO_BUILD_JOBS:-2}
     restart: unless-stopped
+    # Lets the API reach services on the host itself (the Doctor service)
+    # as host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy
@@ -35,7 +39,14 @@ services:
       DATABASE__NAME: farm_doctor
       AUTH__JWT_SECRET: ${AUTH__JWT_SECRET:?set AUTH__JWT_SECRET in .env}
       AUTH__FIXED_SIGN_IN_CODE: ${AUTH__FIXED_SIGN_IN_CODE:-}
+      OTPIQ__API_KEY: ${OTPIQ__API_KEY:-}
+      OTPIQ__PROVIDER: ${OTPIQ__PROVIDER:-auto}
+      OTPIQ__SENDER_ID: ${OTPIQ__SENDER_ID:-}
+      OTPIQ__BASE_URL: ${OTPIQ__BASE_URL:-https://api.otpiq.com/api/}
+      OTPIQ__TIMEOUT_SECONDS: ${OTPIQ__TIMEOUT_SECONDS:-15}
       INGEST__SERVICE_KEY: ${INGEST__SERVICE_KEY:?set INGEST__SERVICE_KEY in .env}
+      DOCTOR_URL: ${DOCTOR_URL:-}
+      HTTP__CORS_ORIGINS: ${HTTP__CORS_ORIGINS:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       PORT: "3000"
     ports:

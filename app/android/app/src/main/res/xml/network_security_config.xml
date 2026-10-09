@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plain http is allowed only for the competition test server (FRONTEND.md section 1).
+     Every other address stays https only. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">95.217.14.92</domain>
+    </domain-config>
+</network-security-config>

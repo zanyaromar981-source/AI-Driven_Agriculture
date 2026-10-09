@@ -69,7 +69,7 @@ mod tests {
     fn input(days: u32) -> ViewPriceHistoryInput {
         ViewPriceHistoryInput {
             market: market_slug(MARKET),
-            crop: Crop::Tomato,
+            crop: Crop::of("tomato"),
             days: HistoryDays::new(days).expect("days"),
         }
     }
@@ -78,22 +78,22 @@ mod tests {
     async fn returns_the_window_ending_today_oldest_first() {
         let today = Utc::now().date_naive();
         let repository = FakeAlwaRepository::new()
-            .with_price(a_price(MARKET_ID, Crop::Tomato, today, 1_200, false))
+            .with_price(a_price(MARKET_ID, Crop::of("tomato"), today, 1_200, false))
             .with_price(a_price(
                 MARKET_ID,
-                Crop::Tomato,
+                Crop::of("tomato"),
                 today - Duration::days(6),
                 1_000,
                 false,
             ))
             .with_price(a_price(
                 MARKET_ID,
-                Crop::Tomato,
+                Crop::of("tomato"),
                 today - Duration::days(7),
                 900,
                 false,
             ))
-            .with_price(a_price(MARKET_ID, Crop::Onion, today, 600, false));
+            .with_price(a_price(MARKET_ID, Crop::of("onion"), today, 600, false));
         let use_case = ViewPriceHistoryUseCase::new(Arc::new(repository.clone()));
 
         let (market, history) = use_case.execute(input(7)).await.expect("history");
@@ -112,7 +112,7 @@ mod tests {
                 .calls()
                 .contains(&RepositoryCall::FindPricesBetween {
                     market_ids: vec![MARKET_ID],
-                    crops: vec![Crop::Tomato],
+                    crops: vec![Crop::of("tomato")],
                     from: today - Duration::days(6),
                     to: today,
                 })
@@ -132,7 +132,7 @@ mod tests {
                 .calls()
                 .contains(&RepositoryCall::FindPricesBetween {
                     market_ids: vec![MARKET_ID],
-                    crops: vec![Crop::Tomato],
+                    crops: vec![Crop::of("tomato")],
                     from: today,
                     to: today,
                 })

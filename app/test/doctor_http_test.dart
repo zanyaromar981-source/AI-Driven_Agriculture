@@ -71,4 +71,50 @@ void main() {
       expect(a.actions, hasLength(3));
     },
   );
+
+  test(
+    'askDoctor waits past the usual answer timeout (FRONTEND.md 6)',
+    () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      server.listen((req) async {
+        await req.drain<void>();
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        req.response
+          ..statusCode = 200
+          ..headers.contentType = ContentType.json
+          ..write(
+            jsonEncode({
+              'likely': 'Rust',
+              'confidence': 'unsure',
+              'refer_to_officer': false,
+              'ku': '',
+              'en': '',
+            }),
+          );
+        await req.response.close();
+      });
+      // Usual calls give up after 200 ms here; the Doctor takes 600 ms.
+      final api = HttpApi(
+        'http://127.0.0.1:${server.port}/v1',
+        timeout: const Duration(milliseconds: 200),
+      )..useToken('tok');
+      await expectLater(
+        api.getFarms(),
+        throwsA(isA<ApiException>().having((e) => e.code, 'code', 'offline')),
+      );
+      final a = await api.askDoctor('5', const DoctorQuestion(text: 'Spots?'));
+      await server.close(force: true);
+      expect(a.likely, 'Rust');
+    },
+  );
+
+  test('a photo is sent as the type its bytes are, not its file name', () {
+    expect(photoMime([0xFF, 0xD8, 0xFF, 0xE0, 0x00]), 'image/jpeg');
+    expect(
+      photoMime([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00]),
+      'image/png',
+    );
+    expect(photoMime([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70]), isNull);
+    expect(photoMime([0xFF]), isNull);
+  });
 }

@@ -12,8 +12,8 @@ use crate::{
         alwa::app::use_cases::{
             AcceptOfferUseCase, BrowseListingsUseCase, CancelListingUseCase, ListDealsUseCase,
             ListMarketsUseCase, ListMyListingsUseCase, ListMyOffersUseCase, MakeOfferUseCase,
-            PostListingUseCase, RecordPriceUseCase, ViewListingUseCase, ViewMarketPricesUseCase,
-            ViewPriceHistoryUseCase,
+            MarkListingSoldUseCase, PostListingUseCase, RecordPriceUseCase, ViewListingUseCase,
+            ViewMarketPricesUseCase, ViewPriceHistoryUseCase,
         },
         briefs::app::use_cases::{
             CorrectBriefUseCase, DeleteBriefUseCase, ListBriefsUseCase, ListStoredBriefsUseCase,
@@ -25,19 +25,26 @@ use crate::{
             ListDamsUseCase, ListReferenceDamsUseCase, RecordDamReadingUseCase,
             UpdateDamReadingUseCase, ViewDamHistoryUseCase,
         },
+        doctor::app::use_cases::AskDoctorUseCase,
         farmers::app::use_cases::{
-            EditFarmerUseCase, EditProfileUseCase, ListFarmersUseCase, RegisterFarmerUseCase,
-            RemoveFarmerUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
-            ViewFarmerUseCase, ViewProfileUseCase,
+            EditFarmerUseCase, EditProfileUseCase, EnsureFarmerUseCase, IdentifyFarmerUseCase,
+            IssueLetterUseCase, ListFarmersUseCase, RegisterFarmerUseCase, RemoveFarmerUseCase,
+            RequestSignInCodeUseCase, VerifySignInCodeUseCase, ViewFarmerUseCase,
+            ViewLetterUseCase, ViewProfileUseCase,
         },
         farms::app::use_cases::{
-            ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
-            RegisterFarmUseCase, RemoveAnyFarmUseCase, RemoveFarmUseCase, RenameFarmUseCase,
-            RepaintFarmCellsUseCase, ViewAnyFarmUseCase, ViewFarmUseCase,
+            BackfillFarmPlacesUseCase, EditFarmUseCase, ListAllFarmsUseCase, ListFarmsUseCase,
+            RegisterFarmForFarmerUseCase, RegisterFarmUseCase, RemoveAnyFarmUseCase,
+            RemoveFarmUseCase, RenameFarmUseCase, RepaintFarmCellsUseCase, ViewAnyFarmUseCase,
+            ViewFarmStatsUseCase, ViewFarmUseCase, ViewPublicFarmStatsUseCase,
         },
         fires::app::use_cases::{
             CorrectFireUseCase, CreateFireUseCase, ListFiresUseCase, ListStoredFiresUseCase,
             RecordFireUseCase, RemoveFireUseCase, ViewStoredFireUseCase,
+        },
+        history::app::use_cases::{
+            ClearFarmHistoryUseCase, ListHistoryCoverageUseCase, RecordFarmHistoryUseCase,
+            ViewFarmHistoryUseCase, ViewStoredFarmHistoryUseCase,
         },
         insights::app::use_cases::{
             CorrectFarmInsightUseCase, CreateFarmInsightUseCase, ListFarmCoverageUseCase,
@@ -52,8 +59,9 @@ use crate::{
         },
         staff::app::use_cases::{
             AddStaffUseCase, CreateOwnerUseCase, CreateRoleUseCase, DeleteRoleUseCase,
-            EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase, ListRolesUseCase,
-            ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase, ViewStaffUseCase,
+            EditOwnProfileUseCase, EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase,
+            ListRolesUseCase, ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase,
+            ViewStaffUseCase,
         },
         water::app::use_cases::{
             CreateWaterPlanEntryUseCase, DeleteWaterPlanEntryUseCase, ListWaterPlanEntriesUseCase,
@@ -63,9 +71,9 @@ use crate::{
         zones::app::use_cases::{
             CompareYearsUseCase, CreateSubZoneReadingUseCase, CreateZoneReadingUseCase,
             DeleteSubZoneReadingUseCase, DeleteZoneReadingUseCase, ListSubZoneReadingsUseCase,
-            ListZoneReadingsUseCase, ListZonesUseCase, RecordSubZoneReadingUseCase,
-            RecordZoneReadingUseCase, UpdateSubZoneReadingUseCase, UpdateZoneReadingUseCase,
-            ViewRegionOverviewUseCase, ViewZoneUseCase,
+            ListZoneReadingsUseCase, ListZonesUseCase, LocatePlaceUseCase,
+            RecordSubZoneReadingUseCase, RecordZoneReadingUseCase, UpdateSubZoneReadingUseCase,
+            UpdateZoneReadingUseCase, ViewRegionOverviewUseCase, ViewZoneUseCase,
         },
     },
     infra::Config,
@@ -78,17 +86,23 @@ pub struct FarmFeature {
     pub view_farm_use_case: Arc<ViewFarmUseCase>,
     pub remove_farm_use_case: Arc<RemoveFarmUseCase>,
     pub repaint_farm_cells_use_case: Arc<RepaintFarmCellsUseCase>,
+    pub edit_farm_use_case: Arc<EditFarmUseCase>,
     pub list_all_farms_use_case: Arc<ListAllFarmsUseCase>,
     pub view_any_farm_use_case: Arc<ViewAnyFarmUseCase>,
     pub register_farm_for_farmer_use_case: Arc<RegisterFarmForFarmerUseCase>,
     pub rename_farm_use_case: Arc<RenameFarmUseCase>,
     pub remove_any_farm_use_case: Arc<RemoveAnyFarmUseCase>,
+    pub view_farm_stats_use_case: Arc<ViewFarmStatsUseCase>,
+    pub view_public_farm_stats_use_case: Arc<ViewPublicFarmStatsUseCase>,
+    pub backfill_farm_places_use_case: Arc<BackfillFarmPlacesUseCase>,
 }
 
 #[derive(Clone)]
 pub struct FarmerFeature {
     pub request_sign_in_code_use_case: Arc<RequestSignInCodeUseCase>,
     pub verify_sign_in_code_use_case: Arc<VerifySignInCodeUseCase>,
+    pub identify_farmer_use_case: Arc<IdentifyFarmerUseCase>,
+    pub ensure_farmer_use_case: Arc<EnsureFarmerUseCase>,
     pub view_profile_use_case: Arc<ViewProfileUseCase>,
     pub edit_profile_use_case: Arc<EditProfileUseCase>,
     pub list_farmers_use_case: Arc<ListFarmersUseCase>,
@@ -96,6 +110,8 @@ pub struct FarmerFeature {
     pub register_farmer_use_case: Arc<RegisterFarmerUseCase>,
     pub edit_farmer_use_case: Arc<EditFarmerUseCase>,
     pub remove_farmer_use_case: Arc<RemoveFarmerUseCase>,
+    pub issue_letter_use_case: Arc<IssueLetterUseCase>,
+    pub view_letter_use_case: Arc<ViewLetterUseCase>,
 }
 
 #[derive(Clone)]
@@ -136,6 +152,7 @@ pub struct ZoneFeature {
     pub create_sub_zone_reading_use_case: Arc<CreateSubZoneReadingUseCase>,
     pub update_sub_zone_reading_use_case: Arc<UpdateSubZoneReadingUseCase>,
     pub delete_sub_zone_reading_use_case: Arc<DeleteSubZoneReadingUseCase>,
+    pub locate_place_use_case: Arc<LocatePlaceUseCase>,
 }
 
 #[derive(Clone)]
@@ -190,6 +207,7 @@ pub struct AlwaFeature {
     pub post_listing_use_case: Arc<PostListingUseCase>,
     pub list_my_listings_use_case: Arc<ListMyListingsUseCase>,
     pub cancel_listing_use_case: Arc<CancelListingUseCase>,
+    pub mark_listing_sold_use_case: Arc<MarkListingSoldUseCase>,
     pub make_offer_use_case: Arc<MakeOfferUseCase>,
     pub accept_offer_use_case: Arc<AcceptOfferUseCase>,
     pub list_my_offers_use_case: Arc<ListMyOffersUseCase>,
@@ -203,6 +221,11 @@ pub struct AlwaFeature {
     pub list_all_listings_use_case: Arc<ListAllListingsUseCase>,
     pub moderate_listing_use_case: Arc<ModerateListingUseCase>,
     pub delete_listing_use_case: Arc<DeleteListingUseCase>,
+}
+
+#[derive(Clone)]
+pub struct DoctorFeature {
+    pub ask_doctor_use_case: Arc<AskDoctorUseCase>,
 }
 
 #[derive(Clone)]
@@ -220,6 +243,7 @@ pub struct StaffFeature {
     pub edit_staff_use_case: Arc<EditStaffUseCase>,
     pub remove_staff_use_case: Arc<RemoveStaffUseCase>,
     pub create_owner_use_case: Arc<CreateOwnerUseCase>,
+    pub edit_own_profile_use_case: Arc<EditOwnProfileUseCase>,
 }
 
 #[derive(Clone)]
@@ -236,6 +260,108 @@ pub struct BriefFeature {
 }
 
 #[derive(Clone)]
+pub struct VersionFeature {
+    pub list_versions_use_case: Arc<crate::features::versions::app::use_cases::ListVersionsUseCase>,
+}
+
+#[derive(Clone)]
+pub struct RuleFeature {
+    pub list_rules_use_case: Arc<crate::features::rules::app::use_cases::ListRulesUseCase>,
+    pub change_rule_use_case: Arc<crate::features::rules::app::use_cases::ChangeRuleUseCase>,
+    pub view_rule_history_use_case:
+        Arc<crate::features::rules::app::use_cases::ViewRuleHistoryUseCase>,
+}
+
+#[derive(Clone)]
+pub struct JobFeature {
+    pub record_job_run_use_case: Arc<crate::features::jobs::app::use_cases::RecordJobRunUseCase>,
+    pub view_jobs_use_case: Arc<crate::features::jobs::app::use_cases::ViewJobsUseCase>,
+}
+
+#[derive(Clone)]
+pub struct MessageFeature {
+    pub send_message_use_case: Arc<crate::features::messages::app::use_cases::SendMessageUseCase>,
+    pub list_my_messages_use_case:
+        Arc<crate::features::messages::app::use_cases::ListMyMessagesUseCase>,
+    pub view_my_photo_use_case: Arc<crate::features::messages::app::use_cases::ViewMyPhotoUseCase>,
+    pub list_messages_use_case: Arc<crate::features::messages::app::use_cases::ListMessagesUseCase>,
+    pub view_message_use_case: Arc<crate::features::messages::app::use_cases::ViewMessageUseCase>,
+    pub set_message_state_use_case:
+        Arc<crate::features::messages::app::use_cases::SetMessageStateUseCase>,
+    pub reply_to_message_use_case:
+        Arc<crate::features::messages::app::use_cases::ReplyToMessageUseCase>,
+    pub count_messages_use_case:
+        Arc<crate::features::messages::app::use_cases::CountMessagesUseCase>,
+    pub delete_message_use_case:
+        Arc<crate::features::messages::app::use_cases::DeleteMessageUseCase>,
+    pub view_photo_use_case: Arc<crate::features::messages::app::use_cases::ViewPhotoUseCase>,
+}
+
+#[derive(Clone)]
+pub struct AppConfigFeature {
+    pub view_app_config_use_case:
+        Arc<crate::features::app_config::app::use_cases::ViewAppConfigUseCase>,
+    pub update_app_config_use_case:
+        Arc<crate::features::app_config::app::use_cases::UpdateAppConfigUseCase>,
+    pub check_app_version_use_case:
+        Arc<crate::features::app_config::app::use_cases::CheckAppVersionUseCase>,
+    pub list_app_versions_use_case:
+        Arc<crate::features::app_config::app::use_cases::ListAppVersionsUseCase>,
+    pub public_farm_totals_use_case:
+        Arc<crate::features::app_config::app::use_cases::PublicFarmTotalsUseCase>,
+}
+
+#[derive(Clone)]
+pub struct CropFeature {
+    pub list_crops_use_case: Arc<crate::features::crops::app::use_cases::ListCropsUseCase>,
+    pub create_crop_use_case: Arc<crate::features::crops::app::use_cases::CreateCropUseCase>,
+    pub update_crop_use_case: Arc<crate::features::crops::app::use_cases::UpdateCropUseCase>,
+    pub delete_crop_use_case: Arc<crate::features::crops::app::use_cases::DeleteCropUseCase>,
+}
+
+#[derive(Clone)]
+pub struct HistoryFeature {
+    pub view_farm_history_use_case: Arc<ViewFarmHistoryUseCase>,
+    pub record_farm_history_use_case: Arc<RecordFarmHistoryUseCase>,
+    pub list_history_coverage_use_case: Arc<ListHistoryCoverageUseCase>,
+    pub view_stored_farm_history_use_case: Arc<ViewStoredFarmHistoryUseCase>,
+    pub clear_farm_history_use_case: Arc<ClearFarmHistoryUseCase>,
+}
+
+#[derive(Clone)]
+pub struct PlanFeature {
+    pub view_farm_plan_use_case: Arc<crate::features::plans::app::use_cases::ViewFarmPlanUseCase>,
+    pub record_farm_plan_use_case:
+        Arc<crate::features::plans::app::use_cases::RecordFarmPlanUseCase>,
+    pub list_plan_coverage_use_case:
+        Arc<crate::features::plans::app::use_cases::ListPlanCoverageUseCase>,
+    pub view_stored_farm_plan_use_case:
+        Arc<crate::features::plans::app::use_cases::ViewStoredFarmPlanUseCase>,
+}
+
+#[derive(Clone)]
+pub struct AlertFeature {
+    pub list_farm_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ListFarmAlertsUseCase>,
+    pub list_my_alerts_use_case: Arc<crate::features::alerts::app::use_cases::ListMyAlertsUseCase>,
+    pub mark_alert_done_use_case:
+        Arc<crate::features::alerts::app::use_cases::MarkAlertDoneUseCase>,
+    pub record_alert_use_case: Arc<crate::features::alerts::app::use_cases::RecordAlertUseCase>,
+    pub list_unpushed_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ListUnpushedAlertsUseCase>,
+    pub mark_alert_pushed_use_case:
+        Arc<crate::features::alerts::app::use_cases::MarkAlertPushedUseCase>,
+    pub view_stored_farm_alerts_use_case:
+        Arc<crate::features::alerts::app::use_cases::ViewStoredFarmAlertsUseCase>,
+    pub remove_alert_use_case: Arc<crate::features::alerts::app::use_cases::RemoveAlertUseCase>,
+    pub register_device_use_case:
+        Arc<crate::features::alerts::app::use_cases::RegisterDeviceUseCase>,
+    pub remove_device_use_case: Arc<crate::features::alerts::app::use_cases::RemoveDeviceUseCase>,
+    pub remove_dead_device_use_case:
+        Arc<crate::features::alerts::app::use_cases::RemoveDeadDeviceUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -246,8 +372,18 @@ pub struct Features {
     pub outlook: OutlookFeature,
     pub water: WaterFeature,
     pub alwa: AlwaFeature,
+    pub doctor: DoctorFeature,
     pub staff: StaffFeature,
     pub brief: BriefFeature,
+    pub version: VersionFeature,
+    pub rule: RuleFeature,
+    pub job: JobFeature,
+    pub message: MessageFeature,
+    pub app_config: AppConfigFeature,
+    pub crop: CropFeature,
+    pub history: HistoryFeature,
+    pub plan: PlanFeature,
+    pub alert: AlertFeature,
 }
 
 #[derive(Clone)]

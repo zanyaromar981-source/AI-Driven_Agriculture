@@ -1,0 +1,21 @@
+{
+  "sub": "Every number in the admin, the app and the public View page comes from these jobs. This page only shows whether they run on time.",
+  "on_time": "On time",
+  "late": "Late",
+  "failed": "Failed",
+  "job": "Job",
+  "runs": "Runs",
+  "last": "Last run",
+  "next": "Next run",
+  "result": "Result",
+  "days": "Last 14 days",
+  "s_ok": "On time",
+  "s_late": "Late",
+  "s_failed": "Failed",
+  "s_off": "Off",
+  "d_ok": "ran on time",
+  "d_late": "ran late",
+  "d_failed": "failed",
+  "d_none": "not due",
+  "note": "The connections of these jobs (their sources and keys) are set up on the server and are not changed from the website. If a job stays late for more than a day, tell the team that runs the server."
+}

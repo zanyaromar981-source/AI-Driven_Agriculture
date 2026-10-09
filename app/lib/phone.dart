@@ -21,6 +21,10 @@ String prettyPhone(String d) {
   return '+964 ${parts.join(' ')}';
 }
 
+/// Seconds as m:ss for a countdown: 42 -> "0:42", 60 -> "1:00".
+String mmss(int seconds) =>
+    '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';
+
 /// Groups typed digits as 0750 123 4567 (or 750 123 4567) and keeps the cursor at the end.
 class PhoneFormatter extends TextInputFormatter {
   @override

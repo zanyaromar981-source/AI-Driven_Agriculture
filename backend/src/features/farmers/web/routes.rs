@@ -22,10 +22,12 @@ pub fn public_routes() -> Router<AppState> {
 }
 
 pub fn routes() -> Router<AppState> {
-    Router::new().route(
-        "/me",
-        get(handlers::get_profile).put(handlers::update_profile),
-    )
+    Router::new()
+        .route(
+            "/me",
+            get(handlers::get_profile).put(handlers::update_profile),
+        )
+        .route("/account", delete(handlers::delete_account))
 }
 
 /// Routes behind the `staff_auth` layer, for Ministry staff. Each method
@@ -54,5 +56,18 @@ pub fn dashboard_routes() -> Router<AppState> {
                     delete(handlers::dashboard_delete_farmer)
                         .route_layer(require!(Resource::Farmers, Action::Delete)),
                 ),
+        )
+        // Issuing a letter stores a record but changes nothing about the
+        // farmer, and anyone who may read a farmer may print their letter:
+        // it needs `read`, not `create`.
+        .route(
+            "/farmers/{id}/letters",
+            post(handlers::dashboard_issue_letter)
+                .route_layer(require!(Resource::Farmers, Action::Read)),
+        )
+        .route(
+            "/letters/{number}",
+            get(handlers::dashboard_get_letter)
+                .route_layer(require!(Resource::Farmers, Action::Read)),
         )
 }

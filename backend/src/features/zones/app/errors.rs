@@ -21,6 +21,7 @@ impl ToErrorInfo for ZoneError {
             ZoneError::GreennessOutOfRange => invalid("bad_greenness_pct_vs_normal"),
             ZoneError::WaterNeedOutOfRange => invalid("bad_water_need"),
             ZoneError::UnknownCrop(_) | ZoneError::RepeatedCrop(_) => invalid("bad_crop"),
+            ZoneError::BadShape => invalid("bad_shape"),
             ZoneError::DomainError(err) => err.to_error_info(),
         }
     }
@@ -88,6 +89,7 @@ mod tests {
             (ZoneError::RepeatedCrop("wheat".to_string()), "bad_crop"),
             (ZoneError::SameYear, "same_year"),
             (ZoneError::FromAfterTo, "bad_range"),
+            (ZoneError::BadShape, "bad_shape"),
             (
                 ZoneError::BadYear {
                     min: 2000,

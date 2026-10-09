@@ -21,7 +21,7 @@ pub fn dashboard_public_routes() -> Router<AppState> {
 /// in, because every dashboard screen needs them.
 pub fn dashboard_routes() -> Router<AppState> {
     Router::new()
-        .route("/me", get(handlers::get_me))
+        .route("/me", get(handlers::get_me).put(handlers::update_me))
         .route("/permissions", get(handlers::get_permission_catalogue))
         .route(
             "/roles",

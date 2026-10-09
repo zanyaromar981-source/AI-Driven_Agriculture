@@ -9,6 +9,6 @@ WorkingDirectory=/opt/farm-doctor/backend/jobs
 EnvironmentFile=/opt/farm-doctor/backend/deploy/.env
 Environment=FARM_DOCTOR_API=http://127.0.0.1:8790/v1
 Environment=HOME=/root
-ExecStart=/usr/bin/python3 /opt/farm-doctor/backend/jobs/daily_brief.py
+ExecStart=/usr/bin/python3 /opt/farm-doctor/backend/jobs/report_run.py briefs /usr/bin/python3 /opt/farm-doctor/backend/jobs/daily_brief.py
 Nice=10
 TimeoutStartSec=2400

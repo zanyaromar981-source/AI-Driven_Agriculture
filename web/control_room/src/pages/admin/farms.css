@@ -1,0 +1,16 @@
+/* Farmers and farms page */
+.farms-kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1200px) { .farms-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .farms-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .farms-kpis > :last-child { grid-column: 1 / -1; } }
+.farm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 640px) { .farm-actions .btn { flex: 1 1 calc(50% - 8px); } }
+.farm-mini { gap: 10px; }
+.farm-mini .card { padding: 10px 12px; }
+.farm-mini .big { display: block; font: 800 22px var(--display); font-variant-numeric: tabular-nums; margin-top: 2px; }
+@media (max-width: 640px) { .farm-mini { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.crop-strip { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px; background: var(--line-soft); }
+.crop-strip i { display: block; min-width: 3px; }
+.crop-row { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 8px; margin-bottom: 8px; align-items: center; }
+@media (max-width: 640px) { .crop-row { grid-template-columns: minmax(0, 1fr) 96px auto; } }
+.owner-hits { margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; max-height: 220px; overflow-y: auto; background: var(--surface); }
+.owner-hit { width: 100%; border: 0; background: none; font: inherit; color: inherit; text-align: start; }

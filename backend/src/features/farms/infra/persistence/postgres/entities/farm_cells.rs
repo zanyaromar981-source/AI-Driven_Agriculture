@@ -2,7 +2,7 @@
 
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "farm_cells")]
 pub struct Model {
     #[sea_orm(primary_key)]
@@ -14,6 +14,8 @@ pub struct Model {
     #[sea_orm(unique_key = "idx_farm_cells_farm_id_e_n")]
     pub n: i32,
     pub crop: String,
+    #[sea_orm(column_type = "Double")]
+    pub inside_pct: f64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -11,6 +11,9 @@ pub enum FarmerError {
     #[error("A code was sent a moment ago, wait {0} seconds")]
     CodeRequestedTooSoon(u64),
 
+    #[error("This account is blocked")]
+    Blocked,
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

@@ -2,12 +2,14 @@ use std::sync::Arc;
 
 use crate::features::alwa::{
     app::{AlwaRepository, AppError},
-    domain::{AlwaError, Market, MarketNames, MarketSlug},
+    domain::{AlwaError, GeoPoint, Market, MarketNames, MarketSlug},
 };
 
 pub struct CreateMarketInput {
     pub slug: MarketSlug,
     pub names: MarketNames,
+    /// Where the alwa is, when staff know.
+    pub point: Option<GeoPoint>,
 }
 
 pub struct CreateMarketUseCase {
@@ -28,7 +30,7 @@ impl CreateMarketUseCase {
     ) -> Result<Market, AppError> {
         let Some(market) = self
             .repository
-            .create_market(&input.slug, &input.names)
+            .create_market(&input.slug, &input.names, input.point.as_ref())
             .await?
         else {
             tracing::info!(
@@ -54,7 +56,9 @@ impl CreateMarketUseCase {
 mod tests {
     use super::*;
     use crate::features::alwa::{
-        app::testing::{FakeAlwaRepository, MARKET, RepositoryCall, market_names, market_slug},
+        app::testing::{
+            FakeAlwaRepository, MARKET, RepositoryCall, market_names, market_slug, point,
+        },
         domain::MarketName,
     };
 
@@ -62,6 +66,7 @@ mod tests {
         CreateMarketInput {
             slug: market_slug(slug),
             names: market_names("Halabja", "هەڵەبجە"),
+            point: None,
         }
     }
 
@@ -74,6 +79,7 @@ mod tests {
 
         assert_eq!(market.slug().as_str(), "halabja");
         assert_eq!(market.name_ku(), "هەڵەبجە");
+        assert_eq!(*market.point(), None, "nobody said where it is");
         assert_eq!(repository.stored_markets().len(), 3);
         assert_eq!(
             repository.calls(),
@@ -82,6 +88,25 @@ mod tests {
             }],
             "the insert decides, with no lookup before it"
         );
+    }
+
+    #[tokio::test]
+    async fn a_market_is_added_with_the_point_staff_gave() {
+        let repository = FakeAlwaRepository::new();
+        let use_case = CreateMarketUseCase::new(Arc::new(repository.clone()));
+
+        let market = use_case
+            .execute(
+                9,
+                CreateMarketInput {
+                    point: Some(point(35.1778, 45.9861)),
+                    ..input("halabja")
+                },
+            )
+            .await
+            .expect("market");
+
+        assert_eq!(*market.point(), Some(point(35.1778, 45.9861)));
     }
 
     #[tokio::test]

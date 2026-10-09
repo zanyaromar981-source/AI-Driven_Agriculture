@@ -55,6 +55,27 @@ void main() {
     expect(selfIntersects(bow), isTrue);
   });
 
+  LatLng at(double x, double y) => Utm.toLatLng(539600 + x, 3935300 + y);
+
+  test('two loops that only meet at one corner are caught', () {
+    final mid = at(50, 50);
+    final hourglass = [
+      at(0, 0),
+      at(100, 0),
+      mid,
+      at(100, 100),
+      at(0, 100),
+      mid,
+    ];
+    expect(selfIntersects(hourglass), isTrue);
+  });
+
+  test('a corner tapped twice, or the start repeated at the end, is fine', () {
+    final sq = [at(0, 0), at(100, 0), at(100, 0), at(100, 100), at(0, 100)];
+    expect(selfIntersects(sq), isFalse);
+    expect(selfIntersects([...sq, at(0, 0)]), isFalse);
+  });
+
   test('dunam formatting', () {
     expect(fmtDunam(96), '96');
     expect(fmtDunam(1.64), '1.6');

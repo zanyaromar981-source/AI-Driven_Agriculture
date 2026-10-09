@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use crate::{
     app::AuthContext,
     features::farms::{
-        app::{AppError, FarmRepository},
+        app::{AppError, CropDirectory, FarmRepository, PlaceLocator},
         domain::{Farm, FarmName, GridCell, IdempotencyKey, Outline, PaintedCell},
     },
     shared::Phone,
@@ -21,6 +21,8 @@ pub struct RegisterFarmInput {
 
 pub struct RegisterFarmUseCase {
     repository: Arc<dyn FarmRepository>,
+    places: Arc<dyn PlaceLocator>,
+    crops: Arc<dyn CropDirectory>,
     max_farms_per_user: u64,
     max_cells_per_farm: usize,
 }
@@ -28,11 +30,15 @@ pub struct RegisterFarmUseCase {
 impl RegisterFarmUseCase {
     pub fn new(
         repository: Arc<dyn FarmRepository>,
+        places: Arc<dyn PlaceLocator>,
+        crops: Arc<dyn CropDirectory>,
         max_farms_per_user: u64,
         max_cells_per_farm: usize,
     ) -> Self {
         Self {
             repository,
+            places,
+            crops,
             max_farms_per_user,
             max_cells_per_farm,
         }
@@ -73,6 +79,24 @@ impl RegisterFarmUseCase {
             return Ok((existing, Vec::new()));
         }
 
+        // A new farm is new data, so every crop painted on it must be one
+        // staff have switched on. The list is read once for the whole farm,
+        // and not at all for a farm with nothing painted. A repeat of an
+        // earlier upload never gets here: that farm was checked when it was
+        // made, and a crop switched off since does not undo it.
+        let planted: Vec<_> = input
+            .painted
+            .iter()
+            .map(|cell| cell.crop())
+            .filter(|crop| !crop.is_empty())
+            .collect();
+
+        if !planted.is_empty() {
+            self.crops.active().await?.allow(planted).inspect_err(
+                |error| tracing::info!(%error, "registration refused: a crop is not in use"),
+            )?;
+        }
+
         let owned = self.repository.count_by_owner(owner).await?;
 
         if owned >= self.max_farms_per_user {
@@ -85,7 +109,7 @@ impl RegisterFarmUseCase {
             return Err(AppError::MaxFarmsPerUserReached(self.max_farms_per_user));
         }
 
-        let (farm, dropped_cells) = Farm::new(
+        let (mut farm, dropped_cells) = Farm::new(
             input.name,
             owner.clone(),
             input.outline,
@@ -94,6 +118,12 @@ impl RegisterFarmUseCase {
             input.created_offline_at,
             self.max_cells_per_farm,
         )?;
+
+        // A farm is stored with its place or not at all: one saved without
+        // it because the lookup failed would be missing from every report
+        // by district until someone noticed.
+        let (lat, lon) = farm.outline().centroid();
+        farm.place_at(self.places.locate(lat, lon).await?);
 
         let registered = match self.repository.create(&farm).await {
             Ok(registered) => registered,
@@ -123,6 +153,7 @@ impl RegisterFarmUseCase {
             farm_id = registered.id().unwrap_or_default(),
             cells = registered.cells().len(),
             dropped_cells = dropped_cells.len(),
+            placed = registered.place().is_some(),
             owned_after = owned + 1,
             "farm registered"
         );
@@ -136,8 +167,9 @@ mod tests {
     use super::*;
     use crate::features::farms::{
         app::testing::{
-            FakeFarmRepository, MAX_CELLS, OWNER, RepositoryCall, a_cell_inside, a_cell_outside,
-            an_outline, auth_context,
+            FakeCropDirectory, FakeFarmRepository, FakePlaceLocator, MAX_CELLS, OWNER,
+            RepositoryCall, a_cell_inside, a_cell_outside, an_outline, an_outline_outside,
+            auth_context, the_place,
         },
         domain::{Crop, FarmError},
     };
@@ -163,10 +195,114 @@ mod tests {
         max_cells: usize,
         painted: Vec<PaintedCell>,
     ) -> (Result<(Farm, Vec<GridCell>), AppError>, FakeFarmRepository) {
-        let use_case = RegisterFarmUseCase::new(Arc::new(repository.clone()), MAX, max_cells);
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+            max_cells,
+        );
         let result = use_case.execute(&auth_context(), input(painted)).await;
 
         (result, repository)
+    }
+
+    #[tokio::test]
+    async fn the_farm_is_stored_with_the_place_its_centre_lies_in() {
+        let places = FakePlaceLocator::new();
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(FakeFarmRepository::new()),
+            Arc::new(places.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+            MAX_CELLS,
+        );
+
+        let (farm, _) = use_case
+            .execute(&auth_context(), input(vec![]))
+            .await
+            .expect("farm");
+
+        assert_eq!(farm.place(), &Some(the_place()));
+        assert_eq!(
+            places.asked(),
+            vec![an_outline().centroid()],
+            "the centre of the outline is what is looked up, as (lat, lon)"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_farm_outside_every_place_is_stored_with_none() {
+        let repository = FakeFarmRepository::new();
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+            MAX_CELLS,
+        );
+
+        let (farm, _) = use_case
+            .execute(
+                &auth_context(),
+                RegisterFarmInput {
+                    outline: an_outline_outside(),
+                    ..input(vec![])
+                },
+            )
+            .await
+            .expect("farm");
+
+        assert_eq!(farm.place(), &None);
+        assert!(repository.calls().contains(&RepositoryCall::Create));
+    }
+
+    #[tokio::test]
+    async fn a_farm_whose_place_cannot_be_looked_up_is_not_written() {
+        let repository = FakeFarmRepository::new();
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::failing()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+            MAX_CELLS,
+        );
+
+        let result = use_case.execute(&auth_context(), input(vec![])).await;
+
+        assert!(result.is_err());
+        assert!(!repository.calls().contains(&RepositoryCall::Create));
+    }
+
+    #[tokio::test]
+    async fn a_refused_or_repeated_upload_looks_no_place_up() {
+        let places = FakePlaceLocator::new();
+
+        let full = RegisterFarmUseCase::new(
+            Arc::new(FakeFarmRepository::owning(MAX)),
+            Arc::new(places.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+            MAX_CELLS,
+        );
+        assert!(full.execute(&auth_context(), input(vec![])).await.is_err());
+
+        let repeated = RegisterFarmUseCase::new(
+            Arc::new(FakeFarmRepository::holding(
+                crate::features::farms::app::testing::a_farm(),
+            )),
+            Arc::new(places.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+            MAX_CELLS,
+        );
+        let again = RegisterFarmInput {
+            idempotency_key: Some(a_key()),
+            ..input(vec![])
+        };
+        assert!(repeated.execute(&auth_context(), again).await.is_ok());
+
+        assert!(places.asked().is_empty());
     }
 
     #[tokio::test]
@@ -225,8 +361,8 @@ mod tests {
             FakeFarmRepository::new(),
             MAX_CELLS,
             vec![
-                PaintedCell::new(a_cell_inside(), Crop::Wheat),
-                PaintedCell::new(a_cell_outside(), Crop::Wheat),
+                PaintedCell::new(a_cell_inside(), Crop::of("wheat")),
+                PaintedCell::new(a_cell_outside(), Crop::of("wheat")),
             ],
         )
         .await;
@@ -252,7 +388,13 @@ mod tests {
     async fn a_repeated_upload_returns_the_farm_already_created() {
         let repository =
             FakeFarmRepository::holding(crate::features::farms::app::testing::a_farm());
-        let use_case = RegisterFarmUseCase::new(Arc::new(repository.clone()), MAX, MAX_CELLS);
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+            MAX_CELLS,
+        );
 
         let (farm, dropped) = use_case
             .execute(
@@ -280,7 +422,13 @@ mod tests {
     #[tokio::test]
     async fn a_first_upload_with_a_key_is_registered() {
         let repository = FakeFarmRepository::new();
-        let use_case = RegisterFarmUseCase::new(Arc::new(repository.clone()), MAX, MAX_CELLS);
+        let use_case = RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+            MAX_CELLS,
+        );
 
         let result = use_case
             .execute(
@@ -302,5 +450,126 @@ mod tests {
 
         assert!(result.is_err());
         assert!(!repository.calls().contains(&RepositoryCall::Create));
+    }
+
+    fn use_case(repository: &FakeFarmRepository, crops: &FakeCropDirectory) -> RegisterFarmUseCase {
+        RegisterFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            Arc::new(crops.clone()),
+            MAX,
+            MAX_CELLS,
+        )
+    }
+
+    #[tokio::test]
+    async fn a_crop_staff_added_later_can_be_painted_on_a_new_farm() {
+        let repository = FakeFarmRepository::new();
+        let crops = FakeCropDirectory::with(&["wheat", "rice"]);
+
+        let (farm, _) = use_case(&repository, &crops)
+            .execute(
+                &auth_context(),
+                input(vec![PaintedCell::new(a_cell_inside(), Crop::of("rice"))]),
+            )
+            .await
+            .expect("farm");
+
+        assert_eq!(farm.crop_areas()[0].crop(), Crop::of("rice"));
+    }
+
+    #[tokio::test]
+    async fn a_crop_that_is_unknown_or_switched_off_is_refused_by_name_and_nothing_is_stored() {
+        let repository = FakeFarmRepository::new();
+        // Rice is not in the list: it was never added, or staff switched it off.
+        let crops = FakeCropDirectory::with(&["wheat"]);
+
+        let result = use_case(&repository, &crops)
+            .execute(
+                &auth_context(),
+                input(vec![
+                    PaintedCell::new(a_cell_inside(), Crop::of("wheat")),
+                    PaintedCell::new(a_cell_outside(), Crop::of("rice")),
+                ]),
+            )
+            .await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Farm(FarmError::UnknownCrop(code))) if code == "rice"
+        ));
+        assert!(
+            repository.calls().is_empty(),
+            "the crops are checked before anything is counted or written"
+        );
+    }
+
+    #[tokio::test]
+    async fn the_crop_list_is_read_once_however_many_cells_are_painted() {
+        let repository = FakeFarmRepository::new();
+        let crops = FakeCropDirectory::seeded();
+        let painted = an_outline()
+            .cells(MAX_CELLS)
+            .expect("cells")
+            .into_iter()
+            .map(|cell| PaintedCell::new(cell.position(), Crop::of("wheat")))
+            .collect::<Vec<_>>();
+        assert!(painted.len() > 1, "the point is many cells");
+
+        use_case(&repository, &crops)
+            .execute(&auth_context(), input(painted))
+            .await
+            .expect("farm");
+
+        assert_eq!(crops.asked(), 1);
+    }
+
+    #[tokio::test]
+    async fn a_farm_with_nothing_planted_needs_no_crop_list() {
+        let repository = FakeFarmRepository::new();
+        let crops = FakeCropDirectory::failing();
+
+        use_case(&repository, &crops)
+            .execute(
+                &auth_context(),
+                input(vec![PaintedCell::new(a_cell_inside(), Crop::EMPTY)]),
+            )
+            .await
+            .expect("empty is the farms feature's own word, not a crop to look up");
+
+        assert_eq!(crops.asked(), 0);
+    }
+
+    #[tokio::test]
+    async fn when_the_crop_list_cannot_be_read_the_farm_is_not_stored() {
+        let repository = FakeFarmRepository::new();
+
+        let result = use_case(&repository, &FakeCropDirectory::failing())
+            .execute(
+                &auth_context(),
+                input(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]),
+            )
+            .await;
+
+        assert!(result.is_err());
+        assert!(!repository.calls().contains(&RepositoryCall::Create));
+    }
+
+    #[tokio::test]
+    async fn a_repeated_upload_returns_its_farm_even_after_its_crop_was_switched_off() {
+        let existing = crate::features::farms::app::testing::a_farm();
+        let repository = FakeFarmRepository::holding(existing);
+        let crops = FakeCropDirectory::with(&[]);
+
+        let mut repeat = input(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]);
+        repeat.idempotency_key = Some(a_key());
+
+        let (farm, _) = use_case(&repository, &crops)
+            .execute(&auth_context(), repeat)
+            .await
+            .expect("the farm made the first time");
+
+        assert_eq!(farm.id(), &Some(7));
+        assert_eq!(crops.asked(), 0, "nothing new is being stored");
     }
 }

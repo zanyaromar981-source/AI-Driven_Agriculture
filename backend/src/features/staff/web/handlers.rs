@@ -10,7 +10,7 @@ use super::{
         CreateStaffParams, SaveStaffRoleParams, StaffListResponse, StaffLoginParams,
         StaffMeResponse, StaffOneResponse, StaffOneRoleResponse, StaffPermissionCatalogueResponse,
         StaffResponse, StaffRoleResponse, StaffRolesResponse, StaffSignedInResponse,
-        UpdateStaffParams,
+        UpdateOwnStaffProfileParams, UpdateStaffParams,
     },
     errors::WebError,
 };
@@ -72,6 +72,45 @@ pub async fn get_me(
         .staff
         .view_staff_use_case
         .execute(*staff_context.staff_id())
+        .await?;
+
+    Ok(ApiResponse::ok(StaffMeResponse::from((
+        &staff,
+        &staff_context,
+    ))))
+}
+
+/// Change the signed-in staff member's own name, phone and password
+///
+/// Open to anyone signed in. It never changes roles, the active state or
+/// the email. A new password needs the current one.
+#[utoipa::path(
+    put,
+    path = "/v1/dashboard/me",
+    tag = "staff",
+    request_body = UpdateOwnStaffProfileParams,
+    responses(
+        (status = 200, description = "Profile updated successfully", body = StaffMeResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 403, description = "The current password is wrong (`wrong_password`)", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn update_me(
+    State(state): State<AppState>,
+    Extension(staff_context): Extension<StaffContext>,
+    ValidatedJson(params): ValidatedJson<UpdateOwnStaffProfileParams>,
+) -> Result<ApiResponse<StaffMeResponse>, WebError> {
+    let input = params.into_input()?;
+
+    let staff = state
+        .features
+        .staff
+        .edit_own_profile_use_case
+        .execute(&staff_context, input)
         .await?;
 
     Ok(ApiResponse::ok(StaffMeResponse::from((

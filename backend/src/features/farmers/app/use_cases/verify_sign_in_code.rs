@@ -91,6 +91,15 @@ impl VerifySignInCodeUseCase {
             return Err(FarmerError::WrongCode.into());
         }
 
+        // Only someone holding the right code gets this far, so only the
+        // farmer learns that they are blocked. Every other failure above
+        // stays a wrong code.
+        if let Some(farmer) = self.farmers.find_by_phone(&input.phone).await? {
+            farmer
+                .ensure_not_blocked()
+                .inspect_err(|_| tracing::info!("sign-in refused: the farmer is blocked"))?;
+        }
+
         self.farmers
             .create_if_absent(&Farmer::new(input.phone.clone(), *challenge.language()))
             .await?;
@@ -161,6 +170,31 @@ mod tests {
             fakes.farmer_created_at(),
             before,
             "signing in again must not replace the farmer"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_blocked_farmer_is_refused_even_with_the_right_code() {
+        let fakes = Fakes::with_open_challenge("123456").with_blocked_farmer();
+
+        let result = use_case(&fakes).execute(input("123456")).await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Farmer(FarmerError::Blocked))
+        ));
+        assert!(!fakes.calls().contains(&Call::IssueToken));
+    }
+
+    #[tokio::test]
+    async fn a_wrong_code_for_a_blocked_farmer_is_just_a_wrong_code() {
+        let fakes = Fakes::with_open_challenge("123456").with_blocked_farmer();
+
+        let result = use_case(&fakes).execute(input("654321")).await;
+
+        assert!(
+            matches!(result, Err(AppError::Farmer(FarmerError::WrongCode))),
+            "someone guessing must not learn that the number is blocked"
         );
     }
 

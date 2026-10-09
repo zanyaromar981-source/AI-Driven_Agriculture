@@ -1,5 +1,7 @@
-/// Test switch. true = no input checks in sign-in (empty phone and empty code
-/// go through) so the screens can be clicked through. Set to false before release.
+/// Test switch. true = an empty code goes through on the code screen and
+/// corners can be placed by tapping the map. The phone number is always
+/// checked: the server sends real codes and refuses any other number.
+/// Set to false before release.
 const kTestMode = true;
 
 /// The real server's address, set when building:

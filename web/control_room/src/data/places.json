@@ -1,0 +1,1057 @@
+{
+ "governorates": [
+  {
+   "en": "Duhok",
+   "ku": "دهۆک",
+   "c": [
+    36.84367,
+    43.37916
+   ]
+  },
+  {
+   "en": "Erbil",
+   "ku": "هەولێر",
+   "c": [
+    36.37906,
+    44.21027
+   ]
+  },
+  {
+   "en": "Sulaymaniyah",
+   "ku": "سلێمانی",
+   "c": [
+    35.53199,
+    45.37687
+   ]
+  },
+  {
+   "en": "Halabja",
+   "ku": "هەڵەبجە",
+   "c": [
+    35.17274,
+    46.00359
+   ]
+  }
+ ],
+ "districts": [
+  {
+   "en": "Akre",
+   "ku": "ئاکرێ",
+   "gov": "Duhok",
+   "c": [
+    36.75446,
+    43.96228
+   ]
+  },
+  {
+   "en": "Amedi",
+   "ku": "ئامێدی",
+   "gov": "Duhok",
+   "c": [
+    37.09065,
+    43.57876
+   ]
+  },
+  {
+   "en": "Bardarash",
+   "ku": "بەردەڕەش",
+   "gov": "Duhok",
+   "c": [
+    36.49125,
+    43.6901
+   ]
+  },
+  {
+   "en": "Duhok",
+   "ku": "دهۆک",
+   "gov": "Duhok",
+   "c": [
+    36.94314,
+    43.10496
+   ]
+  },
+  {
+   "en": "Shekhan",
+   "ku": "شێخان",
+   "gov": "Duhok",
+   "c": [
+    36.69926,
+    43.41512
+   ]
+  },
+  {
+   "en": "Sumel",
+   "ku": "سێمێل",
+   "gov": "Duhok",
+   "c": [
+    36.95332,
+    42.70788
+   ]
+  },
+  {
+   "en": "Zakho",
+   "ku": "زاخۆ",
+   "gov": "Duhok",
+   "c": [
+    37.20208,
+    42.90427
+   ]
+  },
+  {
+   "en": "Chuman",
+   "ku": "چۆمان",
+   "gov": "Erbil",
+   "c": [
+    36.61148,
+    44.88868
+   ]
+  },
+  {
+   "en": "Erbil",
+   "ku": "هەولێر",
+   "gov": "Erbil",
+   "c": [
+    36.21155,
+    43.9744
+   ]
+  },
+  {
+   "en": "Harir",
+   "ku": "هەریر",
+   "gov": "Erbil",
+   "c": [
+    36.5525,
+    44.21276
+   ]
+  },
+  {
+   "en": "Khalifan",
+   "ku": "خەلیفان",
+   "gov": "Erbil",
+   "c": [
+    36.60236,
+    44.38128
+   ]
+  },
+  {
+   "en": "Koya",
+   "ku": "کۆیە",
+   "gov": "Erbil",
+   "c": [
+    36.10047,
+    44.55117
+   ]
+  },
+  {
+   "en": "Makhmur",
+   "ku": "مەخموور",
+   "gov": "Erbil",
+   "c": [
+    35.82253,
+    43.65232
+   ]
+  },
+  {
+   "en": "Mergasor",
+   "ku": "مێرگەسۆر",
+   "gov": "Erbil",
+   "c": [
+    37.01222,
+    44.05706
+   ]
+  },
+  {
+   "en": "Pirmam",
+   "ku": "پیرمام",
+   "gov": "Erbil",
+   "c": [
+    36.40362,
+    44.09117
+   ]
+  },
+  {
+   "en": "Qushtapa",
+   "ku": "قوشتەپە",
+   "gov": "Erbil",
+   "c": [
+    35.95104,
+    44.01957
+   ]
+  },
+  {
+   "en": "Rawanduz",
+   "ku": "ڕەواندز",
+   "gov": "Erbil",
+   "c": [
+    36.53529,
+    44.64965
+   ]
+  },
+  {
+   "en": "Shaqlawa",
+   "ku": "شەقڵاوە",
+   "gov": "Erbil",
+   "c": [
+    36.36102,
+    44.44108
+   ]
+  },
+  {
+   "en": "Sidakan",
+   "ku": "سیدەکان",
+   "gov": "Erbil",
+   "c": [
+    36.93959,
+    44.64229
+   ]
+  },
+  {
+   "en": "Soran",
+   "ku": "سۆران",
+   "gov": "Erbil",
+   "c": [
+    36.69424,
+    44.52709
+   ]
+  },
+  {
+   "en": "Taqtaq",
+   "ku": "تەقتەق",
+   "gov": "Erbil",
+   "c": [
+    35.96219,
+    44.49173
+   ]
+  },
+  {
+   "en": "Chamchamal",
+   "ku": "چەمچەماڵ",
+   "gov": "Sulaymaniyah",
+   "c": [
+    35.4147,
+    45.00142
+   ]
+  },
+  {
+   "en": "Darbandikhan",
+   "ku": "دەربەندیخان",
+   "gov": "Sulaymaniyah",
+   "c": [
+    35.1856,
+    45.71289
+   ]
+  },
+  {
+   "en": "Dukan",
+   "ku": "دوکان",
+   "gov": "Sulaymaniyah",
+   "c": [
+    35.92018,
+    45.03626
+   ]
+  },
+  {
+   "en": "Kalar",
+   "ku": "کەلار",
+   "gov": "Sulaymaniyah",
+   "c": [
+    34.83953,
+    45.32707
+   ]
+  },
+  {
+   "en": "Penjwen",
+   "ku": "پێنجوێن",
+   "gov": "Sulaymaniyah",
+   "c": [
+    35.64795,
+    45.93113
+   ]
+  },
+  {
+   "en": "Pshdar",
+   "ku": "پشدەر",
+   "gov": "Sulaymaniyah",
+   "c": [
+    36.26506,
+    45.10194
+   ]
+  },
+  {
+   "en": "Ranya",
+   "ku": "ڕانیە",
+   "gov": "Sulaymaniyah",
+   "c": [
+    36.16684,
+    44.91691
+   ]
+  },
+  {
+   "en": "Sharazur",
+   "ku": "شارەزوور",
+   "gov": "Sulaymaniyah",
+   "c": [
+    35.35531,
+    45.83132
+   ]
+  },
+  {
+   "en": "Sharbazher",
+   "ku": "شارباژێڕ",
+   "gov": "Sulaymaniyah",
+   "c": [
+    35.70343,
+    45.6279
+   ]
+  },
+  {
+   "en": "Sulaymaniyah",
+   "ku": "سلێمانی",
+   "gov": "Sulaymaniyah",
+   "c": [
+    35.44243,
+    45.42092
+   ]
+  },
+  {
+   "en": "Halabja",
+   "ku": "هەڵەبجە",
+   "gov": "Halabja",
+   "c": [
+    35.10793,
+    45.98218
+   ]
+  },
+  {
+   "en": "Khurmal",
+   "ku": "خورماڵ",
+   "gov": "Halabja",
+   "c": [
+    35.35993,
+    46.02415
+   ]
+  }
+ ],
+ "subdistricts": [
+  {
+   "en": "Bazian",
+   "ku": "بازیان",
+   "gov": "Sulaymaniyah",
+   "dist": "Sulaymaniyah",
+   "c": [
+    35.56571,
+    45.1399
+   ]
+  },
+  {
+   "en": "Qaradagh",
+   "ku": "قەرەداغ",
+   "gov": "Sulaymaniyah",
+   "dist": "Sulaymaniyah",
+   "c": [
+    35.33644,
+    45.47499
+   ]
+  },
+  {
+   "en": "Sarchnar",
+   "ku": "سەرچنار",
+   "gov": "Sulaymaniyah",
+   "dist": "Sulaymaniyah",
+   "c": [
+    35.59777,
+    45.34609
+   ]
+  },
+  {
+   "en": "Agjalare",
+   "ku": "ئاغجەلەر",
+   "gov": "Sulaymaniyah",
+   "dist": "Chamchamal",
+   "c": [
+    35.742,
+    44.85662
+   ]
+  },
+  {
+   "en": "Markaz Chamchamal",
+   "ku": "ناوەندی چەمچەماڵ",
+   "gov": "Sulaymaniyah",
+   "dist": "Chamchamal",
+   "c": [
+    35.49453,
+    44.94064
+   ]
+  },
+  {
+   "en": "Kadr Karam",
+   "ku": "قادرکەرەم",
+   "gov": "Sulaymaniyah",
+   "dist": "Chamchamal",
+   "c": [
+    35.18959,
+    44.8873
+   ]
+  },
+  {
+   "en": "Cenkaw",
+   "ku": "سەنگاو",
+   "gov": "Sulaymaniyah",
+   "dist": "Chamchamal",
+   "c": [
+    35.2461,
+    45.1974
+   ]
+  },
+  {
+   "en": "Markaz Derbendikhan",
+   "ku": "ناوەندی دەربەندیخان",
+   "gov": "Sulaymaniyah",
+   "dist": "Darbandikhan",
+   "c": [
+    35.1856,
+    45.71289
+   ]
+  },
+  {
+   "en": "Gnareen",
+   "ku": null,
+   "gov": "Sulaymaniyah",
+   "dist": "Dukan",
+   "c": [
+    36.02702,
+    44.8979
+   ]
+  },
+  {
+   "en": "Sourdash",
+   "ku": "سورداش",
+   "gov": "Sulaymaniyah",
+   "dist": "Dukan",
+   "c": [
+    35.8212,
+    45.12386
+   ]
+  },
+  {
+   "en": "Beyara",
+   "ku": "بیارە",
+   "gov": "Halabja",
+   "dist": "Halabja",
+   "c": [
+    35.19097,
+    46.13138
+   ]
+  },
+  {
+   "en": "Khourmal",
+   "ku": "خورماڵ",
+   "gov": "Halabja",
+   "dist": "Khurmal",
+   "c": [
+    35.35993,
+    46.02415
+   ]
+  },
+  {
+   "en": "Markaz Halabja",
+   "ku": "هەڵەبجە و سیروان",
+   "gov": "Halabja",
+   "dist": "Halabja",
+   "c": [
+    35.10584,
+    45.95026
+   ]
+  },
+  {
+   "en": "Shahrazur",
+   "ku": "زەڕایەن",
+   "gov": "Sulaymaniyah",
+   "dist": "Sharazur",
+   "c": [
+    35.35531,
+    45.83132
+   ]
+  },
+  {
+   "en": "Markaz Kalar",
+   "ku": "ناوەندی کەلار",
+   "gov": "Sulaymaniyah",
+   "dist": "Kalar",
+   "c": [
+    34.67607,
+    45.3566
+   ]
+  },
+  {
+   "en": "Bebaz",
+   "ku": null,
+   "gov": "Sulaymaniyah",
+   "dist": "Kalar",
+   "c": [
+    34.95941,
+    45.48531
+   ]
+  },
+  {
+   "en": "Tilako",
+   "ku": "تیلەکۆ",
+   "gov": "Sulaymaniyah",
+   "dist": "Kalar",
+   "c": [
+    34.88077,
+    45.16736
+   ]
+  },
+  {
+   "en": "Karmak",
+   "ku": null,
+   "gov": "Sulaymaniyah",
+   "dist": "Penjwen",
+   "c": [
+    35.7659,
+    46.06524
+   ]
+  },
+  {
+   "en": "Markaz Panjwin",
+   "ku": "ناوەندی پێنجوێن",
+   "gov": "Sulaymaniyah",
+   "dist": "Penjwen",
+   "c": [
+    35.56289,
+    45.92221
+   ]
+  },
+  {
+   "en": "Hero",
+   "ku": "هێرۆ",
+   "gov": "Sulaymaniyah",
+   "dist": "Pshdar",
+   "c": [
+    36.08918,
+    45.29085
+   ]
+  },
+  {
+   "en": "Nawdasht",
+   "ku": "ناوداشت",
+   "gov": "Sulaymaniyah",
+   "dist": "Pshdar",
+   "c": [
+    36.34804,
+    45.05326
+   ]
+  },
+  {
+   "en": "Markaz Pshdar",
+   "ku": "قەڵادزێ",
+   "gov": "Sulaymaniyah",
+   "dist": "Pshdar",
+   "c": [
+    36.20011,
+    45.19954
+   ]
+  },
+  {
+   "en": "Mirka",
+   "ku": null,
+   "gov": "Sulaymaniyah",
+   "dist": "Ranya",
+   "c": [
+    36.04781,
+    45.13203
+   ]
+  },
+  {
+   "en": "Markaz Rania",
+   "ku": "ناوەندی ڕانیە",
+   "gov": "Sulaymaniyah",
+   "dist": "Ranya",
+   "c": [
+    36.26237,
+    44.83894
+   ]
+  },
+  {
+   "en": "Bitwana",
+   "ku": "بتوێن",
+   "gov": "Sulaymaniyah",
+   "dist": "Ranya",
+   "c": [
+    36.34103,
+    44.65345
+   ]
+  },
+  {
+   "en": "Saruchik",
+   "ku": null,
+   "gov": "Sulaymaniyah",
+   "dist": "Sharbazher",
+   "c": [
+    35.54922,
+    45.73448
+   ]
+  },
+  {
+   "en": "Markaz Sharbazher",
+   "ku": "چوارتا",
+   "gov": "Sulaymaniyah",
+   "dist": "Sharbazher",
+   "c": [
+    35.68102,
+    45.61094
+   ]
+  },
+  {
+   "en": "Siwail",
+   "ku": "سیوەیل",
+   "gov": "Sulaymaniyah",
+   "dist": "Sharbazher",
+   "c": [
+    35.88461,
+    45.6201
+   ]
+  },
+  {
+   "en": "Mawat",
+   "ku": "ماوەت",
+   "gov": "Sulaymaniyah",
+   "dist": "Sharbazher",
+   "c": [
+    35.83801,
+    45.40039
+   ]
+  },
+  {
+   "en": "Barwari Bala",
+   "ku": "کانی ماسێ",
+   "gov": "Duhok",
+   "dist": "Amedi",
+   "c": [
+    37.23977,
+    43.36712
+   ]
+  },
+  {
+   "en": "Markaz Al-Amadiya",
+   "ku": "ناوەندی ئامێدی",
+   "gov": "Duhok",
+   "dist": "Amedi",
+   "c": [
+    37.05888,
+    43.6269
+   ]
+  },
+  {
+   "en": "Nerwa Rekan",
+   "ku": "دێرەلووک و شیلادزێ",
+   "gov": "Duhok",
+   "dist": "Amedi",
+   "c": [
+    37.17299,
+    43.84792
+   ]
+  },
+  {
+   "en": "Sarsank",
+   "ku": "سەرسەنگ",
+   "gov": "Duhok",
+   "dist": "Amedi",
+   "c": [
+    36.99544,
+    43.41206
+   ]
+  },
+  {
+   "en": "Al-Duski",
+   "ku": "مانگێشک",
+   "gov": "Duhok",
+   "dist": "Duhok",
+   "c": [
+    37.02045,
+    43.0369
+   ]
+  },
+  {
+   "en": "Markaz Duhok",
+   "ku": "ناوەندی دهۆک",
+   "gov": "Duhok",
+   "dist": "Duhok",
+   "c": [
+    36.85407,
+    42.97513
+   ]
+  },
+  {
+   "en": "Zawita",
+   "ku": "زاویتە",
+   "gov": "Duhok",
+   "dist": "Duhok",
+   "c": [
+    36.90032,
+    43.13305
+   ]
+  },
+  {
+   "en": "Bateel",
+   "ku": "باتێل",
+   "gov": "Duhok",
+   "dist": "Sumel",
+   "c": [
+    36.97145,
+    42.65018
+   ]
+  },
+  {
+   "en": "Fayde",
+   "ku": "فایدە",
+   "gov": "Duhok",
+   "dist": "Sumel",
+   "c": [
+    36.74392,
+    42.94171
+   ]
+  },
+  {
+   "en": "Markaz Sumail",
+   "ku": "ناوەندی سێمێل",
+   "gov": "Duhok",
+   "dist": "Sumel",
+   "c": [
+    36.91273,
+    42.80672
+   ]
+  },
+  {
+   "en": "Sindi",
+   "ku": "ڕزگاری",
+   "gov": "Duhok",
+   "dist": "Zakho",
+   "c": [
+    36.77822,
+    42.94929
+   ]
+  },
+  {
+   "en": "Markaz Zakho",
+   "ku": "ناوەندی زاخۆ",
+   "gov": "Duhok",
+   "dist": "Zakho",
+   "c": [
+    37.10628,
+    42.70291
+   ]
+  },
+  {
+   "en": "Batifa",
+   "ku": "باتیفا",
+   "gov": "Duhok",
+   "dist": "Zakho",
+   "c": [
+    37.22716,
+    43.05686
+   ]
+  },
+  {
+   "en": "Dercar",
+   "ku": "دەرکار",
+   "gov": "Duhok",
+   "dist": "Zakho",
+   "c": [
+    37.22745,
+    42.79318
+   ]
+  },
+  {
+   "en": "Barzan",
+   "ku": "بارزان",
+   "gov": "Erbil",
+   "dist": "Mergasor",
+   "c": [
+    37.01731,
+    43.99993
+   ]
+  },
+  {
+   "en": "Mazouri Bala",
+   "ku": "مزووری باڵا",
+   "gov": "Erbil",
+   "dist": "Mergasor",
+   "c": [
+    37.11902,
+    44.15898
+   ]
+  },
+  {
+   "en": "Qushtappa",
+   "ku": "قوشتەپە",
+   "gov": "Erbil",
+   "dist": "Qushtapa",
+   "c": [
+    35.95104,
+    44.01957
+   ]
+  },
+  {
+   "en": "Markaz Erbil",
+   "ku": "ناوەندی هەولێر",
+   "gov": "Erbil",
+   "dist": "Erbil",
+   "c": [
+    36.21155,
+    43.9744
+   ]
+  },
+  {
+   "en": "Taq Taq",
+   "ku": "تەقتەق",
+   "gov": "Erbil",
+   "dist": "Taqtaq",
+   "c": [
+    35.96219,
+    44.49173
+   ]
+  },
+  {
+   "en": "Shorsh",
+   "ku": "شۆڕش",
+   "gov": "Erbil",
+   "dist": "Koya",
+   "c": [
+    36.13259,
+    44.40835
+   ]
+  },
+  {
+   "en": "Markaz Koysinjaq",
+   "ku": "ناوەندی کۆیە",
+   "gov": "Erbil",
+   "dist": "Koya",
+   "c": [
+    36.10153,
+    44.60426
+   ]
+  },
+  {
+   "en": "Qaraj",
+   "ku": "قەراج",
+   "gov": "Erbil",
+   "dist": "Makhmur",
+   "c": [
+    35.59471,
+    43.5883
+   ]
+  },
+  {
+   "en": "Markaz Makhmour",
+   "ku": "ناوەندی مەخموور",
+   "gov": "Erbil",
+   "dist": "Makhmur",
+   "c": [
+    35.82984,
+    43.50628
+   ]
+  },
+  {
+   "en": "Dibaga",
+   "ku": "دیبەگە",
+   "gov": "Erbil",
+   "dist": "Makhmur",
+   "c": [
+    35.85153,
+    43.77085
+   ]
+  },
+  {
+   "en": "Gwyer",
+   "ku": "گوێر",
+   "gov": "Erbil",
+   "dist": "Makhmur",
+   "c": [
+    36.07467,
+    43.60971
+   ]
+  },
+  {
+   "en": "Markaz Rawanduz",
+   "ku": "ناوەندی ڕەواندز",
+   "gov": "Erbil",
+   "dist": "Rawanduz",
+   "c": [
+    36.53529,
+    44.64965
+   ]
+  },
+  {
+   "en": "Diana",
+   "ku": "دیانا",
+   "gov": "Erbil",
+   "dist": "Soran",
+   "c": [
+    36.69424,
+    44.52709
+   ]
+  },
+  {
+   "en": "Balak",
+   "ku": "باڵەکایەتی",
+   "gov": "Erbil",
+   "dist": "Chuman",
+   "c": [
+    36.60003,
+    44.88335
+   ]
+  },
+  {
+   "en": "Khailfan",
+   "ku": "خەلیفان",
+   "gov": "Erbil",
+   "dist": "Khalifan",
+   "c": [
+    36.60236,
+    44.38128
+   ]
+  },
+  {
+   "en": "Mergasur",
+   "ku": "ناوەندی مێرگەسۆر",
+   "gov": "Erbil",
+   "dist": "Mergasor",
+   "c": [
+    36.83796,
+    44.28827
+   ]
+  },
+  {
+   "en": "Bradost",
+   "ku": "برادۆست",
+   "gov": "Erbil",
+   "dist": "Sidakan",
+   "c": [
+    36.93959,
+    44.64229
+   ]
+  },
+  {
+   "en": "Haji Omaran",
+   "ku": "حاجی ئۆمەران",
+   "gov": "Erbil",
+   "dist": "Chuman",
+   "c": [
+    36.68408,
+    44.95727
+   ]
+  },
+  {
+   "en": "Khoshnaw",
+   "ku": "خۆشناو",
+   "gov": "Erbil",
+   "dist": "Shaqlawa",
+   "c": [
+    36.36102,
+    44.44108
+   ]
+  },
+  {
+   "en": "Salah Al-Din",
+   "ku": "سەڵاحەدین",
+   "gov": "Erbil",
+   "dist": "Pirmam",
+   "c": [
+    36.40362,
+    44.09117
+   ]
+  },
+  {
+   "en": "Harir",
+   "ku": "هەریر",
+   "gov": "Erbil",
+   "dist": "Harir",
+   "c": [
+    36.5525,
+    44.21276
+   ]
+  },
+  {
+   "en": "Bardarash",
+   "ku": "بەردەڕەش",
+   "gov": "Duhok",
+   "dist": "Bardarash",
+   "c": [
+    36.49125,
+    43.6901
+   ]
+  },
+  {
+   "en": "Begeel",
+   "ku": "بجیل",
+   "gov": "Duhok",
+   "dist": "Akre",
+   "c": [
+    36.65498,
+    44.13005
+   ]
+  },
+  {
+   "en": "Kurdsein",
+   "ku": "گردەسێن",
+   "gov": "Duhok",
+   "dist": "Akre",
+   "c": [
+    36.64659,
+    43.86454
+   ]
+  },
+  {
+   "en": "Dinarta",
+   "ku": "دینارتێ",
+   "gov": "Duhok",
+   "dist": "Akre",
+   "c": [
+    36.84272,
+    43.91423
+   ]
+  },
+  {
+   "en": "Markaz Aqra",
+   "ku": "ناوەندی ئاکرێ",
+   "gov": "Duhok",
+   "dist": "Akre",
+   "c": [
+    36.75651,
+    43.83534
+   ]
+  },
+  {
+   "en": "Markaz Al-Shikhan",
+   "ku": "ناوەندی شێخان",
+   "gov": "Duhok",
+   "dist": "Shekhan",
+   "c": [
+    36.6185,
+    43.36441
+   ]
+  },
+  {
+   "en": "Qasruk",
+   "ku": "قەسرۆک",
+   "gov": "Duhok",
+   "dist": "Shekhan",
+   "c": [
+    36.68122,
+    43.5435
+   ]
+  },
+  {
+   "en": "Atreesh",
+   "ku": "ئەترووش",
+   "gov": "Duhok",
+   "dist": "Shekhan",
+   "c": [
+    36.83053,
+    43.33234
+   ]
+  }
+ ]
+}

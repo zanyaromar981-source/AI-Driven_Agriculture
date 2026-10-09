@@ -1,0 +1,17 @@
+[Unit]
+Description=Farm Doctor farm history: ten years of monthly weather, greenness and groundwater per farm
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/farm-doctor/backend/jobs
+EnvironmentFile=/opt/farm-doctor/backend/deploy/.env
+Environment=FARM_DOCTOR_API=http://127.0.0.1:8790/v1
+Environment=FARM_HISTORY_CACHE=/opt/farm-doctor/cache/farm_history
+# The venv has rasterio, which only the groundwater source needs. That source
+# is off until FARM_HISTORY_SOURCES=weather,greenness,groundwater is set here.
+ExecStart=/opt/farm-doctor/venv/bin/python /opt/farm-doctor/backend/jobs/farm_history.py
+Nice=10
+# The job stops starting new work after 45 minutes; this is the hard stop.
+TimeoutStartSec=3600

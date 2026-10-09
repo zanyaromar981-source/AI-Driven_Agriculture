@@ -2,4 +2,6 @@ mod repo;
 mod services;
 
 pub use repo::FarmRepository;
-pub use services::FarmerDirectory;
+pub use services::{
+    AreaDirectory, CropDirectory, FarmerDirectory, PlaceLocator, PublicTotalsSwitch,
+};

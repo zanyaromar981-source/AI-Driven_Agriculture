@@ -6,8 +6,8 @@ use crate::{
     features::alwa::{
         app::AppError,
         domain::{
-            Crop, Deal, IdempotencyKey, Listing, ListingStatus, Market, MarketNames, MarketSlug,
-            Offer, Price,
+            Crop, Deal, GeoPoint, IdempotencyKey, Listing, ListingStatus, Market, MarketNames,
+            MarketSlug, Offer, Price,
         },
     },
     shared::Phone,
@@ -70,11 +70,14 @@ pub trait AlwaRepository: Send + Sync + std::fmt::Debug {
     /// crop and day.
     async fn upsert_price(&self, price: &Price) -> Result<Price, AppError>;
 
-    /// Returns one page of the board, newest first, and how many listings
-    /// match in all.
+    /// Returns one page of the board and how many listings match in all.
+    /// With `near` the page is ordered by distance from that point, nearest
+    /// first, and listings without a place come last; without it, and
+    /// between listings equally far, newest first.
     async fn find_listings(
         &self,
         filter: &ListingFilter,
+        near: Option<&GeoPoint>,
         now: DateTime<Utc>,
         pagination: &Pagination,
     ) -> Result<(Vec<Listing>, u64), AppError>;
@@ -112,6 +115,12 @@ pub trait AlwaRepository: Send + Sync + std::fmt::Debug {
     /// stored listing stopped being open in the meantime.
     async fn cancel_listing(&self, entity: &Listing) -> Result<(), AppError>;
 
+    /// Stores a listing its seller marked sold and, in the same
+    /// transaction, declines every open offer on it. Fails with
+    /// `ListingNotOpen` when the stored listing stopped being open in the
+    /// meantime, and then changes nothing.
+    async fn sell_listing(&self, entity: &Listing) -> Result<(), AppError>;
+
     /// Returns every offer on the given listings.
     async fn find_offers_by_listings(&self, listing_ids: &[i32]) -> Result<Vec<Offer>, AppError>;
 
@@ -143,14 +152,17 @@ pub trait AlwaRepository: Send + Sync + std::fmt::Debug {
         &self,
         slug: &MarketSlug,
         names: &MarketNames,
+        point: Option<&GeoPoint>,
     ) -> Result<Option<Market>, AppError>;
 
-    /// Replaces the names of the market with this slug. `None` when there is
-    /// no such market.
+    /// Replaces the names of the market with this slug and, when `point` is
+    /// given, its place; without one the stored place is kept. `None` when
+    /// there is no such market.
     async fn update_market(
         &self,
         slug: &MarketSlug,
         names: &MarketNames,
+        point: Option<&GeoPoint>,
     ) -> Result<Option<Market>, AppError>;
 
     /// Removes the market and says whether there was one. Fails with
@@ -198,4 +210,9 @@ pub trait AlwaRepository: Send + Sync + std::fmt::Debug {
     /// Removes the listing with its offers and says whether there was one.
     /// Fails with `ListingHasDeal` when an offer on it was accepted.
     async fn delete_listing(&self, id: i32) -> Result<bool, AppError>;
+
+    /// Whether any listing, of any status, or any price names the crop. For
+    /// the feature that keeps the crop list and may not remove a crop in
+    /// use.
+    async fn is_crop_traded(&self, crop: Crop) -> Result<bool, AppError>;
 }

@@ -14,8 +14,8 @@ use crate::{
     features::staff::{
         app::{AppError, RoleRepository, StaffRepository},
         domain::{
-            Grantor, OwnerStanding, Role, RoleRef, RoleSelection, Staff, StaffChange, StaffEmail,
-            StaffError,
+            Grantor, OwnProfileChange, OwnerStanding, Role, RoleRef, RoleSelection, Staff,
+            StaffChange, StaffEmail, StaffError,
         },
         infra::persistence::postgres::{
             entities::{role_permissions, roles, staff, staff_roles},
@@ -625,6 +625,14 @@ impl StaffRepository for StaffPostgresRepository {
                 staff::Column::Name,
                 Expr::value(String::from(change.name())),
             )
+            .col_expr(
+                staff::Column::Phone,
+                Expr::value(change.phone().as_ref().map(String::from)),
+            )
+            .col_expr(
+                staff::Column::JobTitle,
+                Expr::value(change.job_title().as_ref().map(String::from)),
+            )
             .col_expr(staff::Column::Active, Expr::value(*change.active()))
             .col_expr(
                 staff::Column::UpdatedAt,
@@ -663,6 +671,51 @@ impl StaffRepository for StaffPostgresRepository {
         transaction.commit().await.map_err(database_error)?;
 
         Ok(updated)
+    }
+
+    async fn update_own_profile(
+        &self,
+        id: i32,
+        change: &OwnProfileChange,
+    ) -> Result<Option<Staff>, AppError> {
+        // Only the name, the phone and, when given, the password are in the
+        // statement, so it cannot undo an edit of the roles or the active
+        // state made at the same moment, and none of the rules about owners
+        // and grants can be broken by it.
+        let mut update = staff::Entity::update_many()
+            .col_expr(staff::Column::Name, Expr::value(String::from(&change.name)))
+            .col_expr(
+                staff::Column::Phone,
+                Expr::value(change.phone.as_ref().map(String::from)),
+            )
+            .col_expr(
+                staff::Column::UpdatedAt,
+                Expr::value(Utc::now().naive_utc()),
+            )
+            .filter(staff::Column::Id.eq(id));
+
+        // The current password was checked against a hash read a moment
+        // ago. The new one is written only while that hash is still the
+        // stored one: of two password changes at the same moment one wins
+        // and the other writes nothing.
+        if let Some(password) = &change.password {
+            update = update
+                .col_expr(
+                    staff::Column::PasswordHash,
+                    Expr::value(password.new_hash.as_str().to_string()),
+                )
+                .filter(staff::Column::PasswordHash.eq(password.verified_against.as_str()));
+        }
+
+        let updated = update
+            .exec_with_returning(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        match updated.into_iter().next() {
+            Some(model) => Ok(Some(Self::load_one(&self.conn, model).await?)),
+            None => Ok(None),
+        }
     }
 
     async fn delete(&self, id: i32) -> Result<(), AppError> {

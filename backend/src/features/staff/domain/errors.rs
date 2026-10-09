@@ -29,6 +29,9 @@ pub enum StaffError {
     #[error("You cannot give out a permission you do not hold yourself")]
     CannotGrant,
 
+    #[error("The current password is wrong")]
+    WrongPassword,
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

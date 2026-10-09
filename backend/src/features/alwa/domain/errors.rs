@@ -35,6 +35,9 @@ pub enum AlwaError {
     #[error("Staff may only close a listing")]
     StaffMayOnlyClose,
 
+    #[error("`{0}` is not a crop that can be used: see the crop list")]
+    UnknownCrop(String),
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

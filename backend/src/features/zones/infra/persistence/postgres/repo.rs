@@ -9,9 +9,10 @@ use crate::{
     app::{AppError as GlobalAppError, Pagination},
     features::zones::{
         app::{AppError, ZoneRepository},
-        domain::{Month, MonthRange, SubZone, SubZoneReading, Zone, ZoneReading, ZoneSlug},
-        infra::persistence::postgres::entities::{
-            sub_zone_readings, sub_zones, zone_readings, zones,
+        domain::{Month, MonthRange, Shape, SubZone, SubZoneReading, Zone, ZoneReading, ZoneSlug},
+        infra::persistence::postgres::{
+            entities::{sub_zone_readings, sub_zones, zone_readings, zones},
+            mappings::{SubZoneRow, shaped_sub_zone},
         },
     },
 };
@@ -58,9 +59,10 @@ impl ZoneRepository for ZonePostgresRepository {
     }
 
     async fn find_sub_zones_by_zone(&self, zone_id: i32) -> Result<Vec<SubZone>, AppError> {
-        sub_zones::Entity::find()
+        SubZoneRow::select()
             .filter(sub_zones::Column::ZoneId.eq(zone_id))
             .order_by_asc(sub_zones::Column::Id)
+            .into_model::<SubZoneRow>()
             .all(&self.conn)
             .await
             .map_err(database_error)?
@@ -74,9 +76,10 @@ impl ZoneRepository for ZonePostgresRepository {
         zone_id: i32,
         slug: &ZoneSlug,
     ) -> Result<Option<SubZone>, AppError> {
-        let model = sub_zones::Entity::find()
+        let model = SubZoneRow::select()
             .filter(sub_zones::Column::ZoneId.eq(zone_id))
             .filter(sub_zones::Column::Slug.eq(slug.as_str()))
+            .into_model::<SubZoneRow>()
             .one(&self.conn)
             .await
             .map_err(database_error)?;
@@ -199,8 +202,9 @@ impl ZoneRepository for ZonePostgresRepository {
     }
 
     async fn find_all_sub_zones(&self) -> Result<Vec<SubZone>, AppError> {
-        sub_zones::Entity::find()
+        SubZoneRow::select()
             .order_by_asc(sub_zones::Column::Id)
+            .into_model::<SubZoneRow>()
             .all(&self.conn)
             .await
             .map_err(database_error)?
@@ -388,5 +392,21 @@ impl ZoneRepository for ZonePostgresRepository {
             .map_err(database_error)?;
 
         Ok(result.rows_affected > 0)
+    }
+
+    async fn find_all_sub_zone_shapes(&self) -> Result<Vec<(SubZone, Shape)>, AppError> {
+        sub_zones::Entity::find()
+            .filter(sub_zones::Column::Outline.is_not_null())
+            .order_by_asc(sub_zones::Column::Id)
+            .all(&self.conn)
+            .await
+            .map_err(database_error)?
+            .into_iter()
+            .filter_map(|mut model| {
+                let outline = model.outline.take()?;
+
+                Some(shaped_sub_zone(model, outline))
+            })
+            .collect()
     }
 }

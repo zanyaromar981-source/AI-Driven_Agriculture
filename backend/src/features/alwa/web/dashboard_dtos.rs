@@ -8,7 +8,7 @@ use utoipa::{IntoParams, ToSchema};
 use validator::Validate;
 
 use super::dtos::{
-    AlwaBuyerKind, AlwaCrop, AlwaFairPrice, AlwaGrade, AlwaListingStatus, AlwaMarketResponse,
+    AlwaBuyerKind, AlwaFairPrice, AlwaGrade, AlwaListingStatus, AlwaMarketResponse,
     AlwaOfferStatus, AlwaOnePriceResponse, AlwaPickup, AlwaRecordedPriceResponse,
     RecordAlwaPriceParams, given, listing_id, missing_id, parse_day,
 };
@@ -24,7 +24,8 @@ use crate::{
             },
         },
         domain::{
-            self, ListingCard, Market, MarketName, MarketNames, MarketSlug, Note, Offer, Price,
+            self, GeoPoint, ListingCard, Market, MarketName, MarketNames, MarketSlug, Note, Offer,
+            Price,
         },
     },
     shared::Phone,
@@ -39,6 +40,10 @@ pub struct CreateAlwaMarketParams {
     pub name_en: String,
     /// 1 to 80 characters.
     pub name_ku: String,
+    /// Where the alwa is, WGS84, inside the Kurdistan Region. Given
+    /// together with `lon` or not at all.
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
 }
 
 impl CreateAlwaMarketParams {
@@ -49,6 +54,7 @@ impl CreateAlwaMarketParams {
                 name_en: MarketName::new(self.name_en)?,
                 name_ku: MarketName::new(self.name_ku)?,
             },
+            point: GeoPoint::from_pair(self.lat, self.lon, GeoPoint::in_region)?,
         })
     }
 }
@@ -59,16 +65,24 @@ pub struct UpdateAlwaMarketParams {
     pub name_en: String,
     /// 1 to 80 characters.
     pub name_ku: String,
+    /// Where the alwa is, WGS84, inside the Kurdistan Region. Given
+    /// together with `lon`; both left out, the place stays as it was.
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
 }
 
 impl UpdateAlwaMarketParams {
-    pub fn into_input(self, slug: String) -> Result<(MarketSlug, MarketNames), AppError> {
+    pub fn into_input(
+        self,
+        slug: String,
+    ) -> Result<(MarketSlug, MarketNames, Option<GeoPoint>), AppError> {
         Ok((
             MarketSlug::new(slug)?,
             MarketNames {
                 name_en: MarketName::new(self.name_en)?,
                 name_ku: MarketName::new(self.name_ku)?,
             },
+            GeoPoint::from_pair(self.lat, self.lon, GeoPoint::in_region)?,
         ))
     }
 }
@@ -107,7 +121,7 @@ impl AlwaStoredPricesQuery {
             market: MarketSlug::new(market)?,
             crop: given(self.crop)
                 .as_deref()
-                .map(domain::Crop::try_from)
+                .map(domain::Crop::new)
                 .transpose()?,
             from: given(self.from).as_deref().map(parse_day).transpose()?,
             to: given(self.to).as_deref().map(parse_day).transpose()?,
@@ -186,7 +200,7 @@ impl AlwaModerationQuery {
             market: given(self.market).map(MarketSlug::new).transpose()?,
             crop: given(self.crop)
                 .as_deref()
-                .map(domain::Crop::try_from)
+                .map(domain::Crop::new)
                 .transpose()?,
             status: given(self.status)
                 .as_deref()
@@ -204,14 +218,19 @@ pub struct AlwaModeratedListingResponse {
     pub id: String,
     pub seller_phone: String,
     pub seller_name: Option<String>,
-    pub crop: AlwaCrop,
+    pub crop: String,
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
     pub grade: Option<AlwaGrade>,
-    pub pickup: AlwaPickup,
-    /// Market slug.
-    pub market: String,
+    /// `null` when the seller did not say.
+    pub pickup: Option<AlwaPickup>,
+    /// Market slug, `null` for a listing at no alwa.
+    pub market: Option<String>,
     pub zone_slug: Option<String>,
+    /// Where the crop is, WGS84. `null` for a listing posted without a
+    /// point.
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
     /// The seller's own note.
     pub note: Option<String>,
     pub closes_at: DateTime<Utc>,
@@ -244,9 +263,11 @@ impl TryFrom<&ListingCard> for AlwaModeratedListingResponse {
             quantity_kg: listing.quantity().value(),
             asking_price_iqd_per_kg: listing.asking_price().value(),
             grade: listing.grade().map(Into::into),
-            pickup: (*listing.pickup()).into(),
-            market: listing.market().into(),
+            pickup: listing.pickup().map(Into::into),
+            market: listing.market().as_ref().map(Into::into),
             zone_slug: listing.zone_slug().as_ref().map(Into::into),
+            lat: listing.point().map(|point| point.lat()),
+            lon: listing.point().map(|point| point.lon()),
             note: listing.note().as_ref().map(Into::into),
             closes_at: *listing.closes_at(),
             status: (*card.status()).into(),

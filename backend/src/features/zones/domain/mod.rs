@@ -1,6 +1,7 @@
 mod entities;
 mod enums;
 mod errors;
+mod place;
 mod statistics;
 mod value_objects;
 mod views;
@@ -8,6 +9,7 @@ mod views;
 pub use entities::{SubZone, SubZoneReading, Zone, ZoneReading};
 pub use enums::{Crop, DrynessBand};
 pub use errors::ZoneError;
+pub use place::{Governorate, Place, PlaceIndex};
 pub use value_objects::*;
 pub use views::{
     RankedReading, RegionComparison, RegionOverview, RegionSummary, SubZoneDryness, YearAverage,

@@ -2,7 +2,7 @@
 
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "alwa_markets")]
 pub struct Model {
     #[sea_orm(primary_key)]
@@ -11,6 +11,10 @@ pub struct Model {
     pub slug: String,
     pub name_en: String,
     pub name_ku: String,
+    #[sea_orm(column_type = "Double", nullable)]
+    pub lat: Option<f64>,
+    #[sea_orm(column_type = "Double", nullable)]
+    pub lon: Option<f64>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

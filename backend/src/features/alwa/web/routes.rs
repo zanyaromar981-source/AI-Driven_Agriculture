@@ -11,8 +11,9 @@ use crate::{
 
 use super::{dashboard_handlers, handlers};
 
-/// What the dashboard reads without a login: markets, prices, the board of
-/// listings and the deals of a day.
+/// What anyone reads without a login: markets, prices, the board of
+/// listings and the deals of a day. The two listing routes look at a
+/// farmer's token when there is one, to show the seller's phone.
 pub fn public_routes() -> Router<AppState> {
     Router::new()
         .route("/alwa/markets", get(handlers::get_markets))
@@ -37,6 +38,10 @@ pub fn routes() -> Router<AppState> {
         .route("/alwa/listings", post(handlers::create_listing))
         .route("/alwa/listings/mine", get(handlers::get_my_listings))
         .route("/alwa/listings/{id}", delete(handlers::cancel_listing))
+        .route(
+            "/alwa/listings/{id}/sold",
+            post(handlers::mark_listing_sold),
+        )
         .route("/alwa/listings/{id}/offers", post(handlers::create_offer))
         .route(
             "/alwa/listings/{id}/offers/{offer_id}/accept",

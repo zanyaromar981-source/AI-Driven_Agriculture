@@ -17,6 +17,11 @@ impl ToErrorInfo for FarmerError {
             FarmerError::CodeRequestedTooSoon(seconds) => {
                 ErrorInfo::new(ErrorKind::RateLimited, self.to_string()).retry_after(*seconds)
             }
+            // The one refusal a blocked farmer is told the reason for: the
+            // app shows it instead of asking for a code again and again.
+            FarmerError::Blocked => {
+                ErrorInfo::with_code(ErrorKind::Authorization, "blocked", self.to_string())
+            }
             FarmerError::DomainError(err) => err.to_error_info(),
         }
     }
@@ -70,6 +75,14 @@ mod tests {
 
         assert_eq!(info.kind, ErrorKind::Conflict);
         assert_eq!(info.code, "already_exists");
+    }
+
+    #[test]
+    fn a_blocked_farmer_is_forbidden_with_its_own_code() {
+        let info = FarmerError::Blocked.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Authorization);
+        assert_eq!(info.code, "blocked");
     }
 
     #[test]

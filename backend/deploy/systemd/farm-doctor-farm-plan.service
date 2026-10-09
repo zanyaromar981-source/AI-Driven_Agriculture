@@ -1,0 +1,16 @@
+[Unit]
+Description=Farm Doctor farm plan: the 10-day forecast of each farm turned into farm work
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/farm-doctor/backend/jobs
+EnvironmentFile=/opt/farm-doctor/backend/deploy/.env
+Environment=FARM_DOCTOR_API=http://127.0.0.1:8790/v1
+Environment=FARM_PLAN_CACHE=/opt/farm-doctor/cache
+# Not through report_run.py: most runs find nothing to do, and the job
+# reports only the runs worth a line on the status page (job "plans").
+ExecStart=/usr/bin/python3 /opt/farm-doctor/backend/jobs/farm_plan.py
+Nice=10
+TimeoutStartSec=540

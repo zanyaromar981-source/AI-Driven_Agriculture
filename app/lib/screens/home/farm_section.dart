@@ -6,9 +6,9 @@ import '../../crops.dart';
 import '../../geo.dart';
 import '../../store/local_store.dart';
 import '../../theme.dart';
-import '../../widgets/common.dart';
 import '../../widgets/farm_card.dart';
 import '../doctor/ask_doctor_screen.dart';
+import '../report/report_screen.dart';
 import 'cell_card.dart';
 import 'farm_drawing.dart';
 import 'week_strip.dart';
@@ -33,6 +33,10 @@ class _FarmSectionState extends State<FarmSection> {
   FarmStatusReport? _status;
   FarmPlan? _plan;
   bool _planDown = false;
+
+  /// The server has no 10-day plan yet (404, FRONTEND.md 4): a calm note,
+  /// not an error.
+  bool _planSoon = false;
   bool _loading = true;
 
   /// True while fresh data loads over the copy already on screen.
@@ -67,6 +71,7 @@ class _FarmSectionState extends State<FarmSection> {
     FarmStatusReport? status;
     FarmPlan? plan;
     var planDown = false;
+    var planSoon = false;
     DateTime? offlineSince;
     // Show the copy saved on the phone at once; fresh data replaces it below.
     if (_farm == null) {
@@ -85,6 +90,7 @@ class _FarmSectionState extends State<FarmSection> {
             _status = cst;
             _shape = cfarm.outline.length < 3 ? null : FarmShape(cfarm, cst);
             _plan = cp is Map<String, dynamic> ? FarmPlan.fromJson(cp) : null;
+            _planSoon = c['plan_soon'] == true;
             _shownSavedAt = DateTime.tryParse(
               c['saved_at'] as String? ?? '',
             )?.toLocal();
@@ -107,17 +113,22 @@ class _FarmSectionState extends State<FarmSection> {
       status = got[1] as FarmStatusReport;
       try {
         plan = await api.getPlan(id);
-      } on ApiException {
-        planDown = true;
-        final old = await LocalStore.read(_cacheName);
-        final p = old?['plan'] as Map<String, dynamic>?;
-        if (p != null) plan = FarmPlan.fromJson(p);
+      } on ApiException catch (e) {
+        if (e.status == 404) {
+          planSoon = true;
+        } else {
+          planDown = true;
+          final old = await LocalStore.read(_cacheName);
+          final p = old?['plan'] as Map<String, dynamic>?;
+          if (p != null) plan = FarmPlan.fromJson(p);
+        }
       }
       await LocalStore.write(_cacheName, {
         'saved_at': DateTime.now().toUtc().toIso8601String(),
         'farm': farm.toJson(),
         'status': status.json,
         'plan': plan?.json,
+        'plan_soon': planSoon,
       });
     } on ApiException catch (e) {
       if (e.isOffline) {
@@ -131,6 +142,7 @@ class _FarmSectionState extends State<FarmSection> {
           );
           final p = j['plan'] as Map<String, dynamic>?;
           plan = p == null ? null : FarmPlan.fromJson(p);
+          planSoon = j['plan_soon'] == true;
           offlineSince = DateTime.parse(j['saved_at'] as String);
         }
       } else {
@@ -166,6 +178,7 @@ class _FarmSectionState extends State<FarmSection> {
           : FarmShape(farm, status);
       _plan = plan;
       _planDown = planDown;
+      _planSoon = planSoon;
       _offlineSince = offlineSince;
     });
     if (!_told) {
@@ -335,6 +348,8 @@ class _FarmSectionState extends State<FarmSection> {
         style: latText(size: 11, weight: FontWeight.w800, color: JColors.faint),
       ),
       if (_plan != null) WeekStrip(plan: _plan!),
+      if (_plan == null && _planSoon)
+        Text(s.planSoon, style: jText(false, size: 13.5, color: JColors.muted)),
       if (_planDown)
         Text(
           s.weatherDown,
@@ -347,45 +362,7 @@ class _FarmSectionState extends State<FarmSection> {
     final s = AppScope.of(context).s;
     final st = _status;
     final whole = st?.greennessPctOfNormal;
-    final sum = _farm!.summary;
     switch (_view) {
-      case FarmView.farm:
-        final measuredDunam = (st?.crops ?? const <CropReading>[])
-            .where((c) => c.greennessPctOfNormal != null)
-            .fold(0.0, (a, c) => a + c.dunam);
-        final all = measuredDunam >= sum.areaDunam * 0.95;
-        return IgnorePointer(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 2,
-            children: [
-              Text(
-                whole == null ? s.notMeasured : s.pctOfNormal(whole),
-                style: jText(
-                  false,
-                  size: whole == null ? 18 : 26,
-                  weight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                [
-                  s.wholeFarmLabel,
-                  '${fmtM2(sum.areaDunam * 2500)} ${s.m2}',
-                  if (whole != null) s.levelName(levelFromPct(whole)),
-                ].join(' · '),
-                style: jText(false, size: 12.5, color: JColors.muted),
-              ),
-              if (whole != null && !all)
-                Text(
-                  s.measuredOn(
-                    fmtM2(measuredDunam * 2500),
-                    fmtM2(sum.areaDunam * 2500),
-                  ),
-                  style: jText(false, size: 12, color: JColors.muted),
-                ),
-            ],
-          ),
-        );
       case FarmView.cells:
         final k = _cell;
         if (k == null) return null;
@@ -415,7 +392,12 @@ class _FarmSectionState extends State<FarmSection> {
               ),
             ),
           ),
-          onReport: () => showToast(context, '${s.reportHere}: ${s.notBuilt}'),
+          onReport: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ReportScreen(farm: widget.summary, shape: shape, cell: k),
+            ),
+          ),
         );
       case FarmView.crops:
         final c = _crop;
@@ -450,9 +432,10 @@ class _ViewToggle extends StatelessWidget {
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: JColors.toggleBg,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
+        spacing: 2,
         children: [
           for (final v in FarmView.values)
             Expanded(
@@ -464,11 +447,11 @@ class _ViewToggle extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: v == view ? JColors.card : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(999),
                     boxShadow: v == view
                         ? const [
                             BoxShadow(
-                              color: Color(0x1A000000),
+                              color: Color(0x14162019),
                               blurRadius: 3,
                               offset: Offset(0, 1),
                             ),
@@ -479,12 +462,11 @@ class _ViewToggle extends StatelessWidget {
                     switch (v) {
                       FarmView.cells => s.viewCells,
                       FarmView.crops => s.viewCrops,
-                      FarmView.farm => s.viewFarm,
                     },
                     style: jText(
                       false,
-                      size: 13.5,
-                      weight: v == view ? FontWeight.w700 : FontWeight.w500,
+                      size: 13,
+                      weight: v == view ? FontWeight.w700 : FontWeight.w600,
                       color: v == view ? JColors.ink : JColors.muted,
                     ),
                   ),

@@ -42,7 +42,7 @@ Hard rules:
 ## 4. HTTP
 
 - JSON is snake_case. Success bodies are plain objects through `ApiResponse::ok` / `ApiResponse::created`, with no outer wrapper. A list is wrapped in a named key (`{"farms": [...]}`).
-- The farmer app reads the shapes in the root `BACKEND.md`; what the backend really does is in the root `FRONTEND.md`. Change a route the app uses and you change `FRONTEND.md` in the same commit.
+- The farmer app reads the shapes in the root `BACKEND.md`; what the backend really does is in the root `FRONTEND.md`. Change a route the app or the dashboard uses and you change `FRONTEND.md` and regenerate `API.md` (`python3 tools/api_reference.py <server> > API.md`) in the same commit.
 - Ids travel as strings. A non-numeric id is `404`, not `400`.
 - Timestamps are `DateTime<Utc>` (with the `Z`), days are `NaiveDate`. Database timestamps are naive UTC.
 - Text a person reads comes in Sorani and English (`*_ku`, `*_en`).
@@ -77,13 +77,15 @@ The app retries on timeouts and 5xx, and data jobs re-run and overlap. Every wri
 ## 7. Security
 
 - Never commit keys. `.env` files are ignored; `.env.example` holds names only.
-- Secrets, sign-in codes and tokens never appear in logs or `Debug` output (the one deliberate exception is `LogSignInCodeSender`, which exists only until an SMS provider is chosen).
+- Secrets, sign-in codes and tokens never appear in logs or `Debug` output (the one deliberate exception is `LogSignInCodeSender`, used only when no OTPIQ key is configured).
 - Compare secrets without leaking where they differ (`service_key.rs`).
 - Phone numbers are private: do not return one user's phone to another unless a rule in the domain says so (an Alwa deal).
 
 ## 8. Database
 
 - One migration per change, named `mYYYYMMDD_HHMMSS_what.rs`, registered in `migration/src/lib.rs` in time order. **Never edit a migration that has been pushed:** a server has already run it. Add a new one.
+- **Every table that holds data a website shows belongs to a topic in `data_versions`.** A new table attaches the trigger in its own migration (`CREATE TRIGGER bump_data_version AFTER INSERT OR UPDATE OR DELETE ON <table> FOR EACH STATEMENT EXECUTE FUNCTION bump_data_version('<topic>')`), and a new topic is added to `data_versions`, to `Topic` in `src/features/versions/domain/entities.rs` and to `FRONTEND.md`. Without it the website never learns that the data changed.
+- A new permission resource is added to `Resource` in `src/app/access.rs`, to `StaffResource` in the staff DTOs, and granted to the system role in a migration.
 - Entities in `infra/persistence/postgres/entities/` are written in the exact style `sea-orm-codegen` produces.
 - Repositories map `DbErr` through a `database_error` helper that logs and returns `GlobalAppError::DatabaseError`.
 - Postgres takes 65,535 bind parameters per statement: chunk large inserts and `IN` lists.

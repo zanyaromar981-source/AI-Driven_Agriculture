@@ -15,8 +15,9 @@ use crate::{
                 use_cases::{
                     AcceptOfferUseCase, BrowseListingsUseCase, CancelListingUseCase,
                     ListDealsUseCase, ListMarketsUseCase, ListMyListingsUseCase,
-                    ListMyOffersUseCase, MakeOfferUseCase, PostListingUseCase, RecordPriceUseCase,
-                    ViewListingUseCase, ViewMarketPricesUseCase, ViewPriceHistoryUseCase,
+                    ListMyOffersUseCase, MakeOfferUseCase, MarkListingSoldUseCase,
+                    PostListingUseCase, RecordPriceUseCase, ViewListingUseCase,
+                    ViewMarketPricesUseCase, ViewPriceHistoryUseCase,
                 },
             },
             domain::MAX_OPEN_LISTINGS_PER_SELLER,
@@ -44,35 +45,47 @@ use crate::{
             },
             infra::DamPostgresRepository,
         },
+        doctor::{
+            app::{Doctor, FarmBriefs, FarmHistory, use_cases::AskDoctorUseCase},
+            infra::{FarmsFeatureFarmBriefs, HttpDoctor, InsightsFeatureFarmHistory},
+        },
         farmers::{
             app::{
-                FarmCounter, FarmRemover, FarmerRepository, SignInChallengeRepository,
-                SignInCodeGenerator, SignInCodeHasher, SignInCodeSender, TokenIssuer,
+                FarmCounter, FarmHoldings, FarmRemover, FarmerRepository, LetterIssuers,
+                LetterRepository, SignInChallengeRepository, SignInCodeGenerator, SignInCodeHasher,
+                SignInCodeSender, TokenIssuer,
                 use_cases::{
-                    EditFarmerUseCase, EditProfileUseCase, ListFarmersUseCase,
+                    EditFarmerUseCase, EditProfileUseCase, EnsureFarmerUseCase,
+                    IdentifyFarmerUseCase, IssueLetterUseCase, ListFarmersUseCase,
                     RegisterFarmerUseCase, RemoveFarmerUseCase, RequestSignInCodeUseCase,
-                    VerifySignInCodeUseCase, ViewFarmerUseCase, ViewProfileUseCase,
+                    VerifySignInCodeUseCase, ViewFarmerUseCase, ViewLetterUseCase,
+                    ViewProfileUseCase,
                 },
             },
             domain::SignInCode,
             infra::{
-                FarmerPostgresRepository, FarmsFeatureFarmCounter, FarmsFeatureFarmRemover,
-                FixedSignInCodeGenerator, JwtTokenIssuer, LogSignInCodeSender,
+                FarmerPostgresRepository, FarmsFeatureFarmCounter, FarmsFeatureFarmHoldings,
+                FarmsFeatureFarmRemover, FixedSignInCodeGenerator, JwtTokenIssuer,
+                LetterPostgresRepository, LogSignInCodeSender, OtpiqSignInCodeSender,
                 RandomSignInCodeGenerator, Sha256SignInCodeHasher,
-                SignInChallengePostgresRepository,
+                SignInChallengePostgresRepository, StaffFeatureLetterIssuers,
             },
         },
         farms::{
             app::{
-                FarmRepository, FarmerDirectory,
+                AreaDirectory, FarmRepository, FarmerDirectory, PlaceLocator,
                 use_cases::{
-                    ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
-                    RegisterFarmUseCase, RemoveAnyFarmUseCase, RemoveFarmUseCase,
-                    RenameFarmUseCase, RepaintFarmCellsUseCase, ViewAnyFarmUseCase,
-                    ViewFarmUseCase,
+                    BackfillFarmPlacesUseCase, EditFarmUseCase, ListAllFarmsUseCase,
+                    ListFarmsUseCase, RegisterFarmForFarmerUseCase, RegisterFarmUseCase,
+                    RemoveAnyFarmUseCase, RemoveFarmUseCase, RenameFarmUseCase,
+                    RepaintFarmCellsUseCase, ViewAnyFarmUseCase, ViewFarmStatsUseCase,
+                    ViewFarmUseCase, ViewPublicFarmStatsUseCase,
                 },
             },
-            infra::{FarmPostgresRepository, FarmersFeatureFarmerDirectory},
+            infra::{
+                FarmPostgresRepository, FarmersFeatureFarmerDirectory, ZonesFeatureAreaDirectory,
+                ZonesFeaturePlaceLocator,
+            },
         },
         fires::{
             app::{
@@ -84,6 +97,19 @@ use crate::{
                 },
             },
             infra::FirePostgresRepository,
+        },
+        history::{
+            app::{
+                HistoryFarmDirectory, HistoryFarmOwnership, HistoryRepository,
+                use_cases::{
+                    ClearFarmHistoryUseCase, ListHistoryCoverageUseCase, RecordFarmHistoryUseCase,
+                    ViewFarmHistoryUseCase, ViewStoredFarmHistoryUseCase,
+                },
+            },
+            infra::{
+                FarmsFeatureHistoryFarmDirectory, FarmsFeatureHistoryFarmOwnership,
+                HistoryPostgresRepository,
+            },
         },
         insights::{
             app::{
@@ -115,9 +141,9 @@ use crate::{
                 PasswordHasher, RoleRepository, StaffRepository, StaffTokenIssuer,
                 use_cases::{
                     AddStaffUseCase, CreateOwnerUseCase, CreateRoleUseCase, DeleteRoleUseCase,
-                    EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase, ListRolesUseCase,
-                    ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase,
-                    ViewStaffUseCase,
+                    EditOwnProfileUseCase, EditRoleUseCase, EditStaffUseCase, IdentifyStaffUseCase,
+                    ListRolesUseCase, ListStaffUseCase, RemoveStaffUseCase, SignInUseCase,
+                    ViewRoleUseCase, ViewStaffUseCase,
                 },
             },
             infra::{
@@ -144,7 +170,7 @@ use crate::{
                     CompareYearsUseCase, CreateSubZoneReadingUseCase, CreateZoneReadingUseCase,
                     DeleteSubZoneReadingUseCase, DeleteZoneReadingUseCase,
                     ListSubZoneReadingsUseCase, ListZoneReadingsUseCase, ListZonesUseCase,
-                    RecordSubZoneReadingUseCase, RecordZoneReadingUseCase,
+                    LocatePlaceUseCase, RecordSubZoneReadingUseCase, RecordZoneReadingUseCase,
                     UpdateSubZoneReadingUseCase, UpdateZoneReadingUseCase,
                     ViewRegionOverviewUseCase, ViewZoneUseCase,
                 },
@@ -154,8 +180,9 @@ use crate::{
     },
     infra::{Config, DBConnector},
     shared::{
-        AlwaFeature, BriefFeature, DamFeature, FarmFeature, FarmerFeature, Features, FireFeature,
-        InsightFeature, OutlookFeature, StaffFeature, WaterFeature, ZoneFeature,
+        AlwaFeature, BriefFeature, DamFeature, DoctorFeature, FarmFeature, FarmerFeature, Features,
+        FireFeature, HistoryFeature, InsightFeature, OutlookFeature, StaffFeature, WaterFeature,
+        ZoneFeature,
     },
 };
 
@@ -166,9 +193,46 @@ pub async fn di_init(
     let farm_repository: Arc<dyn FarmRepository> =
         Arc::new(FarmPostgresRepository::new(db_context.conn_clone()));
 
+    // The crop list staff keep. Farms and alwa read which crops are switched
+    // on through their own ports; the crops feature asks them what is in use.
+    let crop_repository: Arc<dyn crate::features::crops::app::CropRepository> = Arc::new(
+        crate::features::crops::infra::CropPostgresRepository::new(db_context.conn_clone()),
+    );
+    let farm_crop_directory: Arc<dyn crate::features::farms::app::CropDirectory> = Arc::new(
+        crate::features::farms::infra::CropsFeatureCropDirectory::new(crop_repository.clone()),
+    );
+    let alwa_crop_directory: Arc<dyn crate::features::alwa::app::CropDirectory> = Arc::new(
+        crate::features::alwa::infra::CropsFeatureCropDirectory::new(crop_repository.clone()),
+    );
+    let farm_crop_usage: Arc<dyn crate::features::crops::app::CropUsage> = Arc::new(
+        crate::features::crops::infra::FarmsFeatureCropUsage::new(farm_repository.clone()),
+    );
+
+    // One instance for the whole server: it holds the sub-zone shapes once
+    // it has read them, and every farm write asks it.
+    let locate_place_use_case = Arc::new(LocatePlaceUseCase::new(Arc::new(
+        ZonePostgresRepository::new(db_context.conn_clone()),
+    )));
+    let place_locator: Arc<dyn PlaceLocator> =
+        Arc::new(ZonesFeaturePlaceLocator::new(locate_place_use_case.clone()));
+    let alwa_zone_locator: Arc<dyn crate::features::alwa::app::ZoneLocator> = Arc::new(
+        crate::features::alwa::infra::ZonesFeatureZoneLocator::new(locate_place_use_case.clone()),
+    );
+    let area_directory: Arc<dyn AreaDirectory> = Arc::new(ZonesFeatureAreaDirectory::new(
+        Arc::new(ZonePostgresRepository::new(db_context.conn_clone())),
+    ));
+
+    let app_config_repository: Arc<dyn crate::features::app_config::app::AppConfigRepository> =
+        Arc::new(
+            crate::features::app_config::infra::AppConfigPostgresRepository::new(
+                db_context.conn_clone(),
+            ),
+        );
     let farm = FarmFeature {
         register_farm_use_case: Arc::new(RegisterFarmUseCase::new(
             farm_repository.clone(),
+            place_locator.clone(),
+            farm_crop_directory.clone(),
             config.farm.max_farms_per_user,
             config.farm.max_cells_per_farm,
         )),
@@ -176,6 +240,13 @@ pub async fn di_init(
         view_farm_use_case: Arc::new(ViewFarmUseCase::new(farm_repository.clone())),
         repaint_farm_cells_use_case: Arc::new(RepaintFarmCellsUseCase::new(
             farm_repository.clone(),
+            farm_crop_directory.clone(),
+        )),
+        edit_farm_use_case: Arc::new(EditFarmUseCase::new(
+            farm_repository.clone(),
+            place_locator.clone(),
+            farm_crop_directory.clone(),
+            config.farm.max_cells_per_farm,
         )),
         remove_farm_use_case: Arc::new(RemoveFarmUseCase::new(farm_repository.clone())),
         list_all_farms_use_case: Arc::new(ListAllFarmsUseCase::new(farm_repository.clone())),
@@ -186,12 +257,31 @@ pub async fn di_init(
             ))) as Arc<dyn FarmerDirectory>,
             Arc::new(RegisterFarmUseCase::new(
                 farm_repository.clone(),
+                place_locator.clone(),
+                farm_crop_directory,
                 config.farm.max_farms_per_user,
                 config.farm.max_cells_per_farm,
             )),
         )),
         rename_farm_use_case: Arc::new(RenameFarmUseCase::new(farm_repository.clone())),
         remove_any_farm_use_case: Arc::new(RemoveAnyFarmUseCase::new(farm_repository.clone())),
+        view_farm_stats_use_case: Arc::new(ViewFarmStatsUseCase::new(
+            farm_repository.clone(),
+            area_directory.clone(),
+        )),
+        view_public_farm_stats_use_case: Arc::new(ViewPublicFarmStatsUseCase::new(
+            farm_repository.clone(),
+            area_directory,
+            Arc::new(
+                crate::features::farms::infra::AppConfigPublicTotalsSwitch::new(
+                    app_config_repository.clone(),
+                ),
+            ),
+        )),
+        backfill_farm_places_use_case: Arc::new(BackfillFarmPlacesUseCase::new(
+            farm_repository.clone(),
+            place_locator,
+        )),
     };
 
     let fire_repository: Arc<dyn FireRepository> =
@@ -213,6 +303,52 @@ pub async fn di_init(
         Arc::new(FarmsFeatureFarmOwnership::new(farm_repository.clone()));
     let farm_directory: Arc<dyn FarmDirectory> =
         Arc::new(FarmsFeatureFarmDirectory::new(farm_repository.clone()));
+    let farm_briefs: Arc<dyn FarmBriefs> =
+        Arc::new(FarmsFeatureFarmBriefs::new(farm_repository.clone()));
+    let farm_history: Arc<dyn FarmHistory> =
+        Arc::new(InsightsFeatureFarmHistory::new(insight_repository.clone()));
+    let message_farms: Arc<dyn crate::features::messages::app::MessageFarmDirectory> = Arc::new(
+        crate::features::messages::infra::FarmsFeatureMessageFarmDirectory::new(
+            farm_repository.clone(),
+        ),
+    );
+
+    let plan = {
+        use crate::features::plans::{
+            app::{
+                PlanFarms, PlanRepository,
+                use_cases::{
+                    ListPlanCoverageUseCase, RecordFarmPlanUseCase, ViewFarmPlanUseCase,
+                    ViewStoredFarmPlanUseCase,
+                },
+            },
+            infra::{FarmsFeaturePlanFarms, PlanPostgresRepository},
+        };
+
+        let plan_repository: Arc<dyn PlanRepository> =
+            Arc::new(PlanPostgresRepository::new(db_context.conn_clone()));
+        let plan_farms: Arc<dyn PlanFarms> =
+            Arc::new(FarmsFeaturePlanFarms::new(farm_repository.clone()));
+
+        crate::shared::PlanFeature {
+            view_farm_plan_use_case: Arc::new(ViewFarmPlanUseCase::new(
+                plan_repository.clone(),
+                plan_farms.clone(),
+            )),
+            record_farm_plan_use_case: Arc::new(RecordFarmPlanUseCase::new(
+                plan_repository.clone(),
+                plan_farms.clone(),
+            )),
+            list_plan_coverage_use_case: Arc::new(ListPlanCoverageUseCase::new(
+                plan_repository.clone(),
+                plan_farms.clone(),
+            )),
+            view_stored_farm_plan_use_case: Arc::new(ViewStoredFarmPlanUseCase::new(
+                plan_repository,
+                plan_farms,
+            )),
+        }
+    };
 
     let insight = InsightFeature {
         view_farm_insights_use_case: Arc::new(ViewFarmInsightsUseCase::new(
@@ -238,6 +374,35 @@ pub async fn di_init(
             insight_repository.clone(),
         )),
         remove_farm_insight_use_case: Arc::new(RemoveFarmInsightUseCase::new(insight_repository)),
+    };
+
+    let history_repository: Arc<dyn HistoryRepository> =
+        Arc::new(HistoryPostgresRepository::new(db_context.conn_clone()));
+    let history_farm_ownership: Arc<dyn HistoryFarmOwnership> = Arc::new(
+        FarmsFeatureHistoryFarmOwnership::new(farm_repository.clone()),
+    );
+    let history_farm_directory: Arc<dyn HistoryFarmDirectory> = Arc::new(
+        FarmsFeatureHistoryFarmDirectory::new(farm_repository.clone()),
+    );
+
+    let history = HistoryFeature {
+        view_farm_history_use_case: Arc::new(ViewFarmHistoryUseCase::new(
+            history_repository.clone(),
+            history_farm_ownership,
+        )),
+        record_farm_history_use_case: Arc::new(RecordFarmHistoryUseCase::new(
+            history_repository.clone(),
+            history_farm_directory.clone(),
+        )),
+        list_history_coverage_use_case: Arc::new(ListHistoryCoverageUseCase::new(
+            history_repository.clone(),
+            history_farm_directory.clone(),
+        )),
+        view_stored_farm_history_use_case: Arc::new(ViewStoredFarmHistoryUseCase::new(
+            history_repository.clone(),
+            history_farm_directory,
+        )),
+        clear_farm_history_use_case: Arc::new(ClearFarmHistoryUseCase::new(history_repository)),
     };
 
     let brief_repository: Arc<dyn BriefRepository> =
@@ -269,13 +434,76 @@ pub async fn di_init(
     );
     let code_hasher: Arc<dyn SignInCodeHasher> =
         Arc::new(Sha256SignInCodeHasher::new(config.auth.jwt_secret.clone()));
-    let code_sender: Arc<dyn SignInCodeSender> = Arc::new(LogSignInCodeSender);
+    let code_sender: Arc<dyn SignInCodeSender> = match &config.otpiq.api_key {
+        Some(api_key) => {
+            if config.auth.sign_in_code.fixed.is_some() {
+                return Err(
+                    "AUTH__FIXED_SIGN_IN_CODE and OTPIQ__API_KEY are both set: a fixed code \
+                     with real delivery would text every phone the same code. Unset one of them."
+                        .into(),
+                );
+            }
+
+            let sender = OtpiqSignInCodeSender::new(api_key.clone(), &config.otpiq)?;
+
+            tracing::info!(
+                sender = "otpiq",
+                provider = %config.otpiq.provider,
+                base_url = %config.otpiq.base_url,
+                timeout_seconds = config.otpiq.timeout_seconds,
+                "sign-in codes are delivered through OTPIQ"
+            );
+
+            Arc::new(sender)
+        }
+        None => {
+            tracing::warn!(
+                sender = "log",
+                "OTPIQ__API_KEY is not set: sign-in codes are written to the server log"
+            );
+
+            Arc::new(LogSignInCodeSender)
+        }
+    };
     let token_issuer: Arc<dyn TokenIssuer> = Arc::new(JwtTokenIssuer::new(config.auth.clone()));
+    let message_senders: Arc<dyn crate::features::messages::app::SenderDirectory> = Arc::new(
+        crate::features::messages::infra::FarmersFeatureSenderDirectory::new(
+            farmer_repository.clone(),
+        ),
+    );
+    let app_farmers: Arc<dyn crate::features::app_config::app::AppFarmers> = Arc::new(
+        crate::features::app_config::infra::FarmersFeatureAppFarmers::new(
+            farmer_repository.clone(),
+        ),
+    );
     let dashboard_farm_counter: Arc<dyn FarmCounter> =
         Arc::new(FarmsFeatureFarmCounter::new(farm_repository.clone()));
     let dashboard_farm_remover: Arc<dyn FarmRemover> =
         Arc::new(FarmsFeatureFarmRemover::new(farm_repository.clone()));
+    let alert_repository: Arc<dyn crate::features::alerts::app::AlertRepository> = Arc::new(
+        crate::features::alerts::infra::AlertPostgresRepository::new(db_context.conn_clone()),
+    );
+    let device_repository: Arc<dyn crate::features::alerts::app::DeviceRepository> = Arc::new(
+        crate::features::alerts::infra::DevicePostgresRepository::new(db_context.conn_clone()),
+    );
+    let alert_farms: Arc<dyn crate::features::alerts::app::AlertFarms> = Arc::new(
+        crate::features::alerts::infra::FarmsFeatureAlertFarms::new(farm_repository.clone()),
+    );
+    let farmer_data_remover: Arc<dyn crate::features::farmers::app::FarmerDataRemover> = Arc::new(
+        crate::features::farmers::infra::AlertsFeatureFarmerDataRemover::new(
+            farm_repository.clone(),
+            alert_repository.clone(),
+            device_repository.clone(),
+        ),
+    );
     let dashboard_farmer_repository = farmer_repository.clone();
+    let letter_repository: Arc<dyn LetterRepository> =
+        Arc::new(LetterPostgresRepository::new(db_context.conn_clone()));
+    let letter_farm_holdings: Arc<dyn FarmHoldings> =
+        Arc::new(FarmsFeatureFarmHoldings::new(farm_repository.clone()));
+    let letter_issuers: Arc<dyn LetterIssuers> = Arc::new(StaffFeatureLetterIssuers::new(
+        Arc::new(StaffPostgresRepository::new(db_context.conn_clone())),
+    ));
     let farm_counter: Arc<dyn FarmCounter> =
         Arc::new(FarmsFeatureFarmCounter::new(farm_repository));
 
@@ -294,6 +522,7 @@ pub async fn di_init(
 
     let farmer = FarmerFeature {
         request_sign_in_code_use_case: Arc::new(RequestSignInCodeUseCase::new(
+            farmer_repository.clone(),
             challenge_repository.clone(),
             code_generator,
             code_hasher.clone(),
@@ -310,6 +539,8 @@ pub async fn di_init(
             config.auth.sign_in_code.max_attempts,
             Duration::seconds(config.auth.sign_in_code.reuse_window_seconds),
         )),
+        identify_farmer_use_case: Arc::new(IdentifyFarmerUseCase::new(farmer_repository.clone())),
+        ensure_farmer_use_case: Arc::new(EnsureFarmerUseCase::new(farmer_repository.clone())),
         view_profile_use_case: Arc::new(ViewProfileUseCase::new(farmer_repository.clone())),
         edit_profile_use_case: Arc::new(EditProfileUseCase::new(farmer_repository)),
         list_farmers_use_case: Arc::new(ListFarmersUseCase::new(
@@ -329,9 +560,17 @@ pub async fn di_init(
             dashboard_farm_counter,
         )),
         remove_farmer_use_case: Arc::new(RemoveFarmerUseCase::new(
-            dashboard_farmer_repository,
+            dashboard_farmer_repository.clone(),
             dashboard_farm_remover,
+            farmer_data_remover,
         )),
+        issue_letter_use_case: Arc::new(IssueLetterUseCase::new(
+            dashboard_farmer_repository,
+            letter_repository.clone(),
+            letter_farm_holdings,
+            letter_issuers,
+        )),
+        view_letter_use_case: Arc::new(ViewLetterUseCase::new(letter_repository)),
     };
 
     let zone_repository: Arc<dyn ZoneRepository> =
@@ -374,6 +613,7 @@ pub async fn di_init(
         delete_sub_zone_reading_use_case: Arc::new(DeleteSubZoneReadingUseCase::new(
             zone_repository,
         )),
+        locate_place_use_case,
     };
 
     let dam_repository: Arc<dyn DamRepository> =
@@ -473,16 +713,22 @@ pub async fn di_init(
         view_price_history_use_case: Arc::new(ViewPriceHistoryUseCase::new(
             alwa_repository.clone(),
         )),
-        record_price_use_case: Arc::new(RecordPriceUseCase::new(alwa_repository.clone())),
+        record_price_use_case: Arc::new(RecordPriceUseCase::new(
+            alwa_repository.clone(),
+            alwa_crop_directory.clone(),
+        )),
         browse_listings_use_case: Arc::new(BrowseListingsUseCase::new(alwa_repository.clone())),
         view_listing_use_case: Arc::new(ViewListingUseCase::new(alwa_repository.clone())),
         list_deals_use_case: Arc::new(ListDealsUseCase::new(alwa_repository.clone())),
         post_listing_use_case: Arc::new(PostListingUseCase::new(
             alwa_repository.clone(),
+            alwa_crop_directory.clone(),
+            alwa_zone_locator,
             MAX_OPEN_LISTINGS_PER_SELLER,
         )),
         list_my_listings_use_case: Arc::new(ListMyListingsUseCase::new(alwa_repository.clone())),
         cancel_listing_use_case: Arc::new(CancelListingUseCase::new(alwa_repository.clone())),
+        mark_listing_sold_use_case: Arc::new(MarkListingSoldUseCase::new(alwa_repository.clone())),
         make_offer_use_case: Arc::new(MakeOfferUseCase::new(alwa_repository.clone())),
         accept_offer_use_case: Arc::new(AcceptOfferUseCase::new(alwa_repository.clone())),
         list_my_offers_use_case: Arc::new(ListMyOffersUseCase::new(alwa_repository.clone())),
@@ -492,12 +738,51 @@ pub async fn di_init(
         list_stored_prices_use_case: Arc::new(ListStoredPricesUseCase::new(
             alwa_repository.clone(),
         )),
-        create_price_use_case: Arc::new(CreatePriceUseCase::new(alwa_repository.clone())),
-        update_price_use_case: Arc::new(UpdatePriceUseCase::new(alwa_repository.clone())),
+        create_price_use_case: Arc::new(CreatePriceUseCase::new(
+            alwa_repository.clone(),
+            alwa_crop_directory.clone(),
+        )),
+        update_price_use_case: Arc::new(UpdatePriceUseCase::new(
+            alwa_repository.clone(),
+            alwa_crop_directory,
+        )),
         delete_price_use_case: Arc::new(DeletePriceUseCase::new(alwa_repository.clone())),
         list_all_listings_use_case: Arc::new(ListAllListingsUseCase::new(alwa_repository.clone())),
         moderate_listing_use_case: Arc::new(ModerateListingUseCase::new(alwa_repository.clone())),
-        delete_listing_use_case: Arc::new(DeleteListingUseCase::new(alwa_repository)),
+        delete_listing_use_case: Arc::new(DeleteListingUseCase::new(alwa_repository.clone())),
+    };
+
+    let crop = crate::shared::CropFeature {
+        list_crops_use_case: Arc::new(
+            crate::features::crops::app::use_cases::ListCropsUseCase::new(crop_repository.clone()),
+        ),
+        create_crop_use_case: Arc::new(
+            crate::features::crops::app::use_cases::CreateCropUseCase::new(crop_repository.clone()),
+        ),
+        update_crop_use_case: Arc::new(
+            crate::features::crops::app::use_cases::UpdateCropUseCase::new(crop_repository.clone()),
+        ),
+        delete_crop_use_case: Arc::new(
+            crate::features::crops::app::use_cases::DeleteCropUseCase::new(
+                crop_repository,
+                vec![
+                    farm_crop_usage,
+                    Arc::new(crate::features::crops::infra::AlwaFeatureCropUsage::new(
+                        alwa_repository,
+                    )),
+                ],
+            ),
+        ),
+    };
+
+    let doctor_service: Arc<dyn Doctor> = Arc::new(HttpDoctor::new(&config.doctor.url)?);
+
+    let doctor = DoctorFeature {
+        ask_doctor_use_case: Arc::new(AskDoctorUseCase::new(
+            farm_briefs,
+            farm_history,
+            doctor_service,
+        )),
     };
 
     let role_repository: Arc<dyn RoleRepository> =
@@ -531,7 +816,175 @@ pub async fn di_init(
             password_hasher.clone(),
         )),
         remove_staff_use_case: Arc::new(RemoveStaffUseCase::new(staff_repository.clone())),
-        create_owner_use_case: Arc::new(CreateOwnerUseCase::new(staff_repository, password_hasher)),
+        create_owner_use_case: Arc::new(CreateOwnerUseCase::new(
+            staff_repository.clone(),
+            password_hasher.clone(),
+        )),
+        edit_own_profile_use_case: Arc::new(EditOwnProfileUseCase::new(
+            staff_repository,
+            password_hasher,
+        )),
+    };
+
+    let version_repository: Arc<dyn crate::features::versions::app::VersionRepository> = Arc::new(
+        crate::features::versions::infra::VersionPostgresRepository::new(db_context.conn_clone()),
+    );
+
+    let version = crate::shared::VersionFeature {
+        list_versions_use_case: Arc::new(
+            crate::features::versions::app::use_cases::ListVersionsUseCase::new(version_repository),
+        ),
+    };
+
+    let rule_repository: Arc<dyn crate::features::rules::app::RuleRepository> = Arc::new(
+        crate::features::rules::infra::RulePostgresRepository::new(db_context.conn_clone()),
+    );
+
+    let rule = crate::shared::RuleFeature {
+        list_rules_use_case: Arc::new(
+            crate::features::rules::app::use_cases::ListRulesUseCase::new(rule_repository.clone()),
+        ),
+        change_rule_use_case: Arc::new(
+            crate::features::rules::app::use_cases::ChangeRuleUseCase::new(rule_repository.clone()),
+        ),
+        view_rule_history_use_case: Arc::new(
+            crate::features::rules::app::use_cases::ViewRuleHistoryUseCase::new(rule_repository),
+        ),
+    };
+
+    let job_repository: Arc<dyn crate::features::jobs::app::JobRepository> = Arc::new(
+        crate::features::jobs::infra::JobPostgresRepository::new(db_context.conn_clone()),
+    );
+
+    let job = crate::shared::JobFeature {
+        record_job_run_use_case: Arc::new(
+            crate::features::jobs::app::use_cases::RecordJobRunUseCase::new(job_repository.clone()),
+        ),
+        view_jobs_use_case: Arc::new(crate::features::jobs::app::use_cases::ViewJobsUseCase::new(
+            job_repository,
+        )),
+    };
+
+    let message_repository: Arc<dyn crate::features::messages::app::MessageRepository> = Arc::new(
+        crate::features::messages::infra::MessagePostgresRepository::new(db_context.conn_clone()),
+    );
+
+    let message = {
+        use crate::features::messages::app::use_cases::*;
+
+        crate::shared::MessageFeature {
+            send_message_use_case: Arc::new(SendMessageUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+                message_farms.clone(),
+            )),
+            list_my_messages_use_case: Arc::new(ListMyMessagesUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+            )),
+            view_my_photo_use_case: Arc::new(ViewMyPhotoUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+            )),
+            list_messages_use_case: Arc::new(ListMessagesUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+                message_farms.clone(),
+            )),
+            view_message_use_case: Arc::new(ViewMessageUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+                message_farms.clone(),
+            )),
+            set_message_state_use_case: Arc::new(SetMessageStateUseCase::new(
+                message_repository.clone(),
+                message_senders.clone(),
+                message_farms.clone(),
+            )),
+            reply_to_message_use_case: Arc::new(ReplyToMessageUseCase::new(
+                message_repository.clone(),
+                message_senders,
+                message_farms,
+            )),
+            count_messages_use_case: Arc::new(CountMessagesUseCase::new(
+                message_repository.clone(),
+            )),
+            delete_message_use_case: Arc::new(DeleteMessageUseCase::new(
+                message_repository.clone(),
+            )),
+            view_photo_use_case: Arc::new(ViewPhotoUseCase::new(message_repository)),
+        }
+    };
+
+    // One per process: what the version check remembers between requests.
+    let version_gate = Arc::new(crate::features::app_config::app::VersionGate::new());
+
+    let app_config = {
+        use crate::features::app_config::app::use_cases::*;
+
+        crate::shared::AppConfigFeature {
+            view_app_config_use_case: Arc::new(ViewAppConfigUseCase::new(
+                app_config_repository.clone(),
+            )),
+            update_app_config_use_case: Arc::new(UpdateAppConfigUseCase::new(
+                app_config_repository.clone(),
+                version_gate.clone(),
+            )),
+            check_app_version_use_case: Arc::new(CheckAppVersionUseCase::new(
+                app_config_repository.clone(),
+                app_farmers,
+                version_gate,
+            )),
+            list_app_versions_use_case: Arc::new(ListAppVersionsUseCase::new(
+                app_config_repository.clone(),
+            )),
+            public_farm_totals_use_case: Arc::new(PublicFarmTotalsUseCase::new(
+                app_config_repository,
+            )),
+        }
+    };
+
+    let alert = {
+        use crate::features::alerts::app::use_cases::*;
+
+        crate::shared::AlertFeature {
+            list_farm_alerts_use_case: Arc::new(ListFarmAlertsUseCase::new(
+                alert_repository.clone(),
+                alert_farms.clone(),
+            )),
+            list_my_alerts_use_case: Arc::new(ListMyAlertsUseCase::new(
+                alert_repository.clone(),
+                alert_farms.clone(),
+            )),
+            mark_alert_done_use_case: Arc::new(MarkAlertDoneUseCase::new(
+                alert_repository.clone(),
+                alert_farms.clone(),
+            )),
+            record_alert_use_case: Arc::new(RecordAlertUseCase::new(
+                alert_repository.clone(),
+                alert_farms.clone(),
+            )),
+            list_unpushed_alerts_use_case: Arc::new(ListUnpushedAlertsUseCase::new(
+                alert_repository.clone(),
+                device_repository.clone(),
+                alert_farms.clone(),
+            )),
+            mark_alert_pushed_use_case: Arc::new(MarkAlertPushedUseCase::new(
+                alert_repository.clone(),
+            )),
+            view_stored_farm_alerts_use_case: Arc::new(ViewStoredFarmAlertsUseCase::new(
+                alert_repository.clone(),
+                alert_farms,
+            )),
+            remove_alert_use_case: Arc::new(RemoveAlertUseCase::new(alert_repository)),
+            register_device_use_case: Arc::new(RegisterDeviceUseCase::new(
+                device_repository.clone(),
+            )),
+            remove_dead_device_use_case: Arc::new(RemoveDeadDeviceUseCase::new(
+                device_repository.clone(),
+            )),
+            remove_device_use_case: Arc::new(RemoveDeviceUseCase::new(device_repository)),
+        }
     };
 
     Ok(Features {
@@ -544,7 +997,17 @@ pub async fn di_init(
         outlook,
         water,
         alwa,
+        doctor,
         staff,
         brief,
+        version,
+        rule,
+        job,
+        message,
+        app_config,
+        crop,
+        history,
+        plan,
+        alert,
     })
 }

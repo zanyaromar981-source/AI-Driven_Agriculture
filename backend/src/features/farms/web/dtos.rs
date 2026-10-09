@@ -9,71 +9,19 @@ use crate::{
         app::{
             AppError,
             use_cases::{
-                ListAllFarmsInput, RegisterFarmInput, RenameFarmInput, RepaintFarmCellsInput,
+                EditFarmInput, ListAllFarmsInput, RegisterFarmInput, RenameFarmInput,
+                RepaintFarmCellsInput, ViewFarmStatsInput,
             },
         },
         domain::{
-            self, Cell, CropArea, Farm, FarmName, FarmSummary, GridCell, IdempotencyKey, Outline,
-            OwnedFarmSummary, PaintedCell, Point,
+            self, AreaFilter, AreaStats, Cell, CropArea, CropTotals, Farm, FarmFilter, FarmName,
+            FarmOrder, FarmPlace, FarmSearch, FarmSortKey, FarmStats, FarmSummary, FarmTotals,
+            GridCell, IdempotencyKey, Outline, OwnedFarmSummary, PaintedCell, PlantedCrop, Point,
+            SortDirection,
         },
     },
     shared::Phone,
 };
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum Crop {
-    Wheat,
-    Barley,
-    Tomato,
-    Cucumber,
-    Potato,
-    Onion,
-    Watermelon,
-    Grape,
-    Olive,
-    Sunflower,
-    Chickpea,
-    Empty,
-}
-
-impl From<Crop> for domain::Crop {
-    fn from(value: Crop) -> Self {
-        match value {
-            Crop::Wheat => domain::Crop::Wheat,
-            Crop::Barley => domain::Crop::Barley,
-            Crop::Tomato => domain::Crop::Tomato,
-            Crop::Cucumber => domain::Crop::Cucumber,
-            Crop::Potato => domain::Crop::Potato,
-            Crop::Onion => domain::Crop::Onion,
-            Crop::Watermelon => domain::Crop::Watermelon,
-            Crop::Grape => domain::Crop::Grape,
-            Crop::Olive => domain::Crop::Olive,
-            Crop::Sunflower => domain::Crop::Sunflower,
-            Crop::Chickpea => domain::Crop::Chickpea,
-            Crop::Empty => domain::Crop::Empty,
-        }
-    }
-}
-
-impl From<domain::Crop> for Crop {
-    fn from(value: domain::Crop) -> Self {
-        match value {
-            domain::Crop::Wheat => Crop::Wheat,
-            domain::Crop::Barley => Crop::Barley,
-            domain::Crop::Tomato => Crop::Tomato,
-            domain::Crop::Cucumber => Crop::Cucumber,
-            domain::Crop::Potato => Crop::Potato,
-            domain::Crop::Onion => Crop::Onion,
-            domain::Crop::Watermelon => Crop::Watermelon,
-            domain::Crop::Grape => Crop::Grape,
-            domain::Crop::Olive => Crop::Olive,
-            domain::Crop::Sunflower => Crop::Sunflower,
-            domain::Crop::Chickpea => Crop::Chickpea,
-            domain::Crop::Empty => Crop::Empty,
-        }
-    }
-}
 
 /// A GPS corner the farmer tapped: WGS84 decimal degrees, accuracy in metres,
 /// UTC time.
@@ -87,17 +35,30 @@ pub struct PointParams {
 
 /// One painted cell of the 10 m grid (UTM zone 38N): `e = floor(easting / 10)`,
 /// `n = floor(northing / 10)`.
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct CellParams {
     pub e: i32,
     pub n: i32,
-    pub crop: Crop,
+    /// The code of a crop that is switched on in `GET /v1/crops`, or `empty`
+    /// to unpaint the cell.
+    pub crop: String,
 }
 
-impl From<CellParams> for PaintedCell {
-    fn from(value: CellParams) -> Self {
-        PaintedCell::new(GridCell::new(value.e, value.n), value.crop.into())
+impl TryFrom<CellParams> for PaintedCell {
+    type Error = AppError;
+
+    /// Only the shape of the code is checked here. Whether the crop may be
+    /// used is the use case's question, asked once for the whole request.
+    fn try_from(value: CellParams) -> Result<Self, Self::Error> {
+        Ok(PaintedCell::new(
+            GridCell::new(value.e, value.n),
+            domain::Crop::new(&value.crop)?,
+        ))
     }
+}
+
+fn painted(cells: Vec<CellParams>) -> Result<Vec<PaintedCell>, AppError> {
+    cells.into_iter().map(PaintedCell::try_from).collect()
 }
 
 #[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
@@ -105,7 +66,9 @@ pub struct CreateFarmParams {
     pub name: String,
     /// 3 to 50 corners in walking order. The polygon closes itself.
     pub points: Vec<PointParams>,
-    /// Every painted cell. Unpainted cells inside the outline become `empty`.
+    /// Every painted cell. Cells the outline touches that are not listed
+    /// become `empty`; listed cells it does not touch come back in
+    /// `dropped_cells`.
     #[serde(default)]
     pub cells: Vec<CellParams>,
     pub created_offline_at: Option<DateTime<Utc>>,
@@ -125,9 +88,28 @@ impl CreateFarmParams {
         Ok(RegisterFarmInput {
             name: FarmName::new(self.name)?,
             outline: Outline::new(points)?,
-            painted: self.cells.into_iter().map(Into::into).collect(),
+            painted: painted(self.cells)?,
             idempotency_key: idempotency_key.map(IdempotencyKey::new).transpose()?,
             created_offline_at: self.created_offline_at,
+        })
+    }
+}
+
+impl CreateFarmParams {
+    /// The same body sent to edit a farm. `created_offline_at` is accepted
+    /// and not used: it would say when the edit was made on the phone, and
+    /// the farm keeps the time it was first drawn.
+    pub fn into_edit_input(self) -> Result<EditFarmInput, AppError> {
+        let points = self
+            .points
+            .into_iter()
+            .map(|point| Point::new(point.lat, point.lon, point.acc_m, point.t))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(EditFarmInput {
+            name: FarmName::new(self.name)?,
+            outline: Outline::new(points)?,
+            painted: painted(self.cells)?,
         })
     }
 }
@@ -139,16 +121,16 @@ pub struct RepaintFarmCellsParams {
 }
 
 impl RepaintFarmCellsParams {
-    pub fn into_input(self) -> RepaintFarmCellsInput {
-        RepaintFarmCellsInput {
-            painted: self.cells.into_iter().map(Into::into).collect(),
-        }
+    pub fn into_input(self) -> Result<RepaintFarmCellsInput, AppError> {
+        Ok(RepaintFarmCellsInput {
+            painted: painted(self.cells)?,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct CropAreaResponse {
-    pub crop: Crop,
+    pub crop: String,
     pub dunam: f64,
 }
 
@@ -188,11 +170,15 @@ impl From<&Point> for OutlinePointResponse {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+/// One cell of a farm. `inside_pct` is the share of the cell's 100 square
+/// metres inside the outline, above 0 and at most 100, not rounded: over a
+/// farm's cells it adds up to `area_dunam * 2500` square metres.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct CellResponse {
     pub e: i32,
     pub n: i32,
-    pub crop: Crop,
+    pub crop: String,
+    pub inside_pct: f64,
 }
 
 impl From<&Cell> for CellResponse {
@@ -201,6 +187,7 @@ impl From<&Cell> for CellResponse {
             e: cell.position().e(),
             n: cell.position().n(),
             crop: cell.crop().into(),
+            inside_pct: cell.inside_pct(),
         }
     }
 }
@@ -220,6 +207,19 @@ impl From<&GridCell> for GridCellResponse {
     }
 }
 
+/// The three parts of a farm's place as the answers carry them: all given,
+/// or all `null` for a farm outside every sub-district.
+fn place_parts(place: &Option<FarmPlace>) -> (Option<String>, Option<String>, Option<String>) {
+    match place {
+        Some(place) => (
+            Some(place.governorate().clone()),
+            Some(place.zone_slug().clone()),
+            Some(place.sub_zone_slug().clone()),
+        ),
+        None => (None, None, None),
+    }
+}
+
 /// The id is an opaque string to the app. `status` and `last_picture` are
 /// left out until satellite readings exist; the app treats a missing status
 /// as `none`.
@@ -230,17 +230,30 @@ pub struct FarmSummaryResponse {
     pub area_dunam: f64,
     pub crops: Vec<CropAreaResponse>,
     pub centroid: CentroidResponse,
+    /// The governorate the centroid lies in, by its English name, for
+    /// example `Sulaymaniyah`. `null` with the two slugs below when the
+    /// farm is outside every sub-district.
+    pub governorate: Option<String>,
+    /// The district, as `GET /v1/zones/{slug}` names it.
+    pub zone_slug: Option<String>,
+    /// The sub-district. Unique inside its district only.
+    pub sub_zone_slug: Option<String>,
     pub created_at: DateTime<Utc>,
 }
 
 impl From<&FarmSummary> for FarmSummaryResponse {
     fn from(summary: &FarmSummary) -> Self {
+        let (governorate, zone_slug, sub_zone_slug) = place_parts(summary.place());
+
         Self {
             id: summary.id().to_string(),
             name: summary.name().into(),
             area_dunam: *summary.area_dunam(),
             crops: summary.crops().iter().map(Into::into).collect(),
             centroid: (*summary.centroid()).into(),
+            governorate,
+            zone_slug,
+            sub_zone_slug,
             created_at: *summary.created_at(),
         }
     }
@@ -258,6 +271,10 @@ pub struct FarmResponse {
     pub area_dunam: f64,
     pub crops: Vec<CropAreaResponse>,
     pub centroid: CentroidResponse,
+    /// The place the centroid lies in; see `FarmSummaryResponse`.
+    pub governorate: Option<String>,
+    pub zone_slug: Option<String>,
+    pub sub_zone_slug: Option<String>,
     pub outline: Vec<OutlinePointResponse>,
     pub cells: Vec<CellResponse>,
     pub created_offline_at: Option<DateTime<Utc>>,
@@ -275,12 +292,17 @@ impl TryFrom<&Farm> for FarmResponse {
             ))
         })?;
 
+        let (governorate, zone_slug, sub_zone_slug) = place_parts(farm.place());
+
         Ok(Self {
             id: id.to_string(),
             name: farm.name().into(),
             area_dunam: farm.area_dunam(),
             crops: farm.crop_areas().iter().map(Into::into).collect(),
             centroid: farm.outline().centroid().into(),
+            governorate,
+            zone_slug,
+            sub_zone_slug,
             outline: farm.outline().points().iter().map(Into::into).collect(),
             cells: farm.cells().iter().map(Into::into).collect(),
             created_offline_at: *farm.created_offline_at(),
@@ -306,7 +328,7 @@ impl TryFrom<&Farm> for OneFarmResponse {
 }
 
 /// A farm after a write, with the painted cells that were left out because
-/// they fall outside its outline.
+/// its outline does not touch them.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct SavedFarmResponse {
     pub farm: FarmResponse,
@@ -328,7 +350,7 @@ impl TryFrom<(&Farm, &[GridCell])> for SavedFarmResponse {
 /// `null` and `level` stays `none` until a satellite reading exists.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct CropStatusResponse {
-    pub crop: Crop,
+    pub crop: String,
     pub dunam: f64,
     pub greenness_pct_of_normal: Option<i32>,
     pub level: Level,
@@ -390,24 +412,235 @@ impl From<&Farm> for FarmStatusResponse {
     }
 }
 
-#[derive(Deserialize, Debug, Clone, IntoParams)]
+/// A query value that was sent empty (`?zone=`) is one that was not sent.
+fn given(value: Option<String>) -> Option<String> {
+    value.filter(|value| !value.trim().is_empty())
+}
+
+fn planted_crop(code: String) -> Result<PlantedCrop, AppError> {
+    Ok(PlantedCrop::new(domain::Crop::new(&code)?)?)
+}
+
+#[derive(Deserialize, Debug, Clone, Default, IntoParams)]
 #[into_params(parameter_in = Query)]
 pub struct DashboardFarmsQuery {
     /// Only the farms of the farmer with exactly this phone, for example
     /// `+9647501234567`.
     pub owner_phone: Option<String>,
+    /// Only farms in this governorate, by its name in any case, for example
+    /// `Duhok` or `duhok`. `unknown`: only farms with no place.
+    pub governorate: Option<String>,
+    /// Only farms in the district with this slug. `unknown`: no place.
+    pub zone: Option<String>,
+    /// Only farms in the sub-district with this slug. `unknown`: no place.
+    pub sub_zone: Option<String>,
+    /// Only farms with at least one cell of this crop, for example `wheat`.
+    /// `empty` is not a crop.
+    pub crop: Option<String>,
+    /// Only farms whose name or owner phone contains this text, in any
+    /// case. `%` and `_` stand for themselves. 1 to 100 characters.
+    pub q: Option<String>,
+    /// `created_at` (the default), `area_dunam` or `name`.
+    pub sort: Option<String>,
+    /// `asc` or `desc` (the default). With neither `sort` nor `order` the
+    /// newest farm comes first.
+    pub order: Option<String>,
 }
 
 impl DashboardFarmsQuery {
     pub fn into_input(self, pagination: Pagination) -> Result<ListAllFarmsInput, AppError> {
         Ok(ListAllFarmsInput {
-            owner: self
-                .owner_phone
-                .filter(|phone| !phone.is_empty())
-                .map(Phone::new)
-                .transpose()?,
+            filter: FarmFilter {
+                owner: given(self.owner_phone).map(Phone::new).transpose()?,
+                governorate: given(self.governorate).map(AreaFilter::new).transpose()?,
+                zone: given(self.zone).map(AreaFilter::new).transpose()?,
+                sub_zone: given(self.sub_zone).map(AreaFilter::new).transpose()?,
+                crop: given(self.crop).map(planted_crop).transpose()?,
+                search: given(self.q).map(FarmSearch::new).transpose()?,
+            },
+            order: FarmOrder {
+                key: given(self.sort)
+                    .map(|key| FarmSortKey::try_from(key.as_str()))
+                    .transpose()?
+                    .unwrap_or_default(),
+                direction: given(self.order)
+                    .map(|direction| SortDirection::try_from(direction.as_str()))
+                    .transpose()?
+                    .unwrap_or_default(),
+            },
             pagination,
         })
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, Default, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct FarmStatsQuery {
+    /// Only farms in this governorate, by its name in any case. `unknown`:
+    /// only farms with no place.
+    pub governorate: Option<String>,
+    /// Only farms in the district with this slug. `unknown`: no place.
+    pub zone: Option<String>,
+    /// Only farms growing this crop, and of their crops only this one. The
+    /// `dunam` of an area stays the whole area of those farms.
+    pub crop: Option<String>,
+}
+
+impl FarmStatsQuery {
+    pub fn into_input(self) -> Result<ViewFarmStatsInput, AppError> {
+        Ok(ViewFarmStatsInput {
+            governorate: given(self.governorate).map(AreaFilter::new).transpose()?,
+            zone: given(self.zone).map(AreaFilter::new).transpose()?,
+            crop: given(self.crop).map(planted_crop).transpose()?,
+        })
+    }
+}
+
+/// Farmers are different phones: one farmer with three farms counts once.
+/// `dunam` is the land inside the farms' outlines, painted or not.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+pub struct FarmStatsTotalsResponse {
+    pub farmers: u64,
+    pub farms: u64,
+    pub dunam: f64,
+}
+
+impl From<&FarmTotals> for FarmStatsTotalsResponse {
+    fn from(totals: &FarmTotals) -> Self {
+        Self {
+            farmers: totals.farmers(),
+            farms: totals.farms(),
+            dunam: totals.dunam(),
+        }
+    }
+}
+
+/// One crop over the whole answer: the summed share of its cells inside
+/// their farms' outlines, and who grows it.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FarmStatsCropResponse {
+    pub crop: String,
+    pub dunam: f64,
+    pub farms: u64,
+    pub farmers: u64,
+}
+
+impl From<&CropTotals> for FarmStatsCropResponse {
+    fn from(crop: &CropTotals) -> Self {
+        Self {
+            crop: crop.crop().into(),
+            dunam: crop.dunam(),
+            farms: crop.farms(),
+            farmers: crop.farmers(),
+        }
+    }
+}
+
+/// One crop inside one area.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FarmStatsAreaCropResponse {
+    pub crop: String,
+    pub dunam: f64,
+    pub farms: u64,
+}
+
+impl From<&CropTotals> for FarmStatsAreaCropResponse {
+    fn from(crop: &CropTotals) -> Self {
+        Self {
+            crop: crop.crop().into(),
+            dunam: crop.dunam(),
+            farms: crop.farms(),
+        }
+    }
+}
+
+/// The farms of one governorate, district or sub-district. Only areas with
+/// at least one farm are listed, north to south. Farms with no place come
+/// last as one row with the slug `unknown`. A farmer is counted once in
+/// each area where they have a farm.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FarmStatsAreaResponse {
+    /// A governorate's slug is its English name in lower case.
+    pub slug: String,
+    pub name_en: String,
+    pub name_ku: String,
+    /// On a district and a sub-district: the governorate it lies in.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub governorate: Option<String>,
+    /// On a sub-district: its district, because a sub-district slug is
+    /// unique inside its district only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub zone_slug: Option<String>,
+    pub farmers: u64,
+    pub farms: u64,
+    /// The whole area of the farms, unpainted land included.
+    pub dunam: f64,
+    /// Largest first. `empty` is never listed.
+    pub crops: Vec<FarmStatsAreaCropResponse>,
+}
+
+impl From<&AreaStats> for FarmStatsAreaResponse {
+    fn from(area: &AreaStats) -> Self {
+        Self {
+            slug: area.slug().clone(),
+            name_en: area.name_en().clone(),
+            name_ku: area.name_ku().clone(),
+            governorate: area.governorate().clone(),
+            zone_slug: area.zone_slug().clone(),
+            farmers: area.totals().farmers(),
+            farms: area.totals().farms(),
+            dunam: area.totals().dunam(),
+            crops: area.crops().iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// Totals for the dashboard's reports and charts. `as_of` is when a counted
+/// farm was last written (the time of asking when none is counted).
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct FarmStatsResponse {
+    pub as_of: DateTime<Utc>,
+    pub totals: FarmStatsTotalsResponse,
+    pub by_governorate: Vec<FarmStatsAreaResponse>,
+    pub by_zone: Vec<FarmStatsAreaResponse>,
+    pub by_sub_zone: Vec<FarmStatsAreaResponse>,
+    pub by_crop: Vec<FarmStatsCropResponse>,
+}
+
+impl From<&FarmStats> for FarmStatsResponse {
+    fn from(stats: &FarmStats) -> Self {
+        Self {
+            as_of: *stats.as_of(),
+            totals: stats.totals().into(),
+            by_governorate: stats.by_governorate().iter().map(Into::into).collect(),
+            by_zone: stats.by_zone().iter().map(Into::into).collect(),
+            by_sub_zone: stats.by_sub_zone().iter().map(Into::into).collect(),
+            by_crop: stats.by_crop().iter().map(Into::into).collect(),
+        }
+    }
+}
+
+/// What anyone may read: counts and areas down to districts. No farm, no
+/// name, no phone, and nothing per sub-district, where a row could be one
+/// farmer.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct PublicFarmStatsResponse {
+    pub as_of: DateTime<Utc>,
+    pub totals: FarmStatsTotalsResponse,
+    pub by_governorate: Vec<FarmStatsAreaResponse>,
+    pub by_zone: Vec<FarmStatsAreaResponse>,
+    pub by_crop: Vec<FarmStatsCropResponse>,
+}
+
+impl From<&FarmStats> for PublicFarmStatsResponse {
+    fn from(stats: &FarmStats) -> Self {
+        Self {
+            as_of: *stats.as_of(),
+            totals: stats.totals().into(),
+            by_governorate: stats.by_governorate().iter().map(Into::into).collect(),
+            by_zone: stats.by_zone().iter().map(Into::into).collect(),
+            by_crop: stats.by_crop().iter().map(Into::into).collect(),
+        }
     }
 }
 
@@ -526,7 +759,7 @@ impl TryFrom<(&Farm, &[GridCell])> for DashboardSavedFarmResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::features::farms::app::testing::{OWNER, a_farm};
+    use crate::features::farms::app::testing::{OWNER, a_farm, the_place};
 
     #[test]
     fn the_app_shape_of_a_farm_never_carries_the_owners_phone() {
@@ -557,15 +790,73 @@ mod tests {
     }
 
     #[test]
+    fn every_cell_carries_inside_pct_in_the_app_shape_and_the_dashboard_shape() {
+        let farm = a_farm();
+        let app =
+            serde_json::to_value(OneFarmResponse::try_from(&farm).expect("farm")).expect("json");
+        let dashboard =
+            serde_json::to_value(DashboardOneFarmResponse::try_from(&farm).expect("farm"))
+                .expect("json");
+
+        for body in [app, dashboard] {
+            let cells = body["farm"]["cells"].as_array().expect("cells").clone();
+
+            assert_eq!(cells.len(), farm.cells().len());
+            assert!(cells.iter().zip(farm.cells()).all(|(cell, stored)| {
+                cell["inside_pct"].as_f64() == Some(stored.inside_pct())
+            }));
+        }
+    }
+
+    #[test]
+    fn the_edit_body_is_the_create_body_and_is_checked_the_same_way() {
+        let body = |points: serde_json::Value| -> CreateFarmParams {
+            serde_json::from_value(serde_json::json!({
+                "name": "Lower field",
+                "points": points,
+                "cells": [{"e": 46_415, "n": 398_748, "crop": "wheat"}],
+                "created_offline_at": "2026-10-08T14:10:00Z"
+            }))
+            .expect("body")
+        };
+
+        let input = body(serde_json::json!([
+            {"lat": 36.0300, "lon": 44.6000},
+            {"lat": 36.0300, "lon": 44.6010},
+            {"lat": 36.0310, "lon": 44.6010}
+        ]))
+        .into_edit_input()
+        .expect("input");
+
+        assert_eq!(input.name.as_str(), "Lower field");
+        assert_eq!(input.painted.len(), 1);
+
+        let crossing = body(serde_json::json!([
+            {"lat": 36.0300, "lon": 44.6000},
+            {"lat": 36.0300, "lon": 44.6010},
+            {"lat": 36.0310, "lon": 44.6000},
+            {"lat": 36.0310, "lon": 44.6010}
+        ]))
+        .into_edit_input();
+
+        assert!(matches!(
+            crossing,
+            Err(AppError::Farm(domain::FarmError::OutlineSelfIntersects))
+        ));
+    }
+
+    #[test]
     fn an_empty_phone_filter_is_no_filter_and_a_bad_one_is_refused() {
         let query = |phone: &str| DashboardFarmsQuery {
             owner_phone: Some(phone.to_string()),
+            ..DashboardFarmsQuery::default()
         };
 
         assert!(
             query("")
                 .into_input(Pagination::new(1, 20))
                 .expect("input")
+                .filter
                 .owner
                 .is_none()
         );
@@ -589,5 +880,325 @@ mod tests {
 
         assert_eq!(owner.as_str(), OWNER);
         assert_eq!(input.name.as_str(), "Upper field");
+    }
+
+    fn placed(farm: &Farm) -> Farm {
+        let mut farm = farm.clone();
+        farm.place_at(Some(the_place()));
+        farm
+    }
+
+    #[test]
+    fn a_farm_inside_a_sub_district_carries_its_place_in_every_shape() {
+        let farm = placed(&a_farm());
+        let app =
+            serde_json::to_value(OneFarmResponse::try_from(&farm).expect("farm")).expect("json");
+        let dashboard =
+            serde_json::to_value(DashboardOneFarmResponse::try_from(&farm).expect("farm"))
+                .expect("json");
+
+        for body in [app, dashboard] {
+            assert_eq!(body["farm"]["governorate"], "Sulaymaniyah");
+            assert_eq!(body["farm"]["zone_slug"], "chamchamal");
+            assert_eq!(body["farm"]["sub_zone_slug"], "sangaw");
+        }
+    }
+
+    #[test]
+    fn a_farm_outside_every_sub_district_carries_three_nulls_not_missing_fields() {
+        let body = serde_json::to_value(OneFarmResponse::try_from(&a_farm()).expect("farm"))
+            .expect("json");
+        let farm = body["farm"].as_object().expect("object");
+
+        for field in ["governorate", "zone_slug", "sub_zone_slug"] {
+            assert_eq!(farm.get(field), Some(&serde_json::Value::Null), "{field}");
+        }
+    }
+
+    #[test]
+    fn the_farm_card_carries_the_place_for_the_app_and_for_the_dashboard() {
+        let summary = FarmSummary::rehydrate(
+            7,
+            FarmName::new("Upper field".to_string()).expect("name"),
+            a_farm().outline(),
+            Some(the_place()),
+            vec![],
+            Utc::now(),
+        );
+        let owned = OwnedFarmSummary::new(Phone::new(OWNER.to_string()).expect("phone"), summary);
+
+        let app = serde_json::to_value(FarmSummaryResponse::from(owned.summary())).expect("json");
+        let dashboard =
+            serde_json::to_value(DashboardFarmSummaryResponse::from(&owned)).expect("json");
+
+        for body in [&app, &dashboard] {
+            assert_eq!(body["governorate"], "Sulaymaniyah");
+            assert_eq!(body["zone_slug"], "chamchamal");
+            assert_eq!(body["sub_zone_slug"], "sangaw");
+        }
+        assert!(app.get("owner_phone").is_none());
+    }
+
+    fn farms_query(json: serde_json::Value) -> Result<ListAllFarmsInput, AppError> {
+        serde_json::from_value::<DashboardFarmsQuery>(json)
+            .expect("query")
+            .into_input(Pagination::new(1, 20))
+    }
+
+    #[test]
+    fn with_no_query_every_farm_is_listed_newest_first() {
+        let input = farms_query(serde_json::json!({})).expect("input");
+
+        assert_eq!(input.filter, FarmFilter::default());
+        assert_eq!(input.order, FarmOrder::default());
+    }
+
+    #[test]
+    fn every_filter_and_the_order_are_read_from_the_query() {
+        let input = farms_query(serde_json::json!({
+            "governorate": "Duhok",
+            "zone": "zakho",
+            "sub_zone": "unknown",
+            "crop": "wheat",
+            "q": " upper ",
+            "sort": "area_dunam",
+            "order": "asc"
+        }))
+        .expect("input");
+
+        assert_eq!(
+            input.filter.governorate,
+            Some(AreaFilter::Named("duhok".to_string()))
+        );
+        assert_eq!(
+            input.filter.zone,
+            Some(AreaFilter::Named("zakho".to_string()))
+        );
+        assert_eq!(input.filter.sub_zone, Some(AreaFilter::Unknown));
+        assert_eq!(
+            input.filter.crop.map(|crop| crop.crop()),
+            Some(domain::Crop::of("wheat"))
+        );
+        assert_eq!(
+            input.filter.search.as_ref().map(FarmSearch::as_str),
+            Some("upper")
+        );
+        assert_eq!(input.order.key, FarmSortKey::AreaDunam);
+        assert_eq!(input.order.direction, SortDirection::Ascending);
+    }
+
+    #[test]
+    fn a_filter_sent_empty_is_a_filter_not_sent() {
+        let input = farms_query(serde_json::json!({
+            "governorate": "", "zone": " ", "sub_zone": "", "crop": "", "q": "", "sort": "",
+            "order": ""
+        }))
+        .expect("input");
+
+        assert_eq!(input.filter, FarmFilter::default());
+        assert_eq!(input.order, FarmOrder::default());
+    }
+
+    #[test]
+    fn a_malformed_crop_an_unknown_sort_or_order_and_an_over_long_search_are_refused() {
+        for query in [
+            serde_json::json!({"crop": "Rice"}),
+            serde_json::json!({"crop": "rice!"}),
+            serde_json::json!({"crop": "empty"}),
+            serde_json::json!({"sort": "owner_phone"}),
+            serde_json::json!({"order": "down"}),
+            serde_json::json!({"q": "x".repeat(101)}),
+            serde_json::json!({"zone": "z".repeat(61)}),
+        ] {
+            assert!(farms_query(query.clone()).is_err(), "{query}");
+        }
+    }
+
+    #[test]
+    fn the_stats_query_takes_a_governorate_a_zone_and_a_crop() {
+        let input = serde_json::from_value::<FarmStatsQuery>(serde_json::json!({
+            "governorate": "Erbil", "zone": "", "crop": "barley"
+        }))
+        .expect("query")
+        .into_input()
+        .expect("input");
+
+        assert_eq!(
+            input.governorate,
+            Some(AreaFilter::Named("erbil".to_string()))
+        );
+        assert_eq!(input.zone, None);
+        assert_eq!(
+            input.crop.map(|crop| crop.crop()),
+            Some(domain::Crop::of("barley"))
+        );
+
+        let empty_land = FarmStatsQuery {
+            crop: Some("empty".to_string()),
+            ..FarmStatsQuery::default()
+        };
+        assert!(empty_land.into_input().is_err());
+    }
+
+    /// One farm in Sangaw with six dunams of wheat, and one with no place.
+    fn some_stats() -> FarmStats {
+        use domain::{AreaCount, AreaCropSum, AreaKey, AreaLevel};
+
+        let sangaw = |sub_zone: Option<&str>, zone: Option<&str>| AreaKey {
+            governorate: Some("Sulaymaniyah".to_string()),
+            zone_slug: zone.map(str::to_string),
+            sub_zone_slug: sub_zone.map(str::to_string),
+        };
+        let count = |level, key, farms| AreaCount {
+            level,
+            key,
+            farms,
+            farmers: farms,
+            area_m2: 25_000.0 * farms as f64,
+            latest_change: None,
+        };
+        let wheat = |level, key| AreaCropSum {
+            level,
+            key,
+            crop: domain::Crop::of("wheat"),
+            inside_pct: 15_000.0,
+            farms: 1,
+            farmers: 1,
+        };
+
+        FarmStats::assemble(
+            vec![
+                count(AreaLevel::Region, AreaKey::default(), 2),
+                count(AreaLevel::Governorate, sangaw(None, None), 1),
+                count(AreaLevel::Governorate, AreaKey::default(), 1),
+                count(AreaLevel::Zone, sangaw(None, Some("chamchamal")), 1),
+                count(AreaLevel::Zone, AreaKey::default(), 1),
+                count(
+                    AreaLevel::SubZone,
+                    sangaw(Some("sangaw"), Some("chamchamal")),
+                    1,
+                ),
+                count(AreaLevel::SubZone, AreaKey::default(), 1),
+            ],
+            vec![
+                wheat(AreaLevel::Region, AreaKey::default()),
+                wheat(AreaLevel::Zone, sangaw(None, Some("chamchamal"))),
+            ],
+            &crate::features::farms::app::testing::area_names(),
+            Utc::now(),
+        )
+    }
+
+    #[test]
+    fn the_dashboard_stats_have_the_shape_the_website_asked_for() {
+        let body = serde_json::to_value(FarmStatsResponse::from(&some_stats())).expect("json");
+
+        assert_eq!(
+            body["totals"],
+            serde_json::json!({"farmers": 2, "farms": 2, "dunam": 20.0})
+        );
+        assert_eq!(
+            body["by_crop"],
+            serde_json::json!([{"crop": "wheat", "dunam": 6.0, "farms": 1, "farmers": 1}])
+        );
+        assert_eq!(
+            body["by_zone"][0],
+            serde_json::json!({
+                "slug": "chamchamal",
+                "name_en": "Chamchamal",
+                "name_ku": "چەمچەماڵ",
+                "governorate": "Sulaymaniyah",
+                "farmers": 1,
+                "farms": 1,
+                "dunam": 10.0,
+                "crops": [{"crop": "wheat", "dunam": 6.0, "farms": 1}]
+            })
+        );
+        assert_eq!(body["by_governorate"][0]["slug"], "sulaymaniyah");
+        assert_eq!(body["by_governorate"][1]["slug"], "unknown");
+        assert_eq!(body["by_sub_zone"][0]["zone_slug"], "chamchamal");
+        assert!(body["as_of"].is_string());
+    }
+
+    #[test]
+    fn the_public_stats_carry_no_sub_zone_and_nothing_about_a_person() {
+        let body =
+            serde_json::to_string(&PublicFarmStatsResponse::from(&some_stats())).expect("json");
+        let json: serde_json::Value = serde_json::from_str(&body).expect("json");
+
+        let mut keys: Vec<&str> = json
+            .as_object()
+            .expect("object")
+            .keys()
+            .map(String::as_str)
+            .collect();
+        keys.sort_unstable();
+
+        assert_eq!(
+            keys,
+            vec!["as_of", "by_crop", "by_governorate", "by_zone", "totals"]
+        );
+        for hidden in ["sub_zone", "sangaw", "phone", "+964", "owner", "\"name\""] {
+            assert!(!body.contains(hidden), "{hidden} must not be public");
+        }
+    }
+
+    #[test]
+    fn the_crop_filter_takes_any_crop_code_also_one_staff_added_or_switched_off() {
+        let input = farms_query(serde_json::json!({"crop": "rice"})).expect("input");
+
+        assert_eq!(
+            input.filter.crop.map(|crop| crop.crop()),
+            Some(domain::Crop::of("rice")),
+            "farms painted with a crop are still there whatever the crop list says"
+        );
+    }
+
+    #[test]
+    fn a_painted_cell_carries_its_crop_as_the_same_lower_case_word() {
+        let cell: CellParams =
+            serde_json::from_value(serde_json::json!({"e": 1, "n": 2, "crop": "rice"}))
+                .expect("cell");
+        let painted = PaintedCell::try_from(cell).expect("painted");
+
+        assert_eq!(painted.crop(), domain::Crop::of("rice"));
+        assert_eq!(
+            serde_json::to_value(CropAreaResponse {
+                crop: painted.crop().into(),
+                dunam: 1.0
+            })
+            .expect("json")["crop"],
+            "rice",
+            "a crop is still a plain string on the wire"
+        );
+    }
+
+    #[test]
+    fn a_cell_whose_crop_could_not_be_a_code_is_refused_as_an_unknown_crop() {
+        use crate::app::ToErrorInfo;
+
+        for bad in ["Wheat", "", "w", "wheat 2"] {
+            let cell: CellParams =
+                serde_json::from_value(serde_json::json!({"e": 1, "n": 2, "crop": bad}))
+                    .expect("cell");
+            let error = PaintedCell::try_from(cell).expect_err("refused");
+
+            assert_eq!(error.to_error_info().code, "unknown_crop", "{bad:?}");
+            assert!(error.to_error_info().detail.contains(bad), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn empty_is_still_how_a_cell_is_unpainted() {
+        let cell: CellParams =
+            serde_json::from_value(serde_json::json!({"e": 1, "n": 2, "crop": "empty"}))
+                .expect("cell");
+
+        assert!(
+            PaintedCell::try_from(cell)
+                .expect("painted")
+                .crop()
+                .is_empty()
+        );
     }
 }

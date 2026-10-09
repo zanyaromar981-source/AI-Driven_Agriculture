@@ -7,6 +7,7 @@ pub use dtos::{
     CreateStaffParams, SaveStaffRoleParams, StaffAction, StaffListResponse, StaffLoginParams,
     StaffMeResponse, StaffOneResponse, StaffOneRoleResponse, StaffPermission,
     StaffPermissionCatalogueResponse, StaffResource, StaffResponse, StaffRoleRefResponse,
-    StaffRoleResponse, StaffRolesResponse, StaffSignedInResponse, UpdateStaffParams,
+    StaffRoleResponse, StaffRolesResponse, StaffSignedInResponse, UpdateOwnStaffProfileParams,
+    UpdateStaffParams,
 };
 pub use routes::{dashboard_public_routes, dashboard_routes};

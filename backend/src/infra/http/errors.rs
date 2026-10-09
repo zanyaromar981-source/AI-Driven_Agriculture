@@ -115,10 +115,13 @@ fn status_for_error_kind(kind: ErrorKind) -> StatusCode {
         // operation for its own business rules; this is not client input
         // validation in our API.
         ErrorKind::UpstreamRejected => StatusCode::FAILED_DEPENDENCY,
-        ErrorKind::UpstreamInvalidResponse | ErrorKind::UpstreamFailure => {
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
+        // We are the gateway in front of a service that failed or answered
+        // something unusable: that is a bad gateway, not our own fault.
+        ErrorKind::UpstreamInvalidResponse | ErrorKind::UpstreamFailure => StatusCode::BAD_GATEWAY,
         ErrorKind::Internal => StatusCode::INTERNAL_SERVER_ERROR,
+        // The app must be updated before it is served again. The detail
+        // says which version is the oldest allowed.
+        ErrorKind::UpgradeRequired => StatusCode::UPGRADE_REQUIRED,
     }
 }
 
@@ -158,7 +161,11 @@ mod tests {
         );
         assert_eq!(
             status_for_error_kind(ErrorKind::UpstreamFailure),
-            StatusCode::INTERNAL_SERVER_ERROR
+            StatusCode::BAD_GATEWAY
+        );
+        assert_eq!(
+            status_for_error_kind(ErrorKind::UpstreamInvalidResponse),
+            StatusCode::BAD_GATEWAY
         );
         assert_eq!(
             status_for_error_kind(ErrorKind::UpstreamUnavailable),
@@ -223,6 +230,25 @@ mod tests {
 
         assert_eq!(specific.code, "bad_polygon");
         assert_eq!(general.code, "server_error");
+    }
+
+    #[test]
+    fn an_app_too_old_to_be_served_is_told_to_update_with_426() {
+        let response = HttpErrorResponse::from(ErrorInfo::new(
+            ErrorKind::UpgradeRequired,
+            "Update to 1.2.0 or newer",
+        ));
+
+        assert_eq!(
+            status_for_error_kind(ErrorKind::UpgradeRequired),
+            StatusCode::UPGRADE_REQUIRED
+        );
+        assert_eq!(response.status.as_u16(), 426);
+        assert_eq!(response.code, "update_required");
+        assert_eq!(
+            response.detail, "Update to 1.2.0 or newer",
+            "it is the caller's to act on, so the detail must survive"
+        );
     }
 
     #[test]

@@ -48,6 +48,24 @@ class S {
   String get opening => t('دەچیتە', 'Opening');
   String get error => t('هەڵەیەک ڕوویدا', 'Something went wrong');
 
+  // Sign-in answers from the server (FRONTEND.md section 4).
+  String get checkNumber => t('ژمارەکە بپشکنە', 'Check the number');
+  String get sendFailed => t(
+    'نەتوانرا کۆدەکە بنێردرێت. دووبارە هەوڵ بدەرەوە',
+    'Could not send the code. Try again.',
+  );
+  String askAgainIn(String time) => t(
+    'دەتوانیت دوای \u2066$time\u2069 داوای کۆدێکی نوێ بکەیت',
+    'You can ask for a new code in $time',
+  );
+
+  /// Why a code was not sent. 429 rate_limited is shown as a countdown.
+  String sendError(String code) => switch (code) {
+    'invalid' => checkNumber,
+    'offline' => noInternet,
+    _ => sendFailed,
+  };
+
   // Add farm: walk the corners
   String get cornersTitle =>
       t('سنووری کێڵگەکەت دیاری بکە', 'Mark your field edge');
@@ -160,6 +178,12 @@ class S {
   String get sheetTitle => t('ئەم خانانە چین؟', 'What are these cells?');
   String get selectAll => t('هەمووی', 'Select all');
   String get selectFirst => t('سەرەتا خانەکان هەڵبژێرە', 'Select cells first');
+  String fillFarm(String crop) =>
+      t('هەموو کێڵگەکە بکە بە $crop', 'Fill the whole farm with $crop');
+  String get tapOrFill => t(
+    'خانەکان هەڵبژێرە، یان هەموو کێڵگەکە پڕبکەرەوە',
+    'Tap squares to paint, or fill the whole farm',
+  );
   String get cells => t('خانە', 'cells');
   String get wholeFarm => t('هەموو کێڵگە', 'Whole farm');
   String get next => t('دواتر', 'Next');
@@ -213,6 +237,7 @@ class S {
   String get tabAlerts => 'Alerts';
   String get tabAsk => 'Ask the Doctor';
   String get tabSettings => 'Settings';
+  String get tabAlwa => 'Alwa';
   String get notBuilt => 'Not built yet';
   String get viewCells => 'Cells';
   String get viewCrops => 'Crops';
@@ -271,6 +296,9 @@ class S {
   String measuredOn(String part, String all) => 'measured on $part of $all m²';
   String offlineCopy(String when) => 'No internet. Showing the copy from $when';
   String get weatherDown => 'Weather forecast not available right now';
+
+  /// GET /farms/{id}/plan is not built on the server yet (404).
+  String get planSoon => '10-day plan coming soon';
   String forecastSource(String src, String when) =>
       'Forecast: $src · issued $when';
   String get nothingToDo => 'Nothing to act on in the next 10 days';

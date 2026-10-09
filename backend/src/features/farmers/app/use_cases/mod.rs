@@ -1,19 +1,27 @@
 pub mod edit_farmer;
 pub mod edit_profile;
+pub mod ensure_farmer;
+pub mod identify_farmer;
+pub mod issue_letter;
 pub mod list_farmers;
 pub mod register_farmer;
 pub mod remove_farmer;
 pub mod request_sign_in_code;
 pub mod verify_sign_in_code;
 pub mod view_farmer;
+pub mod view_letter;
 pub mod view_profile;
 
 pub use edit_farmer::*;
 pub use edit_profile::*;
+pub use ensure_farmer::*;
+pub use identify_farmer::*;
+pub use issue_letter::*;
 pub use list_farmers::*;
 pub use register_farmer::*;
 pub use remove_farmer::*;
 pub use request_sign_in_code::*;
 pub use verify_sign_in_code::*;
 pub use view_farmer::*;
+pub use view_letter::*;
 pub use view_profile::*;

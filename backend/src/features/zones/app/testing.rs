@@ -7,8 +7,8 @@ use crate::{
     features::zones::{
         app::{AppError, ZoneRepository},
         domain::{
-            Dryness, Month, MonthRange, ReadingSource, SubZone, SubZoneReading, Zone, ZoneReading,
-            ZoneSlug,
+            Dryness, Month, MonthRange, ReadingSource, Shape, SubZone, SubZoneReading, Zone,
+            ZoneReading, ZoneSlug,
         },
     },
 };
@@ -84,6 +84,7 @@ pub enum RepositoryCall {
         sub_zone_id: i32,
         month: String,
     },
+    FindAllSubZoneShapes,
 }
 
 #[derive(Debug, Default)]
@@ -92,6 +93,7 @@ struct Script {
     sub_zones: Vec<SubZone>,
     readings: Vec<ZoneReading>,
     sub_zone_readings: Vec<SubZoneReading>,
+    shapes: Vec<(SubZone, Shape)>,
     fail_with_database_error: bool,
 }
 
@@ -124,6 +126,19 @@ impl FakeZoneRepository {
     pub fn with_sub_zone_readings(self, readings: Vec<SubZoneReading>) -> Self {
         self.script.lock().expect("script lock").sub_zone_readings = readings;
         self
+    }
+
+    pub fn with_shapes(self, shapes: Vec<(SubZone, Shape)>) -> Self {
+        self.script.lock().expect("script lock").shapes = shapes;
+        self
+    }
+
+    /// Fails every call from now on, or succeeds again.
+    pub fn fail(&self, failing: bool) {
+        self.script
+            .lock()
+            .expect("script lock")
+            .fail_with_database_error = failing;
     }
 
     pub fn failing() -> Self {
@@ -569,6 +584,13 @@ impl ZoneRepository for FakeZoneRepository {
 
         Ok(script.sub_zone_readings.len() < before)
     }
+
+    async fn find_all_sub_zone_shapes(&self) -> Result<Vec<(SubZone, Shape)>, AppError> {
+        self.record(RepositoryCall::FindAllSubZoneShapes);
+        self.guard()?;
+
+        Ok(self.script.lock().expect("script lock").shapes.clone())
+    }
 }
 
 fn stored_reading(id: i32, entity: &ZoneReading) -> ZoneReading {
@@ -701,4 +723,29 @@ pub fn a_reading(zone_id: i32, month: &str, dryness: i32) -> ZoneReading {
 
 pub fn a_sub_zone_reading(sub_zone_id: i32, month: &str, dryness: i32) -> SubZoneReading {
     SubZoneReading::new(sub_zone_id, a_month(month), a_dryness(dryness))
+}
+
+/// A square one degree wide with its south-west corner at the given point.
+pub fn a_square(west: f64, south: f64) -> Shape {
+    Shape::new(vec![vec![
+        (west, south),
+        (west + 1.0, south),
+        (west + 1.0, south + 1.0),
+        (west, south + 1.0),
+    ]])
+    .expect("shape")
+}
+
+/// A shape for each of `sub_zones()`: Chamchamal's three side by side from
+/// 44 to 47 degrees east between 35 and 36 north, and Kalar's south of the
+/// first of them.
+pub fn shapes() -> Vec<(SubZone, Shape)> {
+    let squares = [
+        a_square(44.0, 35.0),
+        a_square(45.0, 35.0),
+        a_square(46.0, 35.0),
+        a_square(44.0, 34.0),
+    ];
+
+    sub_zones().into_iter().zip(squares).collect()
 }

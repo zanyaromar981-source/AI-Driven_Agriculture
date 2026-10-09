@@ -2,47 +2,44 @@
 
 This file is the contract between the farmer app / dashboards (frontend) and the backend. The frontend writes here what it sends and what it expects back. If the backend needs something from the frontend, it writes `FRONTEND.md`, and the frontend follows that file strictly. Both files live at the repo root and are committed with every change.
 
-Status: v2, 2026-10-08 20:48. Section 0 says exactly what the app still needs, checked against `backend/` at a0ade90 and `FRONTEND.md` v2. Backend: confirm or edit each section; mark changes with your date. Added 2026-10-08 21:46: section 2.11, the Control Room (officer sign-in and `/v1/admin` routes for dashboard screens 11 to 18).
+Status: v3, 2026-10-09 16:20. Section 0 says exactly what the app still needs, checked against `FRONTEND.md` v4 (commit 13ba149). Backend: confirm or edit each section; mark changes with your date. Added 2026-10-08 21:46: section 2.11, the Control Room (officer sign-in and `/v1/admin` routes for dashboard screens 11 to 18).
 
 ## 0. What the app still needs (read this first)
 
-Checked 2026-10-08 20:48 against `backend/` at commit a0ade90 and `FRONTEND.md` v2. The app was also run on Android against a stand-in server with the backend's exact shapes over plain `http://`: sign in, My farms and opening a farm worked; Home then stopped at the missing status call (row 5).
+Checked 2026-10-09 16:20 against `FRONTEND.md` v4 with its section 14 (commit 13ba149). The app follows FRONTEND.md v4 since 2026-10-09 14:41 and is built against the test server `http://95.217.14.92:8790/v1`. The size points of the old 0.2 (cells with `inside_pct`, crop areas from inside areas) are done on the backend side: thank you.
 
 ### 0.1 Calls the app makes, in the order a farmer hits them
 
-| # | Call | Backend today | Still needed |
+| # | Call | Backend today | What the app needs from the backend |
 |---|---|---|---|
-| 1 | Sign in: `POST /v1/auth/otp/send`, `/v1/auth/otp/verify` (2.1) | built; for the demo, one fixed code (`AUTH__FIXED_SIGN_IN_CODE`) | Nothing for the demo. An SMS provider before real farmers (open point 2). |
-| 2 | My farms: `GET /v1/farms` (2.2) | built | Nothing. |
-| 3 | Save a farm: `POST /v1/farms` (2.2) | built, `Idempotency-Key` honoured, area from the outline | Cells and crop areas in 0.2 (sizes only, not blocking). |
-| 4 | Open a farm: `GET /v1/farms/{id}` (2.2) | built | `inside_pct` on cells, 0.2 (not blocking). |
-| 5 | Farm from space: `GET /v1/farms/{id}/status` (2.3) | not built | **This blocks Home.** Home loads a farm and its status together; today the `404` makes every farm show "Could not load this farm (not_found)". Fastest fix: the stub answer in 2.3 until the satellite job exists. |
-| 6 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built | Home still opens without it ("Weather forecast not available right now"). Then serve the stored plan (2.4). |
-| 7 | Edit a farm: `PUT /v1/farms/{id}` (2.2, added 21:10) | not built (only `PUT /v1/farms/{id}/cells`) | Needed to change a farm's border, crops and name (the app's edit screen is being built). Changing the border needs the outline, which `PUT .../cells` cannot take. |
-| 8 | Delete a farm: `DELETE /v1/farms/{id}` (2.2) | built | Nothing. The app calls it from the farm's menu (since 21:33); `404` counts as already deleted. |
-| 9 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5, added 2026-10-09) | being built | The app's Ask and Answer screens call it (Ask tab on a farm, and "Ask about this spot" on a tapped square). Until it exists the app shows "The Doctor could not answer this time". |
+| 1 | Sign in: `POST /v1/auth/otp/send`, `/v1/auth/otp/verify` (2.1) | built, real codes through OTPIQ on the test server | Nothing. |
+| 2 | My farms, save, open, edit, delete: `/v1/farms` (2.2) | built, edit with `PUT /v1/farms/{id}` | Nothing. |
+| 3 | Farm from space: `GET /v1/farms/{id}/status` (2.3) | placeholder, every measured field `null` | **Blocks the main picture on Home.** See 0.2, answer to FRONTEND.md 13.1. |
+| 4 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built (`404`) | **The most wanted route for farmers.** The 10-day plan from the forecast with the Weather Planner rules in 2.4. The app shows "10-day plan coming soon" until it exists. It goes through the server only: the app does not call Open-Meteo itself. |
+| 5 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5) | route built; on the test server nothing runs behind it, so every question answers `502 doctor_failed` (FRONTEND.md v5, 6) | **The centre button of the app. See 2.15:** the server gathers the farm's data, gives it with the photos to Codex (already signed in there) and returns the checked answer. No Gemini key needed. |
+| 6 | Insights: `GET /v1/farms/{id}/insights` | built, groundwater filled daily | Nothing for the route. Other topics wait for the per-farm analysis job (FRONTEND.md 13.4). |
+| 7 | Daily brief: `GET /v1/farms/{id}/brief` | built | Nothing. The app card is next. |
+| 8 | Profile: `GET`/`PUT /v1/me` | built | Nothing. The Settings screen is next. |
+| 9 | Alwa market, farmer routes (FRONTEND.md 5) | built, with offers, grade, pickup, market and hidden phones | **Simpler Alwa (user decision 2026-10-09): see 2.14.** GPS point on each listing, phones shown, nearest first, mark as sold, markets with a point. |
+| 10 | **Marketplace (was Alwa): more than crops** (2.16, user decision 2026-10-09 18:29) | crops only, priced per kg | **New.** Fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit, each with its own unit (kg, tray of 30, litre, head). A `products` list with group and unit, and listings that carry `product`, `quantity` and a price per unit. |
 
-Not needed yet, because their screens are not built: reports (2.6), alerts and devices (2.7), `DELETE /v1/account`.
+Needed next, because their screens are being built now:
+- `DELETE /v1/account` for Settings ("Delete my account and farms").
+- Alerts list and `POST /v1/devices` for push (2.7).
+- Reports (2.6).
 
-### 0.2 Sizes: cells and crop areas (not blocking, but numbers disagree until fixed)
+### 0.2 Answers to FRONTEND.md section 13
 
-| Topic | Backend today | The app needs | Why |
-|---|---|---|---|
-| Farm `cells` | cells whose centre is inside the outline | every 10 m cell the outline touches, each with `inside_pct` (0 to 100) | The app sends every touched cell (the edge ones come back in `dropped_cells`, which is harmless). Home adds up `inside_pct` for the weak and measured m²; without it, edge cells count as whole. |
-| `crops[].dunam` | painted cells / 25 | the sum of its cells' inside areas | Crops then add up to `area_dunam`. Today the crop list and the farm total disagree by the edge cells, up to 30 to 50% on plots under half a dunam (user decision 2026-10-08, section 1, Area). |
+1. Farm status: answer pending (user decision, 2026-10-09).
+2. Alwa: the app has no offers (user decision 2026-10-09). Buyers call the seller, whose phone is shown from the start. See 2.14.
+3. Protected mode: for the website team (2.12).
+4. Per-farm analysis job: answer pending.
+5. Missing from `backend/API.md`: nothing found for the app so far.
 
-The app's clipping code can be ported: `cellsTouching` in `app/lib/geo.dart` returns each touched cell with its m² inside.
+### 0.3 Reaching the server
 
-### 0.3 Answers to FRONTEND.md section 7
-
-1. `PUT /v1/farms/{id}/cells` changing only the listed cells: fine, but the app will not use it. Editing a farm sends the whole farm (outline and every cell) through `PUT /v1/farms/{id}` (2.2).
-2. 50,000 cells (2,000 dunam) per farm: fine. The app refuses outlines over 1,000 dunam (2,500,000 m²) before sending.
-3. `GET`/`PUT /v1/me`: the Settings screen is not built yet. Its design shows the language, the phone number, the number of farms, two notification switches and "Delete my account and farms". So `phone` and `lang` are enough now. `name` can stay empty: the app never asks for a name ("No password, no name"). The switches belong to `POST /v1/devices` (2.7), the number of farms comes from `GET /v1/farms`, and delete is `DELETE /v1/account`.
-
-### 0.4 Reaching the server
-
-- Build the app with `--dart-define=API_URL=http://<server>:3000/v1`. From the Android emulator the Mac is `10.0.2.2`; a phone on the same Wi-Fi uses the Mac's address on that network.
-- Plain `http://` works: tested on Android 2026-10-08 (Flutter's own network code is not held back by Android's cleartext rule). Use `https://` before real farmers.
+- The app is built with `--dart-define=API_URL=http://95.217.14.92:8790/v1`. Plain `http` is allowed in the app for that address only (`app/android/app/src/main/res/xml/network_security_config.xml`).
+- The app no longer uses the Codespace server. The three test farms made there from the user's phone are not on the test server.
 
 ## 1. Shared definitions (both sides must use exactly these)
 
@@ -182,11 +179,13 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
   → `200 {"likely": "...", "confidence": "sure|likely|unsure", "why": ["field_eye -> ...", "weather -> ..."], "actions_this_week": ["..."] (max 3), "cannot_tell": ["..."], "refer_to_officer": true|false, "ku": "...", "en": "...", "transcript": "..." (if voice), "case_id": "c_..."}`
   Rules (hard): no pesticide or fertilizer doses, no product names; only numbers from the AIs; `unsure` + `refer_to_officer: true` when inputs conflict. Response time target ≤ 25 s; the app shows "reading the field" meanwhile.
 - What the app does (2026-10-09): sends `question` (trimmed, max 1000 characters), `lang`, `cell` as JSON text when the farmer asked from a tapped square, and each photo as a repeated `photos` part (JPEG, made 1600 px and 80% quality on the phone, so well under 4 MB; PNG only if the gallery gives one). It waits up to 120 s. It reads `likely`, `confidence`, `why` (shown as "Input: conclusion", with an icon chosen from the input's name), `actions_this_week` (first 3), `cannot_tell`, `refer_to_officer` (shows "show this to the office"), `ku` and `en` (a Sorani / English switch). It does not use `case_id` or `transcript` yet. Error codes it words for the farmer: `doctor_not_ready` ("not switched on yet"), `bad_photo`, `empty_question`, `404`, offline; anything else is "could not answer this time".
+- Backend, 2026-10-09 12:11: built as `POST /v1/farms/{id}/ask`, exactly as in `FRONTEND.md` section 13. Differences from the line above: photos may be JPEG or PNG (set each part's Content-Type), 0 to 6; the answer adds `inputs_used`; no `case_id` yet (nothing is stored; needed later for the Control Room inbox) and no `transcript` (voice deferred); `502 doctor_failed` or `503 doctor_not_ready` when the Doctor service cannot answer. The backend waits up to 90 s for the Doctor, so this call needs a longer answer timeout than the 20 s of 2.0.
 
 ### 2.6 Reports (Neighbour Watch)
 - `POST /reports` body `{"farm_id": "f_...", "cell": {"e","n"}|null, "type": "yellow_stripes|insects|wilting|flood|hail|fire|animal_disease|other", "note": "...", "photo_id": "..."|null, "lat", "lon", "t"}` → `201 {"report_id": "r_..."}`
 - `GET /reports/nearby?lat=&lon=&km=20&days=14` → `200 {"count": 3, "by_type": {"yellow_stripes": 2}, "closest": [{"type","km","days_ago"}]}`. Used by the Doctor and the Ministry only: **farmers do not see other farmers' reports** (decided 2026-10-08). Never return another farmer's phone or exact location; round to 1 km.
 - `GET /reports/mine` → `200 {"reports": [{"report_id","farm_id","cell","type","note","t","status": "sent|seen_by_officer"}]}`: the farmer's own reports list.
+- What the app does now (2026-10-09), until these routes exist: the Report screen (opened from a square's card) sends `POST /v1/messages` (FRONTEND.md 4) with `kind` `report`, `farm_id`, up to 4 `photos`, and `text` = `"<type>, square <label>: <note>"` (for example `"Yellow stripes, square E12: since Monday"`), with an `Idempotency-Key`. "My reports" is `GET /v1/messages/mine` filtered to `kind` `report`: `new` shows as "Sent", any other state as "Seen by officer". When `POST /reports` is built, the app moves to it and sends `type` and `cell` as fields.
 
 ### 2.7 Alerts (push)
 - `POST /devices` body `{"push_token": "...", "platform": "android|ios", "lang": "ku"}` → `204`.
@@ -194,6 +193,7 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 - `GET /farms/{id}/alerts?days=30` → `200 {"alerts": [{"alert_id","type","day","level","confidence","ku","en","action_ku","action_en","pushed": true|false,"done": true|false}]}`; `POST /alerts/{id}/done` → `204`.
 - `POST /devices` also takes `"notify": {"red_alerts": true, "weekly_plan": true}`.
 - `DELETE /account` → `204` (removes the phone, farms, reports and cases).
+- What the app does now (2026-10-09): the Alerts tab calls `GET /v1/farms/{id}/alerts?days=30` for the open farm and groups them by day (today, yesterday, last week); a `404` shows "Alerts are coming soon". The done tick is kept on the phone until `POST /alerts/{id}/done` exists. Settings keeps the two notification switches on the phone until `POST /devices` takes `notify`, and "Delete my account and farms" calls `DELETE /v1/account`; a `404` says nothing was deleted and to call the office.
 
 ### 2.8 Dashboard (Ministry, no login)
 - `GET /region/now` → the structure of `web/now.json` (zones with field_eye, weather, season, neighbours; dams; summary; brief). Keep that shape; the dashboard already reads it.
@@ -211,6 +211,8 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 - Provider: **Gemini** (Google AI Studio key `GEMINI_API_KEY`, default model `gemini-2.5-flash`), chosen for cost (about 5–10x cheaper per answer). The call is one swappable function (`farm_doctor/doctor.py`: `FARM_DOCTOR_PROVIDER=gemini|claude`, `FARM_DOCTOR_MODEL`), so a head-to-head test against Claude in Sorani (20 questions, scored by a native speaker) can be run before any real rollout. The rulebook, the JSON answer shape and the no-doses rule are identical for both.
 
 ### 2.11 Control Room: the Ministry runs the app from the dashboard (added 2026-10-08)
+
+**Replaced by 2.12 where they differ (user, 2026-10-09):** staff sign in with email and password, roles are made by staff from permissions, no second-officer approvals, no audit page, no protected mode on the website.
 
 Design: `design/dashboard/jutyar_dashboard.pen`, screens 11 to 18 (builder `design/dashboard/build_control_room.py`). Not built on the backend yet. Every path is under `/v1/admin`, with an **officer** token (not a farmer token).
 
@@ -233,6 +235,190 @@ Design: `design/dashboard/jutyar_dashboard.pen`, screens 11 to 18 (builder `desi
 New tables: `officers (id, phone, name, role, areas, totp_secret, created_at, disabled_at)`, `audit_log (id, at, officer_id or job, action, target_kind, target_id, reason, before_json, after_json)` (insert only), `alerts (id, draft_by, approved_by, area_json, type, day, level, confidence, texts_json, state, sent_at)`, `rule_values (code, value_json, version, source, changed_by, approved_by, at)`, `inbox_actions (item_id, officer_id, action, note, at)`, `farmer_blocks (farmer_id, by, reason, at)`.
 
 - Edit until `PUT /v1/farms/{id}` exists (decided 2026-10-09, user option A): the app saves an edited farm as `POST /v1/farms` (new id, same name, new outline and crops) and then `DELETE /v1/farms/{old id}`. The new farm gets the full 20-year analysis again; the old id disappears. When the backend adds PUT, the app switches back to one call.
+
+### 2.12 The website: what the backend must add (for Arya, 2026-10-09)
+
+**What the website is.** One site in two parts: a public **View** page (map, news bar, dams, fires, compare years, Alwa prices, no login) and the **Admin** part for staff (sign in with `/v1/dashboard/auth/login`, then roles and permissions decide what each person sees). It is designed first in `design/web/jutyar_website.pen`, then coded in `web/control_room/`. **The site keeps no data of its own**: every number comes from the server, and nothing is sample data anymore. Kurdish (Sorani) first, English second.
+
+Decisions (user, 2026-10-09): no Texts page; no approvals; many roles made by staff (the existing `roles` and `staff` slices are right); the news bar and the alerts list are built by the site from routes that already exist; the Doctor is being worked on separately.
+
+The list is in the order the site needs it. Each new resource is also a permission resource (`<resource>:<action>`) added to `GET /v1/dashboard/permissions`; the `Owner` role gets it automatically.
+
+#### A. Needed before the site can run
+
+**A1. CORS.** The site will be hosted on its own address, so the API must allow it. Today `OPTIONS` answers `405` and no `Access-Control-*` header is sent.
+- Allowed origins from a setting, for example `HTTP__CORS_ORIGINS=https://jutyar.example,http://127.0.0.1:5173` (comma list; no `*`, because requests carry a token).
+- Methods `GET, POST, PUT, DELETE, OPTIONS`; request headers `Authorization, Content-Type, If-None-Match, Idempotency-Key`; exposed headers `ETag, X-Api-Version`; preflight `204` with `Access-Control-Max-Age: 600`.
+- In axum: `tower-http` feature `cors`, a `CorsLayer` on the router.
+
+**A2. Cache versions:** section 2.13.
+
+**A3. A place on every farm.** Farms have only `centroid`, so reports by governorate and district cannot be made.
+- Add `governorate`, `zone_slug`, `sub_zone_slug` to farms, computed from the centroid when a farm is created or edited (point in the 72 sub-district shapes already in the database); `null` if outside.
+- Return them in `FarmSummaryResponse`, `DashboardFarmSummaryResponse` and `DashboardFarmResponse`.
+- Filters on `GET /v1/dashboard/farms`: `governorate`, `zone`, `sub_zone`, `crop`, `q` (farm name or owner phone), next to `owner_phone`, `page`, `rows_per_page`; and `sort=created_at|area_dunam|name`, `order=asc|desc`.
+
+**A4. Totals for reports and charts.** The site must not download every farm to add them up.
+- `GET /v1/dashboard/stats/farms?governorate=&zone=&crop=` (`farms:read`) answers `{"as_of", "totals": {"farmers", "farms", "dunam"}, "by_governorate": [...], "by_zone": [...], "by_sub_zone": [...], "by_crop": [{"crop", "dunam", "farms", "farmers"}]}`. Each `by_...` area row is `{"slug", "name_en", "name_ku", "farmers", "farms", "dunam", "crops": [{"crop", "dunam", "farms"}]}`. A farmer is counted once per area where they have a farm.
+- `GET /v1/stats/farms` (no login, for the View page): only `totals`, `by_governorate`, `by_zone`, `by_crop`; no names, no phones. Switched off by `public_farm_totals: false` (B4).
+
+**A5. Farmer details for the support letter.** The letter names the farmer and their place.
+- Add to farmers: `gender` (`male|female|null`), `birth_year` (number or null), `village` (text or null), `governorate`, `zone_slug`, `sub_zone_slug` (home place, may be null), `notes` (staff only), `blocked` (bool).
+- `PUT /v1/dashboard/farmers/{id}` accepts them. `GET /v1/dashboard/farmers` filters `q` (name or phone), `governorate`, `zone`, `blocked`, with `page`, `rows_per_page`, `sort`.
+- `blocked: true` signs the farmer out at once and refuses sign-in: `403 {"error": "blocked"}` on `/v1/auth/otp/verify`.
+- `POST /v1/dashboard/farmers/{id}/letters` (`farmers:read`) with `{"purpose", "lang": "ku|en"}` answers everything the letter prints in one call: the farmer, their farms with place and crops, totals, and a stored letter number `JTY-<yyyymm>-<farmer id>-<n>` (table `letters (id, number, farmer_id, staff_id, purpose, lang, created_at)`). `GET /v1/dashboard/letters/{number}` checks a letter later.
+
+**A6. Staff details.** Add `phone` and `job_title` to staff (`POST` and `PUT /v1/dashboard/staff`), and `PUT /v1/dashboard/me` so a person changes their own name, phone and password (`{"name", "phone", "current_password", "new_password"}`). Forgot password needs an email sender: later. Until then an Owner resets passwords (already built).
+
+#### B. New resources
+
+**B1. Crops** (resource `crops`). Today the crop list is a fixed enum; staff need to add and rename crops.
+- Table `crops (code primary key, name_en, name_ku, color, category, season, yield_kg_per_dunam, active, sort_order, created_at, updated_at)`. `category`: `cereal|vegetable|fruit|legume|oil|fodder|other`. `season`: `winter|summer|perennial`. Seeded with today's codes.
+- `GET /v1/crops` (no login: the app and the View page read names and colours here); `GET` and `POST /v1/dashboard/crops`; `PUT` and `DELETE /v1/dashboard/crops/{code}`.
+- Farms, cells and Alwa listings check crop codes against this table (only active crops for new data). Deleting a crop in use answers `409 {"error": "crop_in_use"}`; the site then offers to switch it off (`active: false`).
+- `code` matches `^[a-z_]{2,24}$` and never changes.
+
+**B2. Rules** (resource `rules`). Every number the jobs use to decide a warning or a colour, changeable without a release.
+- Tables `rules (code primary key, grp, name_en, name_ku, meaning_en, meaning_ku, value, unit, min_value, max_value, default_value, used_by, updated_by, updated_at)` and `rule_changes (id, code, old_value, new_value, reason, staff_id, at)` (insert only).
+- Seeded from today's numbers: weather planner in `farm_doctor/weather_planner.py` (frost 0 °C, hard frost -2 °C, heat 31 °C, heavy rain 12 mm, sowing rain 20 mm in 3 days, rust weather 24 h, spray window 6 h, sunn pest 84 degree-days, dust PM10 150); dryness bands in `backend/src/features/zones/domain/enums.rs`; Field Eye (watch below 85% of normal greenness, alarm below 70%, skip pictures over 30% cloud).
+- `GET /v1/dashboard/rules`; `PUT /v1/dashboard/rules/{code}` with `{"value", "reason"}` (reason required, 3 to 500 characters; outside min and max answers `422 bad_range`); `GET /v1/dashboard/rules/{code}/history`; `POST /v1/dashboard/rules/{code}/reset` (back to `default_value`, also logged).
+- The jobs and the band calculation read the values from this table (once per run). `used_by` is `weather_planner`, `dryness` or `field_eye`, so the site can say where each number applies.
+
+**B3. Inbox: messages from farmers** (resource `messages`).
+- Farmer app: `POST /v1/messages` with `{"kind": "question|report|complaint|request|other", "text", "farm_id?"}` and photos like Ask the Doctor (multipart, 0 to 4, JPEG or PNG, 4 MB each); `GET /v1/messages/mine` with the replies.
+- Dashboard: `GET /v1/dashboard/messages?state=&kind=&governorate=&zone=&q=&page=&rows_per_page=` (newest first, with the farmer's name, phone, farm name and place); `GET /v1/dashboard/messages/{id}` (with photo URLs); `PUT /v1/dashboard/messages/{id}` with `{"state": "new|read|replied|closed"}`; `POST /v1/dashboard/messages/{id}/reply` with `{"text_ku", "text_en?"}` (state becomes `replied`, keeps `replied_by` and `replied_at`; the farmer sees it in the app).
+- `GET /v1/dashboard/messages/counts` answers `{"new", "read", "replied", "closed"}` for the menu badge.
+- Later, Doctor cases with `refer_to_officer: true` land here as `kind: "doctor"`, once cases are stored.
+
+**B4. App control** (resource `app`). What the farmer app reads at start, set from the site.
+- One row `app_config`: `latest_version`, `min_version`, `update_message_ku`, `update_message_en`, `maintenance` (bool), `maintenance_message_ku`, `maintenance_message_en`, `maintenance_from`, `maintenance_until` (UTC or null), `announcement_on`, `announcement_ku`, `announcement_en`, `features` (switches `add_farm`, `walk_mode`, `satellite`, `doctor`, `reports`, `alwa`, `plan`, `push`), `limits` (`farms_per_phone`, `max_farm_dunam`, `min_corners`, `max_corners`, `gps_meters`), `help_phone`, `public_farm_totals` (bool, used by A4).
+- `GET /v1/app/config` (no login; the app reads it at start, cached by version); `GET` and `PUT /v1/dashboard/app/config`.
+- The app sends `X-App-Version: 1.0.3` on every call. The server keeps `app_versions_seen (farmer_id, version, last_seen)`; `GET /v1/dashboard/app/versions` answers `[{"version", "farmers", "share"}]` for the last 30 days. A version below `min_version` answers `426 {"error": "update_required"}`.
+
+**B5. Data job status** (resource `jobs`, read only). Whether the automatic jobs ran on time.
+- Table `job_runs (id, job, started_at, finished_at, ok, rows, message)`. Each job reports itself with the service key: `PUT /v1/ingest/jobs/{job}/runs/{started_at}` with `{"finished_at", "ok", "rows", "message"}`.
+- Table `jobs (job primary key, name_en, name_ku, every_hours)`: `dryness` 12, `fires` 3, `groundwater` 24, `dams` 24, `briefs` 24, `farm_analysis` on demand.
+- `GET /v1/dashboard/jobs` answers per job `{"job", "name_en", "name_ku", "every_hours", "last_run", "last_ok", "next_due", "state": "ok|late|failed|never", "last_14_days": ["ok"|"late"|"failed"|null], "message"}`. `late` means no finished run within `every_hours` × 1.5. No run button and no keys on the site.
+
+#### C. What the site builds itself (no new route)
+
+- **News bar:** from `GET /v1/fires?hours=24`, `GET /v1/dams`, `GET /v1/region/overview` (driest districts), `GET /v1/briefs/latest?scope=region` (headline) and the Alwa price board. It appears only once this data is in the cache.
+- **Alerts:** a read-only list of fire detections, dryness band changes and the brief's `watch` and `alarm` points, from the same routes. Sending messages to farmers waits for push (2.7).
+- **Crop register report, government report, support letter:** from A4 and A5, printed by the browser.
+
+#### D. Permissions after this section
+
+Today: `zones, dams, outlooks, water, fires, alwa, farmers, farms, insights, briefs, staff, roles`. New: `crops, rules, messages, app, jobs`. The site hides a menu item when the person has no `read` on its resource and hides each button whose action they do not hold. The server still checks every call.
+
+### 2.13 Caching and cache invalidation (frontend and backend together)
+
+Goal: the site opens from its cache at once, shows skeletons only for what is missing, and downloads a topic again **only when the server says it changed**.
+
+**Backend**
+1. Table `data_versions (topic primary key, version bigint not null, changed_at timestamptz)`. Topics: `zones, sub_zones, dams, fires, outlooks, water, alwa_prices, alwa_listings, farmers, farms, crops, rules, briefs, messages, app_config, jobs, staff_roles`.
+2. Every write to a topic (dashboard, ingest, farmer app) runs `UPDATE data_versions SET version = version + 1, changed_at = now() WHERE topic = $1` **in the same transaction** as the write. A job that writes many rows bumps once, at the end of its run.
+3. `GET /v1/versions` (no login) answers `{"api": "1.4.0", "versions": {"zones": 41, "dams": 7, "fires": 1290}, "server_time"}` with the public topics only. `GET /v1/dashboard/versions` (any staff) adds the private ones (`farmers, farms, messages, jobs, staff_roles`).
+4. Every `GET` answers `ETag: W/"<topic>-<version>-<short hash of path and query>"` and `Cache-Control: no-cache` (staff routes add `private`). A request with a matching `If-None-Match` answers `304` with no body. A route that reads several topics uses the highest of their versions.
+5. Header `X-Api-Version` on every answer; change it whenever an answer's shape changes.
+
+**Frontend**
+1. On start: draw the page at once from the cache in IndexedDB, then call `/v1/versions` once (and `/v1/dashboard/versions` when signed in).
+2. For each topic whose server version is higher than the cached one: refetch only that topic's routes that are on screen or cached, with `If-None-Match`; a `304` keeps the cached copy. Topics that did not change are not called.
+3. While the site is open: ask `/v1/versions` again every 60 s and whenever the tab comes back into view, so a new fire run shows within a minute.
+4. After the site itself writes (for example edits a farmer), it refetches that topic at once.
+5. The whole cache is wiped when `X-Api-Version` changes or when the site's own `CACHE_SCHEMA` number changes (bumped by the frontend when it changes how it stores data). Private topics are wiped on sign-out and are stored per staff id, so two people on one computer never see each other's data.
+6. Until `/v1/versions` exists: time limits per topic (fires 10 min; Alwa 15 min; zones, dams, briefs 1 h; crops, rules, app config 6 h; staff lists 5 min), plus `ETag` when the server sends one.
+
+**Loading (user decision 2026-10-09):** the branded intro (the Grain Sun drawing itself, 00 to 100) plays only on the first visit, when the cache is empty, and its counter follows the real calls. Later visits open straight from the cache; anything not cached yet shows a skeleton shaped like its content. The news bar stays hidden until its data is cached.
+
+### 2.14 Alwa market in the app: simple listings (user decision, 2026-10-09)
+
+The farmer app uses a simpler Alwa than the one built (FRONTEND.md 5). A listing is only: crop, quantity, asking price, where it is (the phone's GPS), the seller's phone, when it was posted and when it closes. Buyers call the seller directly. There are no offers in the app.
+
+Keep as built: the 16 crop codes, `quantity_kg`, `asking_price_iqd_per_kg`, `closes_at` (at most 14 days; the app sends 14 days unless the farmer picks fewer), at most 20 open listings per phone (`too_many_listings`), cancel with `DELETE /v1/alwa/listings/{id}`, the price board (`/v1/alwa/markets/{slug}/prices`) with its empty state.
+
+What the app needs changed or added:
+
+| # | Change | Why |
+|---|---|---|
+| 1 | `POST /v1/alwa/listings` takes `lat` and `lon` (the phone's GPS, WGS84). `market`, `pickup` and `grade` become optional; the app does not send them. The backend may fill `zone_slug` from the point. | No market or area picker: the place is where the farmer stands. |
+| 2 | Every listing answer (`GET /v1/alwa/listings`, `/{id}`, `/mine`) carries `lat`, `lon` and `seller_phone`, visible to anyone signed in. | User decision: farmers sign in with their phone, so phones are shown from the start. |
+| 3 | `GET /v1/alwa/listings?lat=&lon=&crop=` sorts open listings by distance from that point and adds `distance_km` to each. | Buyers see the nearest first. |
+| 4 | `POST /v1/alwa/listings/{id}/sold` (seller only): marks the listing sold without an offer. | Today a listing is sold only by accepting an offer; the app has no offers. |
+| 5 | Each market (`AlwaMarketResponse`) carries `lat` and `lon`. | The app shows the price board of the market nearest the phone. |
+
+Not used by the app: the offer and accept routes, `/v1/alwa/offers/mine`, `/v1/alwa/deals`, `grade`, `pickup`, `buyer_kind`. They can stay for the website.
+
+- What the app does now (2026-10-09 18:00), until rows 1 to 3 are built: it sends `market` (the first market) and `pickup: "farm"` so the post is not refused, sends `quantity_kg` and the price as whole numbers, and puts the seller's sign-in phone in `seller_name` (any text up to 60 characters, already shown to buyers). It reads `seller_phone` first, else a phone-shaped `seller_name`. List rows have no `created_at` today, so the posted date is left out there. "Call the seller" opens the phone app with the number typed in. When `seller_phone` exists, the app stops writing the phone into `seller_name`.
+
+### 2.15 Ask the Doctor on the test server: Codex reads the photos and the farm's data (user decision, 2026-10-09)
+
+The app's centre button (Ask the Doctor) already sends `POST /v1/farms/{id}/ask` exactly as FRONTEND.md 6 says and already shows the `200` answer. On the test server every question answers `502 doctor_failed` because nothing runs behind the route. To make the button work, the server must do this for every question:
+
+1. **Gather the farm's data** (about 15 s, all at once): the farm (centre, exact area, crops, outline, the tapped cell if any), what `/insights` knows about it, the newest Sentinel-2 reading of the field (Field Eye), the 10-day forecast with the Weather Planner rules (2.4), the season so far (Season Check) and the dam levels (Dam Watch). All of this is fetched by the server; the app calls no outside service.
+2. **Ask Codex**, the `codex exec` program that is already signed in on the test server for the nightly brief: the question, `lang`, every photo attached as an image (`codex exec --image <file>`), the gathered data, and the Doctor's rulebook (`RULEBOOK` in `farm_doctor/doctor.py`: answer only in the JSON below, never a pesticide or fertilizer dose, say `unsure` and refer to an officer when unsure). No Gemini key is needed: this replaces Gemini (2.10) on the test server.
+3. **Check the answer and return it** in the shape the app reads (FRONTEND.md 6): `{"likely", "confidence": "sure|likely|unsure", "why": [...], "actions_this_week": [...] (at most 3), "cannot_tell": [...], "refer_to_officer", "ku", "en", "inputs_used": [...]}`. Anything that is not this shape becomes `502 doctor_failed`, as today.
+4. **Answer within 90 s.** The app waits 120 s. Two farmers asking at the same time must both get an answer (run Codex calls side by side or one after the other, both fit in 90 s for the demo).
+
+The fastest way, already tested on a Mac: run `farm_doctor/doctor_service.py` next to the backend on the test server (`DOCTOR_URL=http://127.0.0.1:8090`). It already does steps 1 and 3 and today calls Gemini or Claude in step 2 (`FARM_DOCTOR_PROVIDER`). A `codex` provider that runs `codex exec` with the photos is the only missing piece; it lives in `farm_doctor/` and the app side can add it. The other way is for the backend to call `codex exec` itself, as `backend/jobs/daily_brief.py` does.
+
+**Steps for Arya (user, 2026-10-09 18:05: "tell Arya what to do").** Checked today: on the test server every question still answers `502 doctor_failed`. The app side is done and needs no change. About 30 minutes:
+
+1. **Add a Codex provider to `farm_doctor/doctor.py`** (stdlib only, like the rest):
+   - `_provider()`: also accept `codex`.
+   - New `ask_codex(inputs, question=None, photos=None)`:
+     - Make a temp folder and write each photo from `_images(photos)` (base64) to it as `photo_1.jpg`, `photo_2.png` and so on.
+     - Run `codex exec --skip-git-repo-check --ephemeral -s read-only -o <tmp>/answer.txt --image <tmp>/photo_1.jpg --image <tmp>/photo_2.png` with `RULEBOOK + "\n\n" + _user_text(inputs, question)` piped on stdin (no prompt argument, so Codex reads stdin). Use `subprocess.run(..., input=prompt, text=True, timeout=75)`.
+     - Read `<tmp>/answer.txt` and return `_parse(text)`. On a timeout or a non-zero exit, return `dict(error='codex: <short reason>')`. Delete the temp folder in both cases.
+   - `ask()`: send `codex` to `ask_codex`.
+2. **`farm_doctor/doctor_service.py`, `has_key()`:** return `True` when the provider is `codex` (Codex is already signed in, no key). Otherwise every question answers `503 doctor_not_ready`.
+3. **Start it next to the backend on the test server**, as the same user that runs Codex for the nightly brief:
+   `cd farm_doctor && FARM_DOCTOR_PROVIDER=codex nohup python3 -I doctor_service.py >> doctor.log 2>&1 &`
+   It listens on `127.0.0.1:8090`, the backend's default `DOCTOR_URL`; set `DOCTOR_URL=http://127.0.0.1:8090` if the backend's env has something else. Add it to whatever restarts the backend.
+4. **Check:**
+   - `curl -s 127.0.0.1:8090/health` answers `{"ok": true, "key": true}`.
+   - Then ask from the app (Ask the Doctor, a question and a photo): a `200` answer within 90 s. `doctor.log` shows one line per question (`farm N: likely, 1 photos, 34 s, used ...`), and each case is saved in `farm_doctor/cases/` (git-ignored).
+   - If the answer is `502`, the reason is in `doctor.log`. Most often Codex took longer than 75 s or answered outside the JSON.
+5. **Two farmers at once:** the service is threaded, so each question runs its own `codex exec`; both fit in 90 s.
+
+### 2.16 Marketplace: the Alwa grows into a market for farm products (user decision, 2026-10-09 18:29)
+
+The farmer app's Alwa becomes the **Marketplace** (Sorani: بازاڕ). It works the same way as 2.14: a seller posts what they have, where it is (GPS), the price, and buyers call the seller. What changes is **what can be sold**: not only the 16 crops, but also fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit. Some of these are not sold by the kg, so **every product has a unit**.
+
+**Keep as built:** the `/v1/alwa/...` routes and their paths (no rename needed; "Marketplace" is only the name people see), GPS point, `seller_phone`, nearest first, mark as sold, cancel, 20 open listings per phone, at most 14 days, the price board staff type in.
+
+**1. A products list** (no login): `GET /v1/products` answers `{"products": [{"code", "group", "unit", "name_en", "name_ku"}]}`. Staff can add and rename products like crops (the crops table may simply become this table with `group` and `unit` added). The 16 crops stay with group `crops` and unit `kg`; painting a farm still uses only group `crops`.
+
+| group | code | unit | name_en | name_ku |
+|---|---|---|---|---|
+| `crops` | the 16 crop codes of today | `kg` | as today | as today |
+| `fish_meat_eggs` | `fish` | `kg` | Fish | ماسی |
+| `fish_meat_eggs` | `chicken` | `kg` | Chicken | مریشک |
+| `fish_meat_eggs` | `eggs` | `tray_30` | Eggs (tray of 30) | هێلکە (تەبەقەی ٣٠) |
+| `honey_dairy` | `honey` | `kg` | Honey | هەنگوین |
+| `honey_dairy` | `milk` | `litre` | Milk | شیر |
+| `honey_dairy` | `yogurt` | `kg` | Yogurt | ماست |
+| `honey_dairy` | `cheese` | `kg` | Cheese | پەنیر |
+| `animals` | `sheep` | `head` | Sheep | مەڕ |
+| `animals` | `goat` | `head` | Goat | بزن |
+| `animals` | `cow` | `head` | Cow | مانگا |
+| `nuts_dried` | `walnut` | `kg` | Walnuts | گوێز |
+| `nuts_dried` | `almond` | `kg` | Almonds | بادەم |
+| `nuts_dried` | `raisin` | `kg` | Raisins | مێوژ |
+| `nuts_dried` | `dried_fig` | `kg` | Dried figs | هەنجیری وشک |
+
+Units: `kg`, `tray_30` (a tray of 30 eggs), `litre`, `head` (one animal). The Sorani names wait for the native speaker check like the rest of the app.
+
+**2. Listings carry a product and a unit.**
+- `POST /v1/alwa/listings` takes `product` (a code from the list), `quantity` (a whole number, in the product's unit) and `asking_price_iqd` (per one unit), with `lat`, `lon`, `closes_at` as today. The server fills `unit` from the product; the app never sends it.
+- Old bodies keep working: `crop`, `quantity_kg` and `asking_price_iqd_per_kg` are still accepted for kg products, so nothing breaks while the app moves over.
+- Limits per unit: `kg` 1 to 1,000,000; `tray_30` 1 to 10,000; `litre` 1 to 100,000; `head` 1 to 1,000. Outside them: `422 invalid` with `field`.
+- **Every listing answer** adds `product`, `group`, `unit`, `quantity` and `asking_price_iqd` (and keeps `crop`, `quantity_kg`, `asking_price_iqd_per_kg` filled for kg products until the app has moved).
+- `GET /v1/alwa/listings` takes `group=` and `product=` filters next to today's ones (`crop=` stays as an alias of `product=`).
+
+**3. The price board** (`/v1/alwa/markets/{slug}/prices`) works per product and per unit: each row adds `product` and `unit`, and staff can type a price for any product, not only crops. `fair_price` compares like for like (same product, same unit).
+
+**4. What the app will do** (next, after this section is built): the tab and screens are renamed Marketplace; "For sale near you" gets group chips (Crops, Fish, meat and eggs, Honey and dairy, Animals, Nuts and dried fruit); Sell asks for the group, then the product, and shows the unit everywhere ("12 trays", "3 head", "40 litres", "IQD per head"). Until the backend has 1 and 2, the app keeps selling crops by the kg as today.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
@@ -265,7 +451,7 @@ The only code the app branches on today is `bad_code`; the others are shown as t
 | 2.3 status | `farm_doctor/field_eye.py` `measure(lon, lat, date)` | Python only: one 1 km square around a point, about 16 s; needs the per-cell version and a stored daily job. Decided 2026-10-08 (user, Arya): the Python AIs push results into `backend/` through `/v1/ingest` (guarded by `X-Service-Key`) and `backend/` serves them. The app-facing `GET /v1/farms/{id}/status` is not built yet. |
 | 2.4 plan | `farm_doctor/weather_planner.py` `plan(lon, lat)` | Python only; decisions are English sentences, need the codes, `ku` and the alert list. Same route in through `/v1/ingest`; `GET /v1/farms/{id}/plan` not built yet. |
 | season label | `farm_doctor/season_check.py` | Python only, 16 zones |
-| 2.5 doctor | `farm_doctor/doctor.py` | Python only; needs `GEMINI_API_KEY` |
+| 2.5 doctor | `backend/` route, `farm_doctor/` service | `POST /v1/farms/{id}/ask` built 2026-10-09: the backend passes the question, the farm and its insights to the local Doctor service at `DOCTOR_URL` and returns its checked answer. The service needs `GEMINI_API_KEY`. No cases stored yet. |
 | 2.6 nearby reports | `farm_doctor/neighbour_watch.py` | test data only |
 | 2.8 region | `farm_doctor/build_now.py` → `web/now.json` | works, 61 s for 16 zones |
 | 2.7 push, `DELETE /v1/account` | nothing yet | later |

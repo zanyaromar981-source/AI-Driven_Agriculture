@@ -4,7 +4,7 @@ use crate::{
     app::Pagination,
     features::zones::{
         app::AppError,
-        domain::{Month, MonthRange, SubZone, SubZoneReading, Zone, ZoneReading, ZoneSlug},
+        domain::{Month, MonthRange, Shape, SubZone, SubZoneReading, Zone, ZoneReading, ZoneSlug},
     },
 };
 
@@ -111,4 +111,9 @@ pub trait ZoneRepository: Send + Sync + std::fmt::Debug {
         sub_zone_id: i32,
         month: Month,
     ) -> Result<bool, AppError>;
+
+    /// Returns every sub-zone that has a shape, with it, in the order they
+    /// were seeded. The shapes are large: this is read once to build the
+    /// place index, never per request.
+    async fn find_all_sub_zone_shapes(&self) -> Result<Vec<(SubZone, Shape)>, AppError>;
 }

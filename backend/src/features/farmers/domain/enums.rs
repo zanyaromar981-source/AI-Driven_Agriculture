@@ -46,6 +46,72 @@ impl TryFrom<&str> for Language {
     }
 }
 
+/// A farmer's gender as a support letter prints it. Unknown is the absence
+/// of a value, not a variant.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Gender {
+    Male,
+    Female,
+}
+
+impl Gender {
+    pub const ALL: [Gender; 2] = [Gender::Male, Gender::Female];
+}
+
+impl From<Gender> for String {
+    fn from(value: Gender) -> Self {
+        match value {
+            Gender::Male => "male".to_string(),
+            Gender::Female => "female".to_string(),
+        }
+    }
+}
+
+impl TryFrom<&str> for Gender {
+    type Error = FarmerError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "male" => Ok(Gender::Male),
+            "female" => Ok(Gender::Female),
+            _ => Err(DomainError::InvalidValue(format!("Invalid gender: {value}")).into()),
+        }
+    }
+}
+
+/// The language a support letter is printed in. The Ministry prints in
+/// Sorani and English only, so this is narrower than [`Language`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LetterLanguage {
+    Sorani,
+    English,
+}
+
+impl LetterLanguage {
+    pub const ALL: [LetterLanguage; 2] = [LetterLanguage::Sorani, LetterLanguage::English];
+}
+
+impl From<LetterLanguage> for String {
+    fn from(value: LetterLanguage) -> Self {
+        match value {
+            LetterLanguage::Sorani => "ku".to_string(),
+            LetterLanguage::English => "en".to_string(),
+        }
+    }
+}
+
+impl TryFrom<&str> for LetterLanguage {
+    type Error = FarmerError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "ku" => Ok(LetterLanguage::Sorani),
+            "en" => Ok(LetterLanguage::English),
+            _ => Err(DomainError::InvalidValue(format!("Invalid letter language: {value}")).into()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -74,5 +140,32 @@ mod tests {
         assert!(Language::try_from("fr").is_err());
         assert!(Language::try_from("").is_err());
         assert!(Language::try_from("KU").is_err());
+    }
+
+    #[test]
+    fn every_gender_round_trips() {
+        for gender in Gender::ALL {
+            let stored = String::from(gender);
+
+            assert_eq!(Gender::try_from(stored.as_str()).expect("gender"), gender);
+        }
+
+        assert!(Gender::try_from("other").is_err());
+        assert!(Gender::try_from("Male").is_err());
+    }
+
+    #[test]
+    fn every_letter_language_round_trips_and_only_sorani_and_english_exist() {
+        for language in LetterLanguage::ALL {
+            let stored = String::from(language);
+
+            assert_eq!(
+                LetterLanguage::try_from(stored.as_str()).expect("language"),
+                language
+            );
+        }
+
+        assert!(LetterLanguage::try_from("ar").is_err());
+        assert!(LetterLanguage::try_from("kmr").is_err());
     }
 }

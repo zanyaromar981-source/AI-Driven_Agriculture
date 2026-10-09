@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the Farm Doctor dams runner once a day
+
+[Timer]
+OnCalendar=*-*-* 13:20:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

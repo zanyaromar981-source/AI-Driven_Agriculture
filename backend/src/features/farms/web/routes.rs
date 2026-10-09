@@ -18,11 +18,18 @@ pub fn routes() -> Router<AppState> {
             .route("/", get(handlers::get_farms).post(handlers::create_farm))
             .route(
                 "/{id}",
-                get(handlers::get_farm).delete(handlers::delete_farm),
+                get(handlers::get_farm)
+                    .put(handlers::edit_farm)
+                    .delete(handlers::delete_farm),
             )
             .route("/{id}/status", get(handlers::get_farm_status))
             .route("/{id}/cells", put(handlers::repaint_farm_cells)),
     )
+}
+
+/// What anyone may read, with no login: totals only, never a farm.
+pub fn public_routes() -> Router<AppState> {
+    Router::new().route("/stats/farms", get(handlers::get_public_farm_stats))
 }
 
 /// Routes behind the `staff_auth` layer, for Ministry staff. Each method
@@ -51,5 +58,10 @@ pub fn dashboard_routes() -> Router<AppState> {
                     delete(handlers::dashboard_delete_farm)
                         .route_layer(require!(Resource::Farms, Action::Delete)),
                 ),
+        )
+        .route(
+            "/stats/farms",
+            get(handlers::dashboard_get_farm_stats)
+                .route_layer(require!(Resource::Farms, Action::Read)),
         )
 }

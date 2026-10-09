@@ -1,0 +1,19 @@
+.login { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(360px, 1fr); }
+.login-art { position: relative; overflow: hidden; color: #F6EDD9; display: grid; place-items: center; padding: 40px;
+  background: radial-gradient(900px 600px at 40% 40%, #1B5A43 0%, var(--deep) 60%, #0C2A1F 100%); }
+.login-art::before { content: ''; position: absolute; inset: 0; opacity: .18;
+  background: url('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/11/795/1287') center / cover; filter: saturate(.6); }
+.login-art-in { position: relative; text-align: center; max-width: 420px; }
+.login-art .sun { filter: drop-shadow(0 0 24px #E8C77A55); }
+.login-art .sun .ray { fill: #D9A441; } .login-art .sun .core { fill: #F2C66B; }
+.login-word { display: flex; gap: 14px; justify-content: center; align-items: baseline; margin: 18px 0 8px; direction: ltr; }
+.login-word span:first-child { font: 800 52px/1 var(--latin); letter-spacing: -.02em; }
+.login-word span:last-child { font: 700 30px var(--arabic); color: #E8C77A; }
+.login-art p { color: #BFD8CB; font-size: 15px; }
+.login-side { background: var(--surface); padding: 20px 28px; display: flex; flex-direction: column; }
+.login-form { width: 100%; max-width: 380px; margin: auto; display: flex; flex-direction: column; gap: 14px; padding: 28px 0; }
+@media (max-width: 860px) {
+  .login { grid-template-columns: minmax(0, 1fr); }
+  .login-art { display: none; }
+  .login-side { min-height: 100vh; padding: 14px 16px; }
+}

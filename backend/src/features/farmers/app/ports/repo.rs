@@ -4,8 +4,11 @@ use chrono::{DateTime, Utc};
 use crate::{
     app::Pagination,
     features::farmers::{
-        app::AppError,
-        domain::{Farmer, FarmerName, Language, SignInChallenge},
+        app::{AppError, FarmerFilter, LetterRecord},
+        domain::{
+            Farmer, FarmerChange, Letter, LetterLanguage, LetterNumber, LetterPurpose,
+            SignInChallenge,
+        },
     },
     shared::Phone,
 };
@@ -27,11 +30,11 @@ pub trait FarmerRepository: Send + Sync + std::fmt::Debug {
 
     async fn find_by_id(&self, id: i32) -> Result<Option<Farmer>, AppError>;
 
-    /// Returns one page of farmers, newest first, or the one farmer with
-    /// exactly `phone` when it is given, with how many there are in all.
+    /// Returns one page of the farmers the filter lets through, in its
+    /// order, with how many there are in all.
     async fn find_page(
         &self,
-        phone: Option<&Phone>,
+        filter: &FarmerFilter,
         pagination: &Pagination,
     ) -> Result<(Vec<Farmer>, u64), AppError>;
 
@@ -41,20 +44,53 @@ pub trait FarmerRepository: Send + Sync + std::fmt::Debug {
     /// exactly one creates.
     async fn create(&self, entity: &Farmer) -> Result<Option<Farmer>, AppError>;
 
-    /// Replaces the name and language of the farmer with that id in one
-    /// statement and returns it, or `None` when there is none. The phone is
-    /// never written.
+    /// Replaces the name, the language and the details of the farmer with
+    /// that id in one statement and returns it, or `None` when there is
+    /// none. The phone is never written, and `blocked` only when the change
+    /// carries it.
     async fn update_by_id(
         &self,
         id: i32,
-        name: Option<&FarmerName>,
-        language: Language,
+        change: &FarmerChange,
         now: DateTime<Utc>,
     ) -> Result<Option<Farmer>, AppError>;
 
     /// Deletes the farmer and the sign-in challenge their phone has open, in
     /// one transaction. Returns whether there was a farmer.
     async fn delete_with_challenge(&self, id: i32) -> Result<bool, AppError>;
+
+    /// Returns the farmers that have one of `ids`, when given, and whose
+    /// name or phone contains `matching`, when given, whatever the case,
+    /// newest first, `limit` at most. For another feature that keeps a
+    /// farmer's id and needs their name and phone, or searches by them.
+    async fn find_many(
+        &self,
+        ids: Option<&[i32]>,
+        matching: Option<&str>,
+        limit: u64,
+    ) -> Result<Vec<Farmer>, AppError>;
+}
+
+#[async_trait]
+pub trait LetterRepository: Send + Sync + std::fmt::Debug {
+    /// Stores the farmer's next letter and returns it with the farmer as
+    /// they were at that moment, or `None`, writing nothing, when there is
+    /// no such farmer. The count that gives the letter its number is taken
+    /// while the farmer's row is held, so letters issued for one farmer at
+    /// the same moment get the numbers one after another: none twice, none
+    /// skipped.
+    async fn issue(
+        &self,
+        farmer_id: i32,
+        staff_id: i32,
+        purpose: &LetterPurpose,
+        language: LetterLanguage,
+        now: DateTime<Utc>,
+    ) -> Result<Option<(Letter, Farmer)>, AppError>;
+
+    /// Returns the stored letter with the farmer's name as it is now.
+    async fn find_by_number(&self, number: &LetterNumber)
+    -> Result<Option<LetterRecord>, AppError>;
 }
 
 #[async_trait]

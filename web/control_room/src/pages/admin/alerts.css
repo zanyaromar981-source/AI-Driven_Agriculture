@@ -1,0 +1,4 @@
+.al-phone { width: 240px; max-width: 100%; margin: 0 auto 10px; background: linear-gradient(160deg, #2C4A3C, #123A2C); border: 5px solid var(--ink); border-radius: 28px; padding: 18px 10px 70px; color: #fff; }
+.al-clock { text-align: center; font: 700 26px var(--latin); margin-bottom: 14px; direction: ltr; }
+.al-push { background: #FFFFFFEE; color: var(--ink); border-radius: 13px; padding: 9px 11px; font-family: var(--arabic); overflow-wrap: anywhere; }
+.al-push-title { font-weight: 700; margin: 2px 0; }

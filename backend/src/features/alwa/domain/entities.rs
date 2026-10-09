@@ -3,8 +3,9 @@ use getset::Getters;
 
 use crate::{
     features::alwa::domain::{
-        AlwaError, BuyerKind, Crop, DisplayName, FairPrice, Grade, ListingStatus, MarketName,
-        MarketSlug, Note, OfferStatus, Pickup, PricePerKg, PriceSource, QuantityKg, ZoneSlug,
+        AlwaError, BuyerKind, Crop, DisplayName, FairPrice, GeoPoint, Grade, ListingStatus,
+        MarketName, MarketSlug, Note, OfferStatus, Pickup, PricePerKg, PriceSource, QuantityKg,
+        ZoneSlug,
     },
     shared::Phone,
 };
@@ -32,13 +33,15 @@ fn percent_change(from: PricePerKg, to: PricePerKg) -> i32 {
 /// An alwa: the wholesale produce market of one city. The first ones are
 /// seeded by the migration; staff add, rename and remove them on the
 /// dashboard.
-#[derive(Clone, Debug, PartialEq, Eq, Getters)]
+#[derive(Clone, Debug, PartialEq, Getters)]
 #[getset(get = "pub")]
 pub struct Market {
     id: i32,
     slug: MarketSlug,
     name_en: String,
     name_ku: String,
+    /// Where the alwa is. `None` until staff have said.
+    point: Option<GeoPoint>,
 }
 
 impl Market {
@@ -49,7 +52,24 @@ impl Market {
             slug,
             name_en,
             name_ku,
+            point: None,
         }
+    }
+
+    /// Completes `rehydrate` for an alwa whose place is known.
+    pub fn located(mut self, point: Option<GeoPoint>) -> Self {
+        self.point = point;
+        self
+    }
+
+    /// The alwa closest to `from`, among those whose place is known.
+    /// Between two equally far the one listed first wins.
+    pub fn nearest<'a>(markets: &'a [Market], from: &GeoPoint) -> Option<&'a Market> {
+        markets
+            .iter()
+            .filter_map(|market| Some((market, market.point?.km_to(from))))
+            .min_by(|(_, one), (_, other)| one.total_cmp(other))
+            .map(|(market, _)| market)
     }
 }
 
@@ -141,8 +161,11 @@ pub struct ListingDraft {
     pub quantity: QuantityKg,
     pub asking_price: PricePerKg,
     pub grade: Option<Grade>,
-    pub pickup: Pickup,
+    /// The app does not ask where the crop is handed over.
+    pub pickup: Option<Pickup>,
     pub zone_slug: Option<ZoneSlug>,
+    /// Where the crop is: the place the seller stood when posting.
+    pub point: Option<GeoPoint>,
     pub note: Option<Note>,
     pub closes_at: DateTime<Utc>,
 }
@@ -156,23 +179,26 @@ pub struct OfferDraft {
     pub price: PricePerKg,
 }
 
-/// A crop a farmer has put on sale at an alwa.
+/// A crop a farmer has put on sale, at an alwa or from where it stands.
 #[derive(Clone, Debug, Getters)]
 #[getset(get = "pub")]
 pub struct Listing {
     /// None = new (not yet persisted), Some = existing (persisted)
     id: Option<i32>,
-    /// Private: see `seller_phone_shown_to`.
+    /// Shown to signed-in readers only: see `seller_phone_seen_by`.
     seller_phone: Phone,
     seller_name: Option<DisplayName>,
     crop: Crop,
     quantity: QuantityKg,
     asking_price: PricePerKg,
     grade: Option<Grade>,
-    pickup: Pickup,
-    market_id: i32,
-    market: MarketSlug,
+    pickup: Option<Pickup>,
+    /// `None` for a listing posted with neither an alwa nor a point.
+    market_id: Option<i32>,
+    market: Option<MarketSlug>,
     zone_slug: Option<ZoneSlug>,
+    /// `None` for a listing posted before listings had a place.
+    point: Option<GeoPoint>,
     note: Option<Note>,
     closes_at: DateTime<Utc>,
     /// The stored status. Read `status_at` instead: a listing whose closing
@@ -201,7 +227,7 @@ impl Moderation {
 impl Listing {
     pub fn new(
         seller: Phone,
-        market: &Market,
+        market: Option<&Market>,
         draft: ListingDraft,
         now: DateTime<Utc>,
     ) -> Result<Self, AlwaError> {
@@ -218,9 +244,10 @@ impl Listing {
             asking_price: draft.asking_price,
             grade: draft.grade,
             pickup: draft.pickup,
-            market_id: market.id,
-            market: market.slug.clone(),
+            market_id: market.map(|market| market.id),
+            market: market.map(|market| market.slug.clone()),
             zone_slug: draft.zone_slug,
+            point: draft.point,
             note: draft.note,
             closes_at: draft.closes_at,
             status: ListingStatus::Open,
@@ -240,9 +267,9 @@ impl Listing {
         quantity: QuantityKg,
         asking_price: PricePerKg,
         grade: Option<Grade>,
-        pickup: Pickup,
-        market_id: i32,
-        market: MarketSlug,
+        pickup: Option<Pickup>,
+        market_id: Option<i32>,
+        market: Option<MarketSlug>,
         zone_slug: Option<ZoneSlug>,
         note: Option<Note>,
         closes_at: DateTime<Utc>,
@@ -262,6 +289,7 @@ impl Listing {
             market_id,
             market,
             zone_slug,
+            point: None,
             note,
             closes_at,
             status,
@@ -269,6 +297,12 @@ impl Listing {
             updated_at,
             moderation: None,
         }
+    }
+
+    /// Completes `rehydrate` for a listing stored with its place.
+    pub fn placed_at(mut self, point: Option<GeoPoint>) -> Self {
+        self.point = point;
+        self
     }
 
     /// Completes `rehydrate` for a listing stored as closed by staff.
@@ -301,6 +335,19 @@ impl Listing {
         self.is_sold_by(phone) && self.status == ListingStatus::Cancelled
     }
 
+    /// True when this seller's listing is already sold, by a deal or by
+    /// their own word. A repeated "sold" then has nothing left to do and is
+    /// not an error.
+    pub fn was_marked_sold_by(&self, phone: &Phone) -> bool {
+        self.is_sold_by(phone) && self.status == ListingStatus::Sold
+    }
+
+    /// When the listing was sold. Nothing changes a listing after that, so
+    /// it is the moment of its last change.
+    pub fn sold_at(&self) -> Option<DateTime<Utc>> {
+        (self.status == ListingStatus::Sold).then_some(self.updated_at)
+    }
+
     /// True when this seller has already made the deal on exactly this
     /// offer. A repeated accept of the same offer then has nothing left to
     /// do and is not an error; accepting a different offer still is.
@@ -326,7 +373,7 @@ impl Listing {
     }
 
     /// A staff member moderates the listing. Closing an open listing is all
-    /// they may do: only a deal sells a listing, and nothing reopens one.
+    /// they may do: only its seller sells a listing, and nothing reopens one.
     pub fn moderate(
         &mut self,
         to: ListingStatus,
@@ -360,6 +407,23 @@ impl Listing {
         }
 
         self.status = ListingStatus::Cancelled;
+        self.updated_at = now;
+
+        Ok(())
+    }
+
+    /// The seller says the crop is sold, to a buyer who called them rather
+    /// than through an offer. The caller declines the offers still open.
+    pub fn mark_sold(&mut self, by: &Phone, now: DateTime<Utc>) -> Result<(), AlwaError> {
+        if !self.is_sold_by(by) {
+            return Err(AlwaError::NotTheSeller);
+        }
+
+        if !self.is_open_at(now) {
+            return Err(AlwaError::ListingNotOpen);
+        }
+
+        self.status = ListingStatus::Sold;
         self.updated_at = now;
 
         Ok(())
@@ -450,8 +514,15 @@ impl Listing {
         Ok(())
     }
 
-    /// The seller's phone is private. Only the buyer whose offer became the
-    /// deal is shown it, so the two can arrange the pickup.
+    /// Buyers call the seller, so the seller's phone is on the listing from
+    /// the start, for anyone who is signed in. A reader without a login,
+    /// `None`, is not shown it.
+    pub fn seller_phone_seen_by(&self, viewer: Option<&Phone>) -> Option<&Phone> {
+        viewer.map(|_| &self.seller_phone)
+    }
+
+    /// On a buyer's own offer the seller's phone is shown once that offer
+    /// became the deal, so the two can arrange the pickup.
     pub fn seller_phone_shown_to(&self, viewer: &Phone, offer: &Offer) -> Option<&Phone> {
         (offer.is_on(self) && offer.is_accepted() && offer.is_by(viewer))
             .then_some(&self.seller_phone)
@@ -466,7 +537,7 @@ impl Listing {
 
         prices
             .iter()
-            .filter(|price| price.market_id == self.market_id && price.crop == self.crop)
+            .filter(|price| Some(price.market_id) == self.market_id && price.crop == self.crop)
             .filter(|price| price.day <= made_on && price.day >= earliest)
             .max_by_key(|price| price.day)
     }
@@ -568,6 +639,9 @@ pub struct ListingCard {
     /// Highest price first, as a seller reads them.
     offers: Vec<Offer>,
     fair_price: FairPrice,
+    /// How far the crop is from the reader, when the reader said where they
+    /// stand and the listing has a place.
+    distance_km: Option<f64>,
 }
 
 impl ListingCard {
@@ -598,7 +672,14 @@ impl ListingCard {
             fair_price: listing.fair_price(prices),
             listing,
             offers,
+            distance_km: None,
         }
+    }
+
+    /// The card as a reader standing at `from` sees it.
+    pub fn seen_from(mut self, from: &GeoPoint) -> Self {
+        self.distance_km = self.listing.point.map(|point| from.km_to(&point));
+        self
     }
 
     pub fn open_offers(&self) -> usize {
@@ -703,12 +784,13 @@ mod tests {
     fn draft(closes_at: DateTime<Utc>) -> ListingDraft {
         ListingDraft {
             seller_name: Some(DisplayName::new("Kak Azad".to_string()).expect("name")),
-            crop: Crop::Tomato,
+            crop: Crop::of("tomato"),
             quantity: QuantityKg::new(500).expect("quantity"),
             asking_price: PricePerKg::new(1_000).expect("price"),
             grade: Some(Grade::A),
-            pickup: Pickup::Farm,
+            pickup: Some(Pickup::Farm),
             zone_slug: None,
+            point: None,
             note: None,
             closes_at,
         }
@@ -719,7 +801,7 @@ mod tests {
     fn listing(now: DateTime<Utc>) -> Listing {
         let mut listing = Listing::new(
             phone(SELLER),
-            &market(),
+            Some(&market()),
             draft(now + Duration::days(3)),
             now,
         )
@@ -752,7 +834,7 @@ mod tests {
         Price::rehydrate(
             1,
             1,
-            Crop::Tomato,
+            Crop::of("tomato"),
             day,
             PricePerKg::new(value).expect("price"),
             fixed,
@@ -766,15 +848,18 @@ mod tests {
         let now = Utc::now();
         let listing = Listing::new(
             phone(SELLER),
-            &market(),
+            Some(&market()),
             draft(now + Duration::days(3)),
             now,
         )
         .expect("listing");
 
         assert_eq!(*listing.status(), ListingStatus::Open);
-        assert_eq!(*listing.market_id(), 1);
-        assert_eq!(listing.market().as_str(), "sulaymaniyah");
+        assert_eq!(*listing.market_id(), Some(1));
+        assert_eq!(
+            listing.market().as_ref().map(MarketSlug::as_str),
+            Some("sulaymaniyah")
+        );
         assert!(listing.id().is_none());
     }
 
@@ -784,7 +869,7 @@ mod tests {
 
         for closes_at in [now, now - Duration::hours(1)] {
             assert!(matches!(
-                Listing::new(phone(SELLER), &market(), draft(closes_at), now),
+                Listing::new(phone(SELLER), Some(&market()), draft(closes_at), now),
                 Err(AlwaError::BadClosingTime(_))
             ));
         }
@@ -795,11 +880,11 @@ mod tests {
         let now = Utc::now();
         let last_moment = now + Duration::days(MAX_CLOSING_DAYS);
 
-        assert!(Listing::new(phone(SELLER), &market(), draft(last_moment), now).is_ok());
+        assert!(Listing::new(phone(SELLER), Some(&market()), draft(last_moment), now).is_ok());
         assert!(matches!(
             Listing::new(
                 phone(SELLER),
-                &market(),
+                Some(&market()),
                 draft(last_moment + Duration::seconds(1)),
                 now
             ),
@@ -1134,7 +1219,7 @@ mod tests {
     }
 
     #[test]
-    fn phones_stay_private_while_there_is_no_deal() {
+    fn on_an_offer_no_phone_is_shown_while_there_is_no_deal() {
         let now = Utc::now();
         let listing = listing(now);
         let offer = offer(1, BUYER, 950, now);
@@ -1211,6 +1296,175 @@ mod tests {
         );
     }
 
+    fn point(lat: f64, lon: f64) -> GeoPoint {
+        GeoPoint::in_region(lat, lon).expect("point")
+    }
+
+    #[test]
+    fn a_listing_may_have_neither_a_market_nor_a_pickup_nor_a_grade() {
+        let now = Utc::now();
+        let listing = Listing::new(
+            phone(SELLER),
+            None,
+            ListingDraft {
+                grade: None,
+                pickup: None,
+                point: Some(point(35.5, 45.4)),
+                ..draft(now + Duration::days(14))
+            },
+            now,
+        )
+        .expect("listing");
+
+        assert_eq!(*listing.market_id(), None);
+        assert_eq!(*listing.market(), None);
+        assert_eq!(*listing.pickup(), None);
+        assert_eq!(*listing.point(), Some(point(35.5, 45.4)));
+        assert_eq!(
+            listing.fair_price(&[price_on(now.date_naive(), 1_000, false)]),
+            FairPrice::Unknown,
+            "with no alwa there is no price to measure against"
+        );
+    }
+
+    #[test]
+    fn the_sellers_phone_is_shown_to_anyone_signed_in_and_to_nobody_else() {
+        let listing = listing(Utc::now());
+
+        assert_eq!(
+            listing.seller_phone_seen_by(Some(&phone(BUYER))),
+            Some(&phone(SELLER)),
+            "no deal is needed: buyers call the seller"
+        );
+        assert_eq!(
+            listing.seller_phone_seen_by(Some(&phone(SELLER))),
+            Some(&phone(SELLER))
+        );
+        assert_eq!(listing.seller_phone_seen_by(None), None);
+    }
+
+    #[test]
+    fn the_seller_marks_an_open_listing_sold_without_an_offer() {
+        let now = Utc::now();
+        let mut listing = listing(now);
+
+        assert_eq!(listing.sold_at(), None);
+        assert!(!listing.was_marked_sold_by(&phone(SELLER)));
+
+        let later = now + Duration::hours(1);
+        listing.mark_sold(&phone(SELLER), later).expect("sold");
+
+        assert_eq!(*listing.status(), ListingStatus::Sold);
+        assert_eq!(listing.sold_at(), Some(later));
+        assert!(listing.was_marked_sold_by(&phone(SELLER)));
+        assert!(
+            !listing.was_marked_sold_by(&phone(BUYER)),
+            "someone else's repeat is not a repeat"
+        );
+    }
+
+    #[test]
+    fn only_the_seller_may_mark_a_listing_sold() {
+        let now = Utc::now();
+        let mut listing = listing(now);
+
+        assert!(matches!(
+            listing.mark_sold(&phone(BUYER), now),
+            Err(AlwaError::NotTheSeller)
+        ));
+        assert_eq!(*listing.status(), ListingStatus::Open);
+    }
+
+    #[test]
+    fn a_cancelled_or_expired_listing_cannot_be_marked_sold() {
+        let now = Utc::now();
+
+        let mut cancelled = listing(now);
+        cancelled.cancel(&phone(SELLER), now).expect("cancel");
+        assert!(matches!(
+            cancelled.mark_sold(&phone(SELLER), now),
+            Err(AlwaError::ListingNotOpen)
+        ));
+        assert_eq!(*cancelled.status(), ListingStatus::Cancelled);
+
+        let mut expired = listing(now);
+        assert!(matches!(
+            expired.mark_sold(&phone(SELLER), now + Duration::days(4)),
+            Err(AlwaError::ListingNotOpen)
+        ));
+    }
+
+    #[test]
+    fn a_listing_sold_through_an_offer_also_counts_as_sold_by_its_seller() {
+        let now = Utc::now();
+        let mut listing = listing(now);
+        let mut offers = vec![offer(1, BUYER, 950, now)];
+
+        listing
+            .accept(&phone(SELLER), 1, &mut offers, now)
+            .expect("accept");
+
+        assert!(listing.was_marked_sold_by(&phone(SELLER)));
+        assert_eq!(listing.sold_at(), Some(now));
+    }
+
+    #[test]
+    fn the_nearest_market_is_the_closest_one_that_has_a_point() {
+        let sulaymaniyah = market().located(Some(point(35.5572, 45.4356)));
+        let erbil = Market::rehydrate(
+            2,
+            MarketSlug::new("erbil".to_string()).expect("slug"),
+            "Erbil".to_string(),
+            "هەولێر".to_string(),
+        )
+        .located(Some(point(36.1911, 44.0092)));
+        let unplaced = Market::rehydrate(
+            3,
+            MarketSlug::new("koya".to_string()).expect("slug"),
+            "Koya".to_string(),
+            "کۆیە".to_string(),
+        );
+        let markets = [unplaced.clone(), sulaymaniyah, erbil];
+
+        let near_erbil = point(36.2, 44.1);
+        let near_sulaymaniyah = point(35.6, 45.3);
+
+        assert_eq!(
+            Market::nearest(&markets, &near_erbil).map(|market| *market.id()),
+            Some(2)
+        );
+        assert_eq!(
+            Market::nearest(&markets, &near_sulaymaniyah).map(|market| *market.id()),
+            Some(1)
+        );
+        assert_eq!(
+            Market::nearest(&[unplaced], &near_erbil),
+            None,
+            "a market without a point is never the nearest"
+        );
+        assert_eq!(Market::nearest(&[], &near_erbil), None);
+    }
+
+    #[test]
+    fn a_card_tells_the_distance_only_when_the_listing_has_a_place() {
+        let now = Utc::now();
+        let from = point(36.1911, 44.0092);
+
+        let unplaced = ListingCard::assemble(listing(now), &[], &[], now);
+        assert_eq!(*unplaced.distance_km(), None, "nobody asked from where");
+        assert_eq!(*unplaced.seen_from(&from).distance_km(), None);
+
+        let placed = listing(now).placed_at(Some(point(35.5572, 45.4356)));
+        let card = ListingCard::assemble(placed, &[], &[], now).seen_from(&from);
+
+        assert!(
+            card.distance_km()
+                .is_some_and(|km| (145.0..150.0).contains(&km)),
+            "got {:?}",
+            card.distance_km()
+        );
+    }
+
     #[test]
     fn the_fair_price_check_uses_the_price_on_the_day_the_listing_was_made() {
         let now = Utc::now();
@@ -1281,8 +1535,8 @@ mod tests {
         let price = PricePerKg::new(1_000).expect("price");
 
         let prices = [
-            Price::rehydrate(1, 1, Crop::Onion, today, price, false, source(), now),
-            Price::rehydrate(2, 2, Crop::Tomato, today, price, false, source(), now),
+            Price::rehydrate(1, 1, Crop::of("onion"), today, price, false, source(), now),
+            Price::rehydrate(2, 2, Crop::of("tomato"), today, price, false, source(), now),
         ];
 
         assert_eq!(listing.fair_price(&prices), FairPrice::Unknown);

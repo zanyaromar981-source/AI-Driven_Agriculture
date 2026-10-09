@@ -6,6 +6,8 @@ pub struct Config {
     pub server: Server,
     pub farm: Farm,
     pub ingest: Ingest,
+    pub doctor: Doctor,
+    pub otpiq: Otpiq,
 }
 
 #[derive(Clone, Debug)]
@@ -54,9 +56,55 @@ pub struct Ingest {
     pub service_key: Option<String>,
 }
 
+/// The local Farm Doctor service that `POST /v1/farms/{id}/ask` passes
+/// questions to. The backend calls no AI itself.
+#[derive(Clone, Debug)]
+pub struct Doctor {
+    pub url: String,
+}
+
+/// The ways OTPIQ can deliver a code. `auto` lets OTPIQ choose.
+pub const OTPIQ_PROVIDERS: [&str; 6] = [
+    "auto",
+    "whatsapp-sms",
+    "telegram-sms",
+    "sms",
+    "whatsapp",
+    "telegram",
+];
+
+/// OTPIQ delivers sign-in codes by SMS, WhatsApp or Telegram. Without an API
+/// key nothing is sent and the code is written to the server log.
+#[derive(Clone)]
+pub struct Otpiq {
+    pub api_key: Option<String>,
+    pub provider: String,
+    pub sender_id: Option<String>,
+    pub base_url: String,
+    pub timeout_seconds: u64,
+}
+
+/// The key is a secret, so it stays out of debug output.
+impl std::fmt::Debug for Otpiq {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("Otpiq")
+            .field("api_key", &self.api_key.as_ref().map(|_| "******"))
+            .field("provider", &self.provider)
+            .field("sender_id", &self.sender_id)
+            .field("base_url", &self.base_url)
+            .field("timeout_seconds", &self.timeout_seconds)
+            .finish()
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Server {
     pub port: u16,
+    /// The addresses of the websites allowed to call this API from a browser.
+    /// Empty means none: the phone app and the data jobs are not browsers and
+    /// need no entry here.
+    pub cors_origins: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -156,6 +204,12 @@ impl Config {
                 port: fetch_env_with_default("PORT", "3000")
                     .parse::<u16>()
                     .unwrap(),
+                cors_origins: dotenvy::var("HTTP__CORS_ORIGINS")
+                    .unwrap_or_default()
+                    .split(',')
+                    .map(|origin| origin.trim().trim_end_matches('/').to_string())
+                    .filter(|origin| !origin.is_empty())
+                    .collect(),
             },
             farm: Farm {
                 max_farms_per_user: fetch_env_with_default("FARMS__MAX_FARMS_PER_USER", "20")
@@ -170,8 +224,60 @@ impl Config {
                     .ok()
                     .filter(|key| !key.trim().is_empty()),
             },
+            doctor: Doctor {
+                url: dotenvy::var("DOCTOR_URL")
+                    .ok()
+                    .filter(|url| !url.trim().is_empty())
+                    .unwrap_or_else(|| "http://127.0.0.1:8090".to_string()),
+            },
+            otpiq: Otpiq {
+                api_key: fetch_optional_env("OTPIQ__API_KEY"),
+                provider: otpiq_provider(
+                    fetch_optional_env("OTPIQ__PROVIDER").unwrap_or_else(|| "auto".to_string()),
+                ),
+                sender_id: fetch_optional_env("OTPIQ__SENDER_ID"),
+                base_url: fetch_optional_env("OTPIQ__BASE_URL")
+                    .unwrap_or_else(|| "https://api.otpiq.com/api/".to_string()),
+                timeout_seconds: otpiq_timeout_seconds(
+                    fetch_optional_env("OTPIQ__TIMEOUT_SECONDS")
+                        .unwrap_or_else(|| "15".to_string()),
+                ),
+            },
         }
     }
+}
+
+/// A provider OTPIQ does not know would fail every send, so it stops the
+/// server at start-up instead.
+fn otpiq_provider(value: String) -> String {
+    let provider = value.trim().to_lowercase();
+
+    if !OTPIQ_PROVIDERS.contains(&provider.as_str()) {
+        panic!(
+            "OTPIQ__PROVIDER must be one of {}",
+            OTPIQ_PROVIDERS.join(", ")
+        );
+    }
+
+    provider
+}
+
+/// Without a limit a send that never answers would hold the farmer's
+/// request open for ever.
+fn otpiq_timeout_seconds(value: String) -> u64 {
+    match value.parse::<u64>() {
+        Ok(seconds) if seconds > 0 => seconds,
+        _ => panic!("OTPIQ__TIMEOUT_SECONDS must be a whole number of seconds, at least 1"),
+    }
+}
+
+/// A variable that may be left out. Blank counts as left out, because the
+/// deployment passes every variable through even when it is empty.
+fn fetch_optional_env(var: &str) -> Option<String> {
+    dotenvy::var(var)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
 }
 
 fn fetch_env(var: &str) -> String {
@@ -186,4 +292,46 @@ fn fetch_env(var: &str) -> String {
 
 fn fetch_env_with_default(var: &str, default: &str) -> String {
     dotenvy::var(var).ok().unwrap_or(default.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_listed_otpiq_provider_is_accepted() {
+        for provider in OTPIQ_PROVIDERS {
+            assert_eq!(otpiq_provider(provider.to_string()), provider);
+        }
+    }
+
+    #[test]
+    fn an_otpiq_provider_is_read_without_its_case_or_spaces() {
+        assert_eq!(otpiq_provider(" WhatsApp-SMS ".to_string()), "whatsapp-sms");
+    }
+
+    #[test]
+    #[should_panic(expected = "OTPIQ__PROVIDER must be one of")]
+    fn an_unknown_otpiq_provider_stops_the_server() {
+        otpiq_provider("carrier-pigeon".to_string());
+    }
+
+    #[test]
+    #[should_panic(expected = "OTPIQ__TIMEOUT_SECONDS must be")]
+    fn a_send_with_no_time_limit_stops_the_server() {
+        otpiq_timeout_seconds("0".to_string());
+    }
+
+    #[test]
+    fn debug_output_never_shows_the_otpiq_key() {
+        let otpiq = Otpiq {
+            api_key: Some("sk-very-secret".to_string()),
+            provider: "auto".to_string(),
+            sender_id: None,
+            base_url: "https://api.otpiq.com/api/".to_string(),
+            timeout_seconds: 15,
+        };
+
+        assert!(!format!("{otpiq:?}").contains("sk-very-secret"));
+    }
 }

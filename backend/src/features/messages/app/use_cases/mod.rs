@@ -1,0 +1,21 @@
+pub mod count_messages;
+pub mod delete_message;
+pub mod list_messages;
+pub mod list_my_messages;
+pub mod reply_to_message;
+pub mod send_message;
+pub mod set_message_state;
+pub mod view_message;
+pub mod view_my_photo;
+pub mod view_photo;
+
+pub use count_messages::*;
+pub use delete_message::*;
+pub use list_messages::*;
+pub use list_my_messages::*;
+pub use reply_to_message::*;
+pub use send_message::*;
+pub use set_message_state::*;
+pub use view_message::*;
+pub use view_my_photo::*;
+pub use view_photo::*;

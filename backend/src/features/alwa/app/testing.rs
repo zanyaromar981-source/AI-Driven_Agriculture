@@ -6,11 +6,15 @@ use chrono::{DateTime, Duration, NaiveDate, Utc};
 use crate::{
     app::{AuthContext, Pagination, User},
     features::alwa::{
-        app::{AlwaRepository, AppError, ListingFilter, ModerationFilter, StoredPriceFilter},
+        app::{
+            AlwaRepository, AppError, CropDirectory, ListingFilter, ModerationFilter,
+            StoredPriceFilter, ZoneLocator,
+        },
         domain::{
-            AlwaError, BuyerKind, Crop, Deal, DisplayName, Grade, IdempotencyKey, Listing,
-            ListingDraft, ListingStatus, Market, MarketName, MarketNames, MarketSlug, Offer,
-            OfferDraft, OfferStatus, Pickup, Price, PricePerKg, PriceSource, QuantityKg,
+            ActiveCrops, AlwaError, BuyerKind, Crop, Deal, DisplayName, GeoPoint, Grade,
+            IdempotencyKey, Listing, ListingDraft, ListingStatus, Market, MarketName, MarketNames,
+            MarketSlug, Offer, OfferDraft, OfferStatus, Pickup, Price, PricePerKg, PriceSource,
+            QuantityKg, ZoneSlug,
         },
     },
     shared::Phone,
@@ -26,6 +30,9 @@ pub const MARKET: &str = "sulaymaniyah";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RepositoryCall {
+    IsCropTraded {
+        crop: Crop,
+    },
     FindMarkets,
     FindMarketBySlug {
         slug: String,
@@ -50,6 +57,7 @@ pub enum RepositoryCall {
     },
     FindListings {
         filter: ListingFilter,
+        nearest_first: bool,
         page: u64,
         rows_per_page: u64,
     },
@@ -67,6 +75,9 @@ pub enum RepositoryCall {
     },
     CreateListing,
     CancelListing {
+        id: i32,
+    },
+    SellListing {
         id: i32,
     },
     FindOffersByListings {
@@ -132,7 +143,8 @@ pub enum RepositoryCall {
 #[derive(Debug)]
 struct Store {
     markets: Vec<Market>,
-    /// What another request stores just before the next `close_listing`.
+    /// What another request stores just before the next `close_listing` or
+    /// `sell_listing`.
     rival: Option<Listing>,
     prices: Vec<Price>,
     listings: Vec<Listing>,
@@ -191,7 +203,8 @@ impl FakeAlwaRepository {
     }
 
     /// Another request gets to the listing first: `rival` is what it stores
-    /// between this use case's read and its `close_listing`.
+    /// between this use case's read and its `close_listing` or
+    /// `sell_listing`.
     pub fn with_rival_write(self, rival: Listing) -> Self {
         self.store.lock().expect("store lock").rival = Some(rival);
         self
@@ -217,6 +230,7 @@ impl FakeAlwaRepository {
                 RepositoryCall::UpsertPrice { .. }
                     | RepositoryCall::CreateListing
                     | RepositoryCall::CancelListing { .. }
+                    | RepositoryCall::SellListing { .. }
                     | RepositoryCall::PlaceOffer { .. }
                     | RepositoryCall::AcceptOffer { .. }
                     | RepositoryCall::CreateMarket { .. }
@@ -382,11 +396,13 @@ impl AlwaRepository for FakeAlwaRepository {
     async fn find_listings(
         &self,
         filter: &ListingFilter,
+        near: Option<&GeoPoint>,
         now: DateTime<Utc>,
         pagination: &Pagination,
     ) -> Result<(Vec<Listing>, u64), AppError> {
         self.record(RepositoryCall::FindListings {
             filter: *filter,
+            nearest_first: near.is_some(),
             page: *pagination.page(),
             rows_per_page: *pagination.rows_per_page(),
         });
@@ -394,19 +410,31 @@ impl AlwaRepository for FakeAlwaRepository {
 
         let store = self.store.lock().expect("store lock");
 
-        let matching: Vec<Listing> = store
+        let mut matching: Vec<Listing> = store
             .listings
             .iter()
             .filter(|listing| listing.status_at(now) == filter.status)
             .filter(|listing| {
                 filter
                     .market_id
-                    .is_none_or(|market_id| *listing.market_id() == market_id)
+                    .is_none_or(|market_id| *listing.market_id() == Some(market_id))
             })
             .filter(|listing| filter.crop.is_none_or(|crop| *listing.crop() == crop))
             .cloned()
             .collect();
         let count = matching.len() as u64;
+
+        // Nearest first, a listing without a place last, as the database
+        // orders them.
+        if let Some(from) = near {
+            let km = |listing: &Listing| {
+                listing
+                    .point()
+                    .map_or(f64::INFINITY, |point| from.km_to(&point))
+            };
+
+            matching.sort_by(|one, other| km(one).total_cmp(&km(other)));
+        }
 
         Ok((
             matching
@@ -521,6 +549,51 @@ impl AlwaRepository for FakeAlwaRepository {
         for stored in &mut store.listings {
             if *stored.id() == Some(id) {
                 *stored = entity.clone();
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn sell_listing(&self, entity: &Listing) -> Result<(), AppError> {
+        let id = entity.id().unwrap_or_default();
+
+        self.record(RepositoryCall::SellListing { id });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        if let Some(rival) = store.rival.take() {
+            for stored in &mut store.listings {
+                if stored.id() == rival.id() {
+                    *stored = rival.clone();
+                }
+            }
+        }
+
+        let still_open = store
+            .listings
+            .iter()
+            .any(|stored| *stored.id() == Some(id) && *stored.status() == ListingStatus::Open);
+
+        if !still_open {
+            return Err(AlwaError::ListingNotOpen.into());
+        }
+
+        for stored in &mut store.listings {
+            if *stored.id() == Some(id) {
+                *stored = entity.clone();
+            }
+        }
+
+        for stored in &mut store.offers {
+            if *stored.listing_id() == id && stored.is_open() {
+                *stored = offer_with(
+                    stored,
+                    stored.id().unwrap_or_default(),
+                    OfferStatus::Declined,
+                    *entity.updated_at(),
+                );
             }
         }
 
@@ -653,7 +726,9 @@ impl AlwaRepository for FakeAlwaRepository {
                     .listings
                     .iter()
                     .find(|listing| offer.is_on(listing))
-                    .filter(|listing| market_id.is_none_or(|id| *listing.market_id() == id))?;
+                    .filter(|listing| {
+                        market_id.is_none_or(|id| *listing.market_id() == Some(id))
+                    })?;
 
                 Deal::new(listing.clone(), offer.clone())
             })
@@ -664,6 +739,7 @@ impl AlwaRepository for FakeAlwaRepository {
         &self,
         slug: &MarketSlug,
         names: &MarketNames,
+        point: Option<&GeoPoint>,
     ) -> Result<Option<Market>, AppError> {
         self.record(RepositoryCall::CreateMarket {
             slug: String::from(slug),
@@ -681,7 +757,8 @@ impl AlwaRepository for FakeAlwaRepository {
             slug.clone(),
             String::from(&names.name_en),
             String::from(&names.name_ku),
-        );
+        )
+        .located(point.copied());
         store.markets.push(created.clone());
 
         Ok(Some(created))
@@ -691,6 +768,7 @@ impl AlwaRepository for FakeAlwaRepository {
         &self,
         slug: &MarketSlug,
         names: &MarketNames,
+        point: Option<&GeoPoint>,
     ) -> Result<Option<Market>, AppError> {
         self.record(RepositoryCall::UpdateMarket {
             slug: String::from(slug),
@@ -708,7 +786,8 @@ impl AlwaRepository for FakeAlwaRepository {
             slug.clone(),
             String::from(&names.name_en),
             String::from(&names.name_ku),
-        );
+        )
+        .located(point.copied().or(*stored.point()));
 
         Ok(Some(stored.clone()))
     }
@@ -734,7 +813,7 @@ impl AlwaRepository for FakeAlwaRepository {
             || store
                 .listings
                 .iter()
-                .any(|listing| *listing.market_id() == id);
+                .any(|listing| *listing.market_id() == Some(id));
 
         if in_use {
             return Err(AlwaError::MarketInUse.into());
@@ -875,7 +954,7 @@ impl AlwaRepository for FakeAlwaRepository {
             .filter(|listing| {
                 filter
                     .market_id
-                    .is_none_or(|market_id| *listing.market_id() == market_id)
+                    .is_none_or(|market_id| *listing.market_id() == Some(market_id))
             })
             .filter(|listing| filter.crop.is_none_or(|crop| *listing.crop() == crop))
             .filter(|listing| {
@@ -963,6 +1042,129 @@ impl AlwaRepository for FakeAlwaRepository {
 
         Ok(store.listings.len() < before)
     }
+
+    async fn is_crop_traded(&self, crop: Crop) -> Result<bool, AppError> {
+        self.record(RepositoryCall::IsCropTraded { crop });
+        self.guard()?;
+
+        let store = self.store.lock().expect("store lock");
+
+        Ok(store.listings.iter().any(|listing| *listing.crop() == crop)
+            || store.prices.iter().any(|price| *price.crop() == crop))
+    }
+}
+
+/// Stands in for the crops feature: the crops staff have switched on.
+#[derive(Debug, Clone, Default)]
+pub struct FakeCropDirectory {
+    active: Vec<Crop>,
+    failing: bool,
+    asked: Arc<Mutex<u32>>,
+}
+
+impl FakeCropDirectory {
+    /// The alwa crops that were fixed in code before staff kept the list.
+    pub fn seeded() -> Self {
+        Self::with(&[
+            "wheat",
+            "barley",
+            "tomato",
+            "cucumber",
+            "potato",
+            "onion",
+            "watermelon",
+            "grape",
+            "olive",
+            "sunflower",
+            "chickpea",
+            "pomegranate",
+            "okra",
+            "eggplant",
+            "pepper",
+            "apple",
+        ])
+    }
+
+    pub fn with(codes: &[&str]) -> Self {
+        Self {
+            active: codes.iter().map(|code| Crop::of(code)).collect(),
+            ..Self::default()
+        }
+    }
+
+    pub fn failing() -> Self {
+        Self {
+            failing: true,
+            ..Self::default()
+        }
+    }
+
+    /// How many times the list was asked for.
+    pub fn asked(&self) -> u32 {
+        *self.asked.lock().expect("asked lock")
+    }
+}
+
+#[async_trait]
+impl CropDirectory for FakeCropDirectory {
+    async fn active(&self) -> Result<ActiveCrops, AppError> {
+        *self.asked.lock().expect("asked lock") += 1;
+
+        if self.failing {
+            return Err(crate::app::AppError::InternalServerError.into());
+        }
+
+        Ok(ActiveCrops::new(self.active.iter().copied()))
+    }
+}
+
+/// Answers every point with one zone, or with none, and remembers the
+/// points it was asked about.
+#[derive(Debug, Clone, Default)]
+pub struct FakeZoneLocator {
+    zone: Option<String>,
+    failing: bool,
+    asked: Arc<Mutex<Vec<GeoPoint>>>,
+}
+
+impl FakeZoneLocator {
+    pub fn everywhere(zone: &str) -> Self {
+        Self {
+            zone: Some(zone.to_string()),
+            ..Self::default()
+        }
+    }
+
+    pub fn nowhere() -> Self {
+        Self::default()
+    }
+
+    pub fn failing() -> Self {
+        Self {
+            failing: true,
+            ..Self::default()
+        }
+    }
+
+    pub fn asked(&self) -> Vec<GeoPoint> {
+        self.asked.lock().expect("asked lock").clone()
+    }
+}
+
+#[async_trait]
+impl ZoneLocator for FakeZoneLocator {
+    async fn zone_of(&self, point: &GeoPoint) -> Result<Option<ZoneSlug>, AppError> {
+        self.asked.lock().expect("asked lock").push(*point);
+
+        if self.failing {
+            return Err(crate::app::AppError::InternalServerError.into());
+        }
+
+        Ok(self
+            .zone
+            .clone()
+            .map(|zone| ZoneSlug::new(zone).expect("zone slug")))
+    }
 }
 
 fn same_key(one: &Price, other: &Price) -> bool {
@@ -1001,6 +1203,7 @@ fn listing_with(entity: &Listing, id: i32) -> Listing {
         *entity.created_at(),
         *entity.updated_at(),
     )
+    .placed_at(*entity.point())
 }
 
 fn offer_with(entity: &Offer, id: i32, status: OfferStatus, updated_at: DateTime<Utc>) -> Offer {
@@ -1030,6 +1233,14 @@ pub fn market_slug(value: &str) -> MarketSlug {
     MarketSlug::new(value.to_string()).expect("slug")
 }
 
+pub fn point(lat: f64, lon: f64) -> GeoPoint {
+    GeoPoint::in_region(lat, lon).expect("point")
+}
+
+/// Where the two fixture markets are.
+pub const SULAYMANIYAH: (f64, f64) = (35.5572, 45.4356);
+pub const ERBIL: (f64, f64) = (36.1911, 44.0092);
+
 pub fn markets() -> Vec<Market> {
     vec![
         Market::rehydrate(
@@ -1037,13 +1248,15 @@ pub fn markets() -> Vec<Market> {
             market_slug(MARKET),
             "Sulaymaniyah".to_string(),
             "سلێمانی".to_string(),
-        ),
+        )
+        .located(Some(point(SULAYMANIYAH.0, SULAYMANIYAH.1))),
         Market::rehydrate(
             2,
             market_slug("erbil"),
             "Erbil".to_string(),
             "هەولێر".to_string(),
-        ),
+        )
+        .located(Some(point(ERBIL.0, ERBIL.1))),
     ]
 }
 
@@ -1051,12 +1264,13 @@ pub fn markets() -> Vec<Market> {
 pub fn a_listing_draft(closes_at: DateTime<Utc>) -> ListingDraft {
     ListingDraft {
         seller_name: Some(DisplayName::new("Kak Azad".to_string()).expect("name")),
-        crop: Crop::Tomato,
+        crop: Crop::of("tomato"),
         quantity: QuantityKg::new(500).expect("quantity"),
         asking_price: PricePerKg::new(1_000).expect("price"),
         grade: Some(Grade::A),
-        pickup: Pickup::Farm,
+        pickup: Some(Pickup::Farm),
         zone_slug: None,
+        point: None,
         note: None,
         closes_at,
     }
@@ -1067,7 +1281,7 @@ pub fn a_listing_draft(closes_at: DateTime<Utc>) -> ListingDraft {
 pub fn a_listing(id: i32, created_at: DateTime<Utc>) -> Listing {
     let listing = Listing::new(
         phone(SELLER),
-        &markets()[0],
+        Some(&markets()[0]),
         a_listing_draft(created_at + Duration::days(3)),
         created_at,
     )

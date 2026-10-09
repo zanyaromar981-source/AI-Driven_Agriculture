@@ -1,4 +1,7 @@
+mod active_crops;
+mod crop;
 mod display_name;
+mod geo_point;
 mod history_days;
 mod idempotency_key;
 mod market_name;
@@ -9,7 +12,10 @@ mod price_source;
 mod quantity_kg;
 mod zone_slug;
 
+pub use active_crops::ActiveCrops;
+pub use crop::Crop;
 pub use display_name::DisplayName;
+pub use geo_point::GeoPoint;
 pub use history_days::HistoryDays;
 pub use idempotency_key::IdempotencyKey;
 pub use market_name::MarketName;

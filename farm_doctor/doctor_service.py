@@ -8,7 +8,7 @@ POST /ask  {"farm": {"id", "name", "lat", "lon", "area_m2", "crops"}, "history":
   503 {"error": "doctor_not_ready"} when no AI key is set; 502 {"error": "doctor_failed"} when the model fails; 400 bad body.
 GET /health  200 {"ok": true, "key": true|false}
 
-Run: python3 -I doctor_service.py   (DOCTOR_PORT, default 8090). Stdlib only. Keys as in doctor.py (farm_doctor/.env)."""
+Run: python3 -I doctor_service.py   (DOCTOR_PORT, default 8090; DOCTOR_HOST, default 127.0.0.1). Stdlib only. Keys as in doctor.py (farm_doctor/.env)."""
 import os, sys, json, time, datetime as dt, concurrent.futures as cf
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
@@ -74,6 +74,8 @@ def shape(a, inputs):
 
 
 def has_key():
+    if doctor._provider() == 'codex':                  # Codex is signed in on the machine: no key to check
+        return True
     return bool(doctor._env('GEMINI_API_KEY' if doctor._provider() == 'gemini' else 'ANTHROPIC_API_KEY'))
 
 
@@ -154,5 +156,8 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     port = int(os.environ.get('DOCTOR_PORT', '8090'))
-    print(f'doctor service on 127.0.0.1:{port}', flush=True)
-    ThreadingHTTPServer(('127.0.0.1', port), Handler).serve_forever()
+    # DOCTOR_HOST: 127.0.0.1 unless the backend runs in Docker, where it must be the Docker bridge address of the host
+    # (never a public address: this service has no login of its own).
+    host = os.environ.get('DOCTOR_HOST', '127.0.0.1')
+    print(f'doctor service on {host}:{port}', flush=True)
+    ThreadingHTTPServer((host, port), Handler).serve_forever()

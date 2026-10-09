@@ -13,6 +13,8 @@ pub struct Model {
     pub slug: String,
     pub name_en: String,
     pub name_ku: String,
+    #[sea_orm(column_type = "JsonBinary", nullable)]
+    pub outline: Option<Json>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
