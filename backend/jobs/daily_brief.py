@@ -45,6 +45,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -67,9 +68,14 @@ LEVELS = ("info", "watch", "alarm")
 RULES = """You write a short daily brief for farmers and agriculture officers in the
 Kurdistan Region of Iraq. Follow every rule:
 
-1. Use only the numbers in the DATA block. Never invent, estimate or round a
-   number that is not there. If a value is null or a list is empty, say that
-   it is not available yet; do not guess.
+1. Numbers come from the DATA block or from a web page you opened and name
+   (rule 3). Never invent, estimate or round a number that is in neither.
+   DATA holds only what was measured; a subject that is absent from it was
+   not measured by us. NEVER write that something is "not available",
+   "not yet available", "missing" or "unknown", and never list what the data
+   lacks: the reader wants what is known. For a subject DATA does not cover
+   (dam levels, prices, an outlook), either report what your web search
+   found, with its date and source, or leave the subject out.
 2. "rain_pct_of_normal" is the rain of the last 365 days against the ten
    years before (100 is normal). "dryness" is that same figure on a 0 to 100
    scale (50 is normal rain, lower is wetter); it is not a soil moisture or
@@ -100,7 +106,11 @@ Kurdistan Region of Iraq. Follow every rule:
 6. Each brief: a headline of at most 100 characters; a summary of at most
    900 characters; up to 5 points, each at most 250 characters with a level
    of "info", "watch" or "alarm". Use "alarm" only for something a farmer
-   should act on today.
+   should act on today. Every point tells the reader something they can use
+   this week: what the weather of the next days means for sowing, watering,
+   spraying, harvest or animals; where the risk is; a price or a notice. A
+   point that only explains the data, or says what cannot be told, is not
+   written.
 7. Write one brief with scope "region", then one for each district listed in
    DISTRICTS_TO_COVER, using that district's slug as the scope. A district
    brief says what is different or specific there; do not repeat the region
@@ -108,7 +118,12 @@ Kurdistan Region of Iraq. Follow every rule:
 8. Fire entries are satellite hot spots that nobody has checked on the ground;
    some may be gas flares or controlled burning. Call them "satellite fire
    detections", never confirmed fires, and give them the level "watch".
-9. Answer with the JSON object only, in the required shape."""
+9. "weather_forecast" is the forecast for the next 7 days at each district's
+   centre (Open-Meteo). Lead with it: say on which days rain, heat, cold
+   nights or strong wind are expected and where, with the numbers, and what
+   that means for field work. A forecast is not a promise: say "is forecast".
+   Never look further ahead than the days in DATA.
+10. Answer with the JSON object only, in the required shape."""
 
 SCHEMA = {
     "type": "object",
@@ -310,13 +325,116 @@ def market_points():
     return markets
 
 
+FORECAST = "https://api.open-meteo.com/v1/forecast"
+FORECAST_DAILY = (
+    "temperature_2m_max,temperature_2m_min,precipitation_sum,"
+    "wind_gusts_10m_max,et0_fao_evapotranspiration"
+)
+
+
+def forecast_points(districts):
+    """The next 7 days at each district's centre, from Open-Meteo.
+
+    One call for all districts. A failure leaves the forecast out; the brief
+    is still written from the rest.
+    """
+    query = urllib.parse.urlencode(
+        {
+            "latitude": ",".join(str(district["lat"]) for district in districts),
+            "longitude": ",".join(str(district["lon"]) for district in districts),
+            "daily": FORECAST_DAILY,
+            "forecast_days": 7,
+            "timezone": "Asia/Baghdad",
+        }
+    )
+    try:
+        with urllib.request.urlopen(f"{FORECAST}?{query}", timeout=60) as response:
+            places = json.loads(response.read())
+    except (urllib.error.URLError, OSError, ValueError) as error:
+        log(f"no weather forecast: {error}")
+        return None
+
+    if isinstance(places, dict):
+        places = [places]
+    if len(places) != len(districts):
+        log("no weather forecast: the answer does not match the districts asked for")
+        return None
+
+    by_district = {}
+    for district, place in zip(districts, places):
+        daily = place.get("daily") or {}
+        by_district[district["slug"]] = {
+            "rain_mm": daily.get("precipitation_sum"),
+            "tmax_c": daily.get("temperature_2m_max"),
+            "tmin_c": daily.get("temperature_2m_min"),
+            "gust_kmh": daily.get("wind_gusts_10m_max"),
+            "et0_mm": daily.get("et0_fao_evapotranspiration"),
+        }
+    days = (places[0].get("daily") or {}).get("time")
+    if not days:
+        return None
+
+    return {
+        "source": "Open-Meteo forecast at each district's centre; one value per day in 'days'; "
+        "et0_mm is the water a well-watered crop would use that day",
+        "days": days,
+        "districts": by_district,
+    }
+
+
+def known_only(value):
+    """Drops nulls and empty lists and objects, so the agent sees what is known."""
+    if isinstance(value, dict):
+        kept = {key: known_only(item) for key, item in value.items()}
+        return {key: item for key, item in kept.items() if item not in (None, {}, [])}
+    if isinstance(value, list):
+        return [known_only(item) for item in value]
+    return value
+
+
+def measured_only(data):
+    """Takes out totals that only add up fields nobody has measured.
+
+    The fire summary sums area, nearby farms and alerted farmers over
+    detections where those are null, which gives zeros that read like "no
+    damage"; a market with no price, no listing and no deal says nothing; a
+    dam with no reading is only its name. They would be read as findings.
+    """
+    data = dict(data)
+
+    fires = dict(data.get("fires") or {})
+    detections = fires.get("last_24_hours") or []
+    summary = dict(fires.get("last_24_hours_summary") or {})
+    for total in ("area_ha", "farms_within_5km", "farmers_alerted"):
+        if not any(fire.get(total) is not None for fire in detections):
+            summary.pop(total, None)
+    fires["last_24_hours_summary"] = summary
+    data["fires"] = fires
+
+    data["markets"] = {
+        slug: market
+        for slug, market in (data.get("markets") or {}).items()
+        if market.get("prices_iqd_per_kg")
+        or market.get("on_sale_now_by_crop")
+        or (market.get("deals_today") or {}).get("deals")
+    }
+    data["dams"] = [
+        dam
+        for dam in data.get("dams") or []
+        if dam.get("latest") or dam.get("last_90_days")
+    ]
+
+    return known_only(data)
+
+
 def gather(districts):
     """Everything the agent is allowed to know, and which farm is where.
 
     Every data point the backend holds goes in: each district's full reading,
     the dams with their recent history, the fires, the season outlook, the
-    water plan, the market, and yesterday's brief so today's does not simply
-    repeat it. Empty parts stay in, so the agent can see what is missing.
+    water plan, the market, the 7-day forecast, and yesterday's brief so
+    today's does not simply repeat it. What is empty is left out of the
+    prompt (see `known_only`): the brief says what is known.
     """
     overview = read("/region/overview") or {}
     farms = (read("/ingest/farms", key=True) or {}).get("farms", [])
@@ -340,6 +458,7 @@ def gather(districts):
         "today": dt.datetime.now(BAGHDAD).date().isoformat(),
         "region_summary": {"month": overview.get("month"), **(overview.get("summary") or {})},
         "districts": district_points(overview),
+        "weather_forecast": forecast_points(districts),
         "dams": dam_points(),
         "fires": fire_points(),
         "season_outlook": read("/outlooks"),
@@ -369,7 +488,7 @@ def build_prompt(data, cover):
         [
             RULES,
             "DISTRICTS_TO_COVER: " + (", ".join(cover) if cover else "(none: write the region brief only)"),
-            "DATA:\n" + json.dumps(data, ensure_ascii=False, indent=1),
+            "DATA:\n" + json.dumps(measured_only(data), ensure_ascii=False),
         ]
     )
 
