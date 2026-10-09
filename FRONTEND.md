@@ -252,3 +252,21 @@ The same rules everywhere:
 3. **Protected mode** for phones and farm positions on the dashboard (`BACKEND.md` 2.11): which screens need it first?
 4. **The per-farm analysis job** is not in the repo. It should be, so it can run on the test server whenever a farm is created or edited.
 5. Is anything you need missing from `backend/API.md`? Write it in `BACKEND.md`.
+
+## 14. For the website: CORS, caching, and the 2.12 list
+
+Answers to `BACKEND.md` 2.12 and 2.13, as built.
+
+**CORS (A1): built.** The server allows the origins listed in its `HTTP__CORS_ORIGINS` setting (comma list, no `*`). Tell Arya the site's address and the address you develop on, to have them added on the test server. Allowed methods `GET, POST, PUT, DELETE, OPTIONS`; request headers `Authorization, Content-Type, If-None-Match, Idempotency-Key, X-App-Version`; exposed `ETag, X-Api-Version`; preflight is cached 600 s. The preflight answers `200`, not `204`; browsers treat both the same.
+
+**Versions (2.13): built.**
+- `GET /v1/versions` (no login) answers `{"api": "1.5.0", "versions": {"zones": 41, "dams": 7, ...}, "server_time"}` for the public topics: `zones, sub_zones, dams, fires, outlooks, water, alwa_prices, alwa_listings, crops, rules, briefs, app_config`.
+- `GET /v1/dashboard/versions` (any signed-in staff) adds the private ones: `farmers, farms, messages, jobs, staff_roles`.
+- A topic's number goes up whenever anything of that kind is written, by anyone (dashboard, data job, farmer app). The database does it itself inside the write's transaction, so it cannot be forgotten. It may go up by more than one for a single action: only compare "is it higher than what I have".
+- Topic to routes: `zones` district readings and `/v1/region...`; `sub_zones` sub-district readings; `dams`; `fires`; `outlooks` (outlooks and outlook runs); `water`; `alwa_prices` (markets and prices); `alwa_listings` (listings, offers, deals); `briefs`; `farmers`; `farms` (farms, cells and per-farm insights); `staff_roles` (staff, roles and their permissions). `crops, rules, messages, app_config, jobs` exist as topics now and start counting when those parts are built.
+- **`ETag` and `304`: built, on every JSON `GET`.** Send the tag back in `If-None-Match`; if the answer would be the same you get `304` with no body. The tag is made from the answer's bytes, not from the topic version, so treat it as opaque. `Cache-Control` is `no-cache` (`private, no-cache` when a token was sent).
+- `X-Api-Version` is on every answer under `/v1`. Wipe the cache when it changes.
+
+**Permissions (D): the five new resources exist** (`crops, rules, messages, app, jobs`), are listed by `GET /v1/dashboard/permissions`, can be put in roles, and the `Owner` role holds them. Their routes are still being built.
+
+**Still being built from 2.12:** A3 (place on every farm, filters and sort), A4 (totals), A5 (farmer details, blocking, letters), A6 (staff phone and job title, `PUT /v1/dashboard/me`), B1 (crops), B2 (rules), B3 (inbox), B4 (app control), B5 (job status). This section will say when each is in.

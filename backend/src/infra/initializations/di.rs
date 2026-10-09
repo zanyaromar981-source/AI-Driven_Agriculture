@@ -589,6 +589,16 @@ pub async fn di_init(
         create_owner_use_case: Arc::new(CreateOwnerUseCase::new(staff_repository, password_hasher)),
     };
 
+    let version_repository: Arc<dyn crate::features::versions::app::VersionRepository> = Arc::new(
+        crate::features::versions::infra::VersionPostgresRepository::new(db_context.conn_clone()),
+    );
+
+    let version = crate::shared::VersionFeature {
+        list_versions_use_case: Arc::new(
+            crate::features::versions::app::use_cases::ListVersionsUseCase::new(version_repository),
+        ),
+    };
+
     Ok(Features {
         farm,
         farmer,
@@ -602,5 +612,6 @@ pub async fn di_init(
         doctor,
         staff,
         brief,
+        version,
     })
 }

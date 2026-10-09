@@ -84,6 +84,8 @@ The app retries on timeouts and 5xx, and data jobs re-run and overlap. Every wri
 ## 8. Database
 
 - One migration per change, named `mYYYYMMDD_HHMMSS_what.rs`, registered in `migration/src/lib.rs` in time order. **Never edit a migration that has been pushed:** a server has already run it. Add a new one.
+- **Every table that holds data a website shows belongs to a topic in `data_versions`.** A new table attaches the trigger in its own migration (`CREATE TRIGGER bump_data_version AFTER INSERT OR UPDATE OR DELETE ON <table> FOR EACH STATEMENT EXECUTE FUNCTION bump_data_version('<topic>')`), and a new topic is added to `data_versions`, to `Topic` in `src/features/versions/domain/entities.rs` and to `FRONTEND.md`. Without it the website never learns that the data changed.
+- A new permission resource is added to `Resource` in `src/app/access.rs`, to `StaffResource` in the staff DTOs, and granted to the system role in a migration.
 - Entities in `infra/persistence/postgres/entities/` are written in the exact style `sea-orm-codegen` produces.
 - Repositories map `DbErr` through a `database_error` helper that logs and returns `GlobalAppError::DatabaseError`.
 - Postgres takes 65,535 bind parameters per statement: chunk large inserts and `IN` lists.

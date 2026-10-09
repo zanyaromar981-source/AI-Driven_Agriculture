@@ -101,6 +101,10 @@ impl std::fmt::Debug for Otpiq {
 #[derive(Clone, Debug)]
 pub struct Server {
     pub port: u16,
+    /// The addresses of the websites allowed to call this API from a browser.
+    /// Empty means none: the phone app and the data jobs are not browsers and
+    /// need no entry here.
+    pub cors_origins: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -200,6 +204,12 @@ impl Config {
                 port: fetch_env_with_default("PORT", "3000")
                     .parse::<u16>()
                     .unwrap(),
+                cors_origins: dotenvy::var("HTTP__CORS_ORIGINS")
+                    .unwrap_or_default()
+                    .split(',')
+                    .map(|origin| origin.trim().trim_end_matches('/').to_string())
+                    .filter(|origin| !origin.is_empty())
+                    .collect(),
             },
             farm: Farm {
                 max_farms_per_user: fetch_env_with_default("FARMS__MAX_FARMS_PER_USER", "20")

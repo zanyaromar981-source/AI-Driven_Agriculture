@@ -1,3 +1,4 @@
+mod cors;
 mod errors;
 mod extractors;
 mod health;
@@ -7,10 +8,12 @@ mod pagination;
 mod response;
 
 // Re-exports
+pub use cors::cors_layer;
 pub use errors::{ErrorBody, HttpErrorResponse};
 pub use extractors::ValidatedJson;
 pub use health::routes as health_routes;
 pub use middlewares::auth::auth;
+pub use middlewares::etag::{API_VERSION, etag};
 pub use middlewares::permission::check_permission;
 pub use middlewares::service_key::service_key;
 pub use middlewares::staff_auth::staff_auth;

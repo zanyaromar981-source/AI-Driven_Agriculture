@@ -246,6 +246,11 @@ pub struct BriefFeature {
 }
 
 #[derive(Clone)]
+pub struct VersionFeature {
+    pub list_versions_use_case: Arc<crate::features::versions::app::use_cases::ListVersionsUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -259,6 +264,7 @@ pub struct Features {
     pub doctor: DoctorFeature,
     pub staff: StaffFeature,
     pub brief: BriefFeature,
+    pub version: VersionFeature,
 }
 
 #[derive(Clone)]

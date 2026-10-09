@@ -184,6 +184,8 @@ impl Modify for BearerAuth {
         staff_handlers::get_staff,
         staff_handlers::update_staff,
         staff_handlers::delete_staff,
+        crate::features::versions::web::handlers::get_versions,
+        crate::features::versions::web::handlers::get_dashboard_versions,
         health::liveness,
         health::readiness,
         fire_handlers::get_dashboard_fires,
@@ -456,6 +458,7 @@ impl Modify for BearerAuth {
         DoctorAskForm,
         DoctorAnswerResponse,
         DoctorConfidence,
+        crate::features::versions::web::VersionsResponse,
         ErrorBody
     )),
     modifiers(&BearerAuth),

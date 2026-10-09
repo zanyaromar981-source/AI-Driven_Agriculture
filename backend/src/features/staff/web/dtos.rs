@@ -36,6 +36,11 @@ pub enum StaffResource {
     Staff,
     Roles,
     Briefs,
+    Crops,
+    Rules,
+    Messages,
+    App,
+    Jobs,
 }
 
 impl From<StaffResource> for Resource {
@@ -53,6 +58,11 @@ impl From<StaffResource> for Resource {
             StaffResource::Staff => Resource::Staff,
             StaffResource::Roles => Resource::Roles,
             StaffResource::Briefs => Resource::Briefs,
+            StaffResource::Crops => Resource::Crops,
+            StaffResource::Rules => Resource::Rules,
+            StaffResource::Messages => Resource::Messages,
+            StaffResource::App => Resource::App,
+            StaffResource::Jobs => Resource::Jobs,
         }
     }
 }
@@ -72,6 +82,11 @@ impl From<Resource> for StaffResource {
             Resource::Staff => StaffResource::Staff,
             Resource::Roles => StaffResource::Roles,
             Resource::Briefs => StaffResource::Briefs,
+            Resource::Crops => StaffResource::Crops,
+            Resource::Rules => StaffResource::Rules,
+            Resource::Messages => StaffResource::Messages,
+            Resource::App => StaffResource::App,
+            Resource::Jobs => StaffResource::Jobs,
         }
     }
 }

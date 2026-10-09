@@ -8,5 +8,6 @@ pub mod fires;
 pub mod insights;
 pub mod outlooks;
 pub mod staff;
+pub mod versions;
 pub mod water;
 pub mod zones;

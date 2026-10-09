@@ -96,6 +96,10 @@ fn main() {
                     "daily_briefs,farm_brief_zones",
                     "src/features/briefs/infra/persistence/postgres/entities",
                 ),
+                (
+                    "data_versions",
+                    "src/features/versions/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

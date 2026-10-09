@@ -45,6 +45,9 @@ use farm_doctor_api::{
                 dashboard_routes as staff_dashboard_routes,
             },
         },
+        versions::web::{
+            dashboard_routes as version_dashboard_routes, public_routes as version_public_routes,
+        },
         water::web::{
             dashboard_routes as water_dashboard_routes, ingest_routes as water_ingest_routes,
             public_routes as water_public_routes,
@@ -56,7 +59,7 @@ use farm_doctor_api::{
     },
     infra::{
         BootstrappedApp, Config, di_init,
-        http::{auth, health_routes, service_key, staff_auth, swagger_ui},
+        http::{auth, cors_layer, etag, health_routes, service_key, staff_auth, swagger_ui},
         postgres_init, telemetry,
     },
     shared::{AppState, Phone, issue_jwt},
@@ -120,6 +123,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(doctor_routes())
                 .layer(middleware::from_fn_with_state(state.clone(), auth))
                 .merge(farmer_public_routes())
+                .merge(version_public_routes())
                 .merge(fire_public_routes())
                 .merge(zone_public_routes())
                 .merge(dam_public_routes())
@@ -144,6 +148,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     "/dashboard",
                     Router::new()
                         .merge(staff_dashboard_routes())
+                        .merge(version_dashboard_routes())
                         .merge(alwa_dashboard_routes())
                         .merge(dam_dashboard_routes())
                         .merge(farm_dashboard_routes())
@@ -158,8 +163,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(staff_dashboard_public_routes()),
                 ),
         )
+        // Outside every /v1 route: tags answers so a client can keep its
+        // copy when nothing changed.
+        .layer(middleware::from_fn(etag))
         .merge(health_routes())
         .merge(swagger_ui())
+        .layer(cors_layer(&state.config.server.cors_origins))
         .layer(telemetry::http_trace_layer())
         .with_state(state.clone());
 
