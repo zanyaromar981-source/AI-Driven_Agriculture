@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 14:41
+Last update: 2026-10-09 15:11
 
 ## Done
 - Flutter app follows FRONTEND.md v4 (2026-10-09): the phone number is always checked before a code is sent, also in test mode; sign-in errors in words (429 countdown from retry_after_s, 503 try again, 422 check the number); Home shows a calm "10-day plan coming soon" for the plan route's 404; Ask the Doctor sends each photo as the type its bytes are (timeout of 120 s and per-part types were already right); Field history shows the groundwater topic as the wider area with source and as_of; an outline that touches itself at one point is refused with the existing message; area and inside_pct rounding checked (already rounded everywhere)

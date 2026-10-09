@@ -70,15 +70,27 @@ Kurdistan Region of Iraq. Follow every rule:
 1. Use only the numbers in the DATA block. Never invent, estimate or round a
    number that is not there. If a value is null or a list is empty, say that
    it is not available yet; do not guess.
-2. "dryness" in the data is only yearly rain put on a 0 to 100 scale (50 is
-   normal rain, lower is wetter). It is not a soil moisture or crop
-   measurement. Describe it as rain against normal, not as crop condition.
-3. You may search the web for today's weather warnings, pest and disease
-   reports, water and dam news, market news and official announcements for
-   the Kurdistan Region and Iraq. Every statement that comes from the web
-   must have its page in "sources", with the real address you opened. If you
-   found nothing useful, say so in the summary and leave "sources" empty. Do
-   not cite a page you did not open.
+2. "rain_pct_of_normal" is the rain of the last 365 days against the ten
+   years before (100 is normal). "dryness" is that same figure on a 0 to 100
+   scale (50 is normal rain, lower is wetter); it is not a soil moisture or
+   crop measurement. Prefer the rain percentage when you write, and describe
+   it as rain against normal, not as crop condition. Each data point carries
+   its "source": do not claim more precision than the source has.
+3. Before you write, search the web: this is part of the job, not optional.
+   Run at least six searches, in English and also in Kurdish or Arabic,
+   covering: weather warnings and the forecast for the Kurdistan Region this
+   week; Dukan and Darbandikhan dam levels; crop pest and disease reports in
+   Iraq; fires in Kurdistan farmland or forest; wheat, barley and vegetable
+   prices and government purchase or seed announcements in Iraq; any notice
+   from the Kurdistan or Iraqi agriculture or water ministries. Open the
+   pages you rely on.
+   Put what you learn into the brief, each item with the date of the report
+   ("a report of 27 July says ..."), and list its page under "sources" with
+   the real address you opened. Prefer the last 7 days; an older report may
+   be used if you say how old it is. Numbers from the web are allowed when
+   you name the report they come from; they never replace a number in DATA.
+   Only if every search finds nothing relevant may you write that no web
+   update was found. Do not cite a page you did not open.
 4. Never give pesticide or fertiliser doses, mixing rates or product names.
    For anything that needs a diagnosis, tell the reader to see the
    agriculture or veterinary office.
@@ -192,8 +204,120 @@ def nearest_district(lat, lon, districts):
     return min(districts, key=distance)["slug"]
 
 
+def district_points(overview):
+    """Every stored number for every district, from the district route."""
+    points = []
+    for zone in overview.get("zones", []):
+        detail = read(f"/zones/{zone['slug']}") or {}
+        reading = detail.get("reading") or {}
+        points.append(
+            {
+                "slug": zone["slug"],
+                "name_en": zone.get("name_en"),
+                "name_ku": zone.get("name_ku"),
+                "governorate": zone.get("governorate"),
+                "month": detail.get("month"),
+                "rain_pct_of_normal": reading.get("rain_pct_of_normal"),
+                "dryness": reading.get("dryness"),
+                "band": reading.get("band"),
+                "rank_driest_first": reading.get("rank"),
+                "ranked_districts": reading.get("rank_of"),
+                "change_vs_last_year": zone.get("change_vs_last_year"),
+                "greenness_pct_vs_normal": reading.get("greenness_pct_vs_normal"),
+                "water_need": reading.get("water_need"),
+                "nitrogen_hold": reading.get("nitrogen_hold"),
+                "best_crops": reading.get("best_crops"),
+                "source": reading.get("source"),
+                "updated_at": reading.get("updated_at"),
+                "same_month_in_past_years": detail.get("history") or [],
+                "sub_districts_with_data": [
+                    {"slug": sub["slug"], "dryness": sub["dryness"]}
+                    for sub in detail.get("sub_zones", [])
+                    if sub.get("dryness") is not None
+                ],
+            }
+        )
+    return points
+
+
+def fire_points():
+    """The last 24 hours in full, and the last 72 hours counted per district."""
+    day = read("/fires?hours=24") or {}
+    three_days = read("/fires?hours=72") or {}
+    per_district = {}
+    for fire in three_days.get("fires", []):
+        slug = fire.get("zone_slug") or "unknown"
+        per_district[slug] = per_district.get(slug, 0) + 1
+    return {
+        "what_these_are": "satellite hot spots inside the districts, gas flare spots removed by a rule; not checked on the ground",
+        "last_24_hours_summary": day.get("summary"),
+        "last_24_hours": [
+            {
+                key: fire.get(key)
+                for key in (
+                    "zone_slug",
+                    "place_en",
+                    "lat",
+                    "lon",
+                    "detected_at",
+                    "status",
+                    "area_ha",
+                    "wind_kmh",
+                    "wind_direction",
+                    "farms_within_5km",
+                    "source",
+                )
+            }
+            for fire in day.get("fires", [])[:80]
+        ],
+        "detections_per_district_last_72_hours": dict(
+            sorted(per_district.items(), key=lambda item: -item[1])
+        ),
+    }
+
+
+def dam_points():
+    """Each dam's latest reading, the one a year before, and the last 90 days."""
+    dams = (read("/dams") or {}).get("dams", [])
+    since = (dt.date.today() - dt.timedelta(days=90)).isoformat()
+    for dam in dams:
+        history = read(f"/dams/{dam['slug']}/history?from={since}") or {}
+        dam["last_90_days"] = history.get("readings", [])
+    return dams
+
+
+def market_points():
+    """Prices staff have entered, what is on sale, and today's deals."""
+    markets = {}
+    for market in (read("/alwa/markets") or {}).get("markets", []):
+        slug = market["slug"]
+        prices = read(f"/alwa/markets/{slug}/prices") or {}
+        listings = read(f"/alwa/listings?market={slug}&status=open&rows_per_page=100") or {}
+        deals = read(f"/alwa/deals?market={slug}") or {}
+        on_sale = {}
+        for listing in listings.get("listings", []):
+            crop = on_sale.setdefault(listing["crop"], {"listings": 0, "kg": 0, "asking_prices": []})
+            crop["listings"] += 1
+            crop["kg"] += listing.get("quantity_kg") or 0
+            crop["asking_prices"].append(listing.get("asking_price_iqd_per_kg"))
+        markets[slug] = {
+            "name_en": market.get("name_en"),
+            "prices_day": prices.get("day"),
+            "prices_iqd_per_kg": prices.get("prices") or [],
+            "on_sale_now_by_crop": on_sale,
+            "deals_today": deals.get("summary"),
+        }
+    return markets
+
+
 def gather(districts):
-    """Everything the agent is allowed to know, and which farm is where."""
+    """Everything the agent is allowed to know, and which farm is where.
+
+    Every data point the backend holds goes in: each district's full reading,
+    the dams with their recent history, the fires, the season outlook, the
+    water plan, the market, and yesterday's brief so today's does not simply
+    repeat it. Empty parts stay in, so the agent can see what is missing.
+    """
     overview = read("/region/overview") or {}
     farms = (read("/ingest/farms", key=True) or {}).get("farms", [])
 
@@ -204,30 +328,32 @@ def gather(districts):
     for slug in farm_zones.values():
         farms_per_zone[slug] = farms_per_zone.get(slug, 0) + 1
 
-    prices = {}
-    for market in (read("/alwa/markets") or {}).get("markets", []):
-        answer = read(f"/alwa/markets/{market['slug']}/prices")
-        if answer and answer.get("prices"):
-            prices[market["slug"]] = {"day": answer.get("day"), "prices": answer["prices"]}
+    topics_seen = {}
+    for farm in farms:
+        for topic in farm.get("topics", []):
+            topics_seen[topic["topic"]] = topics_seen.get(topic["topic"], 0) + 1
+
+    previous = read("/briefs/latest") or {}
+    previous_brief = previous.get("brief") or {}
 
     data = {
         "today": dt.datetime.now(BAGHDAD).date().isoformat(),
-        "districts": {
-            "month": overview.get("month"),
-            "summary": overview.get("summary"),
-            "by_district": [
-                {
-                    key: zone.get(key)
-                    for key in ("slug", "name_en", "name_ku", "governorate", "dryness", "rank")
-                }
-                for zone in overview.get("zones", [])
-            ],
-        },
-        "dams": (read("/dams") or {}).get("dams", []),
-        "fires_last_24_hours": read("/fires?hours=24") or {},
+        "region_summary": {"month": overview.get("month"), **(overview.get("summary") or {})},
+        "districts": district_points(overview),
+        "dams": dam_points(),
+        "fires": fire_points(),
         "season_outlook": read("/outlooks"),
-        "market_prices_iqd_per_kg": prices,
-        "farms_per_district": farms_per_zone,
+        "water_plan": read("/water/plan"),
+        "markets": market_points(),
+        "farms": {
+            "total": len(farms),
+            "per_district": farms_per_zone,
+            "farms_with_each_kind_of_reading": topics_seen,
+        },
+        "previous_brief": {
+            "day": previous_brief.get("day"),
+            "headline_en": previous_brief.get("headline_en"),
+        },
     }
     return data, farm_zones
 
@@ -344,9 +470,11 @@ def main():
     known = {district["slug"] for district in districts}
 
     data, farm_zones = gather(districts)
-    cover = districts_to_cover(data["farms_per_district"])
+    cover = districts_to_cover(data["farms"]["per_district"])
     prompt = build_prompt(data, cover)
-    log(f"{len(farm_zones)} farms in {len(data['farms_per_district'])} districts; covering {cover or 'the region only'}")
+    log(f"{len(farm_zones)} farms in {len(data['farms']['per_district'])} districts; covering {cover or 'the region only'}")
+    log(f"data handed to the agent: {len(json.dumps(data))} characters, {len(data['districts'])} districts, "
+        f"{len(data['fires']['last_24_hours'])} fires, {len(data['dams'])} dams, {len(data['markets'])} markets")
 
     if dry_run:
         print(prompt)
