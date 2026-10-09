@@ -97,8 +97,14 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   void _assign(String crop) {
+    // A crop picked before any square: remember it and offer to fill the
+    // whole farm with it (user, 2026-10-09).
     if (_selected.isEmpty) {
-      return showToast(context, AppScope.read(context).s.selectFirst);
+      setState(() => _lastCrop = crop);
+      if (crop == 'empty') {
+        showToast(context, AppScope.read(context).s.selectFirst);
+      }
+      return;
     }
     setState(() {
       for (final c in _selected) {
@@ -110,6 +116,17 @@ class _PaintScreenState extends State<PaintScreen> {
       }
       _selected.clear();
       _lastCrop = crop;
+    });
+    widget.onCrops?.call(Map.of(_crops));
+  }
+
+  /// Every square of the farm gets [crop].
+  void _fillAll(String crop) {
+    setState(() {
+      for (final c in _cells) {
+        _crops[c] = crop;
+      }
+      _selected.clear();
     });
     widget.onCrops?.call(Map.of(_crops));
   }
@@ -296,6 +313,40 @@ class _PaintScreenState extends State<PaintScreen> {
                   ],
                 ),
               ),
+            if (_lastCrop != null &&
+                _lastCrop != 'empty' &&
+                _selected.isEmpty) ...[
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: JColors.accent,
+                    side: const BorderSide(color: JColors.accent, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => _fillAll(_lastCrop!),
+                  icon: Text(
+                    cropOf(_lastCrop!).emoji,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  label: Text(
+                    s.fillFarm(s.crop(_lastCrop!)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: jText(
+                      ku,
+                      size: 14,
+                      weight: FontWeight.w700,
+                      color: JColors.accent,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+            ],
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
