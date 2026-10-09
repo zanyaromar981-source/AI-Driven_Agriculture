@@ -18,7 +18,7 @@ class TopicView {
     required this.all,
   });
 
-  /// Backend topic name: rain, weather, greenness, soil, dryness.
+  /// Backend topic name: rain, weather, greenness, soil, dryness, groundwater.
   final String key;
   final String title;
   final Evidence evidence;
@@ -412,6 +412,54 @@ TopicView? drynessView(
   );
 }
 
+/// "2026-10-03" -> "3 Oct 2026"; null when it is not a date.
+String? _day(String ymd) {
+  final d = DateTime.tryParse(ymd);
+  return d == null ? null : '${d.day} ${_short[d.month - 1]} ${d.year}';
+}
+
+/// A percentile against the same weeks of past years: 50 is usual, lower is
+/// drier. Same bands as the backend's groundwater job.
+String groundwaterWords(double p) => p < 10
+    ? 'much lower than usual'
+    : p < 30
+    ? 'lower than usual'
+    : p <= 70
+    ? 'about usual'
+    : p <= 90
+    ? 'higher than usual'
+    : 'much higher than usual';
+
+/// The `groundwater` topic (FRONTEND.md 4): a NASA model value for a square
+/// of about 25 km, the same for every farm in it. Worded as the wider area,
+/// never as the farmer's own well.
+TopicView? groundwaterView(InsightTopic? t) {
+  if (t == null) return null;
+  final ground = t.m('groundwater_percentile');
+  final root = t.m('root_zone_moisture_percentile');
+  final top = t.m('surface_moisture_percentile');
+  final asOf = _day(t.asOf);
+  return TopicView(
+    key: 'groundwater',
+    title: 'Groundwater, wider area',
+    evidence: Evidence.area,
+    summary: [
+      if (ground != null)
+        'Water deep in the ground in the wider area, a square about 25 km wide around this field, is ${groundwaterWords(ground)} for this time of year (${_num(ground)}, where 50 is usual and lower is drier).',
+      'This is a NASA model estimate, the same for every farm in that square. It is not a reading of any well and cannot see pumping nearby.',
+    ].join(' '),
+    chips: [
+      if (ground != null) (_num(ground), 'groundwater, 50 is usual'),
+      if (root != null) (_num(root), 'root-zone moisture'),
+      if (top != null) (_num(top), 'top-layer moisture'),
+    ],
+    source:
+        '${t.source.isEmpty ? 'NASA GRACE-DA model, about 25 km wide' : t.source}'
+        '${asOf == null ? '' : ' · as of $asOf'}',
+    all: _allNumbers(t),
+  );
+}
+
 /// The cards in the order farmers asked for: weather first, then the field.
 List<TopicView> topicViews(FarmInsights f) => [
   ?rainView(f.topic('rain')),
@@ -423,6 +471,7 @@ List<TopicView> topicViews(FarmInsights f) => [
     rain: f.topic('rain'),
     green: f.topic('greenness'),
   ),
+  ?groundwaterView(f.topic('groundwater')),
 ];
 
 /// The oldest as_of date among the topics, e.g. "3 Oct 2026".

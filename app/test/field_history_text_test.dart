@@ -124,6 +124,68 @@ void main() {
     expect(empty.ready, 0);
   });
 
+  test('groundwater: the wider area, never a well, with source and date', () {
+    final f = FarmInsights.fromJson({
+      'topics': [
+        {
+          'topic': 'groundwater',
+          'as_of': '2026-10-06',
+          'source':
+              'NASA GRACE-DA weekly percentiles, 25 km model cell; not a well depth, not measured at the farm',
+          'confidence': 'unsure',
+          'summary_en':
+              'Groundwater in the 25 km area around this farm is lower than usual for this time of year. This is a satellite and model estimate for the wider area, not a measurement of your well.',
+          'summary_ku': null,
+          'measures': [
+            for (final (code, value, label) in const [
+              ('groundwater_percentile', 22.4, 'Groundwater storage'),
+              (
+                'root_zone_moisture_percentile',
+                41.0,
+                'Soil moisture, root zone',
+              ),
+              ('surface_moisture_percentile', 63.5, 'Soil moisture, top layer'),
+            ])
+              {
+                'code': code,
+                'value': value,
+                'unit': 'percentile',
+                'label_en': label,
+                'label_ku': null,
+              },
+          ],
+        },
+      ],
+    });
+    expect(
+      f.ready,
+      0,
+      reason: 'not one of the five topics the analysis waits for',
+    );
+    final views = topicViews(f);
+    expect(views.map((v) => v.key), ['groundwater']);
+    final v = views.single;
+    expect(v.title, 'Groundwater, wider area');
+    expect(v.evidence, Evidence.area);
+    expect(v.summary, contains('in the wider area'));
+    expect(
+      v.summary,
+      contains('is lower than usual for this time of year (22,'),
+    );
+    expect(v.summary.toLowerCase(), isNot(contains('your well')));
+    expect(v.chips, [
+      ('22', 'groundwater, 50 is usual'),
+      ('41', 'root-zone moisture'),
+      ('64', 'top-layer moisture'),
+    ]);
+    expect(v.source, startsWith('NASA GRACE-DA'));
+    expect(v.source, endsWith(' · as of 6 Oct 2026'));
+    expect(v.all.first, ('Groundwater storage', '22 percentile'));
+    expect(groundwaterWords(5), 'much lower than usual');
+    expect(groundwaterWords(50), 'about usual');
+    expect(groundwaterWords(95), 'much higher than usual');
+  });
+
   group('new measures (live since 9 Oct 2026) win over the summary text', () {
     final v2 = FarmInsights.fromJson(
       jsonDecode(
