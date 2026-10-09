@@ -39,24 +39,23 @@ Not in the demo unless it is tested on the morning of the pitch: Ask the Doctor.
 
 ## 3-minute version: the story deck
 
-For the 3-minute round use `design/pitch_deck_3min.pen` (7 slides). It tells one farmer's story instead of listing features. About 2 minutes 55 seconds.
+For the 3-minute round use `design/pitch_deck_3min.pen` (6 slides, name Jutyar). The slides carry almost no text, so the numbers are spoken. About 3 minutes.
 
 | # | Slide | Time | Say |
 |---|---|---|---|
-| 1 | What the farmer sees | 20 s | "A farmer can walk through his field every day and still miss the first signs that part of it is failing." Pause. |
-| 2 | What the satellite sees | 25 s | "But from space, it already shows. These are real satellite pictures of the same fields near Koya. On the left, March 2025, the drought year: bare and brown. On the right, April 2026: green. The satellite passes every five days and sees every 10 metres." |
-| 3 | What Khor tells him | 35 s | "Khor turns those signals into something a farmer can use. He registers his field by walking its border. Khor builds the field map, and the satellite checks which squares are weaker than normal. And the AI? AI is not the sensor. It is the translator. The satellite sees the field. The weather models see the forecast. The history sees the pattern. AI turns all of that into Sorani a farmer can understand." |
-| 4 | The message | 20 s | "This is what he receives. One message, five parts: what is most likely wrong, how sure we are, why, what to do this week, and what we cannot tell. It never gives a chemical dose." |
-| 5 | Before drought becomes obvious | 25 s | "Why does it matter? In the winter of 2024/25, by the end of January, Slemani had received half of its normal rain. Harvest was four months away. The data showed it. Most farmers had no way to see it." |
-| 6 | Built for Suli | 25 s | "Khor is built for Suli. We measure Dukan and Darbandikhan from space. Last September, Dukan covered 31 percent of its full area. This September, 92. That is the water a farmer's summer depends on." |
-| 7 | From one farm to a system | 25 s | "One farm is the start. The same data for all 33 districts gives the Ministry one map. We connect the sky, the field and the water into one local decision layer for Sulaimani. We checked the method on 26 past seasons: right 88 percent of the time. And we built the app, the server and this map in two days. Khor means sun. Thank you." |
+| 1 | He knows his field. | 25 s | "A farmer knows his field better than anyone. He walks it every day. And he can still miss the first signs that part of it is failing. Jutyar makes that easier." |
+| 2 | Space sees more. | 30 s | "From space, weak areas appear early. A satellite passes every five days and sees every 10 metres of the field. Jutyar compares each square with its own normal and colours it: green, yellow, orange, red." |
+| 3 | Simple to use. | 30 s | "For the farmer it is simple. He signs in with his phone number, walks the border of his field once, and marks his crops. After that: one farm, one view." |
+| 4 | One message. | 35 s | "And he receives one message, in Sorani, with five parts. The problem. How confident we are. Why, with the source of each reason. What to do this week. And the limits: what we cannot tell. It never gives a chemical dose. This is where the AI works. AI is not the sensor. It is the translator." |
+| 5 | Built for Kurdistan. | 30 s | "Jutyar is built for Kurdistan: four governorates, 33 districts, local crops and local water. We measure Dukan and Darbandikhan from space. Last September Dukan covered 31 percent of its full area. This September, 92." |
+| 6 | From one farm to a smarter Kurdistan. | 30 s | "One farm is the start. The same view for every farm gives the region one picture. We checked the method on 26 past seasons: right 88 percent of the time. And we built the app, the server and the map in two days. Thank you." |
 
 Notes for this version:
 
 - If there is time for a demo, do it on slide 3: hold up the phone and tap one coloured square. 20 seconds at most.
-- Slide 2 compares March 2025 with April 2026. They are different months, so say the dates as written and do not call it "the same day".
-- Koya is in Erbil governorate. The pictures show what the satellite sees; the Slemani numbers come on slides 4 and 5.
-- The dashboard picture on slide 7 is the team's design with sample numbers. Say "this is the design", not "this is live".
+- The coloured grid on slide 2 is an illustration drawn on a real Sentinel-2 picture, not a real result for that field. Say "this is how it looks", not "this is what we found".
+- The picture on slide 6 is AI-made. The glowing network is a vision, not a map of real farms.
+- The message on slide 4 is a sample in Sorani that a native speaker still has to check.
 
 ## Questions the judges may ask
 
