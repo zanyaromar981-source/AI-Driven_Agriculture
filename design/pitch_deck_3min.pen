@@ -1,0 +1,2552 @@
+{
+  "version": "2.21",
+  "children": [
+    {
+      "type": "frame",
+      "id": "FZiWB",
+      "x": 0,
+      "y": 0,
+      "name": "01 What the farmer sees",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$ink",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "c1Rw9",
+          "x": 0,
+          "y": 0,
+          "name": "Cover Photo",
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "F3C0tu",
+          "x": 0,
+          "y": 0,
+          "name": "Overlay",
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 270,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#2C3B1EF5",
+                "position": 0
+              },
+              {
+                "color": "#2C3B1ECC",
+                "position": 0.45
+              },
+              {
+                "color": "#2C3B1E00",
+                "position": 1
+              }
+            ]
+          },
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "type": "text",
+          "id": "Pa31g",
+          "x": 120,
+          "y": 110,
+          "name": "Event Label",
+          "fill": "$gold",
+          "content": "WHAT THE FARMER SEES",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "tPL3M",
+          "x": 120,
+          "y": 0,
+          "name": "Title Block",
+          "width": 1150,
+          "height": 1080,
+          "layout": "vertical",
+          "gap": 36,
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "DZq48",
+              "name": "Name",
+              "width": "fill_container",
+              "gap": 36,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O8qqyM",
+                  "name": "Title",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "He walks this field every day.",
+                  "lineHeight": 1.05,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 124,
+                  "fontWeight": "800",
+                  "letterSpacing": -3
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "c99Ut9",
+              "name": "Subtitle",
+              "fill": "$on-dark-muted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "And still misses the first signs that part of it is failing.",
+              "lineHeight": 1.25,
+              "fontFamily": "$font-lat",
+              "fontSize": 44,
+              "fontWeight": "500"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "c6ptt",
+      "x": 2040,
+      "y": 0,
+      "name": "02 What the satellite sees",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$soil",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "zDBs5",
+          "x": 0,
+          "y": 0,
+          "name": "Satellite 2025",
+          "width": 960,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "pitch_assets/sat_koya_2025-03-16.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "frame",
+          "id": "vNyrF",
+          "x": 960,
+          "y": 0,
+          "name": "Satellite 2026",
+          "width": 960,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "pitch_assets/sat_koya_2026-04-17.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "d1FSJ",
+          "x": 0,
+          "y": 0,
+          "name": "Top Shade",
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#1B2412F2",
+                "position": 0
+              },
+              {
+                "color": "#1B241200",
+                "position": 1
+              }
+            ]
+          },
+          "width": 1920,
+          "height": 520
+        },
+        {
+          "type": "rectangle",
+          "id": "vMzmZ",
+          "x": 0,
+          "y": 760,
+          "name": "Bottom Shade",
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#1B2412E6",
+                "position": 0
+              },
+              {
+                "color": "#1B241200",
+                "position": 1
+              }
+            ]
+          },
+          "width": 1920,
+          "height": 320
+        },
+        {
+          "type": "rectangle",
+          "id": "G3UXc5",
+          "x": 957,
+          "y": 0,
+          "name": "Divider",
+          "fill": "$gold",
+          "width": 6,
+          "height": 1080
+        },
+        {
+          "type": "text",
+          "id": "RXQ9o",
+          "x": 120,
+          "y": 110,
+          "name": "Label",
+          "fill": "$gold",
+          "content": "WHAT THE SATELLITE SEES",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "text",
+          "id": "JqdsX",
+          "x": 120,
+          "y": 170,
+          "name": "Title",
+          "fill": "#FFFFFF",
+          "content": "From space, it already shows.",
+          "lineHeight": 1.05,
+          "fontFamily": "$font-lat",
+          "fontSize": 100,
+          "fontWeight": "800",
+          "letterSpacing": -3
+        },
+        {
+          "type": "frame",
+          "id": "ENMkh",
+          "x": 120,
+          "y": 930,
+          "name": "Date 16 March 2025",
+          "gap": 16,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZRERE",
+              "name": "Chip",
+              "fill": "$gold",
+              "cornerRadius": 32,
+              "padding": [
+                12,
+                24
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zVFxl",
+                  "name": "Date",
+                  "fill": "$soil",
+                  "content": "16 March 2025",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "X9rbwM",
+              "name": "Season",
+              "fill": "#FFFFFF",
+              "content": "drought",
+              "fontFamily": "$font-lat",
+              "fontSize": 30,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "F5wdCJ",
+          "x": 1080,
+          "y": 930,
+          "name": "Date 17 April 2026",
+          "gap": 16,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Bs3h9",
+              "name": "Chip",
+              "fill": "$gold",
+              "cornerRadius": 32,
+              "padding": [
+                12,
+                24
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "O77B62",
+                  "name": "Date",
+                  "fill": "$soil",
+                  "content": "17 April 2026",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Uv0yS",
+              "name": "Season",
+              "fill": "#FFFFFF",
+              "content": "wet year",
+              "fontFamily": "$font-lat",
+              "fontSize": 30,
+              "fontWeight": "600"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "E103h",
+          "x": 120,
+          "y": 1020,
+          "name": "Source",
+          "fill": "$on-dark-muted",
+          "content": "Real Sentinel-2 pictures of the same fields near Koya. One pixel is 10 m.",
+          "fontFamily": "$font-lat",
+          "fontSize": 20,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "mNvdi",
+      "x": 4080,
+      "y": 0,
+      "name": "03 What Khor tells him",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$ink",
+      "layout": "vertical",
+      "gap": 56,
+      "padding": [
+        90,
+        120,
+        100,
+        120
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "NBjFj",
+          "name": "Header",
+          "width": "fill_container",
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "p8wsEx",
+              "name": "Brand",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "UCqaW",
+                  "name": "Grain Sun",
+                  "width": 44,
+                  "height": 44,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "dwgyY",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Rays",
+                      "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
+                      "viewBox": [
+                        0,
+                        0,
+                        100,
+                        100
+                      ],
+                      "fill": "$gold",
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "zROqn",
+                      "x": 15.84,
+                      "y": 15.84,
+                      "name": "Core",
+                      "fill": "$gold",
+                      "width": 12.32,
+                      "height": 12.32
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "CxxLT",
+                  "name": "Wordmark",
+                  "fill": "#FFFFFF",
+                  "content": "Khor",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Kj8EV",
+              "name": "Page",
+              "fill": "$on-dark-muted",
+              "content": "03 / 06",
+              "fontFamily": "$font-lat",
+              "fontSize": 22,
+              "fontWeight": "600",
+              "letterSpacing": 1.5
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "DxGrk",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 80,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "uLdRE",
+              "name": "Text",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 48,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aHHJW",
+                  "name": "Label",
+                  "fill": "$gold",
+                  "content": "WHAT KHOR TELLS HIM",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 22,
+                  "fontWeight": "700",
+                  "letterSpacing": 3
+                },
+                {
+                  "type": "text",
+                  "id": "X9WA7R",
+                  "name": "Title",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "The satellite sees.\nAI translates.",
+                  "lineHeight": 1.1,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 56,
+                  "fontWeight": "800",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "IwLd2",
+                  "name": "Sub",
+                  "fill": "$on-dark-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Plain Sorani advice, every week.",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 40,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "eE8Gk",
+              "name": "Phones",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XK4oq",
+                  "name": "Phone Wrap screen_grid",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VJW5o",
+                      "name": "Phone screen_grid",
+                      "clip": true,
+                      "width": 340,
+                      "height": 735,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "pitch_assets/screen_grid.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 32,
+                      "stroke": "#FFFFFF22",
+                      "strokeWidth": 2,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#16201922",
+                        "offset": {
+                          "x": 0,
+                          "y": 12
+                        },
+                        "blur": 32
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "p2Btw",
+                  "name": "Phone Wrap screen_cellcard",
+                  "padding": [
+                    40,
+                    0,
+                    0,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Vosik",
+                      "name": "Phone screen_cellcard",
+                      "clip": true,
+                      "width": 340,
+                      "height": 735,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "pitch_assets/screen_cellcard_v2.png",
+                        "mode": "cover"
+                      },
+                      "cornerRadius": 32,
+                      "stroke": "#FFFFFF22",
+                      "strokeWidth": 2,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#16201922",
+                        "offset": {
+                          "x": 0,
+                          "y": 12
+                        },
+                        "blur": 32
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "TMouI",
+                  "name": "Phone Wrap screen_cropview",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "X0boJZ",
+                      "name": "Phone screen_cropview",
+                      "clip": true,
+                      "width": 340,
+                      "height": 735,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "pitch_assets/screen_answer.png",
+                        "mode": "cover",
+                        "transform": [
+                          1,
+                          0,
+                          0,
+                          1.42,
+                          0,
+                          0
+                        ]
+                      },
+                      "cornerRadius": 32,
+                      "stroke": "#FFFFFF22",
+                      "strokeWidth": 2,
+                      "effect": {
+                        "type": "shadow",
+                        "shadowType": "outer",
+                        "color": "#16201922",
+                        "offset": {
+                          "x": 0,
+                          "y": 12
+                        },
+                        "blur": 32
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "jy0NE",
+      "x": 6120,
+      "y": 0,
+      "name": "04 Before drought becomes obvious",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$soil",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "gJFus",
+          "x": 0,
+          "y": 0,
+          "name": "Dry Soil Photo",
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "https://images.unsplash.com/photo-1761925160858-37b2533607c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3OTE0NzI1NDJ8&ixlib=rb-4.1.0&q=80&w=1080",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "klxKG",
+          "x": 0,
+          "y": 0,
+          "name": "Overlay",
+          "fill": "#382A1BD9",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "type": "text",
+          "id": "U4D1m",
+          "x": 120,
+          "y": 110,
+          "name": "Label",
+          "fill": "$gold",
+          "content": "BEFORE DROUGHT BECOMES OBVIOUS",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "VpRIT",
+          "x": 120,
+          "y": 190,
+          "name": "Stat",
+          "gap": 56,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "QP7Fp",
+              "name": "Number",
+              "fill": "$gold",
+              "content": "50%",
+              "lineHeight": 1,
+              "fontFamily": "$font-lat",
+              "fontSize": 340,
+              "fontWeight": "800",
+              "letterSpacing": -12
+            },
+            {
+              "type": "frame",
+              "id": "CNnLW",
+              "name": "Caption",
+              "width": 760,
+              "layout": "vertical",
+              "gap": 20,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "N8A8L",
+                  "name": "Line 1",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "of normal rain in Slemani by the end of January 2025.",
+                  "lineHeight": 1.15,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 52,
+                  "fontWeight": "800",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "RVOM8",
+                  "name": "Line 2",
+                  "fill": "$on-dark-muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Harvest was four months away.",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 40,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "sKCgW",
+          "x": 120,
+          "y": 700,
+          "name": "Timeline",
+          "width": 1680,
+          "gap": 10,
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "frame",
+              "id": "j1zTH",
+              "name": "Month Oct",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 7,
+                  "id": "wdNqN",
+                  "name": "Bar",
+                  "fill": "#FFFFFF40",
+                  "width": "fill_container",
+                  "height": 14
+                },
+                {
+                  "type": "text",
+                  "id": "u2L9N0",
+                  "name": "Month",
+                  "fill": "$on-dark-muted",
+                  "content": "Oct",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "P9DoA",
+              "name": "Month Nov",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 7,
+                  "id": "a2eOu",
+                  "name": "Bar",
+                  "fill": "#FFFFFF40",
+                  "width": "fill_container",
+                  "height": 14
+                },
+                {
+                  "type": "text",
+                  "id": "dXf11",
+                  "name": "Month",
+                  "fill": "$on-dark-muted",
+                  "content": "Nov",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zgLVf",
+              "name": "Month Dec",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 7,
+                  "id": "OQiAW",
+                  "name": "Bar",
+                  "fill": "#FFFFFF40",
+                  "width": "fill_container",
+                  "height": 14
+                },
+                {
+                  "type": "text",
+                  "id": "qyyNt",
+                  "name": "Month",
+                  "fill": "$on-dark-muted",
+                  "content": "Dec",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Lft5S",
+              "name": "Month Jan",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "f7u1lQ",
+                  "name": "Tag",
+                  "fill": "$gold",
+                  "content": "The rain data shows it",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 7,
+                  "id": "a9osL",
+                  "name": "Bar",
+                  "fill": "$gold",
+                  "width": "fill_container",
+                  "height": 28
+                },
+                {
+                  "type": "text",
+                  "id": "gZ1qS",
+                  "name": "Month",
+                  "fill": "$on-dark-muted",
+                  "content": "Jan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "f5JL0",
+              "name": "Month Feb",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 7,
+                  "id": "Lq550",
+                  "name": "Bar",
+                  "fill": "#FFFFFF40",
+                  "width": "fill_container",
+                  "height": 14
+                },
+                {
+                  "type": "text",
+                  "id": "drITt",
+                  "name": "Month",
+                  "fill": "$on-dark-muted",
+                  "content": "Feb",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RpGm9",
+              "name": "Month Mar",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 7,
+                  "id": "e07ZsZ",
+                  "name": "Bar",
+                  "fill": "#FFFFFF40",
+                  "width": "fill_container",
+                  "height": 14
+                },
+                {
+                  "type": "text",
+                  "id": "qLTsx",
+                  "name": "Month",
+                  "fill": "$on-dark-muted",
+                  "content": "Mar",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "oN3Oo",
+              "name": "Month Apr",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 7,
+                  "id": "dW1KA",
+                  "name": "Bar",
+                  "fill": "#FFFFFF40",
+                  "width": "fill_container",
+                  "height": 14
+                },
+                {
+                  "type": "text",
+                  "id": "zrW6n",
+                  "name": "Month",
+                  "fill": "$on-dark-muted",
+                  "content": "Apr",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "EkpQi",
+              "name": "Month May",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jaunD",
+                  "name": "Tag",
+                  "fill": "#FFFFFF",
+                  "content": "Harvest",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 7,
+                  "id": "lmUtl",
+                  "name": "Bar",
+                  "fill": "#FFFFFF",
+                  "width": "fill_container",
+                  "height": 28
+                },
+                {
+                  "type": "text",
+                  "id": "mMf5D",
+                  "name": "Month",
+                  "fill": "$on-dark-muted",
+                  "content": "May",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "T4KpCu",
+          "x": 120,
+          "y": 1000,
+          "name": "Source",
+          "fill": "$on-dark-muted",
+          "content": "Rain measured on 8 points across Slemani, winter 2024/25, against the 1991 to 2020 normal.",
+          "fontFamily": "$font-lat",
+          "fontSize": 20,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "RU9ku",
+      "x": 8160,
+      "y": 0,
+      "name": "05 Built for Suli",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$ink",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "jM9Kk",
+          "x": 120,
+          "y": 90,
+          "name": "Header",
+          "width": 1680,
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "qwMGY",
+              "name": "Brand",
+              "gap": 14,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "aSuq9",
+                  "name": "Grain Sun",
+                  "width": 44,
+                  "height": 44,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "kzhBH",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Rays",
+                      "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
+                      "viewBox": [
+                        0,
+                        0,
+                        100,
+                        100
+                      ],
+                      "fill": "$gold",
+                      "width": 44,
+                      "height": 44
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "b3scCz",
+                      "x": 15.84,
+                      "y": 15.84,
+                      "name": "Core",
+                      "fill": "$gold",
+                      "width": 12.32,
+                      "height": 12.32
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "V3Eku5",
+                  "name": "Wordmark",
+                  "fill": "#FFFFFF",
+                  "content": "Khor",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "X43oF",
+              "name": "Page",
+              "fill": "$on-dark-muted",
+              "content": "05 / 06",
+              "fontFamily": "$font-lat",
+              "fontSize": 22,
+              "fontWeight": "600",
+              "letterSpacing": 1.5
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FdYFD",
+          "x": 870,
+          "y": 64,
+          "name": "Zone Map",
+          "width": 988,
+          "height": 951.6,
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "S7lAJ",
+              "x": 319.8,
+              "y": 169.65,
+              "name": "District · Akre",
+              "geometry": "M643 460l-20 21-6 8-11 0-4 14-15-1-6-10-2-7-7-10-3-11-16 2-2-5 4-7-8-9-8-2-4-11-8-10-12 5-6 5-10 1 2-7-1-7-8 0 0-13 10-11-1-23 6-22 28-2-2-21 3-22-15-9-10-1-5-5 1-3 12-8 7-16 14-2 28 8 14 0 0 2 3 4 14 10 11 2 5 7 26 16 6 12 9 4 0 12 1 2 21 4 9 6 34 12 14 16 4 11 9 5 0 10-4 1-9 17-9 3-12 14-13 6-16 20-6-7-8-1-11 11-5-10-5-1-7 3z",
+              "viewBox": [
+                492,
+                261,
+                256,
+                242
+              ],
+              "fill": "#FFFFFF17",
+              "width": 166.4,
+              "height": 157.3,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "R1dm7C",
+              "x": 196.3,
+              "y": 72.15,
+              "name": "District · Amedi",
+              "geometry": "M583 266l-1 3-7 1-35-9-10 1-4 1-7 16-12 8-1 3 5 5 10 1 15 9-3 22 2 21-28 2-47-9-40 3-2-27-3-8-29-3 3-8-9-4-5-12-16 6-4-10-2-3 0-14 3-13-4-5-6-5-10-4-4-6-8-3-8 1-14-4 0-5 4-4 1-5 5-3 1-12 16-3 3-4 7-2 1-2-5-19-6-5-13-3-2-5 1-6 9-2 2-10 8-10 5-11 8 0 8 5 9 1 3 4 7 3 2 4 14 7 5-8 7-4 5 1 12 14 10 6 15 6 8 10 14 2 11-5 4 0 10 11 7 0 10 6 5-3 5 1 9-6 5 3 4-2 8 2 5-2 8 1 11 4 6 10 6 4 1-6 4-6 6-3 14 2 6-3 4-8 0-6 4-5 3-8 14-7 8-11 11 12 13 7 1 25 2 16-1 3-6 1-1 3-2 4-1 11-15 8-19 18-24 12-8 15-11 6z",
+              "viewBox": [
+                302,
+                111,
+                369,
+                239
+              ],
+              "fill": "#FFFFFF17",
+              "width": 239.85,
+              "height": 155.35,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "cIqRp",
+              "x": 294.45,
+              "y": 272.35,
+              "name": "District · Bardarash",
+              "geometry": "M570 538l0 10-9 11-12 12-5 10-16 0-9-4-4-23-8-5-17 12-15-16-9 0-5 3-3-5-5-4 3-11 6-2 0-11-4-4 1-4-3-5 1-9 8-13 2-17 6-16 6-9 9-9 4-10 8 0 1 7-2 7 1 1 9-2 6-5 12-5 8 10 4 11 8 2 8 9-4 7 2 5 16-2 3 11 7 10 2 7 5 8 1 2-1 1 2 8 0 7-7 6-13 4 2 10z",
+              "viewBox": [
+                453,
+                419,
+                135,
+                162
+              ],
+              "fill": "#FFFFFF17",
+              "width": 87.75,
+              "height": 105.3,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "UBAZ0",
+              "x": 139.1,
+              "y": 144.3,
+              "name": "District · Duhok",
+              "geometry": "M331 372l-18-8-3-3-18-7-17-1-17-3-11-7-2-6-3-4 0-4 6 0-10-17 5-3 2-5-12-10-9-10 1-5-2-7-8-13 9-14-10-8 20-4 18-1 3-5 8-3 16-1 13 7 3-4 6 0 3-4 12 4 8-1 8 3 4 6 12 5 6 7 2 6-3 9 0 14 2 3 4 10 16-6 5 12 9 4-11 20-8 1-2 3-2 3 0 8-25 37-10 2z",
+              "viewBox": [
+                214,
+                222,
+                175,
+                150
+              ],
+              "fill": "#FFFFFF17",
+              "width": 113.75,
+              "height": 97.5,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "szPB9",
+              "x": 209.3,
+              "y": 198.9,
+              "name": "District · Shekhan",
+              "geometry": "M458 490l-2 8 3 8-11 2-10-5-10-8-5-8-7-7-24-4 5-8-3-5-7 2-8 9-11 4-15-1-5-3 2-6 0-18 12-4 4-6 0-8 1-8-5-5-7-4-2-7 4-9 15-13 0-8-13 1-8-3-2 0-3 6-14-1-8 3-2-1 3-2 7-11 9 0 25-37 0-8 2-3 2-3 8-1 6-12 31 3 3 8 2 27 40-3 47 9-6 22 1 23-10 11 0 13-4 10-9 9-6 9-6 16-2 17-7 10z",
+              "viewBox": [
+                322,
+                306,
+                185,
+                202
+              ],
+              "fill": "#FFFFFF17",
+              "width": 120.25,
+              "height": 131.3,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "HVxPh",
+              "x": 33.800000000000004,
+              "y": 144.3,
+              "name": "District · Sumel",
+              "geometry": "M242 401l-3-6-1-6 2-7 3-5 5-4 5-1 6 2 4 4 3 6 1 7-9 1-16 9z m-26-142l7 13 2 7-1 5 9 10 12 10-2 5-5 3 10 17-6 0 0 4 4 8-9 8-9 0-13 14-6 1-4-2-11-2-11 3-8-4-2 3-2-7-11-9-10-4-7 0-2 11-4 1-13-17-12-8 1-12-6-16-4-19-8-1 0 7-4 11-5-2-13-11-5-2-16-28 21-21 3-8 41-5 23 3 18 15 11 2 11 4 25 4 11 9z",
+              "viewBox": [
+                52,
+                222,
+                215,
+                179
+              ],
+              "fill": "#FFFFFF17",
+              "width": 139.75,
+              "height": 116.35000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "ICvHq",
+              "x": 28.6,
+              "y": 66.3,
+              "name": "District · Zakho",
+              "geometry": "M214 237l10 8-9 14-10-9-25-4-11-4-11-2-18-15-23-3-41 5-3 8-21 21-7-6 7-10-2-5-5-3-1-6 0-3 5-4 9 3 26-12 13 2 9-7 21 1 1-10 10-14 1-5 9-9 6-16 6-2 7-8-2-7 11-2 5-4 1-6-5-8 14-3 5-3 5-7 12 3 5 10 9 1 5 4 15 3 13 6 20-7 6-9 2-1 31-7 13-1 2 0 5 7-5 11-8 10-2 10-9 2-1 6 2 5 13 3 6 5 2 9 3 8-1 4-7 2-3 4-16 3-1 12-5 3-1 5-4 4 0 5 2 0-1 2-8 2-3 4-13-7-16 1-8 3-3 5-18 1-20 4z m33 106l11 7 17 3 17 1 18 7 3 3 18 8-6 9-24 11-13 0-21-1-1-8-4-6-6-4-6-1-7 5-4 7 0 9 3 9-26-1-6-4-2-9-14-1-4-2-8-12-7-4-2-7 2-3 8 4 11-3 18 4 16-15 9 0 9-8 1 2z",
+              "viewBox": [
+                44,
+                102,
+                296,
+                300
+              ],
+              "fill": "#FFFFFF17",
+              "width": 192.4,
+              "height": 195,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "N03bQ",
+              "x": 569.4,
+              "y": 242.45000000000002,
+              "name": "District · Chuman",
+              "geometry": "M999 485l-4 2-1 13-4 17-5 3-23-3-15-7-13-22-22-16-12-17-21-26-3-10 0-20 2-6 3-5 18-2 4 7 5-2-2-6 7 1 25-5 14 4 1-11 10-1 11 0 5 3 9 9 16 5 4 4 9 16 3 9-1 16-1 4-11 12-1 5 5 7-1 4-13 10 2 8z",
+              "viewBox": [
+                876,
+                373,
+                144,
+                147
+              ],
+              "fill": "#FFFFFF17",
+              "width": 93.60000000000001,
+              "height": 95.55,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "y6ytI6",
+              "x": 327.6,
+              "y": 349.05,
+              "name": "District · Erbil",
+              "geometry": "M729 655l-7 3-20 2-6 4-3 4-20 7-18 11-10 3-2 5-7 6-7 1-3-1-2-3-2-11-10 1-7-4-7 0-16 9-12 4-13-4-2 9-4 8-4 3-6 0-8-3 2-13-8-14 0-3 7-11 7-4 5-8 5-1 6-11-7-7-22-14-24 0 8-17 11-9 15-8 7-10 4-8 12-12 9-11 0-10 13 2 17-3 27 8 18 20 19 2 18 4 7 6 23 13-1 8 0 8 1 3 5 2-1 23 6 8 7 13z",
+              "viewBox": [
+                504,
+                537,
+                225,
+                175
+              ],
+              "fill": "#FFFFFF17",
+              "width": 146.25,
+              "height": 113.75,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "x1WYf2",
+              "x": 414.7,
+              "y": 274.95,
+              "name": "District · Harir",
+              "geometry": "M726 425l14-2 5 5 5 18 24 24 7 32-8 4-10-3-15 2-3 14-3 3-3 1-9-5-15-14-24-1-4 6-3 0-1-4 1-6-22-8-11-13-9-7-4-6 12-8 5 1 5 10 11-11 8 1 6 7 16-20 13-6 12-14z",
+              "viewBox": [
+                638,
+                423,
+                143,
+                100
+              ],
+              "fill": "#FFFFFF17",
+              "width": 92.95,
+              "height": 65,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "r0H69",
+              "x": 473.85,
+              "y": 240.5,
+              "name": "District · Khalifan",
+              "geometry": "M864 531l-24-13-20-8-7-1-21 15-8-12-10-42-24-24-5-18-5-5-7 0 2-1 9-17 4-1 0-10-9-5-4-11-6-8 27 1 8 9 4 10 2 13 4 14 9 7 9 3 5 11-14 11 7 14 16 16 13 8 45 44z",
+              "viewBox": [
+                729,
+                370,
+                135,
+                161
+              ],
+              "fill": "#FFFFFF17",
+              "width": 87.75,
+              "height": 104.65,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "hoflo",
+              "x": 465.40000000000003,
+              "y": 389.35,
+              "name": "District · Koya",
+              "geometry": "M875 637l-6 6-2 16-5 5 2 7 7 2 22 20 25 15-4 8 1 20-2 7-20 6-5-2-1-4-6-8-34-15-7-7-9-4-18-1-13 9-6-2-3-2 2-7-1-24-8-13-8-4-8 0-5 3-1 11-2 4-24 27-4-9 2-35-12-24-6-8 0-13 1-10 6 2 5-5 5-2 3 5 5 2 15-1 2-9 22 1 3 4 0-3 34 8 9 0 2-12 5-2 12 5 3 6 7 0 4-5 4 0 13 5 11 13 2 5 0 7-1 5-13-3z",
+              "viewBox": [
+                716,
+                599,
+                202,
+                150
+              ],
+              "fill": "#FFFFFF17",
+              "width": 131.3,
+              "height": 97.5,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "kONxR",
+              "x": 261.3,
+              "y": 404.95,
+              "name": "District · Makhmur",
+              "geometry": "M566 862l6 16-20 15-2 6 2 12-1 9-2 5-9 5-19 1-2 20-33-4 1 8-7 15-4 0-28-12-13 1-5-3-1-9 3-13 2-18-4-8-13-1 2-10-1-18-9-12-5-2-2-6 5-11-2-21 5-27 4-9 10-4 7-7 4-11 0-23-14 0-9-5-5-13 24-7 11-7 6-13 1-8 17-19 10-21 14-16 3-8 11-6 24 0 22 14 7 7-6 11-5 1-5 8-7 4-7 11 0 3 8 14-6 27 7 11 14 12 38 23 28 20-14 10-2 12-9 6-10 10-5 12-15 4-6 7 11 12z",
+              "viewBox": [
+                402,
+                623,
+                214,
+                347
+              ],
+              "fill": "#FFFFFF17",
+              "width": 139.1,
+              "height": 225.55,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "ZJp5d",
+              "x": 378.3,
+              "y": 83.2,
+              "name": "District · Mergasor",
+              "geometry": "M730 281l17 6 4-1 14 10 17 24 2 7-1 7 7 8 28 26 21 9-2 7-6 8-3 9-10 0-3 3-12-15-14-2-21 0-4-7-8-9-27-1-8-8-34-12-9-6-21-4-1-2 0-12-9-4-6-12-26-16-5-7-11-2-12-8-5-6 1-5 3-3 8-3 8-15 24-12 19-18 15-8 1-11 2-4 1-3 6-1-2-44-11-5-10-11 7 0 13 3 16-1 8 6 6 1 5 4 17 7 12 16 3 8-1 9 4 8 0 5-5 7-13 1-2 6-7 8-5 10 1 6 3 6 12 12-1 11 10 20z",
+              "viewBox": [
+                582,
+                128,
+                257,
+                276
+              ],
+              "fill": "#FFFFFF17",
+              "width": 167.05,
+              "height": 179.4,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "kk1BQ",
+              "x": 369.2,
+              "y": 302.25,
+              "name": "District · Pirmam",
+              "geometry": "M723 613l-11-4-1-3 0-8 1-8-23-13-7-6-18-4-19-2-18-20-12-4-15-4-17 3-13-2-2-10 13-4 7-6-2-15 16 0 4-14 11 0 6-8 15-16 4 6 9 7 11 13 22 8-1 6 1 4 3 0 4-6 5 1 27 36 5 4 21 16 10 1 6 5 1 16 6 13 2 9-16-1-2 9-15 1-5-2-3-5-5 2-5 5z",
+              "viewBox": [
+                568,
+                465,
+                206,
+                148
+              ],
+              "fill": "#FFFFFF17",
+              "width": 133.9,
+              "height": 96.2,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "wn9mR",
+              "x": 343.85,
+              "y": 425.75,
+              "name": "District · Qushtapa",
+              "geometry": "M735 803l-9-3-10 0-15-9-11 1-2 1 0 6 1 15-4 5-4-3-13 4-4 0-25-14-18-15-33-22-38-23-14-12-7-11 4-14 6 3 8 0 6-6 4-14 13 4 31-13 4 0 7 4 10-1 2 11 2 3 8 1 6-4 5-8 10-3 18-11 20-7 3-4 6-4 20-2 7-3 4 8 2 8-3 30 7 19-1 12-11 35 1 20 7 16z",
+              "viewBox": [
+                529,
+                655,
+                210,
+                165
+              ],
+              "fill": "#FFFFFF17",
+              "width": 136.5,
+              "height": 107.25,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "ev8hL",
+              "x": 508.95000000000005,
+              "y": 278.2,
+              "name": "District · Rawanduz",
+              "geometry": "M947 510l-2-1-15 14-26 1-13 4-5 0-12-6-8 3-2 6-45-44-17-12-12-12-7-14 14-11 15-3 2-5 6-2 6 0 14 8 11 1 11 0 3-2 3-5 6 0 4 4 0 6 12 4 10 11 12 17 22 16 13 22z",
+              "viewBox": [
+                783,
+                428,
+                164,
+                103
+              ],
+              "fill": "#FFFFFF17",
+              "width": 106.60000000000001,
+              "height": 66.95,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "ECPeE",
+              "x": 452.40000000000003,
+              "y": 326.3,
+              "name": "District · Shaqlawa",
+              "geometry": "M864 531l-10 14-17 12-5 8 0 9 7 7 6 23-15-4-2 1-2 12-9 0-34-8 0 3-3-4-6 0-2-9-6-13-1-16-6-5-10-1-26-20-27-36 19 0 15 14 9 5 3-1 3-3 3-14 15-2 10 3 8-4 3 10 8 12 21-15 7 1 20 8 24 13z",
+              "viewBox": [
+                696,
+                502,
+                168,
+                111
+              ],
+              "fill": "#FFFFFF17",
+              "width": 109.2,
+              "height": 72.15,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "pNTaB",
+              "x": 485.55,
+              "y": 122.2,
+              "name": "District · Sidakan",
+              "geometry": "M876 411l-11-8-9-14-5-6-6-4-27-11-28-26-7-8 1-7-2-7-13-19-4-5-14-10-4 0 8-17 8-9 0-3-4-3-1-4 8-3 11 0 19-6 18-10 4-4 2-6 11-4 10-15 21-14 14 6 16 0 12 5 6-2 11 8-6 7-4 9 6 11 2 7 9 13 5 2 11-3 6 5 10 3 3 4-2 7-4 7-3 14 8 13 2 7-1 6-4 12-14 10-5 10-2 7 0 4 4 10 11 4-1 11-14-4-25 5-7-1 2 6-5 2-4-7-18 2-5 11 0 12z",
+              "viewBox": [
+                747,
+                188,
+                217,
+                223
+              ],
+              "fill": "#FFFFFF17",
+              "width": 141.05,
+              "height": 144.95000000000002,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "QEaG1",
+              "x": 499.20000000000005,
+              "y": 245.05,
+              "name": "District · Soran",
+              "geometry": "M890 444l-12-4-2-8-5-2-3 0-3 5-3 2-11 0-11-1-14-8-6 0-6 2-2 5-15 3-5-11-9-3-9-7-4-14-2-16 21 0 14 2 12 15 3-3 10 0 3-9 6-8 2-7 6 2 10 7 10 17 11 8 0 12 3 6 11 15z",
+              "viewBox": [
+                768,
+                377,
+                122,
+                67
+              ],
+              "fill": "#FFFFFF17",
+              "width": 79.3,
+              "height": 43.550000000000004,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "lBvRq",
+              "x": 472.55,
+              "y": 432.25,
+              "name": "District · Taqtaq",
+              "geometry": "M978 775l-9 5-13-7-7 2 0 9-14 5-6-9-3 2-4 6-11-7-8 2-6-3-13 0-5-3-8 0-13-6-6 6-10 2-6 8-4 2-6 0-19-6-6 4-14 3-13 12-13-3-14 6-12-2-7-16-1-20 12-42 0-5-3-10 24-27 2-4 1-11 5-3 8 0 8 4 8 13 1 24-2 7 3 2 6 2 13-9 18 1 9 4 7 7 34 15 6 8 1 4 5 2 20-6 2-7-1-20 4-8 6 6 23 31 27 22 4 8z",
+              "viewBox": [
+                727,
+                665,
+                251,
+                140
+              ],
+              "fill": "#FFFFFF17",
+              "width": 163.15,
+              "height": 91,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "SItrM",
+              "x": 543.4,
+              "y": 501.15000000000003,
+              "name": "District · Chamchamal",
+              "geometry": "M1059 967l50 69 31 38 44 23-11 10-9 1 2 13-6 9-3 2-3-6-29 3-16 6-32-7-16 3-26 10-6 9-16 8-11 15-6 4-5 1-10 0-12-17-37-2-16-13-11 1 0-6-15 8-9-5-4 3-4 11-2-2-3-3-3-9-6-10-23-23 7-1 17-19 22-3-1-6 5-15 6-29 4-7 7 0 4-5-3-12-8-5-2-11 15-10 4-8 10-5-1-20-11-1-4-9-6 0 0-9 0-11 4-1-3-14-1-15 3-7 10-12 4-8 0-8-10-9-20-3 4-5 0-7-6-4-11-17 3-12-2-5 0-7-5-2-3 15-3 0-2-18-5-15 13 6 8 0 5 3 13 0 6 3 8-2 11 7 4-6 3-2 6 9 14-5 0-9 7-2 13 7 7-3 13 40 7 33-2 4 3 19-5 11 18 24 49 59z",
+              "viewBox": [
+                836,
+                771,
+                348,
+                407
+              ],
+              "fill": "#FFFFFF17",
+              "width": 226.20000000000002,
+              "height": 264.55,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "jpRvK",
+              "x": 636.35,
+              "y": 713.0500000000001,
+              "name": "District · Kalar",
+              "geometry": "M1173 1259l-11 16-7 34-4 8-10 1-12 5-9 1-2 1-13 20-7 3-10 12-3 2-8-19-6-10 10-9-7-12 1-5 12-9-4-11-7-2-2-9-20-18-8-2-11 8-2-5 6-8-4-18-5-4-10 6-4 10-3 3-13-14-11-3-6-8-1-5-3-17 4-13 0-7-2-3 15-1 6-4 11-15 14-6 8-11 35-12 7-1 32 7 16-6 29-3 3 6 3-2 6-9-2-13 9-1 5-6 6-4 2 1 14 7 14 11-4 7 0 9 11 2 12 11-11 7 3 6-1 5-5 4-2 6 2 12-7 21-18 13-12 18-9 22z",
+              "viewBox": [
+                979,
+                1097,
+                254,
+                265
+              ],
+              "fill": "#FFFFFF17",
+              "width": 165.1,
+              "height": 172.25,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "RnRdk",
+              "x": 827.45,
+              "y": 507.65000000000003,
+              "name": "District · Penjwen",
+              "geometry": "M1360 969l-46-15-6-5-6 3-4-8-5-4-3-12 11-2-1-15 6-10 0-10-7-10-1-27-4-16-19-19-2-18 6-3 9 4 10-2 6 1 5-9 7-2 13 6 9-8 20 5 10-7 16-5 9 7 9 0-3 5 1 4 2 4 7 6 17 3 7-7 9 1 6-2 5-7 5-1 6 3 9 2 3 6 0 8-4 5-2 5-5 3-6 1 0 3-7 2-1 7-8 2-6 6-14-4-3 4-5 0-3 8-5 2-8-2-17 4-12-6-15 8-1 11-3 9 5 5 0 7-3 9 4 4 0 3-14-3 0 4 8 10 4 9-1 3-6 2-1 6 7 24 6 5z",
+              "viewBox": [
+                1273,
+                781,
+                203,
+                188
+              ],
+              "fill": "#FFFFFF17",
+              "width": 131.95000000000002,
+              "height": 122.2,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "eo9C2",
+              "x": 599.3000000000001,
+              "y": 315.25,
+              "name": "District · Pshdar",
+              "geometry": "M1113 642l1 13 5 4 2 7 7 9 2 7-6 9-4 13-6 12-40-31-15-8-3-7-10-3-10-12-15-1-24-12 0-8-15-9-43-49-12-10 1-6 9 0 3-9-18-27 8-1 15-14 17 8 23 3 5-3 4-17 1-13 4-2 15 11 3 5 1 10 6 8 1 7 3 4 11 8 9 0 30-12 5 3 10 16 2 22-2 10 0 5 11 14-13 8 6 5 4 0 9 4 5 18-2 11z",
+              "viewBox": [
+                922,
+                485,
+                208,
+                231
+              ],
+              "fill": "#FFFFFF17",
+              "width": 135.20000000000002,
+              "height": 150.15,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "cRiix",
+              "x": 540.8000000000001,
+              "y": 339.3,
+              "name": "District · Ranya",
+              "geometry": "M984 736l11-27-6-12-7-8-30-25-33-20-5 1-7 8-9 4-11-6-9-10 0-4 10 3 1-5 0-7-8-13-5-5-13-5-4 0-4 5-7 0-4-10-5-19-7-7 0-9 5-8 17-12 9-11 3-9 8-3 12 6 5 0 13-4 18 0 18 27-3 9-9 0-1 6 12 10 43 49 15 9 0 8 24 12 15 1 10 12 10 3 3 7 15 8 40 31-1 2-26 18 0 7 5 7 4 1-5 9-11 6-3-3-14 0-23-15-10-12-11-6-17 1-7-2-11 7z",
+              "viewBox": [
+                832,
+                522,
+                282,
+                244
+              ],
+              "fill": "#FFFFFF17",
+              "width": 183.3,
+              "height": 158.6,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "hQx8K",
+              "x": 807.3000000000001,
+              "y": 616.85,
+              "name": "District · Sharazur",
+              "geometry": "M1248 1013l1-5-7-2 0-16 1-1 1-8 9-1 11-12-1-5 9 2-5 18 23-1 4-10 4-1 0-17 10-5 6 5 22 8 0 10-6 7-1 7 9 0 1 44-8 3-5 7-2 8-11 10-10-15-13-14-17-10-25-6z",
+              "viewBox": [
+                1242,
+                949,
+                97,
+                109
+              ],
+              "fill": "#FFFFFF17",
+              "width": 63.050000000000004,
+              "height": 70.85000000000001,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "fSvJc",
+              "x": 698.1,
+              "y": 465.40000000000003,
+              "name": "District · Sharbazher",
+              "geometry": "M1253 980l-11-14-3 1 2 9-6-1-8-10-4 0-9-12 0-3 6 0-3-10-12-16-22-8-2-2-1-5-7 0-22-38-18-27-7 2-15-16-21-15-7-8 7-8-2-10 7-5 0-5-2-3-12 0-7-5 6-5 11-6 5-9-4-1-5-7 0-7 26-18 1-2 6 12 3-1 13 3 4 0 2-5 5 0 3-5 8 2 8-5 14 3 7-2 6 1 4 6 10 2 2 9 8 0 6 5 0 6 8 8 2 6 9 6 5 7 6 13 10 18 4 2 6-6 2 18 19 19 4 16 1 27 7 10 0 10-6 10 1 15-11 2 3 12 5 4 4 8-4 2 0 17-4 1-4 10-23 1 5-18-2-2-7 0 1 5-11 12z",
+              "viewBox": [
+                1074,
+                716,
+                232,
+                267
+              ],
+              "fill": "#FFFFFF17",
+              "width": 150.8,
+              "height": 173.55,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "IpKzf",
+              "x": 644.8000000000001,
+              "y": 529.75,
+              "name": "District · Sulaymaniyah",
+              "geometry": "M1173 909l7 0 1 5 2 2 22 8 12 16 3 10-6 0 0 3 9 12 4 0 8 10 6 1-2-9 3-1 11 14-9 1-1 8-1 1 0 16 7 2-2 9-14-5-1 2 1 8-6 10 7 4 0 10-6 4 0 5-5 15-20-6-6 4 1 8 5 4 2 5 10 5 8 7-4 2-8 0 5 11-2 6-14-11-60-31-15-18-73-99-58-69-2-4 5-11-3-19 2-4 18-1 5 7 9 7 11 6 11 0 6-22 12-13 5-17 5 0 11 6 2-1-1-7 1 0 20 15 15 16 7-2 18 27 22 38z",
+              "viewBox": [
+                992,
+                815,
+                261,
+                301
+              ],
+              "fill": "#FFFFFF17",
+              "width": 169.65,
+              "height": 195.65,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "gxUPA",
+              "x": 817.0500000000001,
+              "y": 663.65,
+              "name": "District · Halabja",
+              "geometry": "M1257 1118l14-4 1-6 9-1 16 2 0-11-7-10 0-6 34-34 2-8 5-7 8-3 0-9 18 11 4 5 0 4 7 1 14-6 2 3 4-1 16-9 2 3 0 6-13 13-3 8 7-3 0 5 21 3 3 4 0 3 3 3-8 10-8 4-2 17 11 5 1 4-8 9-15 4-8 0-4-6-6 2-2 12 3 1 0 2-3 0-2 6-4-3 0-2-7 1-3-6-4-4-7 3-14-9-8 1-2 4 1 12-11 0-5 4 1 14 2 6 0 5 3 4 0 7-10 23-7 2-16-7-4 0-5-13 2-10-5-9 0-16-2-6 0-5-6-17-5-5z",
+              "viewBox": [
+                1257,
+                1021,
+                167,
+                185
+              ],
+              "fill": "#FFFFFF17",
+              "width": 108.55,
+              "height": 120.25,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "LXVGl",
+              "x": 863.85,
+              "y": 625.3000000000001,
+              "name": "District · Khurmal",
+              "geometry": "M1404 1029l-16 9-4 1-2-3-14 6-7-1 0-4-4-5-18-11-1-35-9 0 1-7 6-7 0-10 18 7 6 0 8 21 19 18 7 1 3 3 1 6 6 11z",
+              "viewBox": [
+                1329,
+                962,
+                75,
+                80
+              ],
+              "fill": "#FFFFFF17",
+              "width": 48.75,
+              "height": 52,
+              "stroke": "$ink",
+              "strokeWidth": 2,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "UZcM4",
+              "x": 540.8000000000001,
+              "y": 315.25,
+              "name": "Border · Sulaymaniyah",
+              "geometry": "M1083 1287l-7-2-2-9-20-18-8-2-11 8-2-5 6-8-4-18-5-4-10 6-4 10-3 3-13-14-11-3-6-8-4-22 4-13 0-7-14-20-37-2-16-13-11 1 0-6-15 8-9-5-4 3-4 11-5-5-3-9-6-10-23-23 7-1 17-19 22-3-1-6 5-15 6-29 4-7 7 0 4-5-3-12-8-5-2-11 15-10 4-8 10-5-1-20-11-1-4-9-6 0 0-9 0-11 4-1-3-14-1-15 3-7 10-12 4-8 0-8-10-9-20-3 4-5 0-7-6-4-11-17 3-12-2-5 0-7-5-2-3 15-3 0-2-18-5-15 13 6 8 0 5 3 13 0 6 3 8-2 11 7 4-6 3-2 6 9 14-5 0-9 7-2 13 7 5-1 4-4-4-8-27-22-26-35-28-17-22-20-7-2-2-7 5-5 2-16 6-6 13 3 1-12-2-5-11-13-13-5-4 0-4 5-7 0-4-10-5-19-7-7 0-9 5-8 17-12 9-11 3-9 8-3 12 6 5 0 13-4 26-1 15-14 17 8 23 3 5-3 4-17 1-13 4-2 15 11 3 5 1 10 6 8 1 7 3 4 11 8 9 0 30-12 5 3 10 16 2 22-2 10 0 5 11 14-13 8 6 5 4 0 9 4 5 18-2 8 1 16 5 4 2 7 7 9 2 7-6 9-4 13-6 12 6 12 3-1 17 3 2-5 5 0 3-5 8 2 8-5 14 3 7-2 6 1 4 6 10 2 2 9 8 0 6 5 0 6 8 8 2 6 9 6 21 38 4 2 12-9 9 4 10-2 6 1 6-9 6-2 13 6 9-8 20 5 10-7 16-5 9 7 9 0-3 5 1 4 2 4 7 6 17 3 7-7 9 1 6-2 5-7 5-1 6 3 9 2 3 6 0 8-4 5-2 5-5 3-6 1 0 3-7 2-1 7-8 2-6 6-14-4-3 4-5 0-3 8-5 2-8-2-17 4-12-6-15 8-1 11-3 9 5 5 0 7-3 9 4 4 0 3-14-3 0 4 8 10 4 9-1 3-6 2-1 6 7 24 6 5-6 0-18-7 0 10-6 7-1 7 9 0 1 44-8 3-5 7-2 8-34 34 0 6 7 10 0 11-16-2-9 1-1 6-21 5-13 23-15 10 3 6-1 5-5 4-2 6 2 12-7 21-18 13-12 18-12 28-8 10-7 34-4 8-10 1-12 5-9 1-2 1-13 20-7 3-10 12-3 2-8-19-6-10 10-9-7-12 1-5 12-9-4-11z",
+              "viewBox": [
+                832,
+                485,
+                644,
+                877
+              ],
+              "width": 418.6,
+              "height": 570.0500000000001,
+              "stroke": "#FFFFFFB3",
+              "strokeWidth": 3,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "j5ss2c",
+              "x": 778.0500000000001,
+              "y": 657.8000000000001,
+              "name": "District · Darbandikhan",
+              "geometry": "M1210 1123l6-13-5-11 8 0 4-2-8-7-10-5-2-5-5-4-1-8 6-4 20 6 5-15 0-5 6-4 0-10-7-4 6-10-1-7 1-3 14 5 1-4 19 5 19 8 17 17 10 15-24 26 1 4 7 10 0 11-16-2-9 1-1 6-21 5-13 23-4 3-12-11-11-2 0-9z",
+              "viewBox": [
+                1197,
+                1012,
+                116,
+                133
+              ],
+              "fill": "#D49A3766",
+              "width": 75.4,
+              "height": 86.45,
+              "stroke": "$gold",
+              "strokeWidth": 5,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "path",
+              "id": "qfJDZ",
+              "x": 560.3000000000001,
+              "y": 414.05,
+              "name": "District · Dukan",
+              "geometry": "M1039 869l-20-13-5-7-18 1-7-33-12-37 1-5-4-8-27-22-26-35-28-17-22-20-7-2-2-7 5-5 2-16 3-4 6-2 1 6 8 8 11 6 9-4 7-8 5-1 33 20 30 25 7 8 6 12-11 27 11-7 7 2 17-1 11 6 10 12 23 15 14 0 3 3-6 5 7 5 12 0 2 3 0 5-7 5 2 10-7 8 7 8 1 7-2 1-11-6-5 0-5 17-12 13-6 22-11 0z",
+              "viewBox": [
+                862,
+                637,
+                233,
+                232
+              ],
+              "fill": "#D49A3766",
+              "width": 151.45000000000002,
+              "height": 150.8,
+              "stroke": "$gold",
+              "strokeWidth": 5,
+              "strokeLinejoin": "round"
+            },
+            {
+              "type": "frame",
+              "id": "d8zH5",
+              "x": 446,
+              "y": 323,
+              "name": "Pin · Dukan",
+              "fill": "$gold",
+              "cornerRadius": 44,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#00000055",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 24
+              },
+              "gap": 12,
+              "padding": [
+                14,
+                26,
+                14,
+                18
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "PHMYO",
+                  "name": "Drop",
+                  "width": 40,
+                  "height": 40,
+                  "icon": "droplet",
+                  "library": "lucide",
+                  "fill": "$soil"
+                },
+                {
+                  "type": "text",
+                  "id": "vNXcF",
+                  "name": "Pin Percent",
+                  "fill": "$soil",
+                  "content": "92%",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 52,
+                  "fontWeight": "800",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "i2b4nA",
+                  "name": "Pin Name",
+                  "fill": "$soil",
+                  "content": "Dukan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OQdMH",
+              "x": 585,
+              "y": 758,
+              "name": "Pin · Darbandikhan",
+              "fill": "$gold",
+              "cornerRadius": 44,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#00000055",
+                "offset": {
+                  "x": 0,
+                  "y": 8
+                },
+                "blur": 24
+              },
+              "gap": 12,
+              "padding": [
+                14,
+                26,
+                14,
+                18
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "k6vpz",
+                  "name": "Drop",
+                  "width": 40,
+                  "height": 40,
+                  "icon": "droplet",
+                  "library": "lucide",
+                  "fill": "$soil"
+                },
+                {
+                  "type": "text",
+                  "id": "btmuj",
+                  "name": "Pin Percent",
+                  "fill": "$soil",
+                  "content": "63%",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 52,
+                  "fontWeight": "800",
+                  "letterSpacing": -1
+                },
+                {
+                  "type": "text",
+                  "id": "tigV8",
+                  "name": "Pin Name",
+                  "fill": "$soil",
+                  "content": "Darbandikhan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 26,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "xTYFX",
+          "x": 120,
+          "y": 0,
+          "name": "Left",
+          "width": 720,
+          "height": 1080,
+          "layout": "vertical",
+          "gap": 56,
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "QLpiM",
+              "name": "Title",
+              "fill": "#FFFFFF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Built for Suli",
+              "lineHeight": 1.1,
+              "fontFamily": "$font-lat",
+              "fontSize": 68,
+              "fontWeight": "800",
+              "letterSpacing": -1.5
+            },
+            {
+              "type": "frame",
+              "id": "M0T3AC",
+              "name": "Gauge · Dukan",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PYznD",
+                  "name": "Lake Name",
+                  "fill": "#FFFFFF",
+                  "content": "Dukan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "frame",
+                  "id": "G9lUF",
+                  "name": "Bar Row 2025",
+                  "width": "fill_container",
+                  "gap": 18,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "B0T3lX",
+                      "name": "Year",
+                      "fill": "$on-dark-muted",
+                      "content": "2025",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EiWLZ",
+                      "name": "Track",
+                      "clip": true,
+                      "width": 500,
+                      "height": 30,
+                      "fill": "#FFFFFF1F",
+                      "cornerRadius": 15,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 15,
+                          "id": "z7vGzU",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Fill",
+                          "fill": "#FFFFFF66",
+                          "width": 155,
+                          "height": 30
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "u1MawY",
+                      "name": "Value",
+                      "fill": "#FFFFFF",
+                      "content": "31%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "psgZx",
+                  "name": "Bar Row 2026",
+                  "width": "fill_container",
+                  "gap": 18,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Yblsi",
+                      "name": "Year",
+                      "fill": "$on-dark-muted",
+                      "content": "2026",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SwwCX",
+                      "name": "Track",
+                      "clip": true,
+                      "width": 500,
+                      "height": 30,
+                      "fill": "#FFFFFF1F",
+                      "cornerRadius": 15,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 15,
+                          "id": "wxfWa",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Fill",
+                          "fill": "$gold",
+                          "width": 460,
+                          "height": 30
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "a4Ed1F",
+                      "name": "Value",
+                      "fill": "$gold",
+                      "content": "92%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "sXEk5",
+              "name": "Gauge · Darbandikhan",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 14,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KpIi9",
+                  "name": "Lake Name",
+                  "fill": "#FFFFFF",
+                  "content": "Darbandikhan",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "frame",
+                  "id": "k8GLtc",
+                  "name": "Bar Row 2025",
+                  "width": "fill_container",
+                  "gap": 18,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "TlyOg",
+                      "name": "Year",
+                      "fill": "$on-dark-muted",
+                      "content": "2025",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "b4PwV",
+                      "name": "Track",
+                      "clip": true,
+                      "width": 500,
+                      "height": 30,
+                      "fill": "#FFFFFF1F",
+                      "cornerRadius": 15,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 15,
+                          "id": "zM7NC",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Fill",
+                          "fill": "#FFFFFF66",
+                          "width": 210,
+                          "height": 30
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "kLnSh",
+                      "name": "Value",
+                      "fill": "#FFFFFF",
+                      "content": "42%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "O1inw",
+                  "name": "Bar Row 2026",
+                  "width": "fill_container",
+                  "gap": 18,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tHGkE",
+                      "name": "Year",
+                      "fill": "$on-dark-muted",
+                      "content": "2026",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "hlb6j",
+                      "name": "Track",
+                      "clip": true,
+                      "width": 500,
+                      "height": 30,
+                      "fill": "#FFFFFF1F",
+                      "cornerRadius": 15,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 15,
+                          "id": "Fz2AA",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Fill",
+                          "fill": "$gold",
+                          "width": 315,
+                          "height": 30
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "E0pHYc",
+                      "name": "Value",
+                      "fill": "$gold",
+                      "content": "63%",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "S0aDZU",
+          "x": 120,
+          "y": 960,
+          "name": "Source",
+          "fill": "$on-dark-muted",
+          "textGrowth": "fixed-width",
+          "width": 700,
+          "content": "Share of full lake area each September, measured by Khor on Sentinel-2 images.",
+          "lineHeight": 1.3,
+          "fontFamily": "$font-lat",
+          "fontSize": 20,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "XxvPB",
+      "x": 10200,
+      "y": 0,
+      "name": "06 From one farm to a system",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$ink",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "bJ6Ga",
+          "x": 0,
+          "y": 0,
+          "name": "Closing Photo",
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-5.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "RV8Bv",
+          "x": 0,
+          "y": 0,
+          "name": "Overlay",
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 270,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#2C3B1EF5",
+                "position": 0
+              },
+              {
+                "color": "#2C3B1ECC",
+                "position": 0.45
+              },
+              {
+                "color": "#2C3B1E00",
+                "position": 1
+              }
+            ]
+          },
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "type": "text",
+          "id": "ZuhKK",
+          "x": 120,
+          "y": 110,
+          "name": "Label",
+          "fill": "$gold",
+          "content": "THE VISION",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "m5nt5",
+          "x": 120,
+          "y": 0,
+          "name": "Closing Block",
+          "width": 780,
+          "height": 1080,
+          "layout": "vertical",
+          "gap": 40,
+          "justifyContent": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "u1moT",
+              "name": "Headline",
+              "fill": "#FFFFFF",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "From one farm to a smarter agricultural system.",
+              "lineHeight": 1.1,
+              "fontFamily": "$font-lat",
+              "fontSize": 68,
+              "fontWeight": "800",
+              "letterSpacing": -2
+            },
+            {
+              "type": "frame",
+              "id": "p35rsF",
+              "name": "Results",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 26,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "r762KR",
+                  "name": "Stat",
+                  "gap": 24,
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "GqE75",
+                      "name": "Number",
+                      "fill": "$gold",
+                      "content": "33",
+                      "lineHeight": 0.9,
+                      "fontFamily": "$font-lat",
+                      "fontSize": 170,
+                      "fontWeight": "800",
+                      "letterSpacing": -5
+                    },
+                    {
+                      "type": "text",
+                      "id": "d40ml",
+                      "name": "Stat Label",
+                      "fill": "#FFFFFF",
+                      "content": "districts on one map",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 36,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "pxBya",
+          "x": 120,
+          "y": 920,
+          "name": "Footer",
+          "gap": 16,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Xwpgj",
+              "name": "Grain Sun",
+              "width": 52,
+              "height": 52,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "path",
+                  "id": "AxrCr",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Rays",
+                  "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
+                  "viewBox": [
+                    0,
+                    0,
+                    100,
+                    100
+                  ],
+                  "fill": "$gold",
+                  "width": 52,
+                  "height": 52
+                },
+                {
+                  "type": "ellipse",
+                  "id": "MuHOV",
+                  "x": 18.72,
+                  "y": 18.72,
+                  "name": "Core",
+                  "fill": "$gold",
+                  "width": 14.560000000000002,
+                  "height": 14.560000000000002
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "gv1Au",
+              "name": "Team",
+              "fill": "$on-dark-muted",
+              "content": "88% right over 26 past seasons · built in two days",
+              "fontFamily": "$font-lat",
+              "fontSize": 26,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gztkx",
+          "x": 960,
+          "y": 170,
+          "name": "Dashboard",
+          "clip": true,
+          "width": 1100,
+          "height": 782,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "pitch_assets/dashboard_overview.png",
+            "mode": "cover"
+          },
+          "cornerRadius": 20,
+          "stroke": "#FFFFFF33",
+          "strokeWidth": 2,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000077",
+            "offset": {
+              "x": 0,
+              "y": 20
+            },
+            "blur": 60
+          }
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "bg": {
+      "type": "color",
+      "value": "#F5F1E6"
+    },
+    "card": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "accent": {
+      "type": "color",
+      "value": "#78A128"
+    },
+    "accent-soft": {
+      "type": "color",
+      "value": "#E6EDD3"
+    },
+    "gold": {
+      "type": "color",
+      "value": "#D49A37"
+    },
+    "gold-bright": {
+      "type": "color",
+      "value": "#D49A37"
+    },
+    "gold-soft": {
+      "type": "color",
+      "value": "#F4E6C8"
+    },
+    "ink": {
+      "type": "color",
+      "value": "#2C3B1E"
+    },
+    "muted": {
+      "type": "color",
+      "value": "#6B6A55"
+    },
+    "on-dark-muted": {
+      "type": "color",
+      "value": "#E4E0CC"
+    },
+    "line": {
+      "type": "color",
+      "value": "#DDD7C4"
+    },
+    "level-normal": {
+      "type": "color",
+      "value": "#78A128"
+    },
+    "level-watch": {
+      "type": "color",
+      "value": "#C3B135"
+    },
+    "level-alarm": {
+      "type": "color",
+      "value": "#D49A37"
+    },
+    "font-lat": {
+      "type": "string",
+      "value": "Manrope"
+    },
+    "font-ku": {
+      "type": "string",
+      "value": "Noto Sans Arabic"
+    },
+    "mustard": {
+      "type": "color",
+      "value": "#C3B135"
+    },
+    "soil": {
+      "type": "color",
+      "value": "#382A1B"
+    }
+  },
+  "fileToken": "28728787-b323-47ba-870a-826b48a4f77c"
+}
