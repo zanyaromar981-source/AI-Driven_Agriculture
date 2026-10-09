@@ -103,3 +103,44 @@ python3 dams_runner.py --dry-run     # measures for real, pushes nothing
 First run, 9 Oct 2026: 110 readings backfilled, then 13 passes found, 6 new clear ones pushed, 6 already in the history (the new measurements equal the backtest's to the last digit), 1 not clear. It took 83 seconds; a run with nothing new takes about 10. Newest: Dukan 249 km2 on 27 Sep 2026 (83 km2 a year before), Darbandikhan 68 km2 on 4 Oct 2026 (47 km2 a year before).
 
 On the server it runs from `farm-doctor-dams-runner.timer` at 13:20 UTC. See its last run with `journalctl -u farm-doctor-dams-runner -n 50`.
+## farm_history.py
+
+Every 10 minutes: ten years of monthly values for every farm, pushed to `PUT /v1/ingest/farms/{id}/history/{metric}` and read by the app from `GET /v1/farms/{id}/history`.
+
+One run asks the backend what each farm already has (`GET /v1/ingest/farms/history/coverage`) and fetches only what is missing:
+
+- **A new farm** (a metric with nothing stored): the last 120 full months.
+- **Once a day**, on the first run after 02:00 UTC: every farm from its last stored month to last month, at least the last two months again, because the sources revise their newest values. Months not sent stay as they are.
+- **Nothing missing:** one call to the backend, no call to any outside service.
+
+| Metric | Unit | Source | Cell | A month is |
+|---|---|---|---|---|
+| `rain_mm` | mm | ERA5 reanalysis, through Open-Meteo | about 25 km | the total of the days |
+| `et0_mm` | mm | FAO-56 reference evapotranspiration, worked out by Open-Meteo from ERA5 | about 25 km | the total of the days |
+| `temp_max_c`, `temp_min_c` | °C | ERA5-Land reanalysis, through Open-Meteo | about 9 km | the mean of each day's highest or lowest |
+| `soil_moisture` | m3/m3 | ERA5-Land, top 7 cm of soil (`soil_moisture_0_to_7cm_mean`) | about 9 km | the mean of the days |
+| `greenness` | NDVI | NASA MODIS Terra, MOD13Q1, through the ORNL DAAC subset service | one 250 m pixel | the mean of its usable 16-day values |
+| `groundwater_pct` | percentile | NASA GRACE-DA weekly maps | about 25 km | the mean of its weekly maps |
+
+Read this before trusting a number:
+
+- **A farm is smaller than every one of these cells.** Two farms a few kilometres apart get the same weather and the same groundwater figure. Greenness is the only one near field scale, and a farm under about 6 hectares still shares its pixel with its neighbours. Only the pixel at the farm's centre is read, not the whole outline.
+- **The weather is a model, not a gauge.** ERA5 is a reanalysis: the weather of the past as a model rebuilds it from observations. In the mountains its rain can be well off a local station. The job asks Open-Meteo for `models=era5_seamless` by name, so the ten years come from one model; without it the archive switches to a forecast model from 2017 on, and the series would jump. Open-Meteo's `era5_land` alone has no rain and no evapotranspiration, which is why those two come from ERA5 at 25 km.
+- **A month with too little data is not stored.** A month of daily values needs at least 90% of its days; a total over a month with a few days missing is scaled up to the whole month (mean day times days in the month). The reanalysis is about five days behind, so the month just ended can be made from 28 days at first and is replaced by the daily refresh.
+- **Greenness:** a 16-day value is dropped when its pixel reliability says snow or ice (2), cloud (3) or no data (-1); good (0) and marginal (1) are kept. A 16-day period belongs to the month its middle day falls in. A month with no usable value is simply absent, so winter months can be missing.
+- **Groundwater is not a well depth.** It is a percentile against the same time of year in 1948 to 2012 (50 is normal), from a model fed with satellite gravity readings. It cannot see local pumping. A month needs at least 3 of its 4 or 5 weekly maps.
+- **Year figures and the normal** are made by the backend from the stored months, not by this job.
+
+How long it takes, measured on 9 Oct 2026 for two farms near Sulaymaniyah: weather is one call and about 2 seconds per farm. Greenness for a new farm is 47 calls to ORNL (10 dates a call is the service's limit, two bands, one call for the list of dates); the service answered in 5 to 40 seconds a call, so one farm took 6 minutes and the other 20. Groundwater reads NASA's weekly archive folders (`nasagrace.unl.edu/globaldata/YYYYMMDD/`): the first time it downloads 520 maps of about 1 MB each into `cache/farm_history/grace/` (0.5 GB), about 4.5 seconds a map, 40 minutes in all, so it is spread over two runs; after that a new farm is read from the cache in seconds and a week adds one map. The daily refresh costs one weather call and two ORNL calls per farm, so beyond a few hundred farms the greenness refresh will need batching.
+
+Being polite: one call at a time, a second's pause after each, a timeout on every call, and up to five tries with a growing wait on 429 and 5xx. A source that fails for a farm is left alone for an hour. Months that were fetched while the backend was down are kept in `cache/farm_history/pending/` and pushed by the next run, without asking the source again. One farm failing does not stop the others, and the run then exits with 1. A run stops starting new work after 45 minutes and the next run carries on. Two runs cannot overlap: the job holds `cache/farm_history/farm_history.lock`. What was done today is kept in `cache/farm_history/state.json`; deleting it only makes the next run do the daily refresh again.
+
+To fetch a series again, clear it on the dashboard (`DELETE /v1/dashboard/farms/{id}/history/{metric}`): the next run sees it missing.
+
+```sh
+INGEST__SERVICE_KEY=... FARM_DOCTOR_API=http://localhost:8790/v1 python3 farm_history.py --dry-run
+python3 farm_history.py --point 35.56,45.43        # try the sources for one place, no backend
+FARM_HISTORY_SOURCES=weather python3 farm_history.py   # leave a source out
+```
+
+Groundwater is off by default, because its first fill is slow: switch it on with `FARM_HISTORY_SOURCES=weather,greenness,groundwater`. It needs `rasterio` (the same venv as `groundwater_runner.py`); without it the job logs one line and runs the other two sources. On the server it runs from `farm-doctor-farm-history.timer`. See its last runs with `journalctl -u farm-doctor-farm-history -n 100`.

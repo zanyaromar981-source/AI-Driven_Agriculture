@@ -97,6 +97,19 @@ use crate::{
             },
             infra::FirePostgresRepository,
         },
+        history::{
+            app::{
+                HistoryFarmDirectory, HistoryFarmOwnership, HistoryRepository,
+                use_cases::{
+                    ClearFarmHistoryUseCase, ListHistoryCoverageUseCase, RecordFarmHistoryUseCase,
+                    ViewFarmHistoryUseCase, ViewStoredFarmHistoryUseCase,
+                },
+            },
+            infra::{
+                FarmsFeatureHistoryFarmDirectory, FarmsFeatureHistoryFarmOwnership,
+                HistoryPostgresRepository,
+            },
+        },
         insights::{
             app::{
                 FarmDirectory, FarmOwnership, InsightRepository,
@@ -167,7 +180,8 @@ use crate::{
     infra::{Config, DBConnector},
     shared::{
         AlwaFeature, BriefFeature, DamFeature, DoctorFeature, FarmFeature, FarmerFeature, Features,
-        FireFeature, InsightFeature, OutlookFeature, StaffFeature, WaterFeature, ZoneFeature,
+        FireFeature, HistoryFeature, InsightFeature, OutlookFeature, StaffFeature, WaterFeature,
+        ZoneFeature,
     },
 };
 
@@ -319,6 +333,35 @@ pub async fn di_init(
             insight_repository.clone(),
         )),
         remove_farm_insight_use_case: Arc::new(RemoveFarmInsightUseCase::new(insight_repository)),
+    };
+
+    let history_repository: Arc<dyn HistoryRepository> =
+        Arc::new(HistoryPostgresRepository::new(db_context.conn_clone()));
+    let history_farm_ownership: Arc<dyn HistoryFarmOwnership> = Arc::new(
+        FarmsFeatureHistoryFarmOwnership::new(farm_repository.clone()),
+    );
+    let history_farm_directory: Arc<dyn HistoryFarmDirectory> = Arc::new(
+        FarmsFeatureHistoryFarmDirectory::new(farm_repository.clone()),
+    );
+
+    let history = HistoryFeature {
+        view_farm_history_use_case: Arc::new(ViewFarmHistoryUseCase::new(
+            history_repository.clone(),
+            history_farm_ownership,
+        )),
+        record_farm_history_use_case: Arc::new(RecordFarmHistoryUseCase::new(
+            history_repository.clone(),
+            history_farm_directory.clone(),
+        )),
+        list_history_coverage_use_case: Arc::new(ListHistoryCoverageUseCase::new(
+            history_repository.clone(),
+            history_farm_directory.clone(),
+        )),
+        view_stored_farm_history_use_case: Arc::new(ViewStoredFarmHistoryUseCase::new(
+            history_repository.clone(),
+            history_farm_directory,
+        )),
+        clear_farm_history_use_case: Arc::new(ClearFarmHistoryUseCase::new(history_repository)),
     };
 
     let brief_repository: Arc<dyn BriefRepository> =
@@ -860,5 +903,6 @@ pub async fn di_init(
         message,
         app_config,
         crop,
+        history,
     })
 }

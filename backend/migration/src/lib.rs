@@ -31,6 +31,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20261009_211000_create_jobs::Migration),
             Box::new(m20261009_220000_create_messages::Migration),
             Box::new(m20261009_221000_create_app_config::Migration),
+            Box::new(m20261009_230000_create_farm_history::Migration),
             Box::new(m20261009_240000_create_crops::Migration),
         ]
     }
@@ -63,3 +64,4 @@ mod sub_zone_shapes;
 mod m20261009_220000_create_messages;
 mod m20261009_221000_create_app_config;
 mod m20261009_240000_create_crops;
+mod m20261009_230000_create_farm_history;

@@ -7,6 +7,7 @@ pub mod doctor;
 pub mod farmers;
 pub mod farms;
 pub mod fires;
+pub mod history;
 pub mod insights;
 pub mod jobs;
 pub mod messages;

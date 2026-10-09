@@ -290,7 +290,12 @@ impl Modify for BearerAuth {
         crate::features::crops::web::handlers::dashboard_get_crops,
         crate::features::crops::web::handlers::dashboard_create_crop,
         crate::features::crops::web::handlers::dashboard_update_crop,
-        crate::features::crops::web::handlers::dashboard_delete_crop
+        crate::features::crops::web::handlers::dashboard_delete_crop,
+        crate::features::history::web::handlers::get_farm_history,
+        crate::features::history::web::handlers::get_history_coverage,
+        crate::features::history::web::handlers::put_farm_history,
+        crate::features::history::web::handlers::get_dashboard_farm_history,
+        crate::features::history::web::handlers::delete_dashboard_farm_history
     ),
     components(schemas(
         CreateFarmParams,
@@ -560,6 +565,17 @@ impl Modify for BearerAuth {
         crate::features::crops::web::OneCropResponse,
         crate::features::crops::web::CreateCropParams,
         crate::features::crops::web::UpdateCropParams,
+        crate::features::history::web::HistoryMetric,
+        crate::features::history::web::RecordFarmHistoryParams,
+        crate::features::history::web::HistoryPointParams,
+        crate::features::history::web::HistoryRecordedResponse,
+        crate::features::history::web::FarmHistoryResponse,
+        crate::features::history::web::HistorySeriesResponse,
+        crate::features::history::web::HistoryMonthResponse,
+        crate::features::history::web::HistoryYearResponse,
+        crate::features::history::web::HistoryCoverageResponse,
+        crate::features::history::web::HistoryFarmCoverageResponse,
+        crate::features::history::web::HistoryMetricCoverageResponse,
         ErrorBody
     )),
     modifiers(&BearerAuth),
@@ -581,7 +597,8 @@ impl Modify for BearerAuth {
         (name = "jobs", description = "Whether the automatic data jobs ran on time: each job reports its runs, staff read how they stand"),
         (name = "messages", description = "The inbox: messages farmers send to the Ministry, with photos, and the replies"),
         (name = "app", description = "App control: what the farmer app reads at start, and which versions are in use"),
-        (name = "crops", description = "The crop list staff keep: the codes farms, listings and prices may use, with names and colours")
+        (name = "crops", description = "The crop list staff keep: the codes farms, listings and prices may use, with names and colours"),
+        (name = "history", description = "Ten years of monthly history per farm: rain, temperature, evapotranspiration, soil moisture, greenness and groundwater")
     ),
     info(
         title = "farm-doctor-api",

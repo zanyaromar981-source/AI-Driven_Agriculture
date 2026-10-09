@@ -42,6 +42,10 @@ use crate::{
             CorrectFireUseCase, CreateFireUseCase, ListFiresUseCase, ListStoredFiresUseCase,
             RecordFireUseCase, RemoveFireUseCase, ViewStoredFireUseCase,
         },
+        history::app::use_cases::{
+            ClearFarmHistoryUseCase, ListHistoryCoverageUseCase, RecordFarmHistoryUseCase,
+            ViewFarmHistoryUseCase, ViewStoredFarmHistoryUseCase,
+        },
         insights::app::use_cases::{
             CorrectFarmInsightUseCase, CreateFarmInsightUseCase, ListFarmCoverageUseCase,
             RecordFarmInsightUseCase, RemoveFarmInsightUseCase, ViewFarmInsightsUseCase,
@@ -315,6 +319,15 @@ pub struct CropFeature {
 }
 
 #[derive(Clone)]
+pub struct HistoryFeature {
+    pub view_farm_history_use_case: Arc<ViewFarmHistoryUseCase>,
+    pub record_farm_history_use_case: Arc<RecordFarmHistoryUseCase>,
+    pub list_history_coverage_use_case: Arc<ListHistoryCoverageUseCase>,
+    pub view_stored_farm_history_use_case: Arc<ViewStoredFarmHistoryUseCase>,
+    pub clear_farm_history_use_case: Arc<ClearFarmHistoryUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -334,6 +347,7 @@ pub struct Features {
     pub message: MessageFeature,
     pub app_config: AppConfigFeature,
     pub crop: CropFeature,
+    pub history: HistoryFeature,
 }
 
 #[derive(Clone)]
