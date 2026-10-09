@@ -213,6 +213,8 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
 
 ### 2.11 Control Room: the Ministry runs the app from the dashboard (added 2026-10-08)
 
+**Replaced by 2.12 where they differ (user, 2026-10-09):** staff sign in with email and password, roles are made by staff from permissions, no second-officer approvals, no audit page, no protected mode on the website.
+
 Design: `design/dashboard/jutyar_dashboard.pen`, screens 11 to 18 (builder `design/dashboard/build_control_room.py`). Not built on the backend yet. Every path is under `/v1/admin`, with an **officer** token (not a farmer token).
 
 **Privacy: Protected mode (user decision 2026-10-08).** Officers see a farmer's phone as `+964 750 ••• 4567` and a farm only at 1 km (its sub-district and a 1 km rounded centre), **unless** that farm has an open report or a Doctor case with `refer_to_officer: true`. Then the exact outline, cells and the shared point open for officers of that area, and close again when the report or case is closed. Seeing the full phone needs a typed reason. Every look and every change is written to the history, which nobody can edit or delete (kept 5 years).
@@ -235,11 +237,100 @@ New tables: `officers (id, phone, name, role, areas, totp_secret, created_at, di
 
 - Edit until `PUT /v1/farms/{id}` exists (decided 2026-10-09, user option A): the app saves an edited farm as `POST /v1/farms` (new id, same name, new outline and crops) and then `DELETE /v1/farms/{old id}`. The new farm gets the full 20-year analysis again; the old id disappears. When the backend adds PUT, the app switches back to one call.
 
-### 2.12 Control Room website, `web/control_room/` (added 2026-10-09)
+### 2.12 The website: what the backend must add (for Arya, 2026-10-09)
 
-The website replaces the Control Room plan of 2.11 where they differ (user brief 2026-10-09). Changes: one admin level (no viewer or district roles), sign-in with email and password (Supabase is the likely backend, with its forgot-password), **no second-officer approvals**, **no protected mode**: admins see and edit farmers (name, phone, gender, birth year, place, village) and farms (place, point, area, crops, irrigation, water source, ownership) because support letters need them. No audit log page. Alerts go to every farmer (no area). Alwa is read only: average asking and sold prices per crop come from the listings; the government sets no price. Data jobs: status only, no run button, no service keys on the web.
+**What the website is.** One site in two parts: a public **View** page (map, news bar, dams, fires, compare years, Alwa prices, no login) and the **Admin** part for staff (sign in with `/v1/dashboard/auth/login`, then roles and permissions decide what each person sees). It is designed first in `design/web/jutyar_website.pen`, then coded in `web/control_room/`. **The site keeps no data of its own**: every number comes from the server, and nothing is sample data anymore. Kurdish (Sorani) first, English second.
 
-Data the website needs: one table per record in `web/control_room/src/data/types.ts` (farmers, farms with crop rows, crops, admins, alerts, messages, news lines, listings, district readings with a `manual` flag, dams with monthly history, fires, rules with change history, Doctor questions with ratings, answer bank, app texts, jobs status, app config, site settings, site text overrides). Pages only call `src/data/api.ts` and `db`, so connecting a backend replaces `store.ts`, `db.ts` and `api.ts`.
+Decisions (user, 2026-10-09): no Texts page; no approvals; many roles made by staff (the existing `roles` and `staff` slices are right); the news bar and the alerts list are built by the site from routes that already exist; the Doctor is being worked on separately.
+
+The list is in the order the site needs it. Each new resource is also a permission resource (`<resource>:<action>`) added to `GET /v1/dashboard/permissions`; the `Owner` role gets it automatically.
+
+#### A. Needed before the site can run
+
+**A1. CORS.** The site will be hosted on its own address, so the API must allow it. Today `OPTIONS` answers `405` and no `Access-Control-*` header is sent.
+- Allowed origins from a setting, for example `HTTP__CORS_ORIGINS=https://jutyar.example,http://127.0.0.1:5173` (comma list; no `*`, because requests carry a token).
+- Methods `GET, POST, PUT, DELETE, OPTIONS`; request headers `Authorization, Content-Type, If-None-Match, Idempotency-Key`; exposed headers `ETag, X-Api-Version`; preflight `204` with `Access-Control-Max-Age: 600`.
+- In axum: `tower-http` feature `cors`, a `CorsLayer` on the router.
+
+**A2. Cache versions:** section 2.13.
+
+**A3. A place on every farm.** Farms have only `centroid`, so reports by governorate and district cannot be made.
+- Add `governorate`, `zone_slug`, `sub_zone_slug` to farms, computed from the centroid when a farm is created or edited (point in the 72 sub-district shapes already in the database); `null` if outside.
+- Return them in `FarmSummaryResponse`, `DashboardFarmSummaryResponse` and `DashboardFarmResponse`.
+- Filters on `GET /v1/dashboard/farms`: `governorate`, `zone`, `sub_zone`, `crop`, `q` (farm name or owner phone), next to `owner_phone`, `page`, `rows_per_page`; and `sort=created_at|area_dunam|name`, `order=asc|desc`.
+
+**A4. Totals for reports and charts.** The site must not download every farm to add them up.
+- `GET /v1/dashboard/stats/farms?governorate=&zone=&crop=` (`farms:read`) answers `{"as_of", "totals": {"farmers", "farms", "dunam"}, "by_governorate": [...], "by_zone": [...], "by_sub_zone": [...], "by_crop": [{"crop", "dunam", "farms", "farmers"}]}`. Each `by_...` area row is `{"slug", "name_en", "name_ku", "farmers", "farms", "dunam", "crops": [{"crop", "dunam", "farms"}]}`. A farmer is counted once per area where they have a farm.
+- `GET /v1/stats/farms` (no login, for the View page): only `totals`, `by_governorate`, `by_zone`, `by_crop`; no names, no phones. Switched off by `public_farm_totals: false` (B4).
+
+**A5. Farmer details for the support letter.** The letter names the farmer and their place.
+- Add to farmers: `gender` (`male|female|null`), `birth_year` (number or null), `village` (text or null), `governorate`, `zone_slug`, `sub_zone_slug` (home place, may be null), `notes` (staff only), `blocked` (bool).
+- `PUT /v1/dashboard/farmers/{id}` accepts them. `GET /v1/dashboard/farmers` filters `q` (name or phone), `governorate`, `zone`, `blocked`, with `page`, `rows_per_page`, `sort`.
+- `blocked: true` signs the farmer out at once and refuses sign-in: `403 {"error": "blocked"}` on `/v1/auth/otp/verify`.
+- `POST /v1/dashboard/farmers/{id}/letters` (`farmers:read`) with `{"purpose", "lang": "ku|en"}` answers everything the letter prints in one call: the farmer, their farms with place and crops, totals, and a stored letter number `JTY-<yyyymm>-<farmer id>-<n>` (table `letters (id, number, farmer_id, staff_id, purpose, lang, created_at)`). `GET /v1/dashboard/letters/{number}` checks a letter later.
+
+**A6. Staff details.** Add `phone` and `job_title` to staff (`POST` and `PUT /v1/dashboard/staff`), and `PUT /v1/dashboard/me` so a person changes their own name, phone and password (`{"name", "phone", "current_password", "new_password"}`). Forgot password needs an email sender: later. Until then an Owner resets passwords (already built).
+
+#### B. New resources
+
+**B1. Crops** (resource `crops`). Today the crop list is a fixed enum; staff need to add and rename crops.
+- Table `crops (code primary key, name_en, name_ku, color, category, season, yield_kg_per_dunam, active, sort_order, created_at, updated_at)`. `category`: `cereal|vegetable|fruit|legume|oil|fodder|other`. `season`: `winter|summer|perennial`. Seeded with today's codes.
+- `GET /v1/crops` (no login: the app and the View page read names and colours here); `GET` and `POST /v1/dashboard/crops`; `PUT` and `DELETE /v1/dashboard/crops/{code}`.
+- Farms, cells and Alwa listings check crop codes against this table (only active crops for new data). Deleting a crop in use answers `409 {"error": "crop_in_use"}`; the site then offers to switch it off (`active: false`).
+- `code` matches `^[a-z_]{2,24}$` and never changes.
+
+**B2. Rules** (resource `rules`). Every number the jobs use to decide a warning or a colour, changeable without a release.
+- Tables `rules (code primary key, grp, name_en, name_ku, meaning_en, meaning_ku, value, unit, min_value, max_value, default_value, used_by, updated_by, updated_at)` and `rule_changes (id, code, old_value, new_value, reason, staff_id, at)` (insert only).
+- Seeded from today's numbers: weather planner in `farm_doctor/weather_planner.py` (frost 0 °C, hard frost -2 °C, heat 31 °C, heavy rain 12 mm, sowing rain 20 mm in 3 days, rust weather 24 h, spray window 6 h, sunn pest 84 degree-days, dust PM10 150); dryness bands in `backend/src/features/zones/domain/enums.rs`; Field Eye (watch below 85% of normal greenness, alarm below 70%, skip pictures over 30% cloud).
+- `GET /v1/dashboard/rules`; `PUT /v1/dashboard/rules/{code}` with `{"value", "reason"}` (reason required, 3 to 500 characters; outside min and max answers `422 bad_range`); `GET /v1/dashboard/rules/{code}/history`; `POST /v1/dashboard/rules/{code}/reset` (back to `default_value`, also logged).
+- The jobs and the band calculation read the values from this table (once per run). `used_by` is `weather_planner`, `dryness` or `field_eye`, so the site can say where each number applies.
+
+**B3. Inbox: messages from farmers** (resource `messages`).
+- Farmer app: `POST /v1/messages` with `{"kind": "question|report|complaint|request|other", "text", "farm_id?"}` and photos like Ask the Doctor (multipart, 0 to 4, JPEG or PNG, 4 MB each); `GET /v1/messages/mine` with the replies.
+- Dashboard: `GET /v1/dashboard/messages?state=&kind=&governorate=&zone=&q=&page=&rows_per_page=` (newest first, with the farmer's name, phone, farm name and place); `GET /v1/dashboard/messages/{id}` (with photo URLs); `PUT /v1/dashboard/messages/{id}` with `{"state": "new|read|replied|closed"}`; `POST /v1/dashboard/messages/{id}/reply` with `{"text_ku", "text_en?"}` (state becomes `replied`, keeps `replied_by` and `replied_at`; the farmer sees it in the app).
+- `GET /v1/dashboard/messages/counts` answers `{"new", "read", "replied", "closed"}` for the menu badge.
+- Later, Doctor cases with `refer_to_officer: true` land here as `kind: "doctor"`, once cases are stored.
+
+**B4. App control** (resource `app`). What the farmer app reads at start, set from the site.
+- One row `app_config`: `latest_version`, `min_version`, `update_message_ku`, `update_message_en`, `maintenance` (bool), `maintenance_message_ku`, `maintenance_message_en`, `maintenance_from`, `maintenance_until` (UTC or null), `announcement_on`, `announcement_ku`, `announcement_en`, `features` (switches `add_farm`, `walk_mode`, `satellite`, `doctor`, `reports`, `alwa`, `plan`, `push`), `limits` (`farms_per_phone`, `max_farm_dunam`, `min_corners`, `max_corners`, `gps_meters`), `help_phone`, `public_farm_totals` (bool, used by A4).
+- `GET /v1/app/config` (no login; the app reads it at start, cached by version); `GET` and `PUT /v1/dashboard/app/config`.
+- The app sends `X-App-Version: 1.0.3` on every call. The server keeps `app_versions_seen (farmer_id, version, last_seen)`; `GET /v1/dashboard/app/versions` answers `[{"version", "farmers", "share"}]` for the last 30 days. A version below `min_version` answers `426 {"error": "update_required"}`.
+
+**B5. Data job status** (resource `jobs`, read only). Whether the automatic jobs ran on time.
+- Table `job_runs (id, job, started_at, finished_at, ok, rows, message)`. Each job reports itself with the service key: `PUT /v1/ingest/jobs/{job}/runs/{started_at}` with `{"finished_at", "ok", "rows", "message"}`.
+- Table `jobs (job primary key, name_en, name_ku, every_hours)`: `dryness` 12, `fires` 3, `groundwater` 24, `dams` 24, `briefs` 24, `farm_analysis` on demand.
+- `GET /v1/dashboard/jobs` answers per job `{"job", "name_en", "name_ku", "every_hours", "last_run", "last_ok", "next_due", "state": "ok|late|failed|never", "last_14_days": ["ok"|"late"|"failed"|null], "message"}`. `late` means no finished run within `every_hours` × 1.5. No run button and no keys on the site.
+
+#### C. What the site builds itself (no new route)
+
+- **News bar:** from `GET /v1/fires?hours=24`, `GET /v1/dams`, `GET /v1/region/overview` (driest districts), `GET /v1/briefs/latest?scope=region` (headline) and the Alwa price board. It appears only once this data is in the cache.
+- **Alerts:** a read-only list of fire detections, dryness band changes and the brief's `watch` and `alarm` points, from the same routes. Sending messages to farmers waits for push (2.7).
+- **Crop register report, government report, support letter:** from A4 and A5, printed by the browser.
+
+#### D. Permissions after this section
+
+Today: `zones, dams, outlooks, water, fires, alwa, farmers, farms, insights, briefs, staff, roles`. New: `crops, rules, messages, app, jobs`. The site hides a menu item when the person has no `read` on its resource and hides each button whose action they do not hold. The server still checks every call.
+
+### 2.13 Caching and cache invalidation (frontend and backend together)
+
+Goal: the site opens from its cache at once, shows skeletons only for what is missing, and downloads a topic again **only when the server says it changed**.
+
+**Backend**
+1. Table `data_versions (topic primary key, version bigint not null, changed_at timestamptz)`. Topics: `zones, sub_zones, dams, fires, outlooks, water, alwa_prices, alwa_listings, farmers, farms, crops, rules, briefs, messages, app_config, jobs, staff_roles`.
+2. Every write to a topic (dashboard, ingest, farmer app) runs `UPDATE data_versions SET version = version + 1, changed_at = now() WHERE topic = $1` **in the same transaction** as the write. A job that writes many rows bumps once, at the end of its run.
+3. `GET /v1/versions` (no login) answers `{"api": "1.4.0", "versions": {"zones": 41, "dams": 7, "fires": 1290}, "server_time"}` with the public topics only. `GET /v1/dashboard/versions` (any staff) adds the private ones (`farmers, farms, messages, jobs, staff_roles`).
+4. Every `GET` answers `ETag: W/"<topic>-<version>-<short hash of path and query>"` and `Cache-Control: no-cache` (staff routes add `private`). A request with a matching `If-None-Match` answers `304` with no body. A route that reads several topics uses the highest of their versions.
+5. Header `X-Api-Version` on every answer; change it whenever an answer's shape changes.
+
+**Frontend**
+1. On start: draw the page at once from the cache in IndexedDB, then call `/v1/versions` once (and `/v1/dashboard/versions` when signed in).
+2. For each topic whose server version is higher than the cached one: refetch only that topic's routes that are on screen or cached, with `If-None-Match`; a `304` keeps the cached copy. Topics that did not change are not called.
+3. While the site is open: ask `/v1/versions` again every 60 s and whenever the tab comes back into view, so a new fire run shows within a minute.
+4. After the site itself writes (for example edits a farmer), it refetches that topic at once.
+5. The whole cache is wiped when `X-Api-Version` changes or when the site's own `CACHE_SCHEMA` number changes (bumped by the frontend when it changes how it stores data). Private topics are wiped on sign-out and are stored per staff id, so two people on one computer never see each other's data.
+6. Until `/v1/versions` exists: time limits per topic (fires 10 min; Alwa 15 min; zones, dams, briefs 1 h; crops, rules, app config 6 h; staff lists 5 min), plus `ETag` when the server sends one.
+
+**Loading (user decision 2026-10-09):** the branded intro (the Grain Sun drawing itself, 00 to 100) plays only on the first visit, when the cache is empty, and its counter follows the real calls. Later visits open straight from the cache; anything not cached yet shows a skeleton shaped like its content. The news bar stays hidden until its data is cached.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.

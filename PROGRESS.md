@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 15:11
+Last update: 2026-10-09 15:50
 
 ## Done
 - Flutter app follows FRONTEND.md v4 (2026-10-09): the phone number is always checked before a code is sent, also in test mode; sign-in errors in words (429 countdown from retry_after_s, 503 try again, 422 check the number); Home shows a calm "10-day plan coming soon" for the plan route's 404; Ask the Doctor sends each photo as the type its bytes are (timeout of 120 s and per-part types were already right); Field history shows the groundwater topic as the wider area with source and as_of; an outline that touches itself at one point is refused with the existing message; area and inside_pct rounding checked (already rounded everywhere)
@@ -32,7 +32,7 @@ Last update: 2026-10-09 15:11
 - Backend: Ask the Doctor `POST /v1/farms/{id}/ask` (slice `doctor`): question, up to 6 photos, tapped cell, language; checks the farm is the farmer's, passes the farm, its insights and the question to the local Doctor service (`DOCTOR_URL`) and returns its checked answer; proven end to end with a fake Doctor (`FRONTEND.md` section 13)
 
 ## In progress
-- Control Room website `web/control_room/`: built on sample data; waiting for the Kurdish texts (Desktop spreadsheet) and the backend choice (Supabase or `backend/`)
+- Website: design in pen.dev (`design/web/jutyar_website.pen`) first, Kurdish first; then code against the real server once Arya adds BACKEND.md 2.12 and 2.13
 - Backend: hosted on a test server with a 12-hourly rain-against-normal job for the 33 districts; next are role-based dashboard routes, more data jobs (dams, fires, soil), touched cells with `inside_pct`, weekly plan
 - Ask the Doctor: app screens, backend route and Doctor service all live in the cloud (2026-10-09); real answers wait only on `GEMINI_API_KEY` in the Codespace (`server/team/farm_doctor/.env`)
 - Review of the full farmer app design in Pencil (all 4 jobs done)
@@ -42,7 +42,6 @@ Last update: 2026-10-09 15:11
 - Tab bar; Home = one farm per screen (changed 2026-10-08 evening, user); cell tap = small card + cells / crops / farm toggle; colours + numbers; Ask = text + photos; own reports only; field edge = always walk; logo 36 Grain Sun; English placeholders on new screens
 
 ## Decisions pending (user)
-- Backend for the website: Supabase or the Rust `backend/` (it already has dashboard staff and roles)
 - Admins now see farmers' full phone numbers and exact farms (needed for support letters): this replaces the 2026-10-08 protected mode. Confirm
 - `design/web/jutyar_control_room.pen` shows the old demo: rebuild it from the new site or leave it
 - App name under the icon: Jutyar (now) or Khor / خۆر (pitch deck)?
@@ -62,6 +61,7 @@ Last update: 2026-10-09 15:11
 - Backend: store Doctor cases (`cases` table, `case_id` in the answer), needed by the Control Room inbox
 
 ## Waiting on the backend (BACKEND.md section 0)
+- Website (BACKEND.md 2.12, 2.13): CORS, farm place, totals route, farmer details and letters, staff phone, crops, rules, inbox, app control, job status, cache versions
 - Control Room (BACKEND.md 2.11): officer sign-in with roles and 2-step, `/v1/admin` routes for farms (protected mode), crop register, alerts with second-officer approval, inbox, rules, Alwa prices, jobs, officers, and an insert-only audit log
 - `GET /v1/farms/{id}/status`: blocks Home today (every farm shows "Could not load this farm"); the stub in BACKEND.md 2.3 is enough for now
 - `GET /v1/farms/{id}/plan` (Home opens without it)
