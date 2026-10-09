@@ -4,6 +4,50 @@ Speaker script for the 8 slides in `design/pitch_deck.pen`. Written to answer th
 
 Length: about 4 minutes 30 seconds, of which 60 seconds is the live demo. Every number below is in the repo; the source is named in the last column of the checklist at the end.
 
+## Round 1 at the table: use this one (10 October)
+
+Rules from the organizers: 3 minutes to pitch, 2 minutes of questions, one judge group, ID asked on arrival. Time is recorded and breaks ties, so the target is **2 minutes 45 seconds**. One person speaks. Build and Demo and AI each count double, so they get most of the time.
+
+### Before the judges arrive
+
+- IDs on the table.
+- Phone charged, app open, already signed in, one farm saved with crops painted.
+- Ask the Doctor: one answer already open from a question asked a few minutes earlier. A live answer took 39 seconds on the server, which is too long to wait for inside 3 minutes.
+- Laptop next to the phone with `design/pitch_deck_3min.pen` on slide 1, and the website open in a second window.
+- The Mac that keeps the server awake stays on, lid open (`PROGRESS.md`).
+- One teammate runs a stopwatch and shows a hand at 2:15.
+
+### The script
+
+| Time | Criterion | Do | Say |
+|---|---|---|---|
+| 0:00 to 0:20 | Problem and local impact | Slide 1 | "Kurdistan has about 50,000 wheat farmers and about 215 agricultural advisers. In the winter of 2024/25 Slemani got 57 percent of its normal rain, and most farmers found out from their own fields. Jutyar gives every farmer an adviser in his pocket." |
+| 0:20 to 1:20 | Build and Demo (double) | Phone in the judges' hands or held up | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm: I walked its corners and marked my crops. Each square is 10 metres, checked from space. Here are my alerts and my 10-day plan from the live forecast. Here I asked a question with a photo, and this is the answer, in Sorani: the problem, how sure, why, what to do, and what it cannot tell. And here is the Marketplace, where I put my tomatoes on sale and another farmer's phone sees them." |
+| 1:20 to 2:00 | AI Integration and Use (double) | Slide 4 (the message), then the website | "AI is in the product in two places. First, the answer you just saw: the satellite, the weather forecast and the field's history are numbers. An AI model turns them and the farmer's photo into advice in Sorani, and it must say when it is unsure. Second, every night an AI agent reads all 33 districts, does its own research, and writes the daily brief for the Ministry. And we built it with AI: Claude and Codex wrote the app and the server with us, and Pencil's AI drew the screens." |
+| 2:00 to 2:30 | Feasibility and scope | Slide 5 (website) | "Is it realistic? The satellite and weather data are free. The server is already hosted, with about 2,000 automated tests. One AI answer costs about half a cent. The natural partner is the Ministry's extension offices: this website is their side, with the farms, the alerts and the region on one map. We start with wheat farmers in Slemani and grow from there." |
+| 2:30 to 2:45 | Close | Slide 7 | "Built in two days: the app, the server, the website. Jutyar: from one farm to a smarter Kurdistan. Thank you." |
+
+If the phone or the network fails: say "the network is against us" once, switch to slides 3 and 4, and keep going. Do not debug in front of the judges.
+
+### Two minutes of questions
+
+| Criterion | Likely question | Answer |
+|---|---|---|
+| Build and Demo | "Is that real data or a mock?" | The farm, the sign-in code, the alerts, the plan and the Marketplace listing come from our hosted server. The satellite and weather numbers are real feeds. The website design shows some sample numbers where the server has no data yet. |
+| Build and Demo | "What did you have before the hackathon?" | Research and tests of the method on past seasons, done on 5 to 7 October. Every line of the app, the server and the website was written on 8 and 9 October. The repo history shows it. |
+| AI | "Where exactly is the AI? Is the satellite part AI?" | No. The satellite and weather numbers are calculations, and we say so. AI is the translator: it turns those numbers and the farmer's photo into Sorani advice, and it writes the nightly brief. |
+| AI | "How do you stop it giving wrong advice?" | It answers only from our rulebook and the measured data, never gives a chemical dose, shows how sure it is, and says "see an officer" when the inputs disagree. Photo diagnosis is not yet tested in Kurdistan: next step is 100 local photos with the plant-protection office. |
+| Problem | "Was Slemani really hit?" | 57 percent of normal rain in 2024/25 on our 8 Slemani points. Erbil and Duhok were hit harder. Dukan fell to 24 percent of capacity in June 2025 (AFP). |
+| Feasibility | "Who pays? Who runs it?" | Running cost is small: free data, a small server, about half a cent per AI answer. It needs a partner for trust and reach, and the Ministry's extension offices are the obvious one. We have not signed anyone yet. |
+| Feasibility | "Is the scope too big?" | The core is small: one farm, one view, one message. The Marketplace and the website use the same server. We would launch the core first. |
+| Pitch | "Why no forecast for next season?" | We tested it for three days. Long-range prediction had no skill, so we took it out. Jutyar tells you about now and the next 10 days. |
+
+### Check on the morning of the pitch
+
+- Ask the Doctor through the app: the log (9 October, 18:06) says the Doctor answered on the server in 39 seconds, and that the route through the backend was still to be checked after a rebuild. Ask one real question from the phone before the judges come. If it fails, show the saved answer and say it is from yesterday.
+- "About 2,000 automated tests" comes from the log (1,974 unit tests on 9 October). Say "about".
+- The name: the app says Jutyar, so say Jutyar.
+
 ## Before you start
 
 - Phone with the app installed, signed in once already, screen mirrored or held up.
@@ -57,7 +101,7 @@ Notes for this version:
 - The coloured grid on slide 2 is an illustration drawn on a real Sentinel-2 picture, not a real result for that field. Say "this is how it looks", not "this is what we found".
 - The picture on slide 7 is AI-made. The glowing network is a vision, not a map of real farms.
 - The message on slide 4 is a sample in Sorani that a native speaker still has to check.
-- The Alwa screens on slide 6 are designs with sample prices and buyers. The server routes for Alwa are built; the phone screens are not in the app yet.
+- The Alwa screens on slide 6 are the older design with sample prices and buyers. The app now has a simpler Marketplace that works on the test server, so show the real one on the phone.
 - The website pictures on slide 5 are the team's Control Room and dashboard designs with sample data. The Control Room demo is not connected to the server yet, so say "this is the website we designed", not "this is live".
 
 ## Questions the judges may ask
