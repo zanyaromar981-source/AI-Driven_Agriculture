@@ -52,3 +52,21 @@ First dry run, 9 Oct 2026: 3,048 detections in the box, 1,063 inside the distric
 ```sh
 python3 fires_runner.py --dry-run
 ```
+
+## groundwater_runner.py
+
+Once a day: for each farm, how wet the ground is around it, deep and shallow, against its own history. Source: NASA's weekly GRACE-DA maps of groundwater storage, root-zone soil moisture and surface soil moisture, as percentiles (50 is normal for the time of year; 10 means only 10% of past years were this dry). Pushed as the farm's `groundwater` topic with confidence `unsure`.
+
+- **It is not a well depth and not measured at the farm.** One value covers a square of about 25 km, so every farm in that square gets the same number. It is a model fed with satellite gravity readings.
+- **It cannot see local pumping.** A village whose wells are falling looks the same as its neighbours.
+- **Nothing better exists for free.** No source gives groundwater depth at farm scale in Iraq.
+- New farms get their value on the next daily run. NASA changes the maps once a week.
+
+First read, 9 Oct 2026 (maps of 6 Oct), at the 33 district centres: groundwater between the 4th and 18th percentile everywhere (mean 11), while root-zone soil moisture sits between the 46th and 95th. So after a wet year the top of the soil is wet, but the model's deep storage is still low.
+
+It needs one package that the other jobs do not:
+
+```sh
+python3 -m venv /opt/farm-doctor/venv && /opt/farm-doctor/venv/bin/pip install rasterio
+/opt/farm-doctor/venv/bin/python groundwater_runner.py --dry-run
+```

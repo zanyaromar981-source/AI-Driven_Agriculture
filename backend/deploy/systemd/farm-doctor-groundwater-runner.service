@@ -1,0 +1,13 @@
+[Unit]
+Description=Farm Doctor groundwater runner: wide-area groundwater and soil moisture percentiles per farm
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/farm-doctor/backend/jobs
+EnvironmentFile=/opt/farm-doctor/backend/deploy/.env
+Environment=FARM_DOCTOR_API=http://127.0.0.1:8790/v1
+ExecStart=/opt/farm-doctor/venv/bin/python /opt/farm-doctor/backend/jobs/groundwater_runner.py
+Nice=10
+TimeoutStartSec=900
