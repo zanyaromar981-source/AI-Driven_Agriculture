@@ -35,6 +35,7 @@ Last update: 2026-10-09 17:31
 - Backend: Ask the Doctor `POST /v1/farms/{id}/ask` (slice `doctor`): question, up to 6 photos, tapped cell, language; checks the farm is the farmer's, passes the farm, its insights and the question to the local Doctor service (`DOCTOR_URL`) and returns its checked answer; proven end to end with a fake Doctor (`FRONTEND.md` section 13)
 
 ## In progress
+- Website on the real server (web/control_room): all pages built from the Pencil design, reviewed by a design critic, a backend checker, a race reviewer and a live tester; findings fixed (STATUS 2026-10-09 19:05). Waiting: STATUS.md merge with the remote before pushing.
 - Website: design in pen.dev (`design/web/jutyar_website.pen`) first, Kurdish first; then code against the real server once Arya adds BACKEND.md 2.12 and 2.13
 - Backend: hosted on a test server with a 12-hourly rain-against-normal job for the 33 districts; next are role-based dashboard routes, more data jobs (dams, fires, soil), touched cells with `inside_pct`, weekly plan
 - Ask the Doctor: app screens, backend route and Doctor service all live in the cloud (2026-10-09); real answers wait only on `GEMINI_API_KEY` in the Codespace (`server/team/farm_doctor/.env`)

@@ -366,6 +366,8 @@ The fastest way, already tested on a Mac: run `farm_doctor/doctor_service.py` ne
 4. **Letter permission:** API.md says issuing a letter needs `farmers:create`, FRONTEND.md says `farmers:read`. Please settle which one in FRONTEND.md; the site follows FRONTEND.md.
 5. **API.md** does not list `GET /v1/crops` and the `/dashboard/crops` routes yet (FRONTEND.md does).
 6. **Yields:** every crop has `yield_kg_per_dunam: null`, so expected harvest on the Crops page and the reports shows "-". Fill the yields (agronomy source) and the numbers appear with no site change.
+7. **Letter reprint:** `GET /dashboard/letters/{number}` returns the record only, so a reprint shows the farms as they are today. Please store and return the farms (names, areas, crops) as they were when the letter was issued.
+8. **Dam readings:** the list is read with `from=` (last 400 days). An older reading can be replaced from the form; a way to list by year would let staff see it.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
