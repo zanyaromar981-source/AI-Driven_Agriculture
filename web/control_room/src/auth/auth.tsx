@@ -3,7 +3,7 @@
 // (the server checks every call anyway).
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { api, setToken, setUnauthorizedHandler, ApiError } from '../api/client';
+import { api, setToken, getToken, setUnauthorizedHandler, ApiError } from '../api/client';
 import { setScope, wipePrivate, refreshVersions } from '../api/cache';
 import type { Action, Me, Permission, Resource, SignedIn, Staff } from '../api/types';
 
@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cur = readSaved(); if (!cur) return;
     try {
       const me = await api.get<Me>('/dashboard/me');
+      if (getToken() !== cur.token) return; // signed out or in again meanwhile: never bring this session back
       store({ ...cur, staff: me.staff, permissions: me.permissions });
     } catch (e) { if (e instanceof ApiError && e.status === 401) signOut(); }
   }, [store, signOut]);

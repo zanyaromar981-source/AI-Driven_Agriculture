@@ -27,7 +27,8 @@ export async function raw<T>(method: string, path: string, opts: { body?: unknow
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
   if (opts.etag) headers['If-None-Match'] = opts.etag;
   if (opts.idempotencyKey) headers['Idempotency-Key'] = opts.idempotencyKey;
-  if (opts.auth !== false && token) headers.Authorization = 'Bearer ' + token;
+  const sentWith = opts.auth !== false ? token : null;
+  if (sentWith) headers.Authorization = 'Bearer ' + sentWith;
   let res: Response;
   try {
     // no-store: our own cache (src/api/cache.ts) owns ETags; the browser's HTTP cache would revalidate the
@@ -46,7 +47,9 @@ export async function raw<T>(method: string, path: string, opts: { body?: unknow
   if (text) { try { body = JSON.parse(text); } catch { body = null; } }
   if (!res.ok) {
     const b = (body ?? {}) as { error?: string; detail?: string; field?: string; retry_after_s?: number };
-    if (res.status === 401 && token && onUnauthorized) onUnauthorized();
+    // only the session that sent this request may be signed out by its 401 (a late answer from an old
+    // token must not end the next session)
+    if (res.status === 401 && sentWith && sentWith === token && onUnauthorized) onUnauthorized();
     throw new ApiError(res.status, b.error ?? 'server_error', b.detail ?? res.statusText, b.field, b.retry_after_s);
   }
   return { status: res.status, data: body as T, etag: res.headers.get('ETag') };

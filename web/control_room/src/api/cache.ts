@@ -45,7 +45,11 @@ async function idbWipe(pred?: (e: Entry) => boolean) {
 
 // ---------- state ----------
 const mem = new Map<string, Entry>();
-const inflight = new Map<string, Promise<Entry>>();
+interface Flight { p: Promise<Entry>; seen: Record<string, number> }
+const inflight = new Map<string, Flight>();
+// Bumped on sign-out, scope change and every wipe: an answer that started in an earlier generation is
+// handed to whoever waits for it but never saved, so private data cannot outlive its session.
+let gen = 0;
 let versions: Record<string, number> = {};
 let versionsKnown = false;
 const listeners = new Set<() => void>();
@@ -65,18 +69,19 @@ let scope = 'pub';
 setApiVersionHandler(v => {
   let prev: string | null = null;
   try { prev = localStorage.getItem('jutyar.api.version'); localStorage.setItem('jutyar.api.version', v); } catch { /* ignore */ }
-  if (prev && prev !== v) { mem.clear(); idbWipe(); notify(); }
+  if (prev && prev !== v) { gen++; mem.clear(); idbWipe(); versions = {}; versionsKnown = false; notify(); refreshVersions(); }
 });
 
 /** Who the private answers belong to: 'pub' when signed out, else the staff id. */
 export function setScope(staffId: string | null) {
   const next = staffId ? 'staff:' + staffId : 'pub';
   if (next === scope) return;
-  scope = next;
+  scope = next; gen++;
   notify();
 }
 /** Sign-out: forget everything private. */
 export function wipePrivate() {
+  gen++;
   for (const [k, e] of mem) if (e.scope !== 'pub') mem.delete(k);
   idbWipe(e => e.scope !== 'pub');
   for (const t of PRIVATE) delete versions[t];
@@ -120,10 +125,12 @@ export function startVersionWatch() {
 // A topic whose version is not known yet (private topics before the first signed-in check) is stored
 // as -1 and adopted when the number first arrives: the answer was fetched moments ago, so it counts as
 // current instead of being asked again.
-const isStale = (e: Entry, topics: Topic[]) => topics.some(t => versions[t] !== undefined && (e.seen[t] ?? -1) !== -1 && versions[t] > e.seen[t]);
+const isStale = (e: Entry, topics: Topic[]) => topics.some(t => versions[t] !== undefined && ((e.seen[t] ?? -1) === -1 || versions[t] > e.seen[t]));
 const snapshot = (topics: Topic[]) => Object.fromEntries(topics.map(t => [t, versions[t] ?? -1]));
 function adoptUnknown() {
+  const recent = Date.now() - 60_000; // only answers fetched in this page view; older -1 entries stay stale
   for (const e of mem.values()) {
+    if (e.at < recent) continue;
     let changed = false;
     for (const t of Object.keys(e.seen)) if (e.seen[t] === -1 && versions[t] !== undefined) { e.seen[t] = versions[t]; changed = true; }
     if (changed) idbPut(e);
@@ -131,17 +138,26 @@ function adoptUnknown() {
 }
 
 async function load(key: string, path: string, topics: Topic[], auth: boolean, prev?: Entry): Promise<Entry> {
-  const running = inflight.get(key); if (running) return running;
+  // The versions this answer will be stamped with are taken BEFORE asking, so a change that lands while
+  // the request runs still makes the answer stale. A running request is joined only if it is at least as
+  // new as what we need now; otherwise a new one is chained after it.
+  const seen = snapshot(topics);
+  const running = inflight.get(key);
+  if (running && topics.every(t => (running.seen[t] ?? -1) >= (seen[t] ?? -1))) return running.p;
+  const myGen = gen, sc = auth ? scope : 'pub';
   const p = (async () => {
-    const r = await raw<unknown>('GET', path, { etag: prev?.etag, auth });
-    const e: Entry = r.status === 304 && prev
-      ? { ...prev, seen: snapshot(topics), at: Date.now() }
-      : { key, etag: r.etag, data: r.data, seen: snapshot(topics), at: Date.now(), scope: auth ? scope : 'pub' };
-    mem.set(key, e); idbPut(e);
+    if (running) await running.p.catch(() => undefined);
+    const base = mem.get(key) ?? prev;
+    const r = await raw<unknown>('GET', path, { etag: base?.etag, auth });
+    const e: Entry = r.status === 304 && base
+      ? { ...base, seen, at: Date.now() }
+      : { key, etag: r.etag, data: r.data, seen, at: Date.now(), scope: sc };
+    if (myGen === gen) { mem.set(key, e); idbPut(e); }
     return e;
   })();
-  inflight.set(key, p);
-  try { return await p; } finally { inflight.delete(key); }
+  const f: Flight = { p, seen };
+  inflight.set(key, f);
+  try { return await p; } finally { if (inflight.get(key) === f) inflight.delete(key); }
 }
 
 /** Preload for the first-visit intro; resolves when the answer is cached. */
@@ -181,6 +197,9 @@ export function useApi<T>(path: string | null, topics: Topic[], opts: { auth?: b
       const e = await load(k, p, tps, auth, cur);
       if (st.current.key === k) { st.current.entry = e; st.current.error = null; }
     } catch (err) {
+      // a route that now answers 404 (public farm totals switched off, a plan deleted) must not keep
+      // showing its old cached answer
+      if (err instanceof ApiError && err.status === 404) { mem.delete(k); idbWipe(x => x.key === k); if (st.current.key === k) st.current.entry = undefined; }
       if (st.current.key === k && err instanceof ApiError) st.current.error = err;
     } finally {
       if (st.current.key === k) { st.current.refreshing = false; force(); }
@@ -210,6 +229,7 @@ export function useApi<T>(path: string | null, topics: Topic[], opts: { auth?: b
 
 /** Settings, "clear saved data": forget every saved answer in this browser (public and private). */
 export async function wipeAll() {
+  gen++;
   mem.clear();
   await idbWipe();
   try { localStorage.removeItem('jutyar.cache.warm'); } catch { /* ignore */ }
