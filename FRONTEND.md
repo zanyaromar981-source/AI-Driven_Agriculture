@@ -109,3 +109,29 @@ For the web dashboard, not the farmer app. Everything is under `/v1/dashboard`; 
 - A missing permission answers `403 {"error": "forbidden"}`; no token or a bad one answers `401`.
 - Codes to handle: `bad_credentials`, `system_role` (the Owner role cannot be changed), `role_in_use`, `role_name_taken`, `email_taken`, `unknown_role`, `own_account`, `last_owner`, and `cannot_grant` (403: you tried to give a permission, a role or a password reset that goes beyond what you hold yourself).
 - A change to a role, or deactivating a staff member, takes effect on that person's next request.
+
+## 11. Dashboard data routes
+
+For the web dashboard, with a staff token. All under `/v1/dashboard`; exact shapes are in `/api-docs`. Every method needs its own permission, named `<resource>:<action>`: `GET` needs `read`, `POST` needs `create`, `PUT` needs `update`, `DELETE` needs `delete`. Without it the answer is `403 {"error": "forbidden"}`.
+
+| Resource | Routes |
+|---|---|
+| `zones` | `/zones` (districts with sub-districts), `/zones/{slug}/readings[/{month}]`, `/zones/{slug}/sub-zones/{sub_slug}/readings[/{month}]` |
+| `dams` | `/dams`, `/dams/{slug}/readings[/{day}]` |
+| `outlooks` | `/outlooks`, `/outlooks/{season}/{issued}/zones/{zone_slug}`, `/outlook-runs[/{season}/{issued}]` |
+| `water` | `/water/seasons`, `/water/plan/{season}/entries[/{zone_slug}]` |
+| `fires` | `/fires[/{id}]` |
+| `insights` | `/farms/{id}/insights[/{topic}]` |
+| `alwa` | `/alwa/markets[/{slug}]`, `/alwa/markets/{slug}/prices[/{crop}/{day}]`, `/alwa/listings[/{id}]` (moderation: close or delete; shows phone numbers) |
+| `farmers` | `/farmers[/{id}]` (shows phone numbers) |
+| `farms` | `/farms[/{id}]` (shows the owner's phone) |
+| `roles`, `staff` | section 10 |
+
+The same rules everywhere:
+
+- `POST` creates. If the thing already exists the answer is `409 {"error": "already_exists"}` and nothing changes.
+- `PUT` changes an existing thing. If there is none the answer is `404`.
+- `DELETE` answers `204`, also when the thing was already gone.
+- Lists that can grow take `page` and `rows_per_page` and answer with `count`, `page`, `rows_per_page`.
+- A reading changed by hand looks like any other; the next data-job push for the same key replaces it.
+- The public read routes of section 2 are unchanged and still need no login.

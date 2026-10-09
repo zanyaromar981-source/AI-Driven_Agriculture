@@ -6,11 +6,11 @@ use chrono::{DateTime, Duration, NaiveDate, Utc};
 use crate::{
     app::{AuthContext, Pagination, User},
     features::alwa::{
-        app::{AlwaRepository, AppError, ListingFilter},
+        app::{AlwaRepository, AppError, ListingFilter, ModerationFilter, StoredPriceFilter},
         domain::{
             AlwaError, BuyerKind, Crop, Deal, DisplayName, Grade, IdempotencyKey, Listing,
-            ListingDraft, ListingStatus, Market, MarketSlug, Offer, OfferDraft, OfferStatus,
-            Pickup, Price, PricePerKg, PriceSource, QuantityKg,
+            ListingDraft, ListingStatus, Market, MarketName, MarketNames, MarketSlug, Offer,
+            OfferDraft, OfferStatus, Pickup, Price, PricePerKg, PriceSource, QuantityKg,
         },
     },
     shared::Phone,
@@ -87,16 +87,73 @@ pub enum RepositoryCall {
         market_id: Option<i32>,
         day: NaiveDate,
     },
+    CreateMarket {
+        slug: String,
+    },
+    UpdateMarket {
+        slug: String,
+    },
+    DeleteMarket {
+        slug: String,
+    },
+    FindStoredPrices {
+        filter: StoredPriceFilter,
+        page: u64,
+        rows_per_page: u64,
+    },
+    CreatePrice {
+        market_id: i32,
+        crop: Crop,
+        day: NaiveDate,
+    },
+    UpdatePrice {
+        market_id: i32,
+        crop: Crop,
+        day: NaiveDate,
+    },
+    DeletePrice {
+        market: String,
+        crop: Crop,
+        day: NaiveDate,
+    },
+    FindListingsForModeration {
+        filter: ModerationFilter,
+        page: u64,
+        rows_per_page: u64,
+    },
+    CloseListing {
+        id: i32,
+    },
+    DeleteListing {
+        id: i32,
+    },
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct Store {
+    markets: Vec<Market>,
+    /// What another request stores just before the next `close_listing`.
+    rival: Option<Listing>,
     prices: Vec<Price>,
     listings: Vec<Listing>,
     offers: Vec<Offer>,
     /// Idempotency keys of posted listings, with the listing each created.
     listing_keys: Vec<(String, i32)>,
     fail_with_database_error: bool,
+}
+
+impl Default for Store {
+    fn default() -> Self {
+        Self {
+            markets: markets(),
+            rival: None,
+            prices: Vec::new(),
+            listings: Vec::new(),
+            offers: Vec::new(),
+            listing_keys: Vec::new(),
+            fail_with_database_error: false,
+        }
+    }
 }
 
 /// Keeps what it is given in memory and applies writes the way the Postgres
@@ -133,6 +190,13 @@ impl FakeAlwaRepository {
         self
     }
 
+    /// Another request gets to the listing first: `rival` is what it stores
+    /// between this use case's read and its `close_listing`.
+    pub fn with_rival_write(self, rival: Listing) -> Self {
+        self.store.lock().expect("store lock").rival = Some(rival);
+        self
+    }
+
     pub fn failing() -> Self {
         let fake = Self::new();
         fake.store
@@ -155,6 +219,14 @@ impl FakeAlwaRepository {
                     | RepositoryCall::CancelListing { .. }
                     | RepositoryCall::PlaceOffer { .. }
                     | RepositoryCall::AcceptOffer { .. }
+                    | RepositoryCall::CreateMarket { .. }
+                    | RepositoryCall::UpdateMarket { .. }
+                    | RepositoryCall::DeleteMarket { .. }
+                    | RepositoryCall::CreatePrice { .. }
+                    | RepositoryCall::UpdatePrice { .. }
+                    | RepositoryCall::DeletePrice { .. }
+                    | RepositoryCall::CloseListing { .. }
+                    | RepositoryCall::DeleteListing { .. }
             )
         })
     }
@@ -167,6 +239,10 @@ impl FakeAlwaRepository {
             .iter()
             .find(|listing| *listing.id() == Some(id))
             .cloned()
+    }
+
+    pub fn stored_markets(&self) -> Vec<Market> {
+        self.store.lock().expect("store lock").markets.clone()
     }
 
     pub fn stored_offers(&self) -> Vec<Offer> {
@@ -201,7 +277,7 @@ impl AlwaRepository for FakeAlwaRepository {
         self.record(RepositoryCall::FindMarkets);
         self.guard()?;
 
-        Ok(markets())
+        Ok(self.stored_markets())
     }
 
     async fn find_market_by_slug(&self, slug: &MarketSlug) -> Result<Option<Market>, AppError> {
@@ -210,7 +286,10 @@ impl AlwaRepository for FakeAlwaRepository {
         });
         self.guard()?;
 
-        Ok(markets().into_iter().find(|market| market.slug() == slug))
+        Ok(self
+            .stored_markets()
+            .into_iter()
+            .find(|market| market.slug() == slug))
     }
 
     async fn find_latest_price_day(&self, market_id: i32) -> Result<Option<NaiveDate>, AppError> {
@@ -580,6 +659,327 @@ impl AlwaRepository for FakeAlwaRepository {
             })
             .collect())
     }
+
+    async fn create_market(
+        &self,
+        slug: &MarketSlug,
+        names: &MarketNames,
+    ) -> Result<Option<Market>, AppError> {
+        self.record(RepositoryCall::CreateMarket {
+            slug: String::from(slug),
+        });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        if store.markets.iter().any(|market| market.slug() == slug) {
+            return Ok(None);
+        }
+
+        let created = Market::rehydrate(
+            100 + store.markets.len() as i32,
+            slug.clone(),
+            String::from(&names.name_en),
+            String::from(&names.name_ku),
+        );
+        store.markets.push(created.clone());
+
+        Ok(Some(created))
+    }
+
+    async fn update_market(
+        &self,
+        slug: &MarketSlug,
+        names: &MarketNames,
+    ) -> Result<Option<Market>, AppError> {
+        self.record(RepositoryCall::UpdateMarket {
+            slug: String::from(slug),
+        });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        let Some(stored) = store.markets.iter_mut().find(|one| one.slug() == slug) else {
+            return Ok(None);
+        };
+
+        *stored = Market::rehydrate(
+            *stored.id(),
+            slug.clone(),
+            String::from(&names.name_en),
+            String::from(&names.name_ku),
+        );
+
+        Ok(Some(stored.clone()))
+    }
+
+    async fn delete_market(&self, slug: &MarketSlug) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeleteMarket {
+            slug: String::from(slug),
+        });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        let Some(id) = store
+            .markets
+            .iter()
+            .find(|market| market.slug() == slug)
+            .map(|market| *market.id())
+        else {
+            return Ok(false);
+        };
+
+        let in_use = store.prices.iter().any(|price| *price.market_id() == id)
+            || store
+                .listings
+                .iter()
+                .any(|listing| *listing.market_id() == id);
+
+        if in_use {
+            return Err(AlwaError::MarketInUse.into());
+        }
+
+        store.markets.retain(|market| market.slug() != slug);
+
+        Ok(true)
+    }
+
+    async fn find_stored_prices(
+        &self,
+        filter: &StoredPriceFilter,
+        pagination: &Pagination,
+    ) -> Result<(Vec<Price>, u64), AppError> {
+        self.record(RepositoryCall::FindStoredPrices {
+            filter: *filter,
+            page: *pagination.page(),
+            rows_per_page: *pagination.rows_per_page(),
+        });
+        self.guard()?;
+
+        let store = self.store.lock().expect("store lock");
+
+        let mut matching: Vec<Price> = store
+            .prices
+            .iter()
+            .filter(|price| *price.market_id() == filter.market_id)
+            .filter(|price| filter.crop.is_none_or(|crop| *price.crop() == crop))
+            .filter(|price| filter.from.is_none_or(|from| *price.day() >= from))
+            .filter(|price| filter.to.is_none_or(|to| *price.day() <= to))
+            .cloned()
+            .collect();
+        matching.sort_by_key(|price| std::cmp::Reverse(*price.day()));
+        let count = matching.len() as u64;
+
+        Ok((
+            matching
+                .into_iter()
+                .skip(pagination.skip() as usize)
+                .take(*pagination.rows_per_page() as usize)
+                .collect(),
+            count,
+        ))
+    }
+
+    async fn create_price(&self, price: &Price) -> Result<Option<Price>, AppError> {
+        self.record(RepositoryCall::CreatePrice {
+            market_id: *price.market_id(),
+            crop: *price.crop(),
+            day: *price.day(),
+        });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        if store.prices.iter().any(|other| same_key(other, price)) {
+            return Ok(None);
+        }
+
+        let created = price_with(price, 1_000 + store.prices.len() as i32);
+        store.prices.push(created.clone());
+
+        Ok(Some(created))
+    }
+
+    async fn update_price(&self, price: &Price) -> Result<Option<Price>, AppError> {
+        self.record(RepositoryCall::UpdatePrice {
+            market_id: *price.market_id(),
+            crop: *price.crop(),
+            day: *price.day(),
+        });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        let Some(stored) = store.prices.iter_mut().find(|other| same_key(other, price)) else {
+            return Ok(None);
+        };
+
+        *stored = price_with(price, stored.id().unwrap_or_default());
+
+        Ok(Some(stored.clone()))
+    }
+
+    async fn delete_price(
+        &self,
+        market: &MarketSlug,
+        crop: Crop,
+        day: NaiveDate,
+    ) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeletePrice {
+            market: String::from(market),
+            crop,
+            day,
+        });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        let market_id = store
+            .markets
+            .iter()
+            .find(|one| one.slug() == market)
+            .map(|one| *one.id());
+        let before = store.prices.len();
+
+        store.prices.retain(|price| {
+            Some(*price.market_id()) != market_id || *price.crop() != crop || *price.day() != day
+        });
+
+        Ok(store.prices.len() < before)
+    }
+
+    async fn find_listings_for_moderation(
+        &self,
+        filter: &ModerationFilter,
+        now: DateTime<Utc>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<Listing>, u64), AppError> {
+        self.record(RepositoryCall::FindListingsForModeration {
+            filter: filter.clone(),
+            page: *pagination.page(),
+            rows_per_page: *pagination.rows_per_page(),
+        });
+        self.guard()?;
+
+        let store = self.store.lock().expect("store lock");
+
+        let matching: Vec<Listing> = store
+            .listings
+            .iter()
+            .filter(|listing| {
+                filter
+                    .status
+                    .is_none_or(|status| listing.status_at(now) == status)
+            })
+            .filter(|listing| {
+                filter
+                    .market_id
+                    .is_none_or(|market_id| *listing.market_id() == market_id)
+            })
+            .filter(|listing| filter.crop.is_none_or(|crop| *listing.crop() == crop))
+            .filter(|listing| {
+                filter
+                    .seller
+                    .as_ref()
+                    .is_none_or(|seller| listing.is_sold_by(seller))
+            })
+            .cloned()
+            .collect();
+        let count = matching.len() as u64;
+
+        Ok((
+            matching
+                .into_iter()
+                .skip(pagination.skip() as usize)
+                .take(*pagination.rows_per_page() as usize)
+                .collect(),
+            count,
+        ))
+    }
+
+    async fn close_listing(&self, entity: &Listing) -> Result<(), AppError> {
+        let id = entity.id().unwrap_or_default();
+
+        self.record(RepositoryCall::CloseListing { id });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        if let Some(rival) = store.rival.take() {
+            for stored in &mut store.listings {
+                if stored.id() == rival.id() {
+                    *stored = rival.clone();
+                }
+            }
+        }
+
+        let still_open = store
+            .listings
+            .iter()
+            .any(|stored| *stored.id() == Some(id) && *stored.status() == ListingStatus::Open);
+
+        if !still_open {
+            return Err(AlwaError::ListingNotOpen.into());
+        }
+
+        for stored in &mut store.listings {
+            if *stored.id() == Some(id) {
+                *stored = entity.clone();
+            }
+        }
+
+        for stored in &mut store.offers {
+            if *stored.listing_id() == id && stored.is_open() {
+                *stored = offer_with(
+                    stored,
+                    stored.id().unwrap_or_default(),
+                    OfferStatus::Declined,
+                    *entity.updated_at(),
+                );
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn delete_listing(&self, id: i32) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeleteListing { id });
+        self.guard()?;
+
+        let mut store = self.store.lock().expect("store lock");
+
+        if store
+            .offers
+            .iter()
+            .any(|offer| *offer.listing_id() == id && offer.is_accepted())
+        {
+            return Err(AlwaError::ListingHasDeal.into());
+        }
+
+        let before = store.listings.len();
+        store.listings.retain(|listing| *listing.id() != Some(id));
+        store.offers.retain(|offer| *offer.listing_id() != id);
+
+        Ok(store.listings.len() < before)
+    }
+}
+
+fn same_key(one: &Price, other: &Price) -> bool {
+    (one.market_id(), one.crop(), one.day()) == (other.market_id(), other.crop(), other.day())
+}
+
+fn price_with(entity: &Price, id: i32) -> Price {
+    Price::rehydrate(
+        id,
+        *entity.market_id(),
+        *entity.crop(),
+        *entity.day(),
+        *entity.price(),
+        *entity.fixed(),
+        entity.source().clone(),
+        *entity.updated_at(),
+    )
 }
 
 fn listing_with(entity: &Listing, id: i32) -> Listing {
@@ -731,4 +1131,11 @@ pub fn a_price(market_id: i32, crop: Crop, day: NaiveDate, value: i64, fixed: bo
         PriceSource::new("alwa-board".to_string()).expect("source"),
         Utc::now(),
     )
+}
+
+pub fn market_names(name_en: &str, name_ku: &str) -> MarketNames {
+    MarketNames {
+        name_en: MarketName::new(name_en.to_string()).expect("name"),
+        name_ku: MarketName::new(name_ku.to_string()).expect("name"),
+    }
 }

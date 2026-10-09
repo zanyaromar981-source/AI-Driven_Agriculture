@@ -9,8 +9,8 @@ use clap::{Parser, Subcommand};
 use farm_doctor_api::{
     features::{
         alwa::web::{
-            ingest_routes as alwa_ingest_routes, public_routes as alwa_public_routes,
-            routes as alwa_routes,
+            dashboard_routes as alwa_dashboard_routes, ingest_routes as alwa_ingest_routes,
+            public_routes as alwa_public_routes, routes as alwa_routes,
         },
         dams::web::{
             dashboard_routes as dam_dashboard_routes, ingest_routes as dam_ingest_routes,
@@ -133,6 +133,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     "/dashboard",
                     Router::new()
                         .merge(staff_dashboard_routes())
+                        .merge(alwa_dashboard_routes())
                         .merge(dam_dashboard_routes())
                         .merge(farm_dashboard_routes())
                         .merge(farmer_dashboard_routes())

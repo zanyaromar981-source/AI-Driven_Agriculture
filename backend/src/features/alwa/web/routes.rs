@@ -3,9 +3,13 @@ use axum::{
     routing::{delete, get, post, put},
 };
 
-use crate::shared::AppState;
+use crate::{
+    app::{Action, Resource},
+    require,
+    shared::AppState,
+};
 
-use super::handlers;
+use super::{dashboard_handlers, handlers};
 
 /// What the dashboard reads without a login: markets, prices, the board of
 /// listings and the deals of a day.
@@ -48,4 +52,66 @@ pub fn ingest_routes() -> Router<AppState> {
         "/alwa/markets/{slug}/prices/{crop}/{day}",
         put(handlers::put_price),
     )
+}
+
+/// What Ministry staff do on the dashboard. Mounted under `/v1/dashboard`,
+/// behind the `staff_auth` layer; each method carries the one permission it
+/// needs. There is no create for listings or offers: only farmers and
+/// buyers make those.
+pub fn dashboard_routes() -> Router<AppState> {
+    Router::new()
+        .route(
+            "/alwa/markets",
+            get(dashboard_handlers::get_markets)
+                .route_layer(require!(Resource::Alwa, Action::Read))
+                .merge(
+                    post(dashboard_handlers::create_market)
+                        .route_layer(require!(Resource::Alwa, Action::Create)),
+                ),
+        )
+        .route(
+            "/alwa/markets/{slug}",
+            put(dashboard_handlers::update_market)
+                .route_layer(require!(Resource::Alwa, Action::Update))
+                .merge(
+                    delete(dashboard_handlers::delete_market)
+                        .route_layer(require!(Resource::Alwa, Action::Delete)),
+                ),
+        )
+        .route(
+            "/alwa/markets/{slug}/prices",
+            get(dashboard_handlers::get_stored_prices)
+                .route_layer(require!(Resource::Alwa, Action::Read))
+                .merge(
+                    post(dashboard_handlers::create_price)
+                        .route_layer(require!(Resource::Alwa, Action::Create)),
+                ),
+        )
+        .route(
+            "/alwa/markets/{slug}/prices/{crop}/{day}",
+            put(dashboard_handlers::update_price)
+                .route_layer(require!(Resource::Alwa, Action::Update))
+                .merge(
+                    delete(dashboard_handlers::delete_price)
+                        .route_layer(require!(Resource::Alwa, Action::Delete)),
+                ),
+        )
+        .route(
+            "/alwa/listings",
+            get(dashboard_handlers::get_listings)
+                .route_layer(require!(Resource::Alwa, Action::Read)),
+        )
+        .route(
+            "/alwa/listings/{id}",
+            get(dashboard_handlers::get_listing)
+                .route_layer(require!(Resource::Alwa, Action::Read))
+                .merge(
+                    put(dashboard_handlers::moderate_listing)
+                        .route_layer(require!(Resource::Alwa, Action::Update)),
+                )
+                .merge(
+                    delete(dashboard_handlers::delete_listing)
+                        .route_layer(require!(Resource::Alwa, Action::Delete)),
+                ),
+        )
 }

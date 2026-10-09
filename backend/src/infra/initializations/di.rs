@@ -2,6 +2,11 @@ use std::sync::Arc;
 
 use chrono::Duration;
 
+use crate::features::alwa::app::use_cases::{
+    CreateMarketUseCase, CreatePriceUseCase, DeleteListingUseCase, DeleteMarketUseCase,
+    DeletePriceUseCase, ListAllListingsUseCase, ListStoredPricesUseCase, ModerateListingUseCase,
+    UpdateMarketUseCase, UpdatePriceUseCase,
+};
 use crate::{
     features::{
         alwa::{
@@ -447,7 +452,19 @@ pub async fn di_init(
         cancel_listing_use_case: Arc::new(CancelListingUseCase::new(alwa_repository.clone())),
         make_offer_use_case: Arc::new(MakeOfferUseCase::new(alwa_repository.clone())),
         accept_offer_use_case: Arc::new(AcceptOfferUseCase::new(alwa_repository.clone())),
-        list_my_offers_use_case: Arc::new(ListMyOffersUseCase::new(alwa_repository)),
+        list_my_offers_use_case: Arc::new(ListMyOffersUseCase::new(alwa_repository.clone())),
+        create_market_use_case: Arc::new(CreateMarketUseCase::new(alwa_repository.clone())),
+        update_market_use_case: Arc::new(UpdateMarketUseCase::new(alwa_repository.clone())),
+        delete_market_use_case: Arc::new(DeleteMarketUseCase::new(alwa_repository.clone())),
+        list_stored_prices_use_case: Arc::new(ListStoredPricesUseCase::new(
+            alwa_repository.clone(),
+        )),
+        create_price_use_case: Arc::new(CreatePriceUseCase::new(alwa_repository.clone())),
+        update_price_use_case: Arc::new(UpdatePriceUseCase::new(alwa_repository.clone())),
+        delete_price_use_case: Arc::new(DeletePriceUseCase::new(alwa_repository.clone())),
+        list_all_listings_use_case: Arc::new(ListAllListingsUseCase::new(alwa_repository.clone())),
+        moderate_listing_use_case: Arc::new(ModerateListingUseCase::new(alwa_repository.clone())),
+        delete_listing_use_case: Arc::new(DeleteListingUseCase::new(alwa_repository)),
     };
 
     let role_repository: Arc<dyn RoleRepository> =

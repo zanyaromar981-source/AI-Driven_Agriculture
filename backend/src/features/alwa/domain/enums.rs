@@ -166,7 +166,7 @@ impl TryFrom<&str> for Pickup {
 pub enum ListingStatus {
     Open,
     Sold,
-    /// Its closing time passed with no deal.
+    /// Its closing time passed with no deal, or staff closed it.
     Closed,
     /// The seller took it down.
     Cancelled,
@@ -211,7 +211,7 @@ pub enum OfferStatus {
     Open,
     /// The seller took it: this is the deal.
     Accepted,
-    /// The seller took another offer.
+    /// The seller took another offer, or staff closed the listing.
     Declined,
     /// The buyer replaced it with a newer offer.
     Withdrawn,

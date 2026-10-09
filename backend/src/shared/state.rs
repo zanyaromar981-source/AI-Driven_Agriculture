@@ -2,6 +2,11 @@ use std::sync::Arc;
 
 use sea_orm::DatabaseConnection;
 
+use crate::features::alwa::app::use_cases::{
+    CreateMarketUseCase, CreatePriceUseCase, DeleteListingUseCase, DeleteMarketUseCase,
+    DeletePriceUseCase, ListAllListingsUseCase, ListStoredPricesUseCase, ModerateListingUseCase,
+    UpdateMarketUseCase, UpdatePriceUseCase,
+};
 use crate::{
     features::{
         alwa::app::use_cases::{
@@ -183,6 +188,16 @@ pub struct AlwaFeature {
     pub make_offer_use_case: Arc<MakeOfferUseCase>,
     pub accept_offer_use_case: Arc<AcceptOfferUseCase>,
     pub list_my_offers_use_case: Arc<ListMyOffersUseCase>,
+    pub create_market_use_case: Arc<CreateMarketUseCase>,
+    pub update_market_use_case: Arc<UpdateMarketUseCase>,
+    pub delete_market_use_case: Arc<DeleteMarketUseCase>,
+    pub list_stored_prices_use_case: Arc<ListStoredPricesUseCase>,
+    pub create_price_use_case: Arc<CreatePriceUseCase>,
+    pub update_price_use_case: Arc<UpdatePriceUseCase>,
+    pub delete_price_use_case: Arc<DeletePriceUseCase>,
+    pub list_all_listings_use_case: Arc<ListAllListingsUseCase>,
+    pub moderate_listing_use_case: Arc<ModerateListingUseCase>,
+    pub delete_listing_use_case: Arc<DeleteListingUseCase>,
 }
 
 #[derive(Clone)]

@@ -4,6 +4,13 @@ use utoipa::{
 };
 use utoipa_swagger_ui::SwaggerUi;
 
+use crate::features::alwa::web::{
+    AlwaModeratedListingDetailResponse, AlwaModeratedListingResponse,
+    AlwaModeratedListingsResponse, AlwaModeratedOfferResponse, AlwaOneMarketResponse,
+    AlwaOneModeratedListingResponse, AlwaStoredPricesResponse, CreateAlwaMarketParams,
+    CreateAlwaPriceParams, ModerateAlwaListingParams, UpdateAlwaMarketParams,
+    dashboard_handlers as alwa_dashboard_handlers,
+};
 use crate::features::{
     farmers::web::{
         DashboardCreateFarmerParams, DashboardFarmerResponse, DashboardFarmersResponse,
@@ -213,7 +220,19 @@ impl Modify for BearerAuth {
         water_handlers::dashboard_get_water_plan_entries,
         water_handlers::dashboard_create_water_plan_entry,
         water_handlers::dashboard_update_water_plan_entry,
-        water_handlers::dashboard_delete_water_plan_entry
+        water_handlers::dashboard_delete_water_plan_entry,
+        alwa_dashboard_handlers::get_markets,
+        alwa_dashboard_handlers::create_market,
+        alwa_dashboard_handlers::update_market,
+        alwa_dashboard_handlers::delete_market,
+        alwa_dashboard_handlers::get_stored_prices,
+        alwa_dashboard_handlers::create_price,
+        alwa_dashboard_handlers::update_price,
+        alwa_dashboard_handlers::delete_price,
+        alwa_dashboard_handlers::get_listings,
+        alwa_dashboard_handlers::get_listing,
+        alwa_dashboard_handlers::moderate_listing,
+        alwa_dashboard_handlers::delete_listing
     ),
     components(schemas(
         CreateFarmParams,
@@ -389,6 +408,17 @@ impl Modify for BearerAuth {
         CreateWaterPlanEntryDashboardParams,
         WaterSeasonsResponse,
         WaterPlanEntriesResponse,
+        CreateAlwaMarketParams,
+        UpdateAlwaMarketParams,
+        AlwaOneMarketResponse,
+        AlwaStoredPricesResponse,
+        CreateAlwaPriceParams,
+        AlwaModeratedListingResponse,
+        AlwaModeratedListingsResponse,
+        AlwaModeratedOfferResponse,
+        AlwaModeratedListingDetailResponse,
+        AlwaOneModeratedListingResponse,
+        ModerateAlwaListingParams,
         ErrorBody
     )),
     modifiers(&BearerAuth),

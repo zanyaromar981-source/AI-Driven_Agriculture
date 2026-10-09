@@ -24,6 +24,20 @@ impl ToErrorInfo for AlwaError {
             AlwaError::BadClosingTime(_) => {
                 ErrorInfo::with_code(ErrorKind::InvalidInput, "bad_closes_at", self.to_string())
             }
+            AlwaError::AlreadyExists(_) => {
+                ErrorInfo::with_code(ErrorKind::Conflict, "already_exists", self.to_string())
+            }
+            AlwaError::MarketInUse => {
+                ErrorInfo::with_code(ErrorKind::Conflict, "market_in_use", self.to_string())
+            }
+            AlwaError::ListingHasDeal => {
+                ErrorInfo::with_code(ErrorKind::Conflict, "listing_has_deal", self.to_string())
+            }
+            AlwaError::StaffMayOnlyClose => ErrorInfo::with_code(
+                ErrorKind::InvalidInput,
+                "status_not_allowed",
+                self.to_string(),
+            ),
             // Answered exactly like a listing that does not exist, so the
             // answer does not say whose listing it is.
             AlwaError::NotTheSeller | AlwaError::OfferNotOnListing => {
@@ -95,6 +109,22 @@ mod tests {
                 AlwaError::BadClosingTime(14),
                 ErrorKind::InvalidInput,
                 "bad_closes_at",
+            ),
+            (
+                AlwaError::AlreadyExists("market"),
+                ErrorKind::Conflict,
+                "already_exists",
+            ),
+            (AlwaError::MarketInUse, ErrorKind::Conflict, "market_in_use"),
+            (
+                AlwaError::ListingHasDeal,
+                ErrorKind::Conflict,
+                "listing_has_deal",
+            ),
+            (
+                AlwaError::StaffMayOnlyClose,
+                ErrorKind::InvalidInput,
+                "status_not_allowed",
             ),
         ] {
             let info = error.to_error_info();

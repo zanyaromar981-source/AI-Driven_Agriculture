@@ -1,6 +1,7 @@
 mod display_name;
 mod history_days;
 mod idempotency_key;
+mod market_name;
 mod market_slug;
 mod note;
 mod price_per_kg;
@@ -11,6 +12,7 @@ mod zone_slug;
 pub use display_name::DisplayName;
 pub use history_days::HistoryDays;
 pub use idempotency_key::IdempotencyKey;
+pub use market_name::MarketName;
 pub use market_slug::MarketSlug;
 pub use note::Note;
 pub use price_per_kg::PricePerKg;
