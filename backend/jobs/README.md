@@ -184,3 +184,65 @@ python3 farm_plan.py --keep-raw /tmp/raw   # also saves the raw forecasts, to ch
 ```
 
 On the server it runs from `farm-doctor-farm-plan.timer`. See its last runs with `journalctl -u farm-doctor-farm-plan -n 50`.
+
+## Push notifications: `push_sender.py`
+
+Sends red alerts (level `alarm`) to farmers' phones through Firebase Cloud Messaging. Every 5 minutes it asks the backend which alerts are waiting (`GET /v1/ingest/alerts/unpushed`; the backend applies "only alarms" and "at most one push per farm per day"), sends each to the phones of the farm's owner, and marks it pushed. A phone whose token Firebase reports dead is removed.
+
+Setup, once:
+
+1. In the Firebase console of the app's project: Project settings, Service accounts, "Generate new private key". That downloads a JSON file.
+2. Put the file on the server as `/opt/farm-doctor/fcm-service-account.json` (`chmod 600`), or anywhere and set `FCM__SERVICE_ACCOUNT_FILE` in `deploy/.env`. Never commit it.
+3. `systemctl enable --now farm-doctor-push-sender.timer`.
+
+There is no "API key" to paste: Firebase switched the old server key off in 2024, and the file above is what replaces it. Without the file the job logs that nothing was sent and exits cleanly. The job needs the `openssl` program (it signs the sign-in request with it) and no Python package. `--dry-run` prints what would be sent.
+
+The app must register each phone with `POST /v1/devices` (FRONTEND.md) and include the Firebase messaging library with the project's `google-services.json`.
+
+
+## farm_analysis.py
+
+Fills the app's "Field history" screen (`GET /v1/farms/{id}/insights`). Every 10 minutes it asks the backend for the farm list (one call) and works only on farms that miss a topic or whose topic is past its refresh age. Each topic is pushed as soon as it is ready. Standard library only. `groundwater` stays with `groundwater_runner.py`.
+
+| Topic | From | Refreshed |
+|---|---|---|
+| `rain` | ERA5 daily rain since 1981, Open-Meteo archive (`era5_seamless`, whose rain is ERA5 at about 25 km) | daily |
+| `weather` | the same download's daily minimum and maximum air temperature (ERA5-Land, about 9 km) | daily |
+| `soil` | SoilGrids 2.0 at 250 m, and heights from Open-Meteo's elevation API (Copernicus DEM 90 m) | stored once |
+| `greenness` | Sentinel-2 (10 m, springs from 2016) and Landsat (30 m, springs 1984 to 2015) through Microsoft Planetary Computer | newest picture daily, seasons weekly |
+| `dryness` | derived from the rain and the greenness, plus the fires the backend stores | daily |
+
+**How each figure is made**
+
+- **Rain.** Season = 1 October to 31 May. Normal = the mean of the 30 seasons ending in 1991 to 2020 (as `evidence/past_seasons/season_rain.py`). Drought = a season under 80% of normal. Trend = straight line through all complete seasons. "So far" = rain since 1 October against the mean of the same days in the normal seasons; pushed only between October and May.
+- **Weather.** A frost night = minimum under 0 C; a season runs July to June. Usual last spring frost and first autumn frost = the median day over the normal seasons, given only when frost came in at least 20 of the 30. **Hard spring frost = minimum of -2 C or colder between 15 March and 15 May. This line is ours:** the laptop analysis did not leave its definition. On the test field it gives 4 seasons, two of them (1991/92, 2011/12) also in the fixture's list for another field. Spring heat = days of 31 C or more in April and May.
+- **Soil.** Clay, sand, organic carbon and pH are the mean of SoilGrids' 0-5, 5-15 and 15-30 cm layers, weighted by thickness. Height is the centre point; slope is the mean of Horn's slope at the 9 inner points of a 5x5 grid of heights 90 m apart. It is a modelled world map, pushed as `unsure`.
+- **Greenness, the field.** The ingest listing gives a farm's centre and area but no outline, so the field is read as **a square box around the centre with the farm's area**. A long or crooked field shares the box with its neighbours; the `source` says "box at centre". A picture counts when 60% of the box is clear (Sentinel-2 scene classes 4 to 7; Landsat's clear bit with no cloud, shadow or snow). NDVI is the mean of the clear pixels (`farm_doctor/field_eye.py`).
+- **Greenness, now.** The newest Sentinel-2 picture of the last 30 days with a clear box, against the mean of the clearest picture within 20 days of the same date in each earlier year (at least 3 years). `now_behind_share_pct` = pixels under 70% of the field's median, when that median is over 0.15; `now_behind_dx_m` / `dy_m` = where they sit from the centre, east and north. `now_stage` is a rule of thumb, ours: under 0.2 NDVI is 0 (bare), or 4 (after the season) from June to September; 0.2 to 0.35 is 1 (coming up) from October to February, 2 from March to May, 4 from June to September; 0.35 to 0.6 is 2; above is 3.
+- **Greenness, the seasons.** Spring peak = the highest picture of February to May (Sentinel-2: the clearest pass of every 10 days; Landsat: the 8 clearest scenes). A season counts with two clear spring pictures, one of them between 1 March and 15 May; `seasons_measured` is that count. **Landsat reads lower than Sentinel-2** (test field: median peak 0.55 against 0.77), so each season is compared with the median of its own satellite and Landsat peaks are scaled to the Sentinel-2 level by the ratio of the medians. That hides any real change between the two periods, so **`trend_peak_ndvi_per_decade` is not pushed**. `weak_share_pct` = 10 m pixels whose own spring peak is under 70% of the field's median pixel in at least 8 of 10 Sentinel-2 seasons that had a crop (median 0.3 or more); needs 3 such seasons. A season that is over is read once and kept.
+- **Dryness.** `rain_green_r` = correlation of season rain (% of normal) with the spring peak; drought under 80%, wet from 115% (`farm_doctor/season_check.py`). Summer green = the lowest July-August picture still at 0.25 or more (`planted_area_test.py`). Not pushed under 5 seasons that have both rain and a peak.
+
+**Left out, on purpose**
+
+- `fire_detections` (the fixture's count since 2000): the job can read only `GET /v1/fires`, which answers the last 7 days. It pushes `fire_detections_7d` instead, under its own code, so the app does not say "no fire was seen" about 26 years on the strength of one week. The count is of the backend's stored fires (grouped, flares removed), within 1 km.
+- `summer_surface_c_normal` (Landsat ground temperature): not built.
+- MODIS: not used.
+
+**Limits to know**
+
+- **Open-Meteo counts the 45-year download as about a thousand calls and allows ten thousand a day** (as we read its rules; not measured). So the archive is asked at the centre rounded to 0.05 degrees (about 5 km: farms of one village share one download, inside one ERA5 cell in most cases), the 45 years are fetched once per place, and later runs ask only for the last days. More than about 8 new places in a day will be refused with 429; the job then tries those again later.
+- **SoilGrids is often slow or down.** It gets one quick try (25 s), so it never holds up the other topics, and one patient try at the end of the run. If both fail, height and slope are pushed alone and the soil is asked again with the back-off below.
+- A topic that fails is tried again after 10 minutes, then 20, 40, up to 6 hours. One farm or topic failing does not stop the rest; the run exits 1.
+- A run stops starting satellite work after 8 minutes; the next run goes on. A lock file stops two runs at once.
+- Everything is kept in `cache/farm_analysis/` (`FARM_ANALYSIS_CACHE`): `state.json` (when each topic was last done; the backend only knows a topic's `as_of` day), the rain series, the soil, heights and the finished seasons. **If the folder is lost,** every farm is analysed again from nothing (and the archive limit above bites), but soil is not pushed again for farms that have it.
+- It reports to the job status page as `farm_analysis` itself, and only for runs that pushed or failed; the timer does not use `report_run.py`.
+
+```sh
+python3 farm_analysis.py --dry-run --at 35.36,45.70,13   # one place (lat, lon, dunam), no backend, pushes nothing
+INGEST__SERVICE_KEY=... FARM_DOCTOR_API=http://localhost:8790/v1 python3 farm_analysis.py
+python3 farm_analysis.py --farm 12 --force                # one farm again, ignoring the refresh ages
+```
+
+First run, 9 Oct 2026, a 3.2 ha rain-fed field in the Sharazur plain (35.360 N, 45.700 E, 545 m): rain and weather after 2 s, soil after 5 s, the newest picture after 13 s, the 39 seasons after 106 s (446 pictures read, 14 searches), dryness right after. Normal rain 786 mm, 10 droughts since 1981/82; 34 frost nights; clay 36%, pH 7.4; spring peak 0.79, bare in every one of 41 summers; newest picture 4 Oct, NDVI 0.12 against 0.12 usual. A daily refresh took 2 s (1 archive call, 1 search), 7 s when a new picture had come (11 searches, 11 pictures); a quiet run is one backend call.
+
+On the server it runs from `farm-doctor-farm-analysis.timer` every 10 minutes. See its last runs with `journalctl -u farm-doctor-farm-analysis -n 50`.
