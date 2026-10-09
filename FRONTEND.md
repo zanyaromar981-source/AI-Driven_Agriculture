@@ -278,4 +278,13 @@ Answers to `BACKEND.md` 2.12 and 2.13, as built.
 
 **Staff details (A6): built.** Staff have optional `phone` and `job_title` on `POST /v1/dashboard/staff` and `PUT /v1/dashboard/staff/{id}`. `PUT /v1/dashboard/me` (any signed-in staff) takes `{"name", "phone", "current_password", "new_password"}`; the two passwords are optional and go together; a wrong current password is `403 {"error": "wrong_password"}`. It answers like `GET /v1/dashboard/me`.
 
-**Still being built from 2.12:** A3 (place on every farm, filters and sort), A4 (totals), B1 (crops), B2 (rules), B3 (inbox), B4 (app control), B5 (job status). This section will say when each is in.
+**Rules (B2): built, but nothing reads them yet.**
+- `GET /v1/dashboard/rules` (`rules:read`) answers `{"rules": [...]}` with every column of the request. `PUT /v1/dashboard/rules/{code}` (`rules:update`) with `{"value", "reason"}` answers `{"rule", "changed"}`; outside min and max is `422 bad_range`, a reason outside 3 to 500 characters `422 bad_reason`. `GET /v1/dashboard/rules/{code}/history` is paged, newest first: `{"changes": [{"id", "code", "old_value", "new_value", "reason", "staff_id", "at"}], "count", "page", "rows_per_page"}`. `POST /v1/dashboard/rules/{code}/reset` with `{"reason"}`.
+- 15 rules are seeded with the numbers in the code today: nine weather planner rules (as in your list), four dryness band edges (`dryness_greener_from` 25, `dryness_normal_from` 45, `dryness_dry_from` 60, `dryness_very_dry_from` 80), and two Field Eye rules.
+- **Field Eye differs from your list.** `farm_doctor/field_eye.py` has no "watch below 85%" or "alarm below 70% of normal", and its cloud limit is 60%, not 30%. What it has was seeded: `field_eye_max_cloud_pct` 60 and `field_eye_weak_pixel_pct` 70 (a pixel below 70% of the field's own median). Tell us if the 85 / 70 / 30 numbers live somewhere else.
+- Sorani names and meanings of the rules are null: they need a native speaker. Show the English until then.
+- **Honest limit: changing a rule changes nothing yet.** The data jobs can read the values (`GET /v1/ingest/rules?used_by=`), but the weather planner, the dryness bands and Field Eye still use their built-in numbers. Say so on the Rules page, or hide the save button, until this line is removed.
+
+**Job status (B5): built.** `GET /v1/dashboard/jobs` (`jobs:read`) answers `{"jobs": [...]}` in the shape of your request. States: `never` (no run), `failed` (the run that finished last was not ok), `late` (nothing finished ok within 1.5 times `every_hours`), else `ok`. A job becomes `late` by time alone, which does not raise the `jobs` topic: refetch this page on a timer. The jobs on the server do not report their runs yet, so every job shows `never` until they do. The Sorani job names need a native check.
+
+**Still being built from 2.12:** A3 (place on every farm, filters and sort), A4 (totals), B1 (crops), B3 (inbox), B4 (app control). This section will say when each is in.

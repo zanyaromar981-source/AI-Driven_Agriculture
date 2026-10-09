@@ -624,6 +624,35 @@ pub async fn di_init(
         ),
     };
 
+    let rule_repository: Arc<dyn crate::features::rules::app::RuleRepository> = Arc::new(
+        crate::features::rules::infra::RulePostgresRepository::new(db_context.conn_clone()),
+    );
+
+    let rule = crate::shared::RuleFeature {
+        list_rules_use_case: Arc::new(
+            crate::features::rules::app::use_cases::ListRulesUseCase::new(rule_repository.clone()),
+        ),
+        change_rule_use_case: Arc::new(
+            crate::features::rules::app::use_cases::ChangeRuleUseCase::new(rule_repository.clone()),
+        ),
+        view_rule_history_use_case: Arc::new(
+            crate::features::rules::app::use_cases::ViewRuleHistoryUseCase::new(rule_repository),
+        ),
+    };
+
+    let job_repository: Arc<dyn crate::features::jobs::app::JobRepository> = Arc::new(
+        crate::features::jobs::infra::JobPostgresRepository::new(db_context.conn_clone()),
+    );
+
+    let job = crate::shared::JobFeature {
+        record_job_run_use_case: Arc::new(
+            crate::features::jobs::app::use_cases::RecordJobRunUseCase::new(job_repository.clone()),
+        ),
+        view_jobs_use_case: Arc::new(crate::features::jobs::app::use_cases::ViewJobsUseCase::new(
+            job_repository,
+        )),
+    };
+
     Ok(Features {
         farm,
         farmer,
@@ -638,5 +667,7 @@ pub async fn di_init(
         staff,
         brief,
         version,
+        rule,
+        job,
     })
 }

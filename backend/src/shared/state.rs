@@ -255,6 +255,20 @@ pub struct VersionFeature {
 }
 
 #[derive(Clone)]
+pub struct RuleFeature {
+    pub list_rules_use_case: Arc<crate::features::rules::app::use_cases::ListRulesUseCase>,
+    pub change_rule_use_case: Arc<crate::features::rules::app::use_cases::ChangeRuleUseCase>,
+    pub view_rule_history_use_case:
+        Arc<crate::features::rules::app::use_cases::ViewRuleHistoryUseCase>,
+}
+
+#[derive(Clone)]
+pub struct JobFeature {
+    pub record_job_run_use_case: Arc<crate::features::jobs::app::use_cases::RecordJobRunUseCase>,
+    pub view_jobs_use_case: Arc<crate::features::jobs::app::use_cases::ViewJobsUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -269,6 +283,8 @@ pub struct Features {
     pub staff: StaffFeature,
     pub brief: BriefFeature,
     pub version: VersionFeature,
+    pub rule: RuleFeature,
+    pub job: JobFeature,
 }
 
 #[derive(Clone)]

@@ -100,6 +100,14 @@ fn main() {
                     "data_versions",
                     "src/features/versions/infra/persistence/postgres/entities",
                 ),
+                (
+                    "rules,rule_changes",
+                    "src/features/rules/infra/persistence/postgres/entities",
+                ),
+                (
+                    "jobs,job_runs",
+                    "src/features/jobs/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

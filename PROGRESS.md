@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 16:33
+Last update: 2026-10-09 16:34
 
 ## Done
 - Alwa market design in Pencil (2026-10-09), `design/jutyar_app.pen` section "Alwa market": 8 phone screens (home with price board and listings, listing, make an offer, my offers, sell a crop, my listings, my listing with Accept, deal done) and a board of empty and error states; Alwa is now a tab in the Tab Bar. Previews `design/jutyar_alwa_*_preview.png`. The user saves the .pen with Cmd+S

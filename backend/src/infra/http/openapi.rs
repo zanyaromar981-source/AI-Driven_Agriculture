@@ -262,7 +262,14 @@ impl Modify for BearerAuth {
         brief_handlers::delete_dashboard_brief,
         farmer_handlers::dashboard_issue_letter,
         farmer_handlers::dashboard_get_letter,
-        staff_handlers::update_me
+        staff_handlers::update_me,
+        crate::features::rules::web::handlers::get_rule_values,
+        crate::features::rules::web::handlers::dashboard_get_rules,
+        crate::features::rules::web::handlers::dashboard_change_rule,
+        crate::features::rules::web::handlers::dashboard_get_rule_history,
+        crate::features::rules::web::handlers::dashboard_reset_rule,
+        crate::features::jobs::web::handlers::put_job_run,
+        crate::features::jobs::web::handlers::dashboard_get_jobs
     ),
     components(schemas(
         CreateFarmParams,
@@ -482,6 +489,23 @@ impl Modify for BearerAuth {
         DashboardLetterRecordResponse,
         DashboardOneLetterRecordResponse,
         UpdateOwnStaffProfileParams,
+        crate::features::rules::web::RuleUsedBy,
+        crate::features::rules::web::RuleResponse,
+        crate::features::rules::web::RulesResponse,
+        crate::features::rules::web::OneRuleResponse,
+        crate::features::rules::web::ChangeRuleParams,
+        crate::features::rules::web::ResetRuleParams,
+        crate::features::rules::web::RuleChangeResponse,
+        crate::features::rules::web::RuleHistoryResponse,
+        crate::features::rules::web::RuleValueResponse,
+        crate::features::rules::web::RuleValuesResponse,
+        crate::features::jobs::web::JobRunState,
+        crate::features::jobs::web::JobDayMark,
+        crate::features::jobs::web::RecordJobRunParams,
+        crate::features::jobs::web::JobRunResponse,
+        crate::features::jobs::web::SavedJobRunResponse,
+        crate::features::jobs::web::JobStatusResponse,
+        crate::features::jobs::web::JobsResponse,
         ErrorBody
     )),
     modifiers(&BearerAuth),
@@ -498,7 +522,9 @@ impl Modify for BearerAuth {
         (name = "water", description = "The plan for which zones should receive water first"),
         (name = "alwa", description = "The wholesale produce markets: prices, crops on sale, offers and deals"),
         (name = "staff", description = "The dashboard's staff accounts, custom roles and sign-in"),
-        (name = "briefs", description = "The daily brief the nightly job writes for the region and for each zone")
+        (name = "briefs", description = "The daily brief the nightly job writes for the region and for each zone"),
+        (name = "rules", description = "The numbers the data jobs use to decide a warning or a colour, changed by staff with a logged reason"),
+        (name = "jobs", description = "Whether the automatic data jobs ran on time: each job reports its runs, staff read how they stand")
     ),
     info(
         title = "farm-doctor-api",
