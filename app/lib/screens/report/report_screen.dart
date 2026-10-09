@@ -177,13 +177,22 @@ class _ReportScreenState extends State<ReportScreen> {
       children: [
         Text(
           'Report a problem',
-          style: latText(size: 24, weight: FontWeight.w700),
+          style: latText(
+            size: 24,
+            weight: FontWeight.w700,
+            letterSpacing: -0.4,
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           'Only you and the Ministry see this. Your phone and exact spot are '
           'never shown to others.',
-          style: latText(size: 15, color: JColors.muted, height: 1.4),
+          style: latText(
+            size: 15,
+            weight: FontWeight.w400,
+            color: JColors.muted,
+            height: 1.45,
+          ),
         ),
         const SizedBox(height: 16),
         heading('What is it?'),
@@ -211,7 +220,7 @@ class _ReportScreenState extends State<ReportScreen> {
           padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
           decoration: BoxDecoration(
             color: JColors.card,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
             spacing: 10,
@@ -224,6 +233,8 @@ class _ReportScreenState extends State<ReportScreen> {
                 selectedCrop: null,
                 onCell: (c) => setState(() => _cell = c),
                 onCrop: (_) {},
+                pin: true,
+                styleButton: false,
               ),
               Text(
                 k == null
@@ -241,6 +252,7 @@ class _ReportScreenState extends State<ReportScreen> {
         const SizedBox(height: 16),
         heading('Photo'),
         PhotoRow(
+          compact: true,
           photos: _photos,
           enabled: !_sending,
           max: kMaxReportPhotos,
@@ -250,10 +262,12 @@ class _ReportScreenState extends State<ReportScreen> {
         const SizedBox(height: 16),
         heading('Note'),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          constraints: const BoxConstraints(minHeight: 64),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: JColors.card,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: JColors.line),
           ),
           child: TextField(
             controller: _note,
@@ -261,12 +275,19 @@ class _ReportScreenState extends State<ReportScreen> {
             minLines: 1,
             maxLines: 4,
             maxLength: 1500,
-            style: latText(size: 15),
+            style: latText(size: 15, weight: FontWeight.w400, height: 1.45),
             decoration: InputDecoration(
               border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
               counterText: '',
               hintText: 'Since Monday, lower leaves first',
-              hintStyle: latText(size: 15, color: JColors.faint),
+              hintStyle: latText(
+                size: 15,
+                weight: FontWeight.w400,
+                color: JColors.faint,
+                height: 1.45,
+              ),
             ),
           ),
         ),
@@ -274,6 +295,7 @@ class _ReportScreenState extends State<ReportScreen> {
         PrimaryButton(
           label: 'Send report',
           icon: Icons.send_rounded,
+          iconFirst: true,
           loading: _sending,
           onPressed: _type == null ? null : _send,
         ),
@@ -293,6 +315,7 @@ class _ReportScreenState extends State<ReportScreen> {
             size: 12,
             weight: FontWeight.w700,
             color: JColors.muted,
+            letterSpacing: 0.6,
           ),
         ),
         const SizedBox(height: 8),
@@ -345,7 +368,10 @@ class _TypeChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: on ? JColors.accentSoft : JColors.card,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: on ? JColors.accent : JColors.line),
+          border: Border.all(
+            color: on ? JColors.accent : JColors.line,
+            width: on ? 2 : 1,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -354,13 +380,14 @@ class _TypeChip extends StatelessWidget {
             Icon(icon, size: 20, color: on ? JColors.accent : JColors.ink),
             Text(
               name,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: latText(
                 size: 12,
                 weight: on ? FontWeight.w700 : FontWeight.w600,
                 color: on ? JColors.accent : JColors.ink,
+                height: 1.15,
               ),
             ),
           ],
@@ -417,7 +444,11 @@ class _MineRow extends StatelessWidget {
               children: [
                 Text(
                   reportLine(message),
-                  style: latText(size: 13, weight: FontWeight.w500),
+                  style: latText(
+                    size: 13,
+                    weight: FontWeight.w500,
+                    height: 1.35,
+                  ),
                 ),
                 if (reply != null && reply.isNotEmpty)
                   Text(

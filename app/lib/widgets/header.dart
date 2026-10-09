@@ -39,7 +39,11 @@ class JutyarHeader extends StatelessWidget {
                           child: Text(
                             'Jutyar',
                             maxLines: 1,
-                            style: latText(size: 20, weight: FontWeight.w800),
+                            style: latText(
+                              size: 20,
+                              weight: FontWeight.w800,
+                              letterSpacing: -0.4,
+                            ),
                           ),
                         ),
                       ),

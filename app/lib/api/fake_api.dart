@@ -493,14 +493,14 @@ class FakeApi implements Api {
         kind: 'report',
         text: 'Yellow stripes, square E12',
         state: 'read',
-        createdAt: now.subtract(const Duration(days: 4)),
+        createdAt: now.subtract(const Duration(days: 8)),
       ),
       FarmerMessage(
         id: 'm1',
         kind: 'report',
         text: 'Insects, square B4',
         state: 'new',
-        createdAt: now.subtract(const Duration(days: 11)),
+        createdAt: now.subtract(const Duration(days: 15)),
       ),
     ];
   }

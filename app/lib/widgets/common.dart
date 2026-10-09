@@ -88,12 +88,16 @@ class PrimaryButton extends StatelessWidget {
     this.onPressed,
     this.loading = false,
     this.icon = Icons.arrow_forward_rounded,
+    this.iconFirst = false,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool loading;
   final IconData icon;
+
+  /// Icon before a 16 px label, with the green shadow (design: Send report).
+  final bool iconFirst;
 
   @override
   Widget build(BuildContext context) {
@@ -102,9 +106,21 @@ class PrimaryButton extends StatelessWidget {
     return AnimatedOpacity(
       opacity: enabled || loading ? 1 : 0.4,
       duration: const Duration(milliseconds: 200),
-      child: SizedBox(
+      child: Container(
         height: 56,
         width: double.infinity,
+        decoration: iconFirst
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x331E7A5A),
+                    offset: Offset(0, 6),
+                    blurRadius: 16,
+                  ),
+                ],
+              )
+            : null,
         child: FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: JColors.accent,
@@ -131,16 +147,17 @@ class PrimaryButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   spacing: 10,
                   children: [
+                    if (iconFirst) Icon(icon, size: 20),
                     Text(
                       label,
                       style: jText(
                         ku,
-                        size: 17,
+                        size: iconFirst ? 16 : 17,
                         weight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
-                    Icon(icon, size: 20),
+                    if (!iconFirst) Icon(icon, size: 20),
                   ],
                 ),
         ),

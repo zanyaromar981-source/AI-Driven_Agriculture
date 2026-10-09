@@ -74,38 +74,103 @@ class TabPage extends StatelessWidget {
   }
 }
 
+/// Open alerts (not ticked done) per farm id, for the badge on the bell.
+/// The Alerts screen updates it when it loads or a tick changes.
+final openAlerts = ValueNotifier<Map<String, int>>({});
+
 /// Home, Alerts, Ask the Doctor (raised), Alwa, Settings (design: Tab Bar).
-class JutyarTabBar extends StatelessWidget {
+class JutyarTabBar extends StatefulWidget {
   const JutyarTabBar({super.key, required this.current, required this.farm});
   final JTab current;
   final FarmSummary farm;
 
   @override
+  State<JutyarTabBar> createState() => _JutyarTabBarState();
+}
+
+class _JutyarTabBarState extends State<JutyarTabBar> {
+  @override
+  void initState() {
+    super.initState();
+    _count();
+  }
+
+  /// The badge count; no badge when the server has no alerts (404) or
+  /// there is no internet.
+  Future<void> _count() async {
+    final id = widget.farm.id;
+    if (openAlerts.value.containsKey(id)) return;
+    try {
+      final a = await AppScope.read(context).api.getAlerts(id);
+      openAlerts.value = {
+        ...openAlerts.value,
+        id: a.where((x) => !x.done).length,
+      };
+    } on ApiException {
+      // No badge.
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context).s;
-    Widget tab(JTab t, IconData icon, String label) {
+    final current = widget.current;
+    final farm = widget.farm;
+    Widget tab(JTab t, IconData icon, String label, {int badge = 0}) {
       final on = t == current;
       return Expanded(
         child: Semantics(
           button: true,
           selected: on,
-          label: label,
+          label: badge > 0 ? '$label, $badge new' : label,
           excludeSemantics: true,
           child: InkWell(
             onTap: () => openTab(context, current, t, farm),
             child: Padding(
-              padding: const EdgeInsets.only(top: 8, bottom: 6),
+              padding: const EdgeInsets.only(top: 10, bottom: 6),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                alignment: Alignment.bottomCenter,
+                alignment: Alignment.topCenter,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   spacing: 4,
                   children: [
-                    Icon(
-                      icon,
-                      size: 22,
-                      color: on ? JColors.accent : JColors.muted,
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          icon,
+                          size: 22,
+                          color: on ? JColors.accent : JColors.muted,
+                        ),
+                        if (badge > 0)
+                          Positioned(
+                            left: 12,
+                            top: -5,
+                            child: Container(
+                              width: 16,
+                              height: 16,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: JColors.levelAlarm,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: JColors.card,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                badge > 9 ? '9+' : '$badge',
+                                style: latText(
+                                  size: 10,
+                                  weight: FontWeight.w800,
+                                  color: Colors.white,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     Text(
                       label,
@@ -133,52 +198,73 @@ class JutyarTabBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 80,
+          height: 64,
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               tab(JTab.home, Icons.home_rounded, s.tabHome),
-              tab(JTab.alerts, Icons.notifications_none_rounded, s.tabAlerts),
+              ValueListenableBuilder(
+                valueListenable: openAlerts,
+                builder: (_, counts, _) => tab(
+                  JTab.alerts,
+                  Icons.notifications_none_rounded,
+                  s.tabAlerts,
+                  badge: counts[farm.id] ?? 0,
+                ),
+              ),
+              // The raised button sits 15 px above the bar (design: y -15).
               SizedBox(
                 width: 96,
-                child: Semantics(
-                  button: true,
-                  label: s.tabAsk,
-                  excludeSemantics: true,
-                  child: InkWell(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => AskDoctorScreen(farm: farm),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 2, bottom: 6),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.bottomCenter,
+                child: OverflowBox(
+                  alignment: Alignment.topCenter,
+                  maxHeight: 100,
+                  child: Transform.translate(
+                    offset: const Offset(0, -19),
+                    child: Semantics(
+                      button: true,
+                      label: s.tabAsk,
+                      excludeSemantics: true,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => AskDoctorScreen(farm: farm),
+                          ),
+                        ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           spacing: 4,
                           children: [
                             Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: JColors.accent,
+                              width: 64,
+                              height: 64,
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: JColors.card,
                                 shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: JColors.card,
-                                  width: 3,
-                                ),
                               ),
-                              child: const Icon(
-                                Icons.medical_services_outlined,
-                                size: 26,
-                                color: Colors.white,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: JColors.accent,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0x4D1E7A5A),
+                                      offset: Offset(0, 6),
+                                      blurRadius: 14,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.medical_services_outlined,
+                                  size: 26,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                             Text(
                               s.tabAsk,
+                              maxLines: 1,
                               style: jText(
                                 false,
                                 size: 11,

@@ -138,6 +138,8 @@ class FarmDrawing extends StatelessWidget {
     required this.onCell,
     required this.onCrop,
     this.overlay,
+    this.pin = false,
+    this.styleButton = true,
   });
 
   final FarmShape shape;
@@ -148,6 +150,12 @@ class FarmDrawing extends StatelessWidget {
   final ValueChanged<CellKey?> onCell;
   final ValueChanged<String?> onCrop;
   final Widget? overlay;
+
+  /// A map pin on the chosen cell (Report: Where?).
+  final bool pin;
+
+  /// The map style button in the corner (off on the small Report map).
+  final bool styleButton;
 
   static final Expando<_FarmGeo> _geos = Expando();
   _FarmGeo get _geo => _geos[shape] ??= _FarmGeo(shape);
@@ -244,6 +252,25 @@ class FarmDrawing extends StatelessWidget {
                             ),
                           ],
                         ),
+                      if (pin && sel != null)
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: Utm.toLatLng(
+                                sel.e * 10.0 + 5,
+                                sel.n * 10.0 + 5,
+                              ),
+                              width: 20,
+                              height: 20,
+                              alignment: Alignment.topCenter,
+                              child: const Icon(
+                                Icons.location_on_rounded,
+                                size: 20,
+                                color: JColors.ink,
+                              ),
+                            ),
+                          ],
+                        ),
                       if (view == FarmView.crops)
                         MarkerLayer(
                           markers: [
@@ -274,7 +301,7 @@ class FarmDrawing extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (!overlayAtTop)
+                if (!overlayAtTop && styleButton)
                   const Positioned(top: 8, right: 8, child: MapStyleButton()),
                 if (overlay != null)
                   Positioned(
