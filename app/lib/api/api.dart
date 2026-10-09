@@ -302,6 +302,10 @@ abstract class Api {
 
   /// GET /farms/{id}/insights: the 20+ year history of this field, as topics.
   Future<FarmInsights> getInsights(String id);
+
+  /// POST /farms/{id}/ask (multipart): a question and photos for the Doctor.
+  /// Slow (about 30 s): the server reads the field and the weather first.
+  Future<DoctorAnswer> askDoctor(String farmId, DoctorQuestion question);
 }
 
 // ---- Farm Home: BACKEND.md 2.2 (GET /farms/{id}), 2.3 (status), 2.4 (plan) ----
@@ -634,4 +638,89 @@ class FarmInsights {
     ],
     json: j,
   );
+}
+
+// ---- Ask the Doctor: BACKEND.md 2.5 ----
+
+/// One photo for the Doctor, already made small on the phone.
+class DoctorPhoto {
+  const DoctorPhoto({required this.bytes, this.mime = 'image/jpeg'});
+  final List<int> bytes;
+  final String mime;
+}
+
+/// What the farmer sends: words, photos or both.
+class DoctorQuestion {
+  const DoctorQuestion({
+    this.text,
+    this.photos = const [],
+    this.cellE,
+    this.cellN,
+    this.lang = 'ku',
+  });
+  final String? text;
+  final List<DoctorPhoto> photos;
+
+  /// The 10 m cell the farmer asks about, if any.
+  final int? cellE;
+  final int? cellN;
+
+  /// `ku` or `en`.
+  final String lang;
+
+  bool get isEmpty => (text ?? '').trim().isEmpty && photos.isEmpty;
+}
+
+/// The Doctor's answer. Only `ku` and `en` come in both languages; the other
+/// texts are English for now.
+class DoctorAnswer {
+  const DoctorAnswer({
+    required this.likely,
+    required this.confidence,
+    this.why = const [],
+    this.actions = const [],
+    this.cannotTell = const [],
+    this.referToOfficer = false,
+    this.ku = '',
+    this.en = '',
+    this.inputsUsed = const [],
+  });
+
+  final String likely;
+
+  /// `sure`, `likely` or `unsure`.
+  final String confidence;
+
+  /// "input -> conclusion" lines: what each conclusion rests on.
+  final List<String> why;
+
+  /// At most 3 things to do this week.
+  final List<String> actions;
+  final List<String> cannotTell;
+  final bool referToOfficer;
+  final String ku;
+  final String en;
+  final List<String> inputsUsed;
+
+  static List<String> _list(Object? v) => v is List
+      ? [
+          for (final x in v)
+            if ('$x'.trim().isNotEmpty) '$x',
+        ]
+      : const [];
+
+  factory DoctorAnswer.fromJson(Map<String, dynamic> j) {
+    final c = j['confidence'];
+    return DoctorAnswer(
+      likely: (j['likely'] as String?) ?? '',
+      confidence: c == 'sure' || c == 'likely' ? c as String : 'unsure',
+      why: _list(j['why']),
+      actions: _list(j['actions_this_week']).take(3).toList(),
+      cannotTell: _list(j['cannot_tell']),
+      referToOfficer: j['refer_to_officer'] == true,
+      ku: (j['ku'] as String?) ?? '',
+      en: (j['en'] as String?) ?? '',
+      inputsUsed: _list(j['inputs_used']),
+    );
+  }
 }

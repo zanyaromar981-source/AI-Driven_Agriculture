@@ -5,6 +5,7 @@ import '../../app_scope.dart';
 import '../../l10n/strings.dart';
 import '../../store/outbox.dart';
 import '../add_farm/farm_actions.dart';
+import '../doctor/ask_doctor_screen.dart';
 import '../history/field_history_screen.dart';
 import '../history/now_card.dart';
 import '../../theme.dart';
@@ -112,7 +113,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        bottomNavigationBar: english(const _TabBar()),
+        bottomNavigationBar: english(
+          _TabBar(
+            onAsk: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => AskDoctorScreen(farm: _farm),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -180,10 +189,12 @@ class _BackBar extends StatelessWidget {
   }
 }
 
-/// Home, Alerts, Ask the Doctor (raised), Settings. Only Home is built so far;
-/// tapping it from a farm goes back to My farms.
+/// Home, Alerts, Ask the Doctor (raised), Settings. Home goes back to My
+/// farms; Ask opens the Doctor for this farm. Alerts and Settings are not
+/// built yet.
 class _TabBar extends StatelessWidget {
-  const _TabBar();
+  const _TabBar({required this.onAsk});
+  final VoidCallback onAsk;
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +258,7 @@ class _TabBar extends StatelessWidget {
               tab(Icons.notifications_none_rounded, s.tabAlerts),
               Expanded(
                 child: InkWell(
-                  onTap: () => later(s.tabAsk),
+                  onTap: onAsk,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 4, bottom: 6),
                     child: FittedBox(

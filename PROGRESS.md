@@ -30,7 +30,7 @@ Last update: 2026-10-09 11:52
 
 ## In progress
 - Backend: hosted on a test server with a 12-hourly rain-against-normal job for the 33 districts; next are role-based dashboard routes, more data jobs (dams, fires, soil), touched cells with `inside_pct`, weekly plan
-- Flutter app, one screen at a time: next is Ask the Doctor (the tab bar is in place)
+- Flutter app: Ask the Doctor screens done (2026-10-09); backend route `POST /v1/farms/{id}/ask` and the Doctor service in the Codespace in progress; needs `GEMINI_API_KEY`
 - Review of the full farmer app design in Pencil (all 4 jobs done)
 - Ministry dashboard: wire `web/now.json` into the template (paused until the template is settled)
 
@@ -43,7 +43,7 @@ Last update: 2026-10-09 11:52
 - Map source: user dislikes the current map (asked for Google, then Leaflet). Leaflet map demo built in `web/map_demo/` for review
 
 ## Next
-- Flutter: Ask the Doctor, Report, Alerts, Settings (Home done; its Ask and Report buttons say "not built yet")
+- Flutter: Report, Alerts, Settings (Home and Ask the Doctor done; the Report button says "not built yet")
 - Flutter: Home labels to Sorani after a native speaker check
 - Flutter: set `kTestMode` to false before any release
 - Pitch deck: swap the AI satellite picture on slide 5 for a real Sentinel-2 capture, add team names, refresh the lake numbers on demo morning

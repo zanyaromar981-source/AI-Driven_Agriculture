@@ -8,6 +8,7 @@ import '../../store/local_store.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/farm_card.dart';
+import '../doctor/ask_doctor_screen.dart';
 import 'cell_card.dart';
 import 'farm_drawing.dart';
 import 'week_strip.dart';
@@ -405,7 +406,15 @@ class _FarmSectionState extends State<FarmSection> {
               s.compareLine(shape.neighbours(k), whole),
           ],
           onClose: () => setState(() => _cell = null),
-          onAsk: () => showToast(context, '${s.askSpot}: ${s.notBuilt}'),
+          onAsk: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => AskDoctorScreen(
+                farm: widget.summary,
+                cell: k,
+                cellLabel: shape.label(k),
+              ),
+            ),
+          ),
           onReport: () => showToast(context, '${s.reportHere}: ${s.notBuilt}'),
         );
       case FarmView.crops:
