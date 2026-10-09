@@ -351,8 +351,9 @@ Be honest on screen about this.
 
 | Data | State | Where it comes from |
 |---|---|---|
-| District rain and `dryness` | **live**, all 33 districts, refreshed every 12 hours | rain of the last 365 days against the 10 years before (Open-Meteo, ERA5). `dryness` is only that rain figure on a 0 to 100 scale (50 = normal rain, lower = wetter). It is **not** soil moisture or crop condition: label it "rain against normal". `greenness`, `water_need`, `best_crops` are empty. |
-| Fires | **live**, refreshed every 3 hours | NASA satellite detections inside the 33 districts, gas flares removed by a rule. About 3 hours behind the satellite. Nobody has checked the list by hand: call them "satellite fire detections", not confirmed fires. `area_ha`, wind and `farmers_alerted` are empty. |
+| District rain and `dryness` | **live**, all 33 districts, 37 months of history, refreshed every 12 hours | rain of the last 365 days against the 10 years before (Open-Meteo, ERA5). `dryness` is only that rain figure on a 0 to 100 scale (50 = normal rain, lower = wetter). It is **not** soil moisture or crop condition: label it "rain against normal". `change_vs_last_year`, the earlier years of a district and `/v1/region/compare` now have data. `water_need` and `best_crops` are empty. |
+| District `greenness` | being filled (a slow satellite service) | MODIS NDVI at 250 m inside the district, against the same 16 days of the 10 previous years, all land, not only cropland. Null until a district's picture has been fetched. |
+| Fires | **live**, refreshed every 3 hours, with wind | NASA satellite detections inside the 33 districts, gas flares removed by a rule. About 3 hours behind the satellite. Nobody has checked the list by hand: call them "satellite fire detections", not confirmed fires. `wind_kmh` and `wind_direction` (where the wind blows to) are from a weather model at the hour of detection; `farms_within_5km` counts registered farms. `area_ha` and `farmers_alerted` are empty. |
 | Nightly brief | **live** for the region and for districts that have farms | an AI agent reads our stored numbers and searches the web; show its sources |
 | Groundwater per farm | **live**, daily | section 4; the wider area, not a well |
 | Farmers and farms | the few test accounts people have made | the app |

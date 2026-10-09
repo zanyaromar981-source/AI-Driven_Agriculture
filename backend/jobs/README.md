@@ -4,21 +4,58 @@ Scripts that compute numbers and push them to the backend's `/v1/ingest` routes.
 
 ## region_runner.py
 
-Rain against normal for each of the 33 districts, every 12 hours.
+Rain and greenness against normal for each of the 33 districts, every 12 hours.
 
 - **Measured:** `rain_pct_of_normal`, the rain of the last 365 days at the district's centre against the same window in the 10 years before. Source: Open-Meteo archive (ERA5 reanalysis, cells of about 9 to 25 km). It is a district-scale figure, not a field-scale one.
-- **Derived, not measured:** `dryness` is the rain figure on the dashboard's 0 to 100 scale, `100 - rain% / 2`. Normal rain is 50. Soil moisture and greenness are not in it yet.
-- **Not computed:** greenness, water need, nitrogen hold, best crops.
+- **Derived, not measured:** `dryness` is the rain figure on the dashboard's 0 to 100 scale, `100 - rain% / 2`. Normal rain is 50. Soil moisture and greenness are not in it.
+- **Measured:** `greenness_pct_vs_normal`, from satellite (see "Greenness" below). Empty when there is no usable picture.
+- **Not computed:** water need, nitrogen hold, best crops. The backend only says that water need is "0 to 100, higher is more", with no rule for what a number means, so nothing honest can be put on that scale yet; and no data here can rank crops.
 
 The first run fetches eleven years of daily rain, two districts a minute, so it takes about 20 minutes. Later runs fetch only the last 40 days and take seconds. The rain is kept in `cache/rain.json`.
 
-Run by hand:
+Run by hand (`--dry-run` fetches and works out everything but pushes nothing, and needs no key):
 
 ```sh
 INGEST__SERVICE_KEY=... FARM_DOCTOR_API=http://localhost:8790/v1 python3 region_runner.py
 ```
 
 On the server it runs from a systemd timer (`farm-doctor-region-runner.timer`) at 00:15 and 12:15 UTC. See its last run with `journalctl -u farm-doctor-region-runner -n 50`.
+
+### Past months: `--backfill-months N`
+
+The dashboard compares a month with the same month one year earlier and in up to five earlier years, and it can only compare what is stored. A normal run stores the current month alone. Run once with `--backfill-months 36` and the job also pushes a reading for each of the 36 whole months before this one, each worked out exactly as today's is, as it stood on that month's last day: the 365 days ending then against the ten years before them.
+
+- It needs older rain than the daily run keeps (eleven years before the oldest month), and fetches the missing years once: about 5 minutes on a server that already has `cache/rain.json`, about 40 minutes from nothing (one district a minute).
+- A month is skipped, and logged, when fewer than 8 of its 10 earlier years have rain. The reading's `source` names the number of years really used.
+- The weather archive allows about 10,000 weighted calls a day from one address, and 33 districts times fourteen years is more than that. If it refuses, the job stops with the archive's own words; run it again later and it carries on from the cache.
+- Running it again pushes the same numbers again (the route is an upsert), so it is safe to repeat. The timer never backfills.
+
+### Greenness (`ndvi.py`)
+
+- **Source:** MODIS NDVI, product MOD13Q1 (Terra, 250 m pixels, one picture per 16 days), through the free ORNL DAAC subset service (`modis.ornl.gov/rst/api/v1`, no key).
+- **Where:** a square of about 19 km around the district's centre, keeping only the pixels inside the district's outline (`district_shapes.json`). Not the whole district.
+- **Which land:** all of it. Fields, rangeland, forest and towns in the square all count. **Cropland cannot be told from rangeland here**, so this is how green the land looks, not how the crops are doing.
+- **Water:** pixels that read as open water (NDVI below zero) are dropped. Without that, a lake fuller than in other years showed as land that lost its green: Ranya's square is half Dukan lake and read 27% below normal after a wet year. Some of that is left: the shore that is under water this year is missing from this year's mean and present in the dry years'.
+- **Clouds and snow:** pixels the product marks as cloud, snow or ice (pixel reliability 2 or 3) or leaves empty are dropped. A picture with fewer than half of its pixels left is not used, and the reading then has no greenness. In a cloudy or snowy winter the pixels that remain may be the lower, warmer ones.
+- **The figure:** mean NDVI of the picture against the mean of the same 16 days in each of the 10 years before, in percent (`0` is normal, `-20` is a fifth less green, as the backend defines it). At least 5 of the 10 years must be usable; the `source` names the number used and the day the picture starts.
+- **Which picture:** the latest one with half of its 16 days before the reading's day. A picture reaches the service two to four weeks after its 16 days began, so today's reading shows the land of two to six weeks ago. Older than 48 days and it is not used.
+- **Cost:** the service takes 3 to 8 seconds a call, one call at a time (four at once were slower in total). The newest picture with its ten earlier years is 22 calls a district: about 40 minutes for the 33 districts the first time. After that a run costs one call, plus 66 calls (about 8 minutes) once every 16 days when a new picture arrives, plus the earlier years of that picture if they are not cached yet. Everything fetched is kept in `cache/ndvi.json` and never asked for again.
+- **Time limit:** the job stops asking after `GREENNESS_MINUTES` (20 by default) and the next run carries on, so on a fresh server the greenness fills in over the first few runs. Readings go out without greenness until then. A service that is down never stops the rain.
+- **Past months:** with `--backfill-months` the job also wants the pictures of those months and their ten earlier years, about 13 years of pictures: some 2,000 calls. Measured on 9 Oct 2026: about 12 minutes a district, so 6 to 7 hours for all 33, and that evening the service stopped answering for hours. Do it once by hand with a long limit (below); it can be stopped and started again, and months without greenness are filled by running the backfill again.
+
+Fill the cache alone, without the backend, and print each district's NDVI:
+
+```sh
+GREENNESS_MINUTES=480 python3 ndvi.py --months 36    # all districts, today and 36 months back
+python3 ndvi.py sulaymaniyah                         # one district, today
+```
+
+The `source` of a reading is one of:
+
+```
+Open-Meteo ERA5, district centre: 365-day rain vs 10-yr normal; dryness=100-rain%/2; to 2026-10-08
+ERA5 rain 365d to 2026-10-08 vs 10y; dryness=100-rain%/2; MODIS NDVI all land from 2026-09-14 vs 10y
+```
 
 ## daily_brief.py
 
@@ -44,7 +81,10 @@ Satellite fire detections inside the 33 districts, every 3 hours, with gas flare
 - **Inside a district:** tested against the district outlines in `district_shapes.json` (made from `web/map_demo/kri_map_data.js`). Detections outside every district are dropped.
 - **Flares:** a flare burns at one spot day and night for weeks; a crop fire moves and is over in hours. The job remembers each spot of about 1 km and the days it was hot (`cache/fire_cells.json`, 30 days). A spot hot on 3 or more days, at night on at least 2 of them, counts as a flare, with the cells touching it. Its detections are not pushed. Every run logs how many were removed.
 - **What this gets wrong:** a real fire that burns in one place for 3 days and nights is hidden from its third day; a new flare shows as a fire for its first two days; on the first run the memory holds only 7 days, so some flares get through.
-- **Grouping:** detections within about 2 km on the same day are pushed as one fire, with the time of the latest detection and the number of farms within 5 km.
+- **Grouping:** detections within about 2 km on the same day are pushed as one fire, with the time of the latest detection.
+- **Wind:** `wind_kmh` and `wind_direction` are the wind 10 m above the ground at the fire's place in the hour of its latest detection, from Open-Meteo's weather model (one call per 50 fires). It is a model value for a cell of several km, not a measurement at the fire. The direction is where the wind blows **towards** (the way the fire is driven), so a wind from the north-east is pushed as `sw`. Kept in `cache/fire_wind.json`, so a fire is asked about once; if the weather service does not answer, the fire is pushed without wind.
+- **Farms nearby:** `farms_within_5km` is the number of farms whose centre lies within 5 km of the fire, from `GET /v1/ingest/farms`. `0` means the farms were read and none is near; empty means they could not be read.
+- **Sent empty:** `area_ha` (a detection is a hot pixel, not an outline, and no area is made up from the pixel size) and `farmers_alerted` (nobody is alerted yet).
 - **Other limits:** a detection reaches NASA's files about 3 hours after the satellite passed; a short fire between passes is never seen; burned area is not measured.
 
 First dry run, 9 Oct 2026: 3,048 detections in the box, 1,063 inside the districts, 284 of those removed as flares, 128 fires in the last 48 hours, most in Makhmur, Sumel, Qushtapa, Shekhan and Erbil. Whether those 128 are all real fires has not been checked by a person.
