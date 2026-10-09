@@ -690,7 +690,7 @@
                       "id": "mcp81",
                       "name": "Feature Text",
                       "fill": "#FFFFFF",
-                      "content": "See it from space",
+                      "content": "See it in 10 m squares",
                       "fontFamily": "$font-lat",
                       "fontSize": 26,
                       "fontWeight": "700"
@@ -1898,7 +1898,7 @@
                   "id": "b6Vjnv",
                   "name": "Chip Text",
                   "fill": "#FFFFFF",
-                  "content": "Nightly AI brief for 33 districts",
+                  "content": "Nightly AI brief for the region",
                   "fontFamily": "$font-lat",
                   "fontSize": 24,
                   "fontWeight": "700"
