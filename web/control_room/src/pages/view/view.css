@@ -1,0 +1,40 @@
+/* Public View page. */
+.pub { min-height: 100vh; display: flex; flex-direction: column; }
+.pub .pub-top .logo .word-ku { color: var(--ray); }
+.pub-main { flex: 1; width: 100%; max-width: 1480px; margin: 0 auto; padding: 18px 24px 40px; }
+.pub-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.pub-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; font-size: 13px; }
+.pub-chip i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.pub-chip .lab { color: var(--ink-2); }
+.pub-chip b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.pub-alert { display: flex; gap: 12px; align-items: flex-start; background: var(--warn-soft); border: 1px solid #EED9B4; border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; }
+.pub-alert b { display: block; margin: 2px 0; }
+.pub-tabs { display: flex; align-items: center; gap: 10px; }
+.pub-tabs .tabs { margin-bottom: 14px; }
+.pub-tab-ico { color: var(--ink-3); margin-bottom: 14px; display: grid; }
+.pub-panel h2 { font-size: 22px; }
+.pub-stat { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 12px; background: var(--bg); border-radius: 12px; flex-wrap: wrap; }
+.pub-stat b { font: 800 26px/1 var(--display); margin-inline-start: auto; }
+.pub-row { width: 100%; border: 0; background: none; text-align: start; font: inherit; color: inherit; }
+.pub-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.pub-k { background: var(--bg); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+.pub-k .v { font: 800 22px/1.15 var(--display); }
+.pub-k .v small { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+.pub-big { font: 800 44px/1.1 var(--display); margin: 8px 0 10px; font-variant-numeric: tabular-nums; }
+.pub-foot { border-top: 1px solid var(--line); background: var(--surface); padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; justify-content: center; text-align: center; font-size: 12.5px; color: var(--ink-2); }
+.pub .page-head .field select { width: auto; min-width: 110px; }
+@media (max-width: 1024px) { .pub-main { padding: 14px 16px 32px; } }
+@media (max-width: 640px) {
+  .pub-main { padding: 12px 12px 28px; }
+  .pub .pub-top .logo .word-ku { display: none; }
+  .pub-chip { padding: 6px 10px; font-size: 12px; }
+  .pub-big { font-size: 36px; }
+  .pub-tab-ico { display: none; }
+}
+/* Leaflet's own tooltip style wins over .map-label (loaded later); keep names as plain text on the map */
+.pub .leaflet-tooltip.map-label { background: none; border: 0; box-shadow: none; }
+/* in Kurdish, zoom buttons go to the right so the "Whole region" button (inline end) does not cover them */
+[dir=rtl] .pub .leaflet-top.leaflet-left { left: auto; right: 0; }
+[dir=rtl] .pub .leaflet-top.leaflet-left .leaflet-control { margin-left: 0; margin-right: 10px; }
+.pub-foot .pill { white-space: normal; }
+@media (max-width: 640px) { .pub .card-head > .muted { flex-basis: 100%; } }
