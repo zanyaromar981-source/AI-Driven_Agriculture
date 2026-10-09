@@ -359,6 +359,14 @@ The app's centre button (Ask the Doctor) already sends `POST /v1/farms/{id}/ask`
 
 The fastest way, already tested on a Mac: run `farm_doctor/doctor_service.py` next to the backend on the test server (`DOCTOR_URL=http://127.0.0.1:8090`). It already does steps 1 and 3 and today calls Gemini or Claude in step 2 (`FARM_DOCTOR_PROVIDER`). A `codex` provider that runs `codex exec` with the photos is the only missing piece; it lives in `farm_doctor/` and the app side can add it. The other way is for the backend to call `codex exec` itself, as `backend/jobs/daily_brief.py` does.
 
+### 2.16 Found while building the website against build 1.6.0 (2026-10-09)
+1. **CORS:** add the site's address to `HTTP__CORS_ORIGINS`, plus `http://localhost:5173` and `http://127.0.0.1:5173` for development. Today the site only works through the Vite proxy.
+2. **Idempotency-Key on POST /dashboard/farmers** is ignored: a retry after a lost answer gets `409 already_exists`. The site recovers by reading `?phone=`, but please honour the key like the other POSTs.
+3. **Second DELETE** of a staff member or role answers 404. The site treats it as done; fine to keep, noted here so it stays that way.
+4. **Letter permission:** API.md says issuing a letter needs `farmers:create`, FRONTEND.md says `farmers:read`. Please settle which one in FRONTEND.md; the site follows FRONTEND.md.
+5. **API.md** does not list `GET /v1/crops` and the `/dashboard/crops` routes yet (FRONTEND.md does).
+6. **Yields:** every crop has `yield_kg_per_dunam: null`, so expected harvest on the Crops page and the reports shows "-". Fill the yields (agronomy source) and the numbers appear with no site change.
+
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
 - The app keeps the last farms list and, per farm, the last farm, `status` and `plan`. On opening it shows that copy at once, asks the server, and swaps in the fresh answer; if the server fails or there is no internet, the copy stays on screen with its date (since 2026-10-08 21:44). So every open still makes the normal calls. The backend sets `Cache-Control: max-age` honestly (status: 1 day; plan: 6 hours).
