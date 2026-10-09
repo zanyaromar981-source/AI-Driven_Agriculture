@@ -354,6 +354,165 @@ class FakeApi implements Api {
     );
   }
 
+  /// Reports sent in this run, newest first (demo only, not saved).
+  final List<FarmerMessage> _sent = [];
+
+  /// Alerts the farmer ticked as done (demo only).
+  final Set<String> doneAlerts = {};
+
+  @override
+  Future<FarmerProfile> getMe() async {
+    await _online();
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    await Future<void>.delayed(_latency);
+    return FarmerProfile(phone: _phone ?? '');
+  }
+
+  /// The alerts of the design (Screen/Alerts), dated from today.
+  @override
+  Future<List<FarmAlert>> getAlerts(String farmId) async {
+    await _online();
+    await _load();
+    _ownFarm(farmId);
+    await Future<void>.delayed(_latency);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    FarmAlert a(
+      String id,
+      String type,
+      String level,
+      String conf,
+      String en,
+      String action,
+      int daysAgo,
+      int h,
+      int m,
+    ) => FarmAlert(
+      id: id,
+      type: type,
+      level: level,
+      confidence: conf,
+      en: en,
+      actionEn: action,
+      day: today
+          .subtract(Duration(days: daysAgo))
+          .add(Duration(hours: h, minutes: m)),
+      done: daysAgo > 0 || doneAlerts.contains(id),
+    );
+    return [
+      a(
+        'a1',
+        'frost',
+        'alarm',
+        'sure',
+        'Frost -3 tonight',
+        'Check the heads in 7 to 10 days. Nothing to spray.',
+        0,
+        6,
+        10,
+      ),
+      a(
+        'a2',
+        'rust_weather',
+        'watch',
+        'likely',
+        'Rust weather Tue to Thu',
+        'Check the flag leaves in the north-east corner.',
+        0,
+        6,
+        10,
+      ),
+      a(
+        'a3',
+        'dust',
+        'alarm',
+        'sure',
+        'Dust storm Thursday',
+        'Delay spraying and harvest, shelter animals.',
+        1,
+        18,
+        40,
+      ),
+      a(
+        'a4',
+        'urea_rain',
+        'watch',
+        'likely',
+        'Urea rain Friday',
+        'Spread urea on dry soil before the 14 mm rain.',
+        5,
+        7,
+        0,
+      ),
+      a(
+        'a5',
+        'field_drop',
+        'alarm',
+        'sure',
+        'Field dropped 20%',
+        '12 cells in the north-east corner, since 25 Sep.',
+        6,
+        9,
+        15,
+      ),
+    ];
+  }
+
+  @override
+  Future<FarmerMessage> sendReport(
+    NewReport report, {
+    String? idempotencyKey,
+  }) async {
+    await _online();
+    await _load();
+    _ownFarm(report.farmId);
+    await Future<void>.delayed(_latency);
+    final m = FarmerMessage(
+      id: 'm${_sent.length + 3}',
+      kind: 'report',
+      text: report.text,
+      state: 'new',
+      farmId: report.farmId,
+      createdAt: DateTime.now(),
+    );
+    _sent.insert(0, m);
+    return m;
+  }
+
+  /// The reports of the design (Screen/Report), after any sent in this run.
+  @override
+  Future<List<FarmerMessage>> getMyMessages() async {
+    await _online();
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    await Future<void>.delayed(_latency);
+    final now = DateTime.now();
+    return [
+      ..._sent,
+      FarmerMessage(
+        id: 'm2',
+        kind: 'report',
+        text: 'Yellow stripes, square E12',
+        state: 'read',
+        createdAt: now.subtract(const Duration(days: 4)),
+      ),
+      FarmerMessage(
+        id: 'm1',
+        kind: 'report',
+        text: 'Insects, square B4',
+        state: 'new',
+        createdAt: now.subtract(const Duration(days: 11)),
+      ),
+    ];
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _online();
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    await Future<void>.delayed(_latency);
+    _token = null;
+  }
+
   @override
   Future<FarmPlan> getPlan(String id) async {
     await _online();
@@ -908,6 +1067,345 @@ class FakeApi implements Api {
       'centroid': {'lat': 36.04, 'lon': 44.61},
     },
   ];
+
+  // ---- Alwa market (BACKEND.md 2.14 as the app wants it) ----
+  //
+  // Sample sellers around Sulaymaniyah, placed by distance from the city
+  // centre, and four listings of the signed-in farmer (open, closing soon,
+  // sold, closed). A phone ending in 0 has no listings of its own. All
+  // numbers are sample values, like the design.
+
+  static const _alwaCentre = (lat: 35.5617, lon: 45.4329);
+
+  /// km to the north-east of the centre, as a point.
+  static ({double lat, double lon}) _alwaAt(double km, double bearingDeg) {
+    final b = bearingDeg * math.pi / 180;
+    return (
+      lat: _alwaCentre.lat + km * math.cos(b) / 111.0,
+      lon: _alwaCentre.lon + km * math.sin(b) / 90.4,
+    );
+  }
+
+  static String _alwaTime(DateTime t) => isoUtc(t);
+
+  /// crop, IQD/kg, kg, km away, bearing, days left (0 = 18 hours), days ago.
+  static const _alwaSellers = [
+    ('tomato', 700, 4000, 2.0, 40, 12, 2, '+9647704128890'),
+    ('cucumber', 560, 1500, 4.0, 120, 0, 13, '+9647501112233'),
+    ('watermelon', 250, 8000, 9.0, 200, 9, 5, '+9647719876543'),
+    ('potato', 520, 6000, 15.0, 300, 14, 0, '+9647502223344'),
+    ('onion', 380, 3000, 18.0, 10, 11, 3, '+9647703334455'),
+    ('wheat', 840, 20000, 22.0, 80, 13, 1, '+9647504445566'),
+    ('grape', 1200, 900, 25.0, 160, 6, 8, '+9647715556677'),
+    ('eggplant', 450, 1200, 27.0, 250, 10, 4, '+9647506667788'),
+    ('pepper', 900, 600, 30.0, 330, 7, 7, '+9647707778899'),
+    ('olive', 1500, 700, 34.0, 60, 12, 2, '+9647508889900'),
+    ('chickpea', 1300, 2000, 41.0, 140, 8, 6, '+9647709990011'),
+    ('barley', 410, 10000, 45.0, 220, 14, 0, '+9647500001122'),
+    ('apple', 1100, 1500, 52.0, 280, 5, 9, '+9647711113344'),
+    ('pomegranate', 1600, 800, 60.0, 20, 9, 5, '+9647502224466'),
+  ];
+
+  List<Map<String, dynamic>>? _alwaMineJson;
+  final Map<String, Map<String, dynamic>> _alwaByKey = {};
+  int _alwaNextId = 900;
+
+  Map<String, dynamic> _alwaJson({
+    required String id,
+    required String crop,
+    required num price,
+    required num kg,
+    required String status,
+    required DateTime created,
+    required DateTime closes,
+    required double lat,
+    required double lon,
+    required String phone,
+    DateTime? sold,
+  }) => {
+    'id': id,
+    'crop': crop,
+    'quantity_kg': kg,
+    'asking_price_iqd_per_kg': price,
+    'status': status,
+    'created_at': _alwaTime(created),
+    'closes_at': _alwaTime(closes),
+    'lat': lat,
+    'lon': lon,
+    'seller_phone': phone,
+    'sold_at': sold == null ? null : _alwaTime(sold),
+  };
+
+  List<Map<String, dynamic>> _alwaSellersJson() {
+    final now = DateTime.now();
+    return [
+      for (final (i, l) in _alwaSellers.indexed)
+        _alwaJson(
+          id: '${100 + i}',
+          crop: l.$1,
+          price: l.$2,
+          kg: l.$3,
+          status: 'open',
+          created: now.subtract(Duration(days: l.$7, hours: 1)),
+          closes: l.$6 == 0
+              ? now.add(const Duration(hours: 18))
+              : now.add(Duration(days: l.$6)),
+          lat: _alwaAt(l.$4, l.$5.toDouble()).lat,
+          lon: _alwaAt(l.$4, l.$5.toDouble()).lon,
+          phone: l.$8,
+        ),
+    ];
+  }
+
+  /// The signed-in farmer's listings (made once per run).
+  List<Map<String, dynamic>> _alwaMine() {
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    if (_alwaMineJson != null) return _alwaMineJson!;
+    final phone = _phone ?? '';
+    final now = DateTime.now();
+    final at = _alwaAt(1.2, 90);
+    Map<String, dynamic> mine(
+      String id,
+      String crop,
+      num price,
+      num kg,
+      String status,
+      Duration ago,
+      Duration closesIn, {
+      Duration? soldAgo,
+    }) => _alwaJson(
+      id: id,
+      crop: crop,
+      price: price,
+      kg: kg,
+      status: status,
+      created: now.subtract(ago),
+      closes: now.add(closesIn),
+      lat: at.lat,
+      lon: at.lon,
+      phone: phone,
+      sold: soldAgo == null ? null : now.subtract(soldAgo),
+    );
+    return _alwaMineJson = phone.endsWith('0')
+        ? []
+        : [
+            mine(
+              '801',
+              'tomato',
+              700,
+              4000,
+              'open',
+              const Duration(days: 2),
+              const Duration(days: 12),
+            ),
+            mine(
+              '802',
+              'cucumber',
+              560,
+              1500,
+              'open',
+              const Duration(days: 13),
+              const Duration(hours: 18),
+            ),
+            mine(
+              '803',
+              'potato',
+              600,
+              6000,
+              'sold',
+              const Duration(days: 8),
+              const Duration(days: 6),
+              soldAgo: const Duration(days: 4),
+            ),
+            mine(
+              '804',
+              'barley',
+              420,
+              5000,
+              'closed',
+              const Duration(days: 22),
+              const Duration(days: -8),
+            ),
+          ];
+  }
+
+  @override
+  Future<List<AlwaListing>> alwaListings({double? lat, double? lon}) async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    // The farmer's own new listings show to buyers too.
+    final created = (_alwaMineJson ?? const <Map<String, dynamic>>[]).where(
+      (l) => l['status'] == 'open' && int.parse(l['id'] as String) >= 900,
+    );
+    final all = [...created, ..._alwaSellersJson()];
+    if (lat != null && lon != null) {
+      for (final l in all) {
+        l['distance_km'] = alwaKm(
+          lat,
+          lon,
+          l['lat'] as double,
+          l['lon'] as double,
+        );
+      }
+      all.sort(
+        (a, b) =>
+            (a['distance_km'] as double).compareTo(b['distance_km'] as double),
+      );
+    }
+    return [for (final l in all) AlwaListing.fromJson(l)];
+  }
+
+  @override
+  Future<AlwaListing> alwaListing(String id) async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    final all = [...?_alwaMineJson, ..._alwaSellersJson()];
+    final f = all.where((l) => l['id'] == id);
+    if (f.isEmpty) throw ApiException(404, 'not_found');
+    return AlwaListing.fromJson(f.first);
+  }
+
+  @override
+  Future<AlwaListing> createAlwaListing(
+    NewAlwaListing listing, {
+    String? idempotencyKey,
+  }) async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    final mine = _alwaMine();
+    final again = idempotencyKey == null ? null : _alwaByKey[idempotencyKey];
+    if (again != null) return AlwaListing.fromJson(again);
+    if (listing.quantityKg <= 0 ||
+        listing.priceIqdPerKg <= 0 ||
+        listing.days < 1 ||
+        listing.days > kAlwaMaxDays) {
+      throw ApiException(422, 'invalid');
+    }
+    if (mine.where((l) => l['status'] == 'open').length >= kAlwaMaxOpen) {
+      throw ApiException(409, 'too_many_listings');
+    }
+    final now = DateTime.now();
+    final j = _alwaJson(
+      id: '${_alwaNextId++}',
+      crop: listing.crop,
+      price: listing.priceIqdPerKg,
+      kg: listing.quantityKg,
+      status: 'open',
+      created: now,
+      closes: now.add(Duration(days: listing.days)),
+      lat: listing.lat,
+      lon: listing.lon,
+      phone: _phone ?? '',
+    );
+    mine.insert(0, j);
+    if (idempotencyKey != null) _alwaByKey[idempotencyKey] = j;
+    return AlwaListing.fromJson(j);
+  }
+
+  @override
+  Future<List<AlwaListing>> myAlwaListings() async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    return [
+      for (final l in _alwaMine())
+        if (l['status'] != 'cancelled') AlwaListing.fromJson(l),
+    ];
+  }
+
+  @override
+  Future<void> cancelAlwaListing(String id) async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    // The app's Delete: gone from My listings, whatever its status.
+    _alwaMine().removeWhere((l) => l['id'] == id);
+  }
+
+  @override
+  Future<AlwaListing> markAlwaListingSold(String id) async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    final f = _alwaMine().where((l) => l['id'] == id);
+    if (f.isEmpty) throw ApiException(404, 'not_found');
+    final l = f.first;
+    if (l['status'] != 'open') throw ApiException(409, 'listing_not_open');
+    l['status'] = 'sold';
+    l['sold_at'] = _alwaTime(DateTime.now());
+    return AlwaListing.fromJson(l);
+  }
+
+  static const _alwaMarkets = [
+    AlwaMarket(
+      slug: 'sulaymaniyah',
+      nameEn: 'Sulaymaniyah',
+      nameKu: 'سلێمانی',
+      lat: 35.5617,
+      lon: 45.4329,
+    ),
+    AlwaMarket(
+      slug: 'erbil',
+      nameEn: 'Erbil',
+      nameKu: 'هەولێر',
+      lat: 36.1911,
+      lon: 44.0092,
+    ),
+    AlwaMarket(
+      slug: 'duhok',
+      nameEn: 'Duhok',
+      nameKu: 'دهۆک',
+      lat: 36.8669,
+      lon: 42.9503,
+    ),
+  ];
+
+  @override
+  Future<AlwaPriceBoard?> alwaPriceBoard({double? lat, double? lon}) async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    final market = AlwaMarket.pick(_alwaMarkets, lat, lon)!;
+    final now = DateTime.now();
+    final day =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    return AlwaPriceBoard.fromJson(
+      {
+        'day': day,
+        'market': market.slug,
+        'prices': [
+          {
+            'crop': 'tomato',
+            'price_iqd_per_kg': 750,
+            'change_pct_7d': 7,
+            'fixed': false,
+          },
+          {
+            'crop': 'cucumber',
+            'price_iqd_per_kg': 500,
+            'change_pct_7d': -4,
+            'fixed': false,
+          },
+          {
+            'crop': 'potato',
+            'price_iqd_per_kg': 600,
+            'change_pct_7d': 0,
+            'fixed': false,
+          },
+          {
+            'crop': 'onion',
+            'price_iqd_per_kg': 400,
+            'change_pct_7d': null,
+            'fixed': false,
+          },
+          {
+            'crop': 'wheat',
+            'price_iqd_per_kg': 850,
+            'change_pct_7d': null,
+            'fixed': true,
+          },
+        ],
+      },
+      market,
+      nearest: lat != null && lon != null,
+    );
+  }
 }
 
 const _demoInsights = r'''
