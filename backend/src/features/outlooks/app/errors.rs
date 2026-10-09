@@ -44,6 +44,26 @@ pub enum AppError {
 
     #[error("No outlook was issued for season {season} in {issued}")]
     IssueNotFound { season: String, issued: String },
+
+    #[error("The zone {zone_slug} already has an outlook for season {season} issued in {issued}")]
+    ZoneOutlookAlreadyExists {
+        zone_slug: String,
+        season: String,
+        issued: String,
+    },
+
+    #[error("The zone {zone_slug} has no outlook for season {season} issued in {issued}")]
+    ZoneOutlookNotFound {
+        zone_slug: String,
+        season: String,
+        issued: String,
+    },
+
+    #[error("Season {season} already has a track record for the issue of {issued}")]
+    RunAlreadyExists { season: String, issued: String },
+
+    #[error("Season {season} has no track record for the issue of {issued}")]
+    RunNotFound { season: String, issued: String },
 }
 
 impl ToErrorInfo for AppError {
@@ -54,8 +74,11 @@ impl ToErrorInfo for AppError {
             AppError::GlobalAppError(err) => err.to_error_info(),
             AppError::NoOutlookIssued
             | AppError::SeasonNotIssued(_)
-            | AppError::IssueNotFound { .. } => {
-                ErrorInfo::new(ErrorKind::NotFound, self.to_string())
+            | AppError::IssueNotFound { .. }
+            | AppError::ZoneOutlookNotFound { .. }
+            | AppError::RunNotFound { .. } => ErrorInfo::new(ErrorKind::NotFound, self.to_string()),
+            AppError::ZoneOutlookAlreadyExists { .. } | AppError::RunAlreadyExists { .. } => {
+                ErrorInfo::with_code(ErrorKind::Conflict, "already_exists", self.to_string())
             }
         }
     }

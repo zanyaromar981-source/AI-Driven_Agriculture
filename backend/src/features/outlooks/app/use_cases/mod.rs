@@ -1,9 +1,25 @@
+pub mod create_outlook_run;
+pub mod create_zone_outlook;
+pub mod delete_outlook_run;
+pub mod delete_zone_outlook;
+pub mod list_outlook_runs;
+pub mod list_zone_outlooks;
 pub mod record_outlook_run;
 pub mod record_zone_outlook;
+pub mod update_outlook_run;
+pub mod update_zone_outlook;
 pub mod view_season_outlook;
 pub mod view_zone_outlook;
 
+pub use create_outlook_run::*;
+pub use create_zone_outlook::*;
+pub use delete_outlook_run::*;
+pub use delete_zone_outlook::*;
+pub use list_outlook_runs::*;
+pub use list_zone_outlooks::*;
 pub use record_outlook_run::*;
 pub use record_zone_outlook::*;
+pub use update_outlook_run::*;
+pub use update_zone_outlook::*;
 pub use view_season_outlook::*;
 pub use view_zone_outlook::*;

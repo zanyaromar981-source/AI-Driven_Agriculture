@@ -20,7 +20,11 @@ use crate::{
         dams::{
             app::{
                 DamRepository,
-                use_cases::{ListDamsUseCase, RecordDamReadingUseCase, ViewDamHistoryUseCase},
+                use_cases::{
+                    CreateDamReadingUseCase, DeleteDamReadingUseCase, ListDamReadingsUseCase,
+                    ListDamsUseCase, ListReferenceDamsUseCase, RecordDamReadingUseCase,
+                    UpdateDamReadingUseCase, ViewDamHistoryUseCase,
+                },
             },
             infra::DamPostgresRepository,
         },
@@ -82,8 +86,10 @@ use crate::{
             app::{
                 OutlookRepository,
                 use_cases::{
-                    RecordOutlookRunUseCase, RecordZoneOutlookUseCase, ViewSeasonOutlookUseCase,
-                    ViewZoneOutlookUseCase,
+                    CreateOutlookRunUseCase, CreateZoneOutlookUseCase, DeleteOutlookRunUseCase,
+                    DeleteZoneOutlookUseCase, ListOutlookRunsUseCase, ListZoneOutlooksUseCase,
+                    RecordOutlookRunUseCase, RecordZoneOutlookUseCase, UpdateOutlookRunUseCase,
+                    UpdateZoneOutlookUseCase, ViewSeasonOutlookUseCase, ViewZoneOutlookUseCase,
                 },
             },
             infra::OutlookPostgresRepository,
@@ -107,7 +113,10 @@ use crate::{
             app::{
                 WaterPlanRepository,
                 use_cases::{
-                    RemoveWaterPlanEntryUseCase, SetWaterPlanEntryUseCase, ViewWaterPlanUseCase,
+                    CreateWaterPlanEntryUseCase, DeleteWaterPlanEntryUseCase,
+                    ListWaterPlanEntriesUseCase, ListWaterSeasonsUseCase,
+                    RemoveWaterPlanEntryUseCase, SetWaterPlanEntryUseCase,
+                    UpdateWaterPlanEntryUseCase, ViewWaterPlanUseCase,
                 },
             },
             infra::WaterPlanPostgresRepository,
@@ -335,7 +344,14 @@ pub async fn di_init(
     let dam = DamFeature {
         list_dams_use_case: Arc::new(ListDamsUseCase::new(dam_repository.clone())),
         view_dam_history_use_case: Arc::new(ViewDamHistoryUseCase::new(dam_repository.clone())),
-        record_dam_reading_use_case: Arc::new(RecordDamReadingUseCase::new(dam_repository)),
+        record_dam_reading_use_case: Arc::new(RecordDamReadingUseCase::new(dam_repository.clone())),
+        list_reference_dams_use_case: Arc::new(ListReferenceDamsUseCase::new(
+            dam_repository.clone(),
+        )),
+        list_dam_readings_use_case: Arc::new(ListDamReadingsUseCase::new(dam_repository.clone())),
+        create_dam_reading_use_case: Arc::new(CreateDamReadingUseCase::new(dam_repository.clone())),
+        update_dam_reading_use_case: Arc::new(UpdateDamReadingUseCase::new(dam_repository.clone())),
+        delete_dam_reading_use_case: Arc::new(DeleteDamReadingUseCase::new(dam_repository)),
     };
 
     let outlook_repository: Arc<dyn OutlookRepository> =
@@ -351,7 +367,31 @@ pub async fn di_init(
         record_zone_outlook_use_case: Arc::new(RecordZoneOutlookUseCase::new(
             outlook_repository.clone(),
         )),
-        record_outlook_run_use_case: Arc::new(RecordOutlookRunUseCase::new(outlook_repository)),
+        record_outlook_run_use_case: Arc::new(RecordOutlookRunUseCase::new(
+            outlook_repository.clone(),
+        )),
+        list_zone_outlooks_use_case: Arc::new(ListZoneOutlooksUseCase::new(
+            outlook_repository.clone(),
+        )),
+        create_zone_outlook_use_case: Arc::new(CreateZoneOutlookUseCase::new(
+            outlook_repository.clone(),
+        )),
+        update_zone_outlook_use_case: Arc::new(UpdateZoneOutlookUseCase::new(
+            outlook_repository.clone(),
+        )),
+        delete_zone_outlook_use_case: Arc::new(DeleteZoneOutlookUseCase::new(
+            outlook_repository.clone(),
+        )),
+        list_outlook_runs_use_case: Arc::new(ListOutlookRunsUseCase::new(
+            outlook_repository.clone(),
+        )),
+        create_outlook_run_use_case: Arc::new(CreateOutlookRunUseCase::new(
+            outlook_repository.clone(),
+        )),
+        update_outlook_run_use_case: Arc::new(UpdateOutlookRunUseCase::new(
+            outlook_repository.clone(),
+        )),
+        delete_outlook_run_use_case: Arc::new(DeleteOutlookRunUseCase::new(outlook_repository)),
     };
 
     let water_plan_repository: Arc<dyn WaterPlanRepository> =
@@ -365,6 +405,21 @@ pub async fn di_init(
             water_plan_repository.clone(),
         )),
         remove_water_plan_entry_use_case: Arc::new(RemoveWaterPlanEntryUseCase::new(
+            water_plan_repository.clone(),
+        )),
+        list_water_seasons_use_case: Arc::new(ListWaterSeasonsUseCase::new(
+            water_plan_repository.clone(),
+        )),
+        list_water_plan_entries_use_case: Arc::new(ListWaterPlanEntriesUseCase::new(
+            water_plan_repository.clone(),
+        )),
+        create_water_plan_entry_use_case: Arc::new(CreateWaterPlanEntryUseCase::new(
+            water_plan_repository.clone(),
+        )),
+        update_water_plan_entry_use_case: Arc::new(UpdateWaterPlanEntryUseCase::new(
+            water_plan_repository.clone(),
+        )),
+        delete_water_plan_entry_use_case: Arc::new(DeleteWaterPlanEntryUseCase::new(
             water_plan_repository,
         )),
     };

@@ -12,7 +12,10 @@ use farm_doctor_api::{
             ingest_routes as alwa_ingest_routes, public_routes as alwa_public_routes,
             routes as alwa_routes,
         },
-        dams::web::{ingest_routes as dam_ingest_routes, public_routes as dam_public_routes},
+        dams::web::{
+            dashboard_routes as dam_dashboard_routes, ingest_routes as dam_ingest_routes,
+            public_routes as dam_public_routes,
+        },
         farmers::web::{
             dashboard_routes as farmer_dashboard_routes, public_routes as farmer_public_routes,
             routes as farmer_routes,
@@ -27,7 +30,8 @@ use farm_doctor_api::{
             routes as insight_routes,
         },
         outlooks::web::{
-            ingest_routes as outlook_ingest_routes, public_routes as outlook_public_routes,
+            dashboard_routes as outlook_dashboard_routes, ingest_routes as outlook_ingest_routes,
+            public_routes as outlook_public_routes,
         },
         staff::{
             app::use_cases::CreateOwnerInput,
@@ -36,7 +40,10 @@ use farm_doctor_api::{
                 dashboard_routes as staff_dashboard_routes,
             },
         },
-        water::web::{ingest_routes as water_ingest_routes, public_routes as water_public_routes},
+        water::web::{
+            dashboard_routes as water_dashboard_routes, ingest_routes as water_ingest_routes,
+            public_routes as water_public_routes,
+        },
         zones::web::{
             dashboard_routes as zone_dashboard_routes, ingest_routes as zone_ingest_routes,
             public_routes as zone_public_routes,
@@ -126,10 +133,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     "/dashboard",
                     Router::new()
                         .merge(staff_dashboard_routes())
+                        .merge(dam_dashboard_routes())
                         .merge(farm_dashboard_routes())
                         .merge(farmer_dashboard_routes())
                         .merge(fire_dashboard_routes())
                         .merge(insight_dashboard_routes())
+                        .merge(outlook_dashboard_routes())
+                        .merge(water_dashboard_routes())
                         .merge(zone_dashboard_routes())
                         .layer(middleware::from_fn_with_state(state.clone(), staff_auth))
                         .merge(staff_dashboard_public_routes()),

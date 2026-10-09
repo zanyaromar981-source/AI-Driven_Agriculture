@@ -20,4 +20,16 @@ pub trait WaterPlanRepository: Send + Sync + std::fmt::Debug {
 
     /// Removes the entry. Returns whether there was one to remove.
     async fn delete(&self, season: &Season, zone_slug: &ZoneSlug) -> Result<bool, AppError>;
+
+    /// Returns every season that has at least one entry, newest first, each
+    /// season once.
+    async fn find_seasons(&self) -> Result<Vec<Season>, AppError>;
+
+    /// Stores the entry only if its season has none for that zone. Returns
+    /// None, with nothing written, when there already was one.
+    async fn create(&self, entry: &WaterPlanEntry) -> Result<Option<WaterPlanEntry>, AppError>;
+
+    /// Replaces every non-key field of the entry for that season and zone.
+    /// Returns None, with nothing written, when there is no such entry.
+    async fn update(&self, entry: &WaterPlanEntry) -> Result<Option<WaterPlanEntry>, AppError>;
 }

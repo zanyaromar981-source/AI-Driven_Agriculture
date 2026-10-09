@@ -10,7 +10,11 @@ use crate::{
             PostListingUseCase, RecordPriceUseCase, ViewListingUseCase, ViewMarketPricesUseCase,
             ViewPriceHistoryUseCase,
         },
-        dams::app::use_cases::{ListDamsUseCase, RecordDamReadingUseCase, ViewDamHistoryUseCase},
+        dams::app::use_cases::{
+            CreateDamReadingUseCase, DeleteDamReadingUseCase, ListDamReadingsUseCase,
+            ListDamsUseCase, ListReferenceDamsUseCase, RecordDamReadingUseCase,
+            UpdateDamReadingUseCase, ViewDamHistoryUseCase,
+        },
         farmers::app::use_cases::{
             EditFarmerUseCase, EditProfileUseCase, ListFarmersUseCase, RegisterFarmerUseCase,
             RemoveFarmerUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
@@ -31,8 +35,10 @@ use crate::{
             ViewStoredFarmInsightsUseCase,
         },
         outlooks::app::use_cases::{
-            RecordOutlookRunUseCase, RecordZoneOutlookUseCase, ViewSeasonOutlookUseCase,
-            ViewZoneOutlookUseCase,
+            CreateOutlookRunUseCase, CreateZoneOutlookUseCase, DeleteOutlookRunUseCase,
+            DeleteZoneOutlookUseCase, ListOutlookRunsUseCase, ListZoneOutlooksUseCase,
+            RecordOutlookRunUseCase, RecordZoneOutlookUseCase, UpdateOutlookRunUseCase,
+            UpdateZoneOutlookUseCase, ViewSeasonOutlookUseCase, ViewZoneOutlookUseCase,
         },
         staff::app::use_cases::{
             AddStaffUseCase, CreateOwnerUseCase, CreateRoleUseCase, DeleteRoleUseCase,
@@ -40,7 +46,9 @@ use crate::{
             ListStaffUseCase, RemoveStaffUseCase, SignInUseCase, ViewRoleUseCase, ViewStaffUseCase,
         },
         water::app::use_cases::{
-            RemoveWaterPlanEntryUseCase, SetWaterPlanEntryUseCase, ViewWaterPlanUseCase,
+            CreateWaterPlanEntryUseCase, DeleteWaterPlanEntryUseCase, ListWaterPlanEntriesUseCase,
+            ListWaterSeasonsUseCase, RemoveWaterPlanEntryUseCase, SetWaterPlanEntryUseCase,
+            UpdateWaterPlanEntryUseCase, ViewWaterPlanUseCase,
         },
         zones::app::use_cases::{
             CompareYearsUseCase, CreateSubZoneReadingUseCase, CreateZoneReadingUseCase,
@@ -125,6 +133,11 @@ pub struct DamFeature {
     pub list_dams_use_case: Arc<ListDamsUseCase>,
     pub view_dam_history_use_case: Arc<ViewDamHistoryUseCase>,
     pub record_dam_reading_use_case: Arc<RecordDamReadingUseCase>,
+    pub list_reference_dams_use_case: Arc<ListReferenceDamsUseCase>,
+    pub list_dam_readings_use_case: Arc<ListDamReadingsUseCase>,
+    pub create_dam_reading_use_case: Arc<CreateDamReadingUseCase>,
+    pub update_dam_reading_use_case: Arc<UpdateDamReadingUseCase>,
+    pub delete_dam_reading_use_case: Arc<DeleteDamReadingUseCase>,
 }
 
 #[derive(Clone)]
@@ -133,6 +146,14 @@ pub struct OutlookFeature {
     pub view_zone_outlook_use_case: Arc<ViewZoneOutlookUseCase>,
     pub record_zone_outlook_use_case: Arc<RecordZoneOutlookUseCase>,
     pub record_outlook_run_use_case: Arc<RecordOutlookRunUseCase>,
+    pub list_zone_outlooks_use_case: Arc<ListZoneOutlooksUseCase>,
+    pub create_zone_outlook_use_case: Arc<CreateZoneOutlookUseCase>,
+    pub update_zone_outlook_use_case: Arc<UpdateZoneOutlookUseCase>,
+    pub delete_zone_outlook_use_case: Arc<DeleteZoneOutlookUseCase>,
+    pub list_outlook_runs_use_case: Arc<ListOutlookRunsUseCase>,
+    pub create_outlook_run_use_case: Arc<CreateOutlookRunUseCase>,
+    pub update_outlook_run_use_case: Arc<UpdateOutlookRunUseCase>,
+    pub delete_outlook_run_use_case: Arc<DeleteOutlookRunUseCase>,
 }
 
 #[derive(Clone)]
@@ -140,6 +161,11 @@ pub struct WaterFeature {
     pub view_water_plan_use_case: Arc<ViewWaterPlanUseCase>,
     pub set_water_plan_entry_use_case: Arc<SetWaterPlanEntryUseCase>,
     pub remove_water_plan_entry_use_case: Arc<RemoveWaterPlanEntryUseCase>,
+    pub list_water_seasons_use_case: Arc<ListWaterSeasonsUseCase>,
+    pub list_water_plan_entries_use_case: Arc<ListWaterPlanEntriesUseCase>,
+    pub create_water_plan_entry_use_case: Arc<CreateWaterPlanEntryUseCase>,
+    pub update_water_plan_entry_use_case: Arc<UpdateWaterPlanEntryUseCase>,
+    pub delete_water_plan_entry_use_case: Arc<DeleteWaterPlanEntryUseCase>,
 }
 
 #[derive(Clone)]

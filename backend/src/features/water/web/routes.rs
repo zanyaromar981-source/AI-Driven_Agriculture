@@ -1,9 +1,13 @@
 use axum::{
     Router,
-    routing::{get, put},
+    routing::{delete, get, post, put},
 };
 
-use crate::shared::AppState;
+use crate::{
+    app::{Action, Resource},
+    require,
+    shared::AppState,
+};
 
 use super::handlers;
 
@@ -18,4 +22,34 @@ pub fn ingest_routes() -> Router<AppState> {
         "/water/plan/{season}/zones/{zone_slug}",
         put(handlers::put_water_plan_entry).delete(handlers::delete_water_plan_entry),
     )
+}
+
+/// Reads and corrections by Ministry staff. Mounted under `/v1/dashboard`,
+/// behind the `staff_auth` layer. Each method carries the one permission it
+/// needs.
+pub fn dashboard_routes() -> Router<AppState> {
+    Router::new()
+        .route(
+            "/water/seasons",
+            get(handlers::dashboard_get_water_seasons)
+                .route_layer(require!(Resource::Water, Action::Read)),
+        )
+        .route(
+            "/water/plan/{season}/entries",
+            get(handlers::dashboard_get_water_plan_entries)
+                .route_layer(require!(Resource::Water, Action::Read))
+                .merge(
+                    post(handlers::dashboard_create_water_plan_entry)
+                        .route_layer(require!(Resource::Water, Action::Create)),
+                ),
+        )
+        .route(
+            "/water/plan/{season}/entries/{zone_slug}",
+            put(handlers::dashboard_update_water_plan_entry)
+                .route_layer(require!(Resource::Water, Action::Update))
+                .merge(
+                    delete(handlers::dashboard_delete_water_plan_entry)
+                        .route_layer(require!(Resource::Water, Action::Delete)),
+                ),
+        )
 }

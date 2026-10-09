@@ -2,10 +2,13 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 
-use crate::features::outlooks::{
-    app::{AppError, OutlookRepository},
-    domain::{
-        Confidence, IssueMonth, Outlook, OutlookRun, RunMethod, Season, ZoneOutlook, ZoneSlug,
+use crate::{
+    app::{Pagination, StaffContext},
+    features::outlooks::{
+        app::{AppError, OutlookRepository},
+        domain::{
+            Confidence, IssueMonth, Outlook, OutlookRun, RunMethod, Season, ZoneOutlook, ZoneSlug,
+        },
     },
 };
 
@@ -33,6 +36,40 @@ pub enum RepositoryCall {
         issued: String,
     },
     UpsertRun {
+        season: String,
+        issued: String,
+    },
+    FindZoneOutlooksPage {
+        season: Option<String>,
+        issued: Option<String>,
+        page: u64,
+        rows_per_page: u64,
+    },
+    CreateZoneOutlook {
+        zone_slug: String,
+        season: String,
+        issued: String,
+    },
+    UpdateZoneOutlook {
+        zone_slug: String,
+        season: String,
+        issued: String,
+    },
+    DeleteZoneOutlook {
+        zone_slug: String,
+        season: String,
+        issued: String,
+    },
+    FindRuns,
+    CreateRun {
+        season: String,
+        issued: String,
+    },
+    UpdateRun {
+        season: String,
+        issued: String,
+    },
+    DeleteRun {
         season: String,
         issued: String,
     },
@@ -225,16 +262,250 @@ impl OutlookRepository for FakeOutlookRepository {
         });
         self.guard()?;
 
-        Ok(OutlookRun::rehydrate(
-            1,
-            run.season().clone(),
-            *run.issued(),
-            *run.seasons_tested(),
-            *run.seasons_right(),
-            run.method().clone(),
-            *run.updated_at(),
+        Ok(persisted_run(run))
+    }
+
+    async fn find_zone_outlooks_page(
+        &self,
+        season: Option<&Season>,
+        issued: Option<&IssueMonth>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<ZoneOutlook>, u64), AppError> {
+        self.record(RepositoryCall::FindZoneOutlooksPage {
+            season: season.map(String::from),
+            issued: issued.map(String::from),
+            page: *pagination.page(),
+            rows_per_page: *pagination.rows_per_page(),
+        });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        let mut outlooks: Vec<ZoneOutlook> = script
+            .outlooks
+            .iter()
+            .filter(|outlook| {
+                season.is_none_or(|season| outlook.season() == season)
+                    && issued.is_none_or(|issued| outlook.issued() == issued)
+            })
+            .cloned()
+            .collect();
+        outlooks.sort_by(|first, second| {
+            second
+                .issued()
+                .cmp(first.issued())
+                .then(second.season().cmp(first.season()))
+                .then(first.zone_slug().cmp(second.zone_slug()))
+        });
+
+        let count = outlooks.len() as u64;
+
+        Ok((
+            outlooks
+                .into_iter()
+                .skip(pagination.skip() as usize)
+                .take(*pagination.rows_per_page() as usize)
+                .collect(),
+            count,
         ))
     }
+
+    async fn create_zone_outlook(
+        &self,
+        outlook: &ZoneOutlook,
+    ) -> Result<Option<ZoneOutlook>, AppError> {
+        self.record(RepositoryCall::CreateZoneOutlook {
+            zone_slug: String::from(outlook.zone_slug()),
+            season: String::from(outlook.season()),
+            issued: String::from(outlook.issued()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script
+            .outlooks
+            .iter()
+            .any(|stored| same_outlook(stored, outlook))
+        {
+            return Ok(None);
+        }
+
+        let stored = persisted_outlook(outlook);
+        script.outlooks.push(stored.clone());
+
+        Ok(Some(stored))
+    }
+
+    async fn update_zone_outlook(
+        &self,
+        outlook: &ZoneOutlook,
+    ) -> Result<Option<ZoneOutlook>, AppError> {
+        self.record(RepositoryCall::UpdateZoneOutlook {
+            zone_slug: String::from(outlook.zone_slug()),
+            season: String::from(outlook.season()),
+            issued: String::from(outlook.issued()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(stored) = script
+            .outlooks
+            .iter_mut()
+            .find(|stored| same_outlook(stored, outlook))
+        else {
+            return Ok(None);
+        };
+
+        *stored = persisted_outlook(outlook);
+
+        Ok(Some(stored.clone()))
+    }
+
+    async fn delete_zone_outlook(
+        &self,
+        zone_slug: &ZoneSlug,
+        season: &Season,
+        issued: &IssueMonth,
+    ) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeleteZoneOutlook {
+            zone_slug: String::from(zone_slug),
+            season: String::from(season),
+            issued: String::from(issued),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+        let before = script.outlooks.len();
+
+        script.outlooks.retain(|outlook| {
+            !(outlook.zone_slug() == zone_slug
+                && outlook.season() == season
+                && outlook.issued() == issued)
+        });
+
+        Ok(script.outlooks.len() < before)
+    }
+
+    async fn find_runs(&self) -> Result<Vec<OutlookRun>, AppError> {
+        self.record(RepositoryCall::FindRuns);
+        self.guard()?;
+
+        let mut runs = self.script.lock().expect("script lock").runs.clone();
+        runs.sort_by(|first, second| {
+            second
+                .issued()
+                .cmp(first.issued())
+                .then(second.season().cmp(first.season()))
+        });
+
+        Ok(runs)
+    }
+
+    async fn create_run(&self, run: &OutlookRun) -> Result<Option<OutlookRun>, AppError> {
+        self.record(RepositoryCall::CreateRun {
+            season: String::from(run.season()),
+            issued: String::from(run.issued()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script
+            .runs
+            .iter()
+            .any(|stored| stored.season() == run.season() && stored.issued() == run.issued())
+        {
+            return Ok(None);
+        }
+
+        let stored = persisted_run(run);
+        script.runs.push(stored.clone());
+
+        Ok(Some(stored))
+    }
+
+    async fn update_run(&self, run: &OutlookRun) -> Result<Option<OutlookRun>, AppError> {
+        self.record(RepositoryCall::UpdateRun {
+            season: String::from(run.season()),
+            issued: String::from(run.issued()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(stored) = script
+            .runs
+            .iter_mut()
+            .find(|stored| stored.season() == run.season() && stored.issued() == run.issued())
+        else {
+            return Ok(None);
+        };
+
+        *stored = persisted_run(run);
+
+        Ok(Some(stored.clone()))
+    }
+
+    async fn delete_run(&self, season: &Season, issued: &IssueMonth) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeleteRun {
+            season: String::from(season),
+            issued: String::from(issued),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+        let before = script.runs.len();
+
+        script
+            .runs
+            .retain(|run| !(run.season() == season && run.issued() == issued));
+
+        Ok(script.runs.len() < before)
+    }
+}
+
+fn same_outlook(first: &ZoneOutlook, second: &ZoneOutlook) -> bool {
+    first.zone_slug() == second.zone_slug()
+        && first.season() == second.season()
+        && first.issued() == second.issued()
+}
+
+fn persisted_outlook(outlook: &ZoneOutlook) -> ZoneOutlook {
+    ZoneOutlook::rehydrate(
+        1,
+        outlook.zone_slug().clone(),
+        outlook.season().clone(),
+        *outlook.issued(),
+        *outlook.outlook(),
+        *outlook.confidence(),
+        outlook.reason_en().clone(),
+        outlook.reason_ku().clone(),
+        *outlook.updated_at(),
+    )
+}
+
+fn persisted_run(run: &OutlookRun) -> OutlookRun {
+    OutlookRun::rehydrate(
+        1,
+        run.season().clone(),
+        *run.issued(),
+        *run.seasons_tested(),
+        *run.seasons_right(),
+        run.method().clone(),
+        *run.updated_at(),
+    )
+}
+
+/// Staff member 7, holding no permission: the routes check those, the use
+/// cases only record who acted.
+pub fn staff() -> StaffContext {
+    StaffContext::new(
+        7,
+        "officer@example.org".to_string(),
+        std::collections::HashSet::new(),
+    )
 }
 
 pub fn season(value: &str) -> Season {

@@ -3,9 +3,12 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 use chrono::NaiveDate;
 
-use crate::features::dams::{
-    app::{AppError, DamRepository},
-    domain::{Dam, DamReading, DamSlug, PercentFull, ReadingSource},
+use crate::{
+    app::{Pagination, StaffContext},
+    features::dams::{
+        app::{AppError, DamRepository},
+        domain::{Dam, DamReading, DamSlug, PercentFull, ReadingSource},
+    },
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -23,6 +26,25 @@ pub enum RepositoryCall {
         to: NaiveDate,
     },
     UpsertReading {
+        dam_id: i32,
+        day: NaiveDate,
+    },
+    FindReadingsPage {
+        dam_id: i32,
+        from: Option<NaiveDate>,
+        to: Option<NaiveDate>,
+        page: u64,
+        rows_per_page: u64,
+    },
+    CreateReading {
+        dam_id: i32,
+        day: NaiveDate,
+    },
+    UpdateReading {
+        dam_id: i32,
+        day: NaiveDate,
+    },
+    DeleteReading {
         dam_id: i32,
         day: NaiveDate,
     },
@@ -164,6 +186,131 @@ impl DamRepository for FakeDamRepository {
             *reading.updated_at(),
         ))
     }
+
+    async fn find_readings_page(
+        &self,
+        dam_id: i32,
+        from: Option<NaiveDate>,
+        to: Option<NaiveDate>,
+        pagination: &Pagination,
+    ) -> Result<(Vec<DamReading>, u64), AppError> {
+        self.record(RepositoryCall::FindReadingsPage {
+            dam_id,
+            from,
+            to,
+            page: *pagination.page(),
+            rows_per_page: *pagination.rows_per_page(),
+        });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        let mut readings: Vec<DamReading> = script
+            .readings
+            .iter()
+            .filter(|reading| {
+                *reading.dam_id() == dam_id
+                    && from.is_none_or(|from| *reading.day() >= from)
+                    && to.is_none_or(|to| *reading.day() <= to)
+            })
+            .cloned()
+            .collect();
+        readings.sort_by_key(|reading| std::cmp::Reverse(*reading.day()));
+
+        let count = readings.len() as u64;
+
+        Ok((
+            readings
+                .into_iter()
+                .skip(pagination.skip() as usize)
+                .take(*pagination.rows_per_page() as usize)
+                .collect(),
+            count,
+        ))
+    }
+
+    async fn create_reading(&self, reading: &DamReading) -> Result<Option<DamReading>, AppError> {
+        self.record(RepositoryCall::CreateReading {
+            dam_id: *reading.dam_id(),
+            day: *reading.day(),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script
+            .readings
+            .iter()
+            .any(|stored| stored.dam_id() == reading.dam_id() && stored.day() == reading.day())
+        {
+            return Ok(None);
+        }
+
+        let stored = persisted(reading);
+        script.readings.push(stored.clone());
+
+        Ok(Some(stored))
+    }
+
+    async fn update_reading(&self, reading: &DamReading) -> Result<Option<DamReading>, AppError> {
+        self.record(RepositoryCall::UpdateReading {
+            dam_id: *reading.dam_id(),
+            day: *reading.day(),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        let Some(stored) = script
+            .readings
+            .iter_mut()
+            .find(|stored| stored.dam_id() == reading.dam_id() && stored.day() == reading.day())
+        else {
+            return Ok(None);
+        };
+
+        *stored = persisted(reading);
+
+        Ok(Some(stored.clone()))
+    }
+
+    async fn delete_reading(&self, dam_id: i32, day: NaiveDate) -> Result<bool, AppError> {
+        self.record(RepositoryCall::DeleteReading { dam_id, day });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+        let before = script.readings.len();
+
+        script
+            .readings
+            .retain(|reading| !(*reading.dam_id() == dam_id && *reading.day() == day));
+
+        Ok(script.readings.len() < before)
+    }
+}
+
+fn persisted(reading: &DamReading) -> DamReading {
+    DamReading::rehydrate(
+        1,
+        *reading.dam_id(),
+        *reading.day(),
+        *reading.pct_full(),
+        *reading.volume_bn_m3(),
+        *reading.lake_area_km2(),
+        *reading.farm_supply_bn_m3(),
+        reading.source().clone(),
+        *reading.updated_at(),
+    )
+}
+
+/// Staff member 7, holding no permission: the routes check those, the use
+/// cases only record who acted.
+pub fn staff() -> StaffContext {
+    StaffContext::new(
+        7,
+        "officer@example.org".to_string(),
+        std::collections::HashSet::new(),
+    )
 }
 
 pub fn day(year: i32, month: u32, day: u32) -> NaiveDate {

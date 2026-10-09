@@ -184,3 +184,48 @@ impl From<&WaterPlanEntry> for SavedWaterPlanEntryResponse {
         }
     }
 }
+
+/// The ingest body plus the zone, which on a create is not in the path.
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct CreateWaterPlanEntryDashboardParams {
+    pub zone_slug: String,
+    /// 0 to 100. The plan is ranked by it, highest first.
+    pub need: f64,
+    /// The dam the water is to come from, once decided.
+    pub dam_slug: Option<String>,
+    /// Million m3 to send, once decided.
+    pub send_million_m3: Option<f64>,
+    #[serde(default)]
+    pub urgent: bool,
+    /// One short remark in English, 200 characters max.
+    pub note_en: Option<String>,
+    /// The same remark in Sorani, 200 characters max.
+    pub note_ku: Option<String>,
+}
+
+impl CreateWaterPlanEntryDashboardParams {
+    /// Goes through the ingest body, so that both are checked by one rule.
+    pub fn into_input(self, season: String) -> Result<SetWaterPlanEntryInput, AppError> {
+        SetWaterPlanEntryParams {
+            need: self.need,
+            dam_slug: self.dam_slug,
+            send_million_m3: self.send_million_m3,
+            urgent: self.urgent,
+            note_en: self.note_en,
+            note_ku: self.note_ku,
+        }
+        .into_input(season, self.zone_slug)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct WaterSeasonsResponse {
+    /// Seasons that have at least one entry, newest first.
+    pub seasons: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct WaterPlanEntriesResponse {
+    /// Highest need first.
+    pub entries: Vec<StoredWaterPlanEntryResponse>,
+}

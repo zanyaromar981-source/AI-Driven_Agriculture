@@ -3,17 +3,20 @@ use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 use validator::Validate;
 
-use crate::features::outlooks::{
-    app::{
-        AppError,
-        use_cases::{
-            RecordOutlookRunInput, RecordZoneOutlookInput, ViewSeasonOutlookInput,
-            ViewZoneOutlookInput,
+use crate::{
+    app::Pagination,
+    features::outlooks::{
+        app::{
+            AppError,
+            use_cases::{
+                ListZoneOutlooksInput, RecordOutlookRunInput, RecordZoneOutlookInput,
+                ViewSeasonOutlookInput, ViewZoneOutlookInput,
+            },
         },
-    },
-    domain::{
-        self, Confidence, IssueMonth, OutlookCounts, OutlookRun, Reason, RunMethod, Season,
-        SeasonOutlook, ZoneOutlook, ZoneSlug,
+        domain::{
+            self, Confidence, IssueMonth, OutlookCounts, OutlookRun, Reason, RunMethod, Season,
+            SeasonOutlook, ZoneOutlook, ZoneSlug,
+        },
     },
 };
 
@@ -317,4 +320,103 @@ impl From<&OutlookRun> for SavedOutlookRunResponse {
             },
         }
     }
+}
+
+/// A blank filter is the same as none: a filter form sends its empty fields.
+fn filter(raw: Option<String>) -> Option<String> {
+    raw.map(|raw| raw.trim().to_string())
+        .filter(|raw| !raw.is_empty())
+}
+
+#[derive(Deserialize, Debug, Clone, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct OutlookDashboardQuery {
+    /// Season like `2026-27`. Without it every season is listed.
+    pub season: Option<String>,
+    /// Issue month, `YYYY-MM`. Without it every issue is listed.
+    pub issued: Option<String>,
+}
+
+impl OutlookDashboardQuery {
+    pub fn into_input(self, pagination: Pagination) -> Result<ListZoneOutlooksInput, AppError> {
+        Ok(ListZoneOutlooksInput {
+            season: filter(self.season).map(Season::new).transpose()?,
+            issued: filter(self.issued)
+                .map(|issued| IssueMonth::new(&issued))
+                .transpose()?,
+            pagination,
+        })
+    }
+}
+
+/// The ingest body plus the key, which on a create is not in the path.
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct CreateOutlookDashboardParams {
+    /// Season like `2026-27`.
+    pub season: String,
+    /// Issue month, `YYYY-MM`.
+    pub issued: String,
+    pub zone_slug: String,
+    pub outlook: Outlook,
+    /// 0 to 100.
+    pub confidence_pct: f64,
+    /// One short sentence in English, 200 characters max.
+    pub reason_en: Option<String>,
+    /// The same sentence in Sorani, 200 characters max.
+    pub reason_ku: Option<String>,
+}
+
+impl CreateOutlookDashboardParams {
+    /// Goes through the ingest body, so that both are checked by one rule.
+    pub fn into_input(self) -> Result<RecordZoneOutlookInput, AppError> {
+        RecordZoneOutlookParams {
+            outlook: self.outlook,
+            confidence_pct: self.confidence_pct,
+            reason_en: self.reason_en,
+            reason_ku: self.reason_ku,
+        }
+        .into_input(self.season, self.issued, self.zone_slug)
+    }
+}
+
+/// The ingest body plus the key, which on a create is not in the path.
+#[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
+pub struct CreateOutlookRunDashboardParams {
+    /// Season like `2026-27`.
+    pub season: String,
+    /// Issue month, `YYYY-MM`.
+    pub issued: String,
+    /// Past seasons the method was tested on.
+    pub seasons_tested: i32,
+    /// How many of them it called right. Never more than `seasons_tested`.
+    pub seasons_right: i32,
+    pub method: String,
+}
+
+impl CreateOutlookRunDashboardParams {
+    /// Goes through the ingest body, so that both are checked by one rule.
+    pub fn into_input(self) -> Result<RecordOutlookRunInput, AppError> {
+        RecordOutlookRunParams {
+            seasons_tested: self.seasons_tested,
+            seasons_right: self.seasons_right,
+            method: self.method,
+        }
+        .into_input(self.season, self.issued)
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct OutlooksPageResponse {
+    /// Newest issue first.
+    pub outlooks: Vec<StoredZoneOutlookResponse>,
+    /// How many outlooks match in all, on every page.
+    pub count: u64,
+    pub page: u64,
+    pub rows_per_page: u64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct OutlookRunsResponse {
+    /// Newest issue first.
+    pub runs: Vec<OutlookRunResponse>,
 }
