@@ -117,12 +117,12 @@ mod tests {
 
     fn a_board() -> FakeAlwaRepository {
         FakeAlwaRepository::new()
-            .with_price(a_price(MARKET_ID, Crop::Tomato, day(1), 1_000, false))
-            .with_price(a_price(MARKET_ID, Crop::Tomato, day(8), 1_250, false))
-            .with_price(a_price(MARKET_ID, Crop::Wheat, day(1), 800, true))
-            .with_price(a_price(MARKET_ID, Crop::Wheat, day(8), 850, true))
-            .with_price(a_price(MARKET_ID, Crop::Onion, day(8), 600, false))
-            .with_price(a_price(2, Crop::Tomato, day(9), 9_999, false))
+            .with_price(a_price(MARKET_ID, Crop::of("tomato"), day(1), 1_000, false))
+            .with_price(a_price(MARKET_ID, Crop::of("tomato"), day(8), 1_250, false))
+            .with_price(a_price(MARKET_ID, Crop::of("wheat"), day(1), 800, true))
+            .with_price(a_price(MARKET_ID, Crop::of("wheat"), day(8), 850, true))
+            .with_price(a_price(MARKET_ID, Crop::of("onion"), day(8), 600, false))
+            .with_price(a_price(2, Crop::of("tomato"), day(9), 9_999, false))
     }
 
     #[tokio::test]
@@ -163,10 +163,10 @@ mod tests {
                 .change_pct_7d
         };
 
-        assert_eq!(change_of(Crop::Tomato), Some(25));
-        assert_eq!(change_of(Crop::Wheat), None, "wheat is a fixed price");
+        assert_eq!(change_of(Crop::of("tomato")), Some(25));
+        assert_eq!(change_of(Crop::of("wheat")), None, "wheat is a fixed price");
         assert_eq!(
-            change_of(Crop::Onion),
+            change_of(Crop::of("onion")),
             None,
             "onion had no price a week ago"
         );

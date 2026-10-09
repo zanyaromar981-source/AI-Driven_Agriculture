@@ -32,7 +32,7 @@ use crate::features::{
 };
 use crate::{
     features::alwa::web::{
-        AlwaBuyerKind, AlwaCrop, AlwaDealResponse, AlwaDealsResponse, AlwaDealsSummaryResponse,
+        AlwaBuyerKind, AlwaDealResponse, AlwaDealsResponse, AlwaDealsSummaryResponse,
         AlwaFairPrice, AlwaGrade, AlwaListingResponse, AlwaListingStatus,
         AlwaListingSummaryResponse, AlwaListingsResponse, AlwaMarketPricesResponse,
         AlwaMarketResponse, AlwaMarketsResponse, AlwaMyListingsResponse, AlwaMyOfferResponse,
@@ -59,7 +59,7 @@ use crate::{
         SignedInResponse, VerifySignInCodeParams, handlers as farmer_handlers,
     },
     features::farms::web::{
-        CellParams, CellResponse, CellStatusResponse, CentroidResponse, CreateFarmParams, Crop,
+        CellParams, CellResponse, CellStatusResponse, CentroidResponse, CreateFarmParams,
         CropAreaResponse, CropStatusResponse, FarmResponse, FarmStatusResponse,
         FarmSummaryResponse, FarmsResponse, GridCellResponse, Level, OneFarmResponse,
         OutlinePointResponse, PointParams, RepaintFarmCellsParams, SavedFarmResponse,
@@ -285,7 +285,12 @@ impl Modify for BearerAuth {
         crate::features::app_config::web::handlers::get_app_config,
         crate::features::app_config::web::handlers::dashboard_get_app_config,
         crate::features::app_config::web::handlers::dashboard_update_app_config,
-        crate::features::app_config::web::handlers::dashboard_get_app_versions
+        crate::features::app_config::web::handlers::dashboard_get_app_versions,
+        crate::features::crops::web::handlers::get_crops,
+        crate::features::crops::web::handlers::dashboard_get_crops,
+        crate::features::crops::web::handlers::dashboard_create_crop,
+        crate::features::crops::web::handlers::dashboard_update_crop,
+        crate::features::crops::web::handlers::dashboard_delete_crop
     ),
     components(schemas(
         CreateFarmParams,
@@ -300,7 +305,6 @@ impl Modify for BearerAuth {
         OutlinePointResponse,
         CellResponse,
         GridCellResponse,
-        Crop,
         FarmsResponse,
         OneFarmResponse,
         SendSignInCodeParams,
@@ -375,7 +379,6 @@ impl Modify for BearerAuth {
         CropStatusResponse,
         CellStatusResponse,
         Level,
-        AlwaCrop,
         AlwaGrade,
         AlwaPickup,
         AlwaListingStatus,
@@ -550,6 +553,13 @@ impl Modify for BearerAuth {
         crate::features::app_config::web::UpdateAppConfigParams,
         crate::features::app_config::web::AppVersionUsageResponse,
         crate::features::app_config::web::AppVersionsResponse,
+        crate::features::crops::web::CropCategory,
+        crate::features::crops::web::CropSeason,
+        crate::features::crops::web::CropResponse,
+        crate::features::crops::web::CropsResponse,
+        crate::features::crops::web::OneCropResponse,
+        crate::features::crops::web::CreateCropParams,
+        crate::features::crops::web::UpdateCropParams,
         ErrorBody
     )),
     modifiers(&BearerAuth),
@@ -570,7 +580,8 @@ impl Modify for BearerAuth {
         (name = "rules", description = "The numbers the data jobs use to decide a warning or a colour, changed by staff with a logged reason"),
         (name = "jobs", description = "Whether the automatic data jobs ran on time: each job reports its runs, staff read how they stand"),
         (name = "messages", description = "The inbox: messages farmers send to the Ministry, with photos, and the replies"),
-        (name = "app", description = "App control: what the farmer app reads at start, and which versions are in use")
+        (name = "app", description = "App control: what the farmer app reads at start, and which versions are in use"),
+        (name = "crops", description = "The crop list staff keep: the codes farms, listings and prices may use, with names and colours")
     ),
     info(
         title = "farm-doctor-api",

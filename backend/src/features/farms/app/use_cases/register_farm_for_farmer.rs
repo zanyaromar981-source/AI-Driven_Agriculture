@@ -61,8 +61,8 @@ mod tests {
     use super::*;
     use crate::features::farms::{
         app::testing::{
-            FakeFarmRepository, FakeFarmerDirectory, FakePlaceLocator, MAX_CELLS, RepositoryCall,
-            an_outline, staff_context, the_place,
+            FakeCropDirectory, FakeFarmRepository, FakeFarmerDirectory, FakePlaceLocator,
+            MAX_CELLS, RepositoryCall, an_outline, staff_context, the_place,
         },
         domain::FarmName,
     };
@@ -93,6 +93,7 @@ mod tests {
             Arc::new(RegisterFarmUseCase::new(
                 Arc::new(repository.clone()),
                 Arc::new(FakePlaceLocator::new()),
+                Arc::new(FakeCropDirectory::seeded()),
                 MAX,
                 MAX_CELLS,
             )),

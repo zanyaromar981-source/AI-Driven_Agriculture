@@ -703,7 +703,7 @@ mod tests {
     fn draft(closes_at: DateTime<Utc>) -> ListingDraft {
         ListingDraft {
             seller_name: Some(DisplayName::new("Kak Azad".to_string()).expect("name")),
-            crop: Crop::Tomato,
+            crop: Crop::of("tomato"),
             quantity: QuantityKg::new(500).expect("quantity"),
             asking_price: PricePerKg::new(1_000).expect("price"),
             grade: Some(Grade::A),
@@ -752,7 +752,7 @@ mod tests {
         Price::rehydrate(
             1,
             1,
-            Crop::Tomato,
+            Crop::of("tomato"),
             day,
             PricePerKg::new(value).expect("price"),
             fixed,
@@ -1281,8 +1281,8 @@ mod tests {
         let price = PricePerKg::new(1_000).expect("price");
 
         let prices = [
-            Price::rehydrate(1, 1, Crop::Onion, today, price, false, source(), now),
-            Price::rehydrate(2, 2, Crop::Tomato, today, price, false, source(), now),
+            Price::rehydrate(1, 1, Crop::of("onion"), today, price, false, source(), now),
+            Price::rehydrate(2, 2, Crop::of("tomato"), today, price, false, source(), now),
         ];
 
         assert_eq!(listing.fair_price(&prices), FairPrice::Unknown);

@@ -20,6 +20,9 @@ use farm_doctor_api::{
             dashboard_routes as brief_dashboard_routes, ingest_routes as brief_ingest_routes,
             public_routes as brief_public_routes, routes as brief_routes,
         },
+        crops::web::{
+            dashboard_routes as crop_dashboard_routes, public_routes as crop_public_routes,
+        },
         dams::web::{
             dashboard_routes as dam_dashboard_routes, ingest_routes as dam_ingest_routes,
             public_routes as dam_public_routes,
@@ -158,6 +161,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(alwa_public_routes())
                 .merge(brief_public_routes())
                 .merge(farm_public_routes())
+                .merge(crop_public_routes())
                 .nest(
                     "/ingest",
                     Router::new()
@@ -180,6 +184,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(alwa_dashboard_routes())
                         .merge(app_config_dashboard_routes())
                         .merge(brief_dashboard_routes())
+                        .merge(crop_dashboard_routes())
                         .merge(dam_dashboard_routes())
                         .merge(farm_dashboard_routes())
                         .merge(farmer_dashboard_routes())

@@ -8,6 +8,6 @@ pub use entities::{
     MAX_OPEN_LISTINGS_PER_SELLER, Market, MarketNames, Moderation, Offer, OfferDraft,
     PRICE_CHANGE_DAYS, PlacedOffer, Price, REFERENCE_PRICE_LOOKBACK_DAYS,
 };
-pub use enums::{BuyerKind, Crop, FairPrice, Grade, ListingStatus, OfferStatus, Pickup};
+pub use enums::{BuyerKind, FairPrice, Grade, ListingStatus, OfferStatus, Pickup};
 pub use errors::AlwaError;
 pub use value_objects::*;

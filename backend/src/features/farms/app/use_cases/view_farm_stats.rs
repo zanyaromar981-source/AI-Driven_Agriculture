@@ -126,7 +126,7 @@ mod tests {
             vec![AreaCropSum {
                 level: AreaLevel::Region,
                 key: AreaKey::default(),
-                crop: Crop::Wheat,
+                crop: Crop::of("wheat"),
                 inside_pct: 15_000.0,
                 farms: 2,
                 farmers: 1,
@@ -172,7 +172,7 @@ mod tests {
 
         let governorate = AreaFilter::new("Sulaymaniyah".to_string()).expect("filter");
         let zone = AreaFilter::new("chamchamal".to_string()).expect("filter");
-        let crop = PlantedCrop::new(Crop::Wheat).expect("crop");
+        let crop = PlantedCrop::new(Crop::of("wheat")).expect("crop");
 
         use_case
             .execute(ViewFarmStatsInput {

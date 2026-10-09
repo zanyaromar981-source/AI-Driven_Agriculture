@@ -104,7 +104,7 @@ What to know:
 - **Painted cells outside the outline** come back in `dropped_cells`. That is not an error.
 - **Limits:** 3 to 50 corners; the outline must not cross or touch itself (`bad_polygon`); 50,000 cells (`farm_too_large`); 20 farms per phone (`too_many_farms`); a name of 1 to 100 characters. Corners must lie in or near the region.
 - **Another farmer's farm** answers `404`, exactly like one that does not exist.
-- Crop codes for cells: `wheat`, `barley`, `tomato`, `cucumber`, `potato`, `onion`, `watermelon`, `grape`, `olive`, `sunflower`, `chickpea`, `empty`. (A crops table that staff can add to is being built; see section 14.)
+- **Crop codes come from `GET /v1/crops`** (no login): `{"crops": [{"code", "name_en", "name_ku", "color", "category", "season", "yield_kg_per_dunam", "active", "sort_order"}]}`, active crops only, in display order. Read names and colours there instead of keeping a list in the app. `empty` (an unplanted cell) is not a crop and is not in the list. A code that is unknown or switched off is refused for new data with `422 unknown_crop`; data saved earlier keeps reading back.
 
 ### What the farm screens can show
 
@@ -143,7 +143,7 @@ Sellers set their own price on each listing. There is no automatic price feed: t
 - **Rules:** at most 20 open listings per phone; a listing closes at `closes_at` (at most 14 days ahead); you cannot offer on your own listing; a buyer has one open offer per listing (a new one replaces it); accepting any offer sells the whole listing and declines the others.
 - **`fair_price`** on a listing is `fair`, `high`, `low` or `unknown`. It is `unknown` unless staff have entered a price for that crop at that market in the last 7 days.
 - **Codes:** `too_many_listings`, `own_listing`, `listing_not_open`, `offer_not_open`, `offer_too_large`, `bad_closes_at`.
-- Crop codes here: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple.
+- Crop codes: the same table, `GET /v1/crops` (16 crops seeded: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple).
 - **The simpler Alwa the app asked for in `BACKEND.md` 2.14** (a GPS point on each listing, the seller's phone shown from the start, nearest first, mark as sold, markets with a point) is **not built yet**. It is next after crops; see section 14. Until then the routes behave as written here.
 
 ## 6. Ask the Doctor
@@ -276,6 +276,13 @@ The same rules everywhere:
 - `/v1/dashboard/farms/{id}/insights[/{topic}]` (`insights`): see and correct the stored readings of any farm.
 - **Check the map:** the shape named `Qaradagh` in `web/map_demo/kri_map_data.js` reaches north to latitude 35.57 and contains the centre of Sulaymaniyah city, and the Sulaymaniyah district has no centre sub-district of its own. So a farm in the city is reported as `qaradagh`. The backend follows the map file exactly; if the shape or its name is wrong, fix it there and we reseed.
 
+### Crops (`crops`)
+
+- `GET /v1/dashboard/crops` (also the switched-off ones), `POST /v1/dashboard/crops`, `PUT` and `DELETE /v1/dashboard/crops/{code}`.
+- Body: `{"code", "name_en", "name_ku", "color": "#rrggbb", "category": "cereal|vegetable|fruit|legume|oil|fodder|other", "season": "winter|summer|perennial", "yield_kg_per_dunam", "active", "sort_order"}`. `code` matches `^[a-z_]{2,24}$` and never changes; `empty` is refused (`422 reserved_code`).
+- Deleting a crop that a farm cell, an Alwa listing or an Alwa price uses answers `409 {"error": "crop_in_use"}`: offer to switch it off (`active: false`) instead.
+- Five seeded crops (pomegranate, okra, eggplant, pepper, apple) have no Sorani name yet, and no crop has a yield: the repo holds none, and we do not invent them. Staff can fill both in here.
+
 ### Inbox (`messages`)
 
 - `GET /v1/dashboard/messages?state=&kind=&governorate=&zone=&q=&page=&rows_per_page=`, newest first. A row has the message, the farmer's name and phone, and the farm's name, governorate and district. `q` searches the text, the farmer's name and phone. The place filters match messages that name a farm.
@@ -314,7 +321,7 @@ The same rules everywhere:
 - `GET /v1/versions` (no login) answers `{"api": "1.6.0", "versions": {"zones": 41, "dams": 7, ...}, "server_time"}` for the public topics: `zones, sub_zones, dams, fires, outlooks, water, alwa_prices, alwa_listings, crops, rules, briefs, app_config`.
 - `GET /v1/dashboard/versions` (any signed-in staff) adds the private ones: `farmers, farms, messages, jobs, staff_roles`.
 - A topic's number goes up whenever anything of that kind is written, by anyone (website, data job, farmer app). The database does it itself inside the write, so it cannot be forgotten. It may go up by more than one for a single action: only compare "is it higher than what I have".
-- Topic to routes: `zones` district readings and `/v1/region...`; `sub_zones` sub-district readings; `dams`; `fires`; `outlooks` (outlooks and outlook runs); `water`; `alwa_prices` (markets and prices); `alwa_listings` (listings, offers, deals); `briefs`; `rules`; `app_config` (the settings, not the versions-in-use list); `farmers` (farmers and letters); `farms` (farms, cells, per-farm readings, and both totals routes); `messages`; `jobs`; `staff_roles` (staff, roles and their permissions). `crops` starts counting when the crops table is in.
+- Topic to routes: `zones` district readings and `/v1/region...`; `sub_zones` sub-district readings; `dams`; `fires`; `outlooks` (outlooks and outlook runs); `water`; `alwa_prices` (markets and prices); `alwa_listings` (listings, offers, deals); `briefs`; `rules`; `app_config` (the settings, not the versions-in-use list); `farmers` (farmers and letters); `farms` (farms, cells, per-farm readings, and both totals routes); `messages`; `jobs`; `staff_roles` (staff, roles and their permissions). `crops` is the crops table.
 - **`ETag` and `304` on every JSON `GET`.** Send the tag back in `If-None-Match`; if the answer would be the same you get `304` with no body. Treat the tag as opaque. `Cache-Control` is `no-cache` (`private, no-cache` when a token was sent).
 - Wipe the cache when `X-Api-Version` changes.
 
@@ -340,7 +347,7 @@ Be honest on screen about this.
 
 ## 12. Things that will trip you up
 
-- **Unknown values in a body** (a crop code not on the list, a wrong `status`) answer `400 bad_request`, not `422`.
+- **Unknown values in a body** (a wrong `status`, `category` or `kind`) answer `400 bad_request`, not `422`. An unknown crop code is `422 unknown_crop`.
 - **An empty `page=`** in a query answers `400`. Leave the parameter out instead.
 - **A `+` in a query string** must be sent as `%2B` (for example a phone filter).
 - **`Ask the Doctor` needs a 90 second timeout** and each photo part's own content type; see section 6.
@@ -360,8 +367,8 @@ Be honest on screen about this.
 | 401 | `unauthorized`, `bad_code`, `bad_credentials` |
 | 403 | `forbidden`, `cannot_grant`, `blocked` (a blocked farmer), `wrong_password` |
 | 404 | `not_found` |
-| 409 | `already_exists`, `listing_not_open`, `offer_not_open`, `listing_has_deal`, `market_in_use`, `system_role`, `role_in_use`, `role_name_taken`, `email_taken`, `own_account`, `last_owner` |
-| 422 | `invalid` (with `field` when one field is at fault), `bad_polygon`, `farm_too_large`, `too_many_farms`, `too_many_listings`, `own_listing`, `offer_too_large`, `bad_closes_at`, `bad_month`, `bad_range`, `bad_reason`, `empty_question`, `bad_photo`, `no_reply`, `missing_text`, `unknown_role`, and other `bad_...` codes that name the field |
+| 409 | `already_exists`, `crop_in_use`, `listing_not_open`, `offer_not_open`, `listing_has_deal`, `market_in_use`, `system_role`, `role_in_use`, `role_name_taken`, `email_taken`, `own_account`, `last_owner` |
+| 422 | `invalid` (with `field` when one field is at fault), `bad_polygon`, `farm_too_large`, `too_many_farms`, `too_many_listings`, `own_listing`, `offer_too_large`, `bad_closes_at`, `bad_month`, `bad_range`, `bad_reason`, `empty_question`, `bad_photo`, `no_reply`, `missing_text`, `unknown_crop`, `reserved_code`, `unknown_role`, and other `bad_...` codes that name the field |
 | 426 | `update_required` (the app is older than `min_version`) |
 | 429 | `rate_limited` (with `retry_after_s`) |
 | 500 | `server_error` (the detail is always "An unexpected error occurred") |
@@ -375,7 +382,6 @@ These answer `404` today. Build the screens so that a `404` or an empty answer s
 | Thing | State |
 |---|---|
 | Per-farm history: ten years of monthly rain, heat, evaporation, soil moisture and greenness (`GET /v1/farms/{id}/history`) | being built now |
-| Crops table staff can add to (`GET /v1/crops`, `/v1/dashboard/crops`), `BACKEND.md` 2.12 B1 | being built now |
 | The simpler Alwa of `BACKEND.md` 2.14 (GPS point, phones shown, nearest first, mark as sold) | next |
 | `GET /v1/farms/{id}/plan`, the 10-day weather plan | not started |
 | Real data in `GET /v1/farms/{id}/status` | not started; needs a satellite job and a store |

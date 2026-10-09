@@ -39,14 +39,15 @@ impl AreaFilter {
     }
 }
 
-/// A crop to keep farms by. `Empty` is the land a farmer has not painted,
-/// not a crop, so it cannot be asked for.
+/// A crop to keep farms by: any crop code, also one staff have switched off
+/// since, because farms painted with it are still there. `empty` is the land
+/// a farmer has not painted, not a crop, so it cannot be asked for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PlantedCrop(Crop);
 
 impl PlantedCrop {
     pub fn new(crop: Crop) -> Result<Self, FarmError> {
-        if crop == Crop::Empty {
+        if crop.is_empty() {
             return Err(DomainError::InvalidValue(
                 "`empty` is unpainted land, not a crop to filter by".to_string(),
             )
@@ -181,10 +182,10 @@ mod tests {
 
     #[test]
     fn empty_land_is_not_a_crop_to_filter_by() {
-        assert!(PlantedCrop::new(Crop::Empty).is_err());
+        assert!(PlantedCrop::new(Crop::EMPTY).is_err());
         assert_eq!(
-            PlantedCrop::new(Crop::Wheat).expect("crop").crop(),
-            Crop::Wheat
+            PlantedCrop::new(Crop::of("wheat")).expect("crop").crop(),
+            Crop::of("wheat")
         );
     }
 

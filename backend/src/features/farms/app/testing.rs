@@ -1,4 +1,7 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use async_trait::async_trait;
 
@@ -6,13 +9,13 @@ use crate::{
     app::{Action, AuthContext, Pagination, Permission, Resource, StaffContext, User},
     features::farms::{
         app::{
-            AppError, AreaDirectory, FarmRepository, FarmerDirectory, PlaceLocator,
+            AppError, AreaDirectory, CropDirectory, FarmRepository, FarmerDirectory, PlaceLocator,
             PublicTotalsSwitch,
         },
         domain::{
-            AreaCount, AreaCropSum, AreaLevel, AreaNames, Cell, Crop, Farm, FarmFilter,
-            FarmLocation, FarmName, FarmOrder, FarmPlace, FarmSummary, GovernorateName, GridCell,
-            IdempotencyKey, Outline, OwnedFarmSummary, PaintedCell, Point, SubZoneName,
+            ActiveCrops, AreaCount, AreaCropSum, AreaLevel, AreaNames, Cell, Crop, Farm,
+            FarmFilter, FarmLocation, FarmName, FarmOrder, FarmPlace, FarmSummary, GovernorateName,
+            GridCell, IdempotencyKey, Outline, OwnedFarmSummary, PaintedCell, Point, SubZoneName,
             UnplacedFarm, ZoneName,
         },
     },
@@ -84,6 +87,9 @@ pub enum RepositoryCall {
     },
     FindSummariesByIds {
         ids: Vec<i32>,
+    },
+    IsCropPainted {
+        crop: Crop,
     },
 }
 
@@ -476,6 +482,77 @@ impl FarmRepository for FakeFarmRepository {
             .map(summary_of)
             .collect())
     }
+
+    async fn is_crop_painted(&self, crop: Crop) -> Result<bool, AppError> {
+        self.record(RepositoryCall::IsCropPainted { crop });
+        self.guard()?;
+
+        let script = self.script.lock().expect("script lock");
+
+        Ok(script
+            .existing
+            .iter()
+            .any(|farm| farm.cells().iter().any(|cell| cell.crop() == crop)))
+    }
+}
+
+/// Stands in for the crops feature: the crops staff have switched on.
+#[derive(Debug, Clone, Default)]
+pub struct FakeCropDirectory {
+    active: Vec<Crop>,
+    failing: bool,
+    asked: Arc<Mutex<u32>>,
+}
+
+impl FakeCropDirectory {
+    /// The farm crops that were fixed in code before staff kept the list.
+    pub fn seeded() -> Self {
+        Self::with(&[
+            "wheat",
+            "barley",
+            "tomato",
+            "cucumber",
+            "potato",
+            "onion",
+            "watermelon",
+            "grape",
+            "olive",
+            "sunflower",
+            "chickpea",
+        ])
+    }
+
+    pub fn with(codes: &[&str]) -> Self {
+        Self {
+            active: codes.iter().map(|code| Crop::of(code)).collect(),
+            ..Self::default()
+        }
+    }
+
+    pub fn failing() -> Self {
+        Self {
+            failing: true,
+            ..Self::default()
+        }
+    }
+
+    /// How many times the list was asked for.
+    pub fn asked(&self) -> u32 {
+        *self.asked.lock().expect("asked lock")
+    }
+}
+
+#[async_trait]
+impl CropDirectory for FakeCropDirectory {
+    async fn active(&self) -> Result<ActiveCrops, AppError> {
+        *self.asked.lock().expect("asked lock") += 1;
+
+        if self.failing {
+            return Err(crate::app::AppError::InternalServerError.into());
+        }
+
+        Ok(ActiveCrops::new(self.active.iter().copied()))
+    }
 }
 
 /// Stands in for the farmers feature: every phone is registered, or none is.
@@ -681,14 +758,13 @@ fn persisted(entity: &Farm, id: i32) -> Farm {
 }
 
 fn summary_of(farm: &Farm) -> FarmSummary {
-    let inside_per_crop = Crop::ALL
-        .into_iter()
-        .map(|crop| {
-            let cells = farm.cells().iter().filter(|cell| cell.crop() == crop);
+    let mut inside: HashMap<Crop, f64> = HashMap::new();
 
-            (crop, cells.map(|cell| cell.inside_pct()).sum())
-        })
-        .collect();
+    for cell in farm.cells() {
+        *inside.entry(cell.crop()).or_default() += cell.inside_pct();
+    }
+
+    let inside_per_crop = inside.into_iter().collect();
 
     FarmSummary::rehydrate(
         farm.id().unwrap_or_default(),
@@ -754,7 +830,7 @@ pub fn a_farm() -> Farm {
         FarmName::new("Upper field".to_string()).expect("name"),
         Phone::new(OWNER.to_string()).expect("phone"),
         an_outline(),
-        vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)],
+        vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))],
         None,
         None,
         MAX_CELLS,

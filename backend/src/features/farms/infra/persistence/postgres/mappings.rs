@@ -74,7 +74,7 @@ impl TryFrom<farm_cells::Model> for Cell {
         Ok(Cell::rehydrate(
             model.id,
             GridCell::new(model.e, model.n),
-            Crop::try_from(model.crop.as_str())?,
+            Crop::new(model.crop.as_str())?,
             model.inside_pct,
         ))
     }
@@ -116,7 +116,7 @@ impl TryFrom<(farms::Model, Vec<(String, f64)>)> for FarmSummary {
     ) -> Result<Self, Self::Error> {
         let inside_per_crop = inside_per_crop
             .into_iter()
-            .map(|(crop, inside_pct)| Ok((Crop::try_from(crop.as_str())?, inside_pct)))
+            .map(|(crop, inside_pct)| Ok((Crop::new(crop.as_str())?, inside_pct)))
             .collect::<Result<Vec<_>, AppError>>()?;
 
         let place = place_from(&model)?;

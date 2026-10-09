@@ -111,7 +111,7 @@ mod tests {
             governorate: Some(AreaFilter::new("Sulaymaniyah".to_string()).expect("filter")),
             zone: Some(AreaFilter::new("chamchamal".to_string()).expect("filter")),
             sub_zone: Some(AreaFilter::Unknown),
-            crop: Some(PlantedCrop::new(Crop::Wheat).expect("crop")),
+            crop: Some(PlantedCrop::new(Crop::of("wheat")).expect("crop")),
             search: Some(FarmSearch::new("upper".to_string()).expect("search")),
         };
         let order = FarmOrder {

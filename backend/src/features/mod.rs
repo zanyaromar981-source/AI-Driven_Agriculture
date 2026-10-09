@@ -1,6 +1,7 @@
 pub mod alwa;
 pub mod app_config;
 pub mod briefs;
+pub mod crops;
 pub mod dams;
 pub mod doctor;
 pub mod farmers;

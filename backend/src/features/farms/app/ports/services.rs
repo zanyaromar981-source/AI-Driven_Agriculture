@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use crate::{
     features::farms::{
         app::AppError,
-        domain::{AreaNames, FarmPlace},
+        domain::{ActiveCrops, AreaNames, FarmPlace},
     },
     shared::Phone,
 };
@@ -35,4 +35,13 @@ pub trait AreaDirectory: Send + Sync + std::fmt::Debug {
 #[async_trait]
 pub trait PublicTotalsSwitch: Send + Sync + std::fmt::Debug {
     async fn is_on(&self) -> Result<bool, AppError>;
+}
+
+/// Which crops may be painted on new data. Owned by the crops feature,
+/// where staff keep the list.
+#[async_trait]
+pub trait CropDirectory: Send + Sync + std::fmt::Debug {
+    /// The crops switched on right now. A use case asks once per request,
+    /// however many cells the request paints.
+    async fn active(&self) -> Result<ActiveCrops, AppError>;
 }

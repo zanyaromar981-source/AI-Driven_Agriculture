@@ -35,7 +35,7 @@ impl TryFrom<alwa_prices::Model> for Price {
         Ok(Price::rehydrate(
             model.id,
             model.market_id,
-            Crop::try_from(model.crop.as_str())?,
+            Crop::new(model.crop.as_str())?,
             model.day,
             PricePerKg::new(i64::from(model.price_iqd_per_kg))?,
             model.fixed,
@@ -80,7 +80,7 @@ impl TryFrom<(alwa_listings::Model, MarketSlug)> for Listing {
             model.id,
             Phone::new(model.seller_phone)?,
             model.seller_name.map(DisplayName::new).transpose()?,
-            Crop::try_from(model.crop.as_str())?,
+            Crop::new(model.crop.as_str())?,
             QuantityKg::new(i64::from(model.quantity_kg))?,
             PricePerKg::new(i64::from(model.asking_price_iqd_per_kg))?,
             model.grade.as_deref().map(Grade::try_from).transpose()?,

@@ -8,7 +8,7 @@ use utoipa::{IntoParams, ToSchema};
 use validator::Validate;
 
 use super::dtos::{
-    AlwaBuyerKind, AlwaCrop, AlwaFairPrice, AlwaGrade, AlwaListingStatus, AlwaMarketResponse,
+    AlwaBuyerKind, AlwaFairPrice, AlwaGrade, AlwaListingStatus, AlwaMarketResponse,
     AlwaOfferStatus, AlwaOnePriceResponse, AlwaPickup, AlwaRecordedPriceResponse,
     RecordAlwaPriceParams, given, listing_id, missing_id, parse_day,
 };
@@ -107,7 +107,7 @@ impl AlwaStoredPricesQuery {
             market: MarketSlug::new(market)?,
             crop: given(self.crop)
                 .as_deref()
-                .map(domain::Crop::try_from)
+                .map(domain::Crop::new)
                 .transpose()?,
             from: given(self.from).as_deref().map(parse_day).transpose()?,
             to: given(self.to).as_deref().map(parse_day).transpose()?,
@@ -186,7 +186,7 @@ impl AlwaModerationQuery {
             market: given(self.market).map(MarketSlug::new).transpose()?,
             crop: given(self.crop)
                 .as_deref()
-                .map(domain::Crop::try_from)
+                .map(domain::Crop::new)
                 .transpose()?,
             status: given(self.status)
                 .as_deref()
@@ -204,7 +204,7 @@ pub struct AlwaModeratedListingResponse {
     pub id: String,
     pub seller_phone: String,
     pub seller_name: Option<String>,
-    pub crop: AlwaCrop,
+    pub crop: String,
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
     pub grade: Option<AlwaGrade>,

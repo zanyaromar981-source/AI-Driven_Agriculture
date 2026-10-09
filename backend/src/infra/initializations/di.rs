@@ -178,6 +178,21 @@ pub async fn di_init(
     let farm_repository: Arc<dyn FarmRepository> =
         Arc::new(FarmPostgresRepository::new(db_context.conn_clone()));
 
+    // The crop list staff keep. Farms and alwa read which crops are switched
+    // on through their own ports; the crops feature asks them what is in use.
+    let crop_repository: Arc<dyn crate::features::crops::app::CropRepository> = Arc::new(
+        crate::features::crops::infra::CropPostgresRepository::new(db_context.conn_clone()),
+    );
+    let farm_crop_directory: Arc<dyn crate::features::farms::app::CropDirectory> = Arc::new(
+        crate::features::farms::infra::CropsFeatureCropDirectory::new(crop_repository.clone()),
+    );
+    let alwa_crop_directory: Arc<dyn crate::features::alwa::app::CropDirectory> = Arc::new(
+        crate::features::alwa::infra::CropsFeatureCropDirectory::new(crop_repository.clone()),
+    );
+    let farm_crop_usage: Arc<dyn crate::features::crops::app::CropUsage> = Arc::new(
+        crate::features::crops::infra::FarmsFeatureCropUsage::new(farm_repository.clone()),
+    );
+
     // One instance for the whole server: it holds the sub-zone shapes once
     // it has read them, and every farm write asks it.
     let locate_place_use_case = Arc::new(LocatePlaceUseCase::new(Arc::new(
@@ -199,6 +214,7 @@ pub async fn di_init(
         register_farm_use_case: Arc::new(RegisterFarmUseCase::new(
             farm_repository.clone(),
             place_locator.clone(),
+            farm_crop_directory.clone(),
             config.farm.max_farms_per_user,
             config.farm.max_cells_per_farm,
         )),
@@ -206,10 +222,12 @@ pub async fn di_init(
         view_farm_use_case: Arc::new(ViewFarmUseCase::new(farm_repository.clone())),
         repaint_farm_cells_use_case: Arc::new(RepaintFarmCellsUseCase::new(
             farm_repository.clone(),
+            farm_crop_directory.clone(),
         )),
         edit_farm_use_case: Arc::new(EditFarmUseCase::new(
             farm_repository.clone(),
             place_locator.clone(),
+            farm_crop_directory.clone(),
             config.farm.max_cells_per_farm,
         )),
         remove_farm_use_case: Arc::new(RemoveFarmUseCase::new(farm_repository.clone())),
@@ -222,6 +240,7 @@ pub async fn di_init(
             Arc::new(RegisterFarmUseCase::new(
                 farm_repository.clone(),
                 place_locator.clone(),
+                farm_crop_directory,
                 config.farm.max_farms_per_user,
                 config.farm.max_cells_per_farm,
             )),
@@ -593,12 +612,16 @@ pub async fn di_init(
         view_price_history_use_case: Arc::new(ViewPriceHistoryUseCase::new(
             alwa_repository.clone(),
         )),
-        record_price_use_case: Arc::new(RecordPriceUseCase::new(alwa_repository.clone())),
+        record_price_use_case: Arc::new(RecordPriceUseCase::new(
+            alwa_repository.clone(),
+            alwa_crop_directory.clone(),
+        )),
         browse_listings_use_case: Arc::new(BrowseListingsUseCase::new(alwa_repository.clone())),
         view_listing_use_case: Arc::new(ViewListingUseCase::new(alwa_repository.clone())),
         list_deals_use_case: Arc::new(ListDealsUseCase::new(alwa_repository.clone())),
         post_listing_use_case: Arc::new(PostListingUseCase::new(
             alwa_repository.clone(),
+            alwa_crop_directory.clone(),
             MAX_OPEN_LISTINGS_PER_SELLER,
         )),
         list_my_listings_use_case: Arc::new(ListMyListingsUseCase::new(alwa_repository.clone())),
@@ -612,12 +635,41 @@ pub async fn di_init(
         list_stored_prices_use_case: Arc::new(ListStoredPricesUseCase::new(
             alwa_repository.clone(),
         )),
-        create_price_use_case: Arc::new(CreatePriceUseCase::new(alwa_repository.clone())),
-        update_price_use_case: Arc::new(UpdatePriceUseCase::new(alwa_repository.clone())),
+        create_price_use_case: Arc::new(CreatePriceUseCase::new(
+            alwa_repository.clone(),
+            alwa_crop_directory.clone(),
+        )),
+        update_price_use_case: Arc::new(UpdatePriceUseCase::new(
+            alwa_repository.clone(),
+            alwa_crop_directory,
+        )),
         delete_price_use_case: Arc::new(DeletePriceUseCase::new(alwa_repository.clone())),
         list_all_listings_use_case: Arc::new(ListAllListingsUseCase::new(alwa_repository.clone())),
         moderate_listing_use_case: Arc::new(ModerateListingUseCase::new(alwa_repository.clone())),
-        delete_listing_use_case: Arc::new(DeleteListingUseCase::new(alwa_repository)),
+        delete_listing_use_case: Arc::new(DeleteListingUseCase::new(alwa_repository.clone())),
+    };
+
+    let crop = crate::shared::CropFeature {
+        list_crops_use_case: Arc::new(
+            crate::features::crops::app::use_cases::ListCropsUseCase::new(crop_repository.clone()),
+        ),
+        create_crop_use_case: Arc::new(
+            crate::features::crops::app::use_cases::CreateCropUseCase::new(crop_repository.clone()),
+        ),
+        update_crop_use_case: Arc::new(
+            crate::features::crops::app::use_cases::UpdateCropUseCase::new(crop_repository.clone()),
+        ),
+        delete_crop_use_case: Arc::new(
+            crate::features::crops::app::use_cases::DeleteCropUseCase::new(
+                crop_repository,
+                vec![
+                    farm_crop_usage,
+                    Arc::new(crate::features::crops::infra::AlwaFeatureCropUsage::new(
+                        alwa_repository,
+                    )),
+                ],
+            ),
+        ),
     };
 
     let doctor_service: Arc<dyn Doctor> = Arc::new(HttpDoctor::new(&config.doctor.url)?);
@@ -807,5 +859,6 @@ pub async fn di_init(
         job,
         message,
         app_config,
+        crop,
     })
 }

@@ -92,10 +92,10 @@ mod tests {
 
     fn repository() -> FakeAlwaRepository {
         FakeAlwaRepository::new()
-            .with_price(a_price(MARKET_ID, Crop::Tomato, day(1), 900, false))
-            .with_price(a_price(MARKET_ID, Crop::Tomato, day(3), 950, false))
-            .with_price(a_price(MARKET_ID, Crop::Wheat, day(2), 850, true))
-            .with_price(a_price(2, Crop::Tomato, day(3), 700, false))
+            .with_price(a_price(MARKET_ID, Crop::of("tomato"), day(1), 900, false))
+            .with_price(a_price(MARKET_ID, Crop::of("tomato"), day(3), 950, false))
+            .with_price(a_price(MARKET_ID, Crop::of("wheat"), day(2), 850, true))
+            .with_price(a_price(2, Crop::of("tomato"), day(3), 700, false))
     }
 
     #[tokio::test]
@@ -132,7 +132,7 @@ mod tests {
 
         let (_, prices, count) = use_case
             .execute(ListStoredPricesInput {
-                crop: Some(Crop::Tomato),
+                crop: Some(Crop::of("tomato")),
                 from: Some(day(1)),
                 to: Some(day(3)),
                 ..input()
@@ -141,7 +141,11 @@ mod tests {
             .expect("prices");
 
         assert_eq!(count, 2);
-        assert!(prices.iter().all(|price| *price.crop() == Crop::Tomato));
+        assert!(
+            prices
+                .iter()
+                .all(|price| *price.crop() == Crop::of("tomato"))
+        );
     }
 
     #[tokio::test]

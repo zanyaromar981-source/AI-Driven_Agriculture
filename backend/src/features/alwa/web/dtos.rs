@@ -24,73 +24,6 @@ use crate::{
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum AlwaCrop {
-    Wheat,
-    Barley,
-    Tomato,
-    Cucumber,
-    Potato,
-    Onion,
-    Watermelon,
-    Grape,
-    Olive,
-    Sunflower,
-    Chickpea,
-    Pomegranate,
-    Okra,
-    Eggplant,
-    Pepper,
-    Apple,
-}
-
-impl From<AlwaCrop> for domain::Crop {
-    fn from(value: AlwaCrop) -> Self {
-        match value {
-            AlwaCrop::Wheat => domain::Crop::Wheat,
-            AlwaCrop::Barley => domain::Crop::Barley,
-            AlwaCrop::Tomato => domain::Crop::Tomato,
-            AlwaCrop::Cucumber => domain::Crop::Cucumber,
-            AlwaCrop::Potato => domain::Crop::Potato,
-            AlwaCrop::Onion => domain::Crop::Onion,
-            AlwaCrop::Watermelon => domain::Crop::Watermelon,
-            AlwaCrop::Grape => domain::Crop::Grape,
-            AlwaCrop::Olive => domain::Crop::Olive,
-            AlwaCrop::Sunflower => domain::Crop::Sunflower,
-            AlwaCrop::Chickpea => domain::Crop::Chickpea,
-            AlwaCrop::Pomegranate => domain::Crop::Pomegranate,
-            AlwaCrop::Okra => domain::Crop::Okra,
-            AlwaCrop::Eggplant => domain::Crop::Eggplant,
-            AlwaCrop::Pepper => domain::Crop::Pepper,
-            AlwaCrop::Apple => domain::Crop::Apple,
-        }
-    }
-}
-
-impl From<domain::Crop> for AlwaCrop {
-    fn from(value: domain::Crop) -> Self {
-        match value {
-            domain::Crop::Wheat => AlwaCrop::Wheat,
-            domain::Crop::Barley => AlwaCrop::Barley,
-            domain::Crop::Tomato => AlwaCrop::Tomato,
-            domain::Crop::Cucumber => AlwaCrop::Cucumber,
-            domain::Crop::Potato => AlwaCrop::Potato,
-            domain::Crop::Onion => AlwaCrop::Onion,
-            domain::Crop::Watermelon => AlwaCrop::Watermelon,
-            domain::Crop::Grape => AlwaCrop::Grape,
-            domain::Crop::Olive => AlwaCrop::Olive,
-            domain::Crop::Sunflower => AlwaCrop::Sunflower,
-            domain::Crop::Chickpea => AlwaCrop::Chickpea,
-            domain::Crop::Pomegranate => AlwaCrop::Pomegranate,
-            domain::Crop::Okra => AlwaCrop::Okra,
-            domain::Crop::Eggplant => AlwaCrop::Eggplant,
-            domain::Crop::Pepper => AlwaCrop::Pepper,
-            domain::Crop::Apple => AlwaCrop::Apple,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
-#[serde(rename_all = "snake_case")]
 pub enum AlwaGrade {
     A,
     B,
@@ -323,7 +256,7 @@ impl AlwaPricesQuery {
 
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaPriceResponse {
-    pub crop: AlwaCrop,
+    pub crop: String,
     pub price_iqd_per_kg: i32,
     /// A government-set price, as for wheat.
     pub fixed: bool,
@@ -372,7 +305,7 @@ impl AlwaHistoryQuery {
     pub fn into_input(self, market: String, crop: &str) -> Result<ViewPriceHistoryInput, AppError> {
         Ok(ViewPriceHistoryInput {
             market: MarketSlug::new(market)?,
-            crop: domain::Crop::try_from(crop)?,
+            crop: domain::Crop::new(crop)?,
             days: match self.days {
                 Some(days) => HistoryDays::new(days)?,
                 None => HistoryDays::DEFAULT,
@@ -399,7 +332,7 @@ impl From<&Price> for AlwaPricePointResponse {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaPriceHistoryResponse {
     pub market: String,
-    pub crop: AlwaCrop,
+    pub crop: String,
     /// Oldest first. A day without a price is left out.
     pub history: Vec<AlwaPricePointResponse>,
 }
@@ -423,7 +356,7 @@ impl RecordAlwaPriceParams {
     ) -> Result<RecordPriceInput, AppError> {
         Ok(RecordPriceInput {
             market: MarketSlug::new(market)?,
-            crop: domain::Crop::try_from(crop)?,
+            crop: domain::Crop::new(crop)?,
             day: parse_day(day)?,
             price: PricePerKg::new(self.price_iqd_per_kg)?,
             fixed: self.fixed,
@@ -435,7 +368,7 @@ impl RecordAlwaPriceParams {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaRecordedPriceResponse {
     pub market: String,
-    pub crop: AlwaCrop,
+    pub crop: String,
     pub day: NaiveDate,
     pub price_iqd_per_kg: i32,
     pub fixed: bool,
@@ -484,7 +417,7 @@ impl AlwaListingsQuery {
             market: given(self.market).map(MarketSlug::new).transpose()?,
             crop: given(self.crop)
                 .as_deref()
-                .map(domain::Crop::try_from)
+                .map(domain::Crop::new)
                 .transpose()?,
             status: given(self.status)
                 .as_deref()
@@ -501,7 +434,7 @@ impl AlwaListingsQuery {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaListingSummaryResponse {
     pub id: String,
-    pub crop: AlwaCrop,
+    pub crop: String,
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
     pub grade: Option<AlwaGrade>,
@@ -630,7 +563,7 @@ impl TryFrom<&Offer> for AlwaOneOfferResponse {
 
 #[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
 pub struct PostAlwaListingParams {
-    pub crop: AlwaCrop,
+    pub crop: String,
     /// 1 to 1,000,000 kg.
     pub quantity_kg: i64,
     pub asking_price_iqd_per_kg: i64,
@@ -655,7 +588,7 @@ impl PostAlwaListingParams {
             market: MarketSlug::new(self.market)?,
             draft: ListingDraft {
                 seller_name: self.seller_name.map(DisplayName::new).transpose()?,
-                crop: self.crop.into(),
+                crop: domain::Crop::new(&self.crop)?,
                 quantity: QuantityKg::new(self.quantity_kg)?,
                 asking_price: PricePerKg::new(self.asking_price_iqd_per_kg)?,
                 grade: self.grade.map(Into::into),
@@ -673,7 +606,7 @@ impl PostAlwaListingParams {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaListingResponse {
     pub id: String,
-    pub crop: AlwaCrop,
+    pub crop: String,
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
     pub grade: Option<AlwaGrade>,
@@ -764,7 +697,7 @@ impl AlwaMyListingsResponse {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaOfferListingResponse {
     pub id: String,
-    pub crop: AlwaCrop,
+    pub crop: String,
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
     /// Market slug.
@@ -858,7 +791,7 @@ impl AlwaDealsQuery {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaDealResponse {
     pub listing_id: String,
-    pub crop: AlwaCrop,
+    pub crop: String,
     /// The quantity that was sold, which is the accepted offer's.
     pub quantity_kg: i32,
     pub asking_price_iqd_per_kg: i32,
@@ -1076,5 +1009,40 @@ mod tests {
         assert!(parse_day("2026-10-08").is_ok());
         assert!(parse_day("08/10/2026").is_err());
         assert!(parse_day("2026-02-30").is_err());
+    }
+
+    #[test]
+    fn a_crop_is_a_plain_code_on_the_wire_also_one_staff_added_later() {
+        let pagination = crate::app::Pagination::new(1, 20);
+        let input = AlwaListingsQuery {
+            market: None,
+            crop: Some("rice".to_string()),
+            status: None,
+        }
+        .into_input(pagination)
+        .expect("input");
+
+        assert_eq!(input.crop, Some(domain::Crop::of("rice")));
+        assert_eq!(String::from(domain::Crop::of("rice")), "rice");
+    }
+
+    #[test]
+    fn a_crop_that_could_not_be_a_code_is_refused_as_an_unknown_crop() {
+        use crate::app::ToErrorInfo;
+
+        let pagination = crate::app::Pagination::new(1, 20);
+
+        for bad in ["Tomato", "tomato 1", "t"] {
+            let error = AlwaListingsQuery {
+                market: None,
+                crop: Some(bad.to_string()),
+                status: None,
+            }
+            .into_input(pagination)
+            .err()
+            .expect("refused");
+
+            assert_eq!(error.to_error_info().code, "unknown_crop", "{bad:?}");
+        }
     }
 }

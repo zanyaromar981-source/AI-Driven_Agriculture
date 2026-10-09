@@ -44,7 +44,7 @@ impl Cell {
         Self {
             id: None,
             position: touched.position(),
-            crop: Crop::Empty,
+            crop: Crop::EMPTY,
             inside_pct: touched.inside_pct(),
             repainted: false,
         }
@@ -69,7 +69,7 @@ pub struct Redraw {
     pub changed: bool,
 }
 
-/// The land under one crop. `Empty` cells are never reported as a crop.
+/// The land under one crop. Unpainted (`empty`) cells are never reported as a crop.
 #[derive(Clone, Copy, Debug, PartialEq, CopyGetters)]
 #[getset(get_copy = "pub")]
 pub struct CropArea {
@@ -100,7 +100,7 @@ pub struct Farm {
 impl Farm {
     /// Builds a farm from the walked outline. Every cell the outline touches
     /// becomes part of the farm; the ones the farmer did not paint are
-    /// `Empty`. Painted cells the outline does not touch are returned so
+    /// `empty`. Painted cells the outline does not touch are returned so
     /// the caller can report them as dropped.
     pub fn new(
         name: FarmName,
@@ -258,6 +258,29 @@ impl Farm {
         inside.into_iter().collect()
     }
 
+    /// The crops this painting would put on a cell that does not carry them
+    /// yet, without `empty`. These are the new data in a repaint or an edit:
+    /// a cell sent again with the crop it already has changes nothing, so a
+    /// crop staff switched off since may stay where it is.
+    pub fn crops_introduced_by(&self, painted: &[PaintedCell]) -> Vec<Crop> {
+        let current: HashMap<GridCell, Crop> = self
+            .cells
+            .iter()
+            .map(|cell| (cell.position, cell.crop))
+            .collect();
+
+        let mut introduced: Vec<Crop> = painted
+            .iter()
+            .filter(|cell| !cell.crop().is_empty())
+            .filter(|cell| current.get(&cell.position()) != Some(&cell.crop()))
+            .map(|cell| cell.crop())
+            .collect();
+        introduced.sort();
+        introduced.dedup();
+
+        introduced
+    }
+
     fn paint(&mut self, painted: Vec<PaintedCell>) -> Vec<GridCell> {
         paint(&mut self.cells, painted)
     }
@@ -405,20 +428,19 @@ impl FarmLocation {
     }
 }
 
-/// Largest area first, so the main crop leads; ties keep the order the crop
-/// codes are declared in. Takes the summed `inside_pct` of each crop's cells.
+/// Largest area first, so the main crop leads; crops with the same area
+/// follow the alphabet of their codes, so the order never depends on the
+/// crop list staff keep. Takes the summed `inside_pct` of each crop's cells.
 fn crop_areas(inside_per_crop: Vec<(Crop, f64)>) -> Vec<CropArea> {
     let mut planted: Vec<(Crop, f64)> = inside_per_crop
         .into_iter()
-        .filter(|(crop, inside_pct)| *crop != Crop::Empty && *inside_pct > 0.0)
+        .filter(|(crop, inside_pct)| !crop.is_empty() && *inside_pct > 0.0)
         .collect();
-
-    let declared = |crop: &Crop| Crop::ALL.iter().position(|other| other == crop);
 
     planted.sort_by(|(first, first_inside), (second, second_inside)| {
         second_inside
             .total_cmp(first_inside)
-            .then(declared(first).cmp(&declared(second)))
+            .then(first.cmp(second))
     });
 
     planted
@@ -518,7 +540,7 @@ mod tests {
         let (farm, dropped) = farm(vec![]);
 
         assert_eq!(farm.cells().len(), touched().len());
-        assert!(farm.cells().iter().all(|cell| cell.crop() == Crop::Empty));
+        assert!(farm.cells().iter().all(|cell| cell.crop() == Crop::EMPTY));
         assert!(dropped.is_empty());
     }
 
@@ -547,9 +569,9 @@ mod tests {
             .enumerate()
             .map(|(index, position)| {
                 let crop = match index % 3 {
-                    0 => Crop::Wheat,
-                    1 => Crop::Tomato,
-                    _ => Crop::Empty,
+                    0 => Crop::of("wheat"),
+                    1 => Crop::of("tomato"),
+                    _ => Crop::EMPTY,
                 };
 
                 PaintedCell::new(*position, crop)
@@ -562,7 +584,7 @@ mod tests {
         let empty: f64 = farm
             .cells()
             .iter()
-            .filter(|cell| cell.crop() == Crop::Empty)
+            .filter(|cell| cell.crop() == Crop::EMPTY)
             .map(|cell| GridCell::dunams(cell.inside_pct()))
             .sum();
         let total = planted + empty;
@@ -583,7 +605,7 @@ mod tests {
             .find(|cell| cell.inside_pct() < 100.0)
             .expect("a cut cell");
 
-        let (farm, _) = farm(vec![PaintedCell::new(cut.position(), Crop::Wheat)]);
+        let (farm, _) = farm(vec![PaintedCell::new(cut.position(), Crop::of("wheat"))]);
 
         assert_eq!(
             farm.crop_areas()[0].dunam(),
@@ -594,7 +616,7 @@ mod tests {
 
     #[test]
     fn a_painted_cell_inside_the_outline_takes_its_crop() {
-        let (farm, dropped) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)]);
+        let (farm, dropped) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]);
 
         let painted = farm
             .cells()
@@ -602,13 +624,13 @@ mod tests {
             .find(|cell| cell.position() == a_cell_inside())
             .expect("the painted cell");
 
-        assert_eq!(painted.crop(), Crop::Wheat);
+        assert_eq!(painted.crop(), Crop::of("wheat"));
         assert!(dropped.is_empty());
     }
 
     #[test]
     fn a_painted_cell_outside_the_outline_is_dropped_not_added() {
-        let (farm, dropped) = farm(vec![PaintedCell::new(a_cell_outside(), Crop::Wheat)]);
+        let (farm, dropped) = farm(vec![PaintedCell::new(a_cell_outside(), Crop::of("wheat"))]);
 
         assert_eq!(dropped, vec![a_cell_outside()]);
         assert!(
@@ -622,17 +644,17 @@ mod tests {
     #[test]
     fn the_later_crop_wins_when_a_cell_is_painted_twice() {
         let (farm, _) = farm(vec![
-            PaintedCell::new(a_cell_inside(), Crop::Wheat),
-            PaintedCell::new(a_cell_inside(), Crop::Tomato),
+            PaintedCell::new(a_cell_inside(), Crop::of("wheat")),
+            PaintedCell::new(a_cell_inside(), Crop::of("tomato")),
         ]);
 
         assert_eq!(farm.crop_areas().len(), 1);
-        assert_eq!(farm.crop_areas()[0].crop(), Crop::Tomato);
+        assert_eq!(farm.crop_areas()[0].crop(), Crop::of("tomato"));
     }
 
     #[test]
     fn the_area_is_the_outlines_and_the_crops_skip_the_empty_cells() {
-        let (farm, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)]);
+        let (farm, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]);
 
         assert_eq!(farm.area_dunam(), outline().area_dunam());
         assert_eq!(farm.crop_areas().len(), 1);
@@ -646,13 +668,13 @@ mod tests {
     fn repainting_changes_only_the_cells_it_names() {
         let cells = positions();
         let (mut farm, _) = farm(vec![
-            PaintedCell::new(cells[0], Crop::Wheat),
-            PaintedCell::new(cells[1], Crop::Wheat),
+            PaintedCell::new(cells[0], Crop::of("wheat")),
+            PaintedCell::new(cells[1], Crop::of("wheat")),
         ]);
 
         let dropped = farm.repaint(vec![
-            PaintedCell::new(cells[0], Crop::Barley),
-            PaintedCell::new(a_cell_outside(), Crop::Barley),
+            PaintedCell::new(cells[0], Crop::of("barley")),
+            PaintedCell::new(a_cell_outside(), Crop::of("barley")),
         ]);
 
         let crop_at = |position: GridCell| {
@@ -663,10 +685,10 @@ mod tests {
                 .crop()
         };
 
-        assert_eq!(crop_at(cells[0]), Crop::Barley);
+        assert_eq!(crop_at(cells[0]), Crop::of("barley"));
         assert_eq!(
             crop_at(cells[1]),
-            Crop::Wheat,
+            Crop::of("wheat"),
             "an unnamed cell keeps its crop"
         );
         assert_eq!(dropped, vec![a_cell_outside()]);
@@ -675,14 +697,14 @@ mod tests {
     #[test]
     fn only_cells_whose_crop_really_changed_are_marked_repainted() {
         let cells = positions();
-        let (mut farm, _) = farm(vec![PaintedCell::new(cells[0], Crop::Wheat)]);
+        let (mut farm, _) = farm(vec![PaintedCell::new(cells[0], Crop::of("wheat"))]);
         for cell in &mut farm.cells {
             cell.repainted = false;
         }
 
         farm.repaint(vec![
-            PaintedCell::new(cells[0], Crop::Wheat),
-            PaintedCell::new(cells[1], Crop::Barley),
+            PaintedCell::new(cells[0], Crop::of("wheat")),
+            PaintedCell::new(cells[1], Crop::of("barley")),
         ]);
 
         let repainted: Vec<GridCell> = farm
@@ -701,16 +723,16 @@ mod tests {
 
     #[test]
     fn a_cell_can_be_cleared_by_painting_it_empty() {
-        let (mut farm, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)]);
+        let (mut farm, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]);
 
-        farm.repaint(vec![PaintedCell::new(a_cell_inside(), Crop::Empty)]);
+        farm.repaint(vec![PaintedCell::new(a_cell_inside(), Crop::EMPTY)]);
 
         assert!(farm.crop_areas().is_empty());
     }
 
     #[test]
     fn redrawing_replaces_the_name_the_outline_and_every_cell() {
-        let (drawn, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)]);
+        let (drawn, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]);
         let mut farm = stored(&drawn);
         let inside_the_new = another_outline().cells(MAX_CELLS).expect("cells")[0].position();
 
@@ -718,7 +740,7 @@ mod tests {
             .redraw(
                 name("Lower field"),
                 another_outline(),
-                vec![PaintedCell::new(inside_the_new, Crop::Barley)],
+                vec![PaintedCell::new(inside_the_new, Crop::of("barley"))],
                 MAX_CELLS,
             )
             .expect("redraw");
@@ -739,7 +761,7 @@ mod tests {
         assert_eq!(farm.crop_areas().len(), 1);
         assert_eq!(
             farm.crop_areas()[0].crop(),
-            Crop::Barley,
+            Crop::of("barley"),
             "the old wheat is not carried over"
         );
         assert_eq!(farm.created_at(), drawn.created_at());
@@ -756,7 +778,7 @@ mod tests {
             .redraw(
                 name("Upper field"),
                 another_outline(),
-                vec![PaintedCell::new(only_in_the_old, Crop::Wheat)],
+                vec![PaintedCell::new(only_in_the_old, Crop::of("wheat"))],
                 MAX_CELLS,
             )
             .expect("redraw");
@@ -767,7 +789,7 @@ mod tests {
 
     #[test]
     fn redrawing_a_farm_as_it_already_is_changes_nothing() {
-        let painted = vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)];
+        let painted = vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))];
         let (drawn, _) = farm(painted.clone());
         let mut farm = stored(&drawn);
         let before = farm.clone();
@@ -787,20 +809,20 @@ mod tests {
 
     #[test]
     fn redrawing_with_only_another_crop_is_a_change() {
-        let (drawn, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)]);
+        let (drawn, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]);
         let mut farm = stored(&drawn);
 
         let redraw = farm
             .redraw(
                 name("Upper field"),
                 outline(),
-                vec![PaintedCell::new(a_cell_inside(), Crop::Olive)],
+                vec![PaintedCell::new(a_cell_inside(), Crop::of("olive"))],
                 MAX_CELLS,
             )
             .expect("redraw");
 
         assert!(redraw.changed);
-        assert_eq!(farm.crop_areas()[0].crop(), Crop::Olive);
+        assert_eq!(farm.crop_areas()[0].crop(), Crop::of("olive"));
     }
 
     #[test]
@@ -813,7 +835,7 @@ mod tests {
             .iter()
             .filter(|cell| cell.inside_pct() > 50.0)
             .zip(1..)
-            .map(|(cell, id)| Cell::rehydrate(id, cell.position(), Crop::Empty, 100.0))
+            .map(|(cell, id)| Cell::rehydrate(id, cell.position(), Crop::EMPTY, 100.0))
             .collect();
         let mut farm = stored(&drawn);
         farm.cells = old_cells;
@@ -828,7 +850,7 @@ mod tests {
 
     #[test]
     fn a_redraw_that_is_refused_leaves_the_farm_as_it_was() {
-        let (drawn, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)]);
+        let (drawn, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]);
         let mut farm = stored(&drawn);
         let before = farm.clone();
 
@@ -848,9 +870,9 @@ mod tests {
             &outline(),
             None,
             vec![
-                (Crop::Tomato, 40_000.0),
-                (Crop::Empty, 20_000.0),
-                (Crop::Wheat, 240_000.0),
+                (Crop::of("tomato"), 40_000.0),
+                (Crop::EMPTY, 20_000.0),
+                (Crop::of("wheat"), 240_000.0),
             ],
             Utc::now(),
         );
@@ -862,7 +884,7 @@ mod tests {
                 .iter()
                 .map(|area| (area.crop(), area.dunam()))
                 .collect::<Vec<_>>(),
-            vec![(Crop::Wheat, 96.0), (Crop::Tomato, 16.0)]
+            vec![(Crop::of("wheat"), 96.0), (Crop::of("tomato"), 16.0)]
         );
     }
 
@@ -915,5 +937,88 @@ mod tests {
         );
 
         assert_eq!(summary.place(), &Some(a_place()));
+    }
+
+    #[test]
+    fn only_crops_put_on_a_cell_that_did_not_carry_them_are_introduced() {
+        let cells = positions();
+        let (farm, _) = farm(vec![PaintedCell::new(cells[0], Crop::of("wheat"))]);
+
+        let introduced = farm.crops_introduced_by(&[
+            // The crop the cell already has: nothing new.
+            PaintedCell::new(cells[0], Crop::of("wheat")),
+            // A new crop on another cell, named twice.
+            PaintedCell::new(cells[1], Crop::of("rice")),
+            PaintedCell::new(cells[1], Crop::of("rice")),
+            // A cell that is not part of the farm.
+            PaintedCell::new(a_cell_outside(), Crop::of("barley")),
+        ]);
+
+        assert_eq!(introduced, vec![Crop::of("barley"), Crop::of("rice")]);
+    }
+
+    #[test]
+    fn unpainting_introduces_no_crop() {
+        let (farm, _) = farm(vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))]);
+
+        assert!(
+            farm.crops_introduced_by(&[PaintedCell::new(a_cell_inside(), Crop::EMPTY)])
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn a_stored_cell_with_a_crop_no_list_knows_still_reads_back_and_counts() {
+        // Slices share no key, so a crop can be gone from the crop list
+        // while a farm still carries it. Reading never asks the list.
+        let (drawn, _) = farm(vec![]);
+        let cells = drawn
+            .cells()
+            .iter()
+            .enumerate()
+            .map(|(index, cell)| {
+                Cell::rehydrate(index as i32 + 1, cell.position(), Crop::of("teff"), 100.0)
+            })
+            .collect::<Vec<_>>();
+        let count = cells.len() as f64;
+
+        let farm = Farm::rehydrate(
+            7,
+            drawn.name().clone(),
+            drawn.owner().clone(),
+            drawn.outline().clone(),
+            cells,
+            None,
+            None,
+            *drawn.created_at(),
+            *drawn.updated_at(),
+        );
+
+        assert_eq!(farm.crop_areas().len(), 1);
+        assert_eq!(farm.crop_areas()[0].crop(), Crop::of("teff"));
+        assert_eq!(
+            farm.crop_areas()[0].dunam(),
+            GridCell::dunams(count * 100.0)
+        );
+    }
+
+    #[test]
+    fn crops_with_the_same_area_follow_the_alphabet_of_their_codes() {
+        let areas = crop_areas(vec![
+            (Crop::of("wheat"), 100.0),
+            (Crop::of("rice"), 100.0),
+            (Crop::of("barley"), 100.0),
+            (Crop::of("tomato"), 200.0),
+        ]);
+
+        assert_eq!(
+            areas.iter().map(|area| area.crop()).collect::<Vec<_>>(),
+            vec![
+                Crop::of("tomato"),
+                Crop::of("barley"),
+                Crop::of("rice"),
+                Crop::of("wheat")
+            ]
+        );
     }
 }

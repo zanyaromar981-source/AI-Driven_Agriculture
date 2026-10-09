@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::{
     app::{AppError as GlobalAppError, AuthContext},
     features::farms::{
-        app::{AppError, FarmRepository, PlaceLocator},
+        app::{AppError, CropDirectory, FarmRepository, PlaceLocator},
         domain::{Farm, FarmName, GridCell, Outline, PaintedCell},
     },
 };
@@ -19,6 +19,7 @@ pub struct EditFarmInput {
 pub struct EditFarmUseCase {
     repository: Arc<dyn FarmRepository>,
     places: Arc<dyn PlaceLocator>,
+    crops: Arc<dyn CropDirectory>,
     max_cells_per_farm: usize,
 }
 
@@ -26,11 +27,13 @@ impl EditFarmUseCase {
     pub fn new(
         repository: Arc<dyn FarmRepository>,
         places: Arc<dyn PlaceLocator>,
+        crops: Arc<dyn CropDirectory>,
         max_cells_per_farm: usize,
     ) -> Self {
         Self {
             repository,
             places,
+            crops,
             max_cells_per_farm,
         }
     }
@@ -52,6 +55,18 @@ impl EditFarmUseCase {
 
             return Err(GlobalAppError::NotFound.into());
         };
+
+        // Only what the edit newly paints must be a crop staff have switched
+        // on. A cell sent again with the crop it already carries is the
+        // farm as it was, so a crop switched off since stays where it is and
+        // the farmer can still move the border or change the name.
+        let introduced = farm.crops_introduced_by(&input.painted);
+
+        if !introduced.is_empty() {
+            self.crops.active().await?.allow(introduced).inspect_err(
+                |error| tracing::info!(farm_id = id, %error, "edit refused: a crop is not in use"),
+            )?;
+        }
 
         let redraw = farm.redraw(
             input.name,
@@ -98,8 +113,9 @@ mod tests {
     use super::*;
     use crate::features::farms::{
         app::testing::{
-            FakeFarmRepository, FakePlaceLocator, MAX_CELLS, OWNER, RepositoryCall, a_cell_inside,
-            a_farm, an_outline, an_outline_outside, another_outline, auth_context, the_place,
+            FakeCropDirectory, FakeFarmRepository, FakePlaceLocator, MAX_CELLS, OWNER,
+            RepositoryCall, a_cell_inside, a_farm, an_outline, an_outline_outside, another_outline,
+            auth_context, the_place,
         },
         domain::{Crop, FarmError},
     };
@@ -115,7 +131,7 @@ mod tests {
         EditFarmInput {
             name: name("Lower field"),
             outline: another_outline(),
-            painted: vec![PaintedCell::new(inside_the_new, Crop::Barley)],
+            painted: vec![PaintedCell::new(inside_the_new, Crop::of("barley"))],
         }
     }
 
@@ -123,6 +139,7 @@ mod tests {
         EditFarmUseCase::new(
             Arc::new(repository.clone()),
             Arc::new(FakePlaceLocator::new()),
+            Arc::new(FakeCropDirectory::seeded()),
             MAX_CELLS,
         )
     }
@@ -134,6 +151,7 @@ mod tests {
         let use_case = EditFarmUseCase::new(
             Arc::new(repository.clone()),
             Arc::new(places.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
             MAX_CELLS,
         );
 
@@ -175,13 +193,14 @@ mod tests {
         let use_case = EditFarmUseCase::new(
             Arc::new(repository.clone()),
             Arc::new(places.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
             MAX_CELLS,
         );
 
         let same = EditFarmInput {
             name: name("Upper field"),
             outline: an_outline(),
-            painted: vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)],
+            painted: vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))],
         };
         use_case
             .execute(&auth_context(), 7, same)
@@ -193,6 +212,7 @@ mod tests {
         let failing = EditFarmUseCase::new(
             Arc::new(repository.clone()),
             Arc::new(FakePlaceLocator::failing()),
+            Arc::new(FakeCropDirectory::seeded()),
             MAX_CELLS,
         );
 
@@ -227,7 +247,7 @@ mod tests {
             another_outline().cells(MAX_CELLS).expect("cells").len()
         );
         assert_eq!(farm.crop_areas().len(), 1);
-        assert_eq!(farm.crop_areas()[0].crop(), Crop::Barley);
+        assert_eq!(farm.crop_areas()[0].crop(), Crop::of("barley"));
         assert!(dropped.is_empty());
     }
 
@@ -331,7 +351,7 @@ mod tests {
                 &auth_context(),
                 7,
                 EditFarmInput {
-                    painted: vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)],
+                    painted: vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))],
                     ..an_edit()
                 },
             )
@@ -349,6 +369,7 @@ mod tests {
         let result = EditFarmUseCase::new(
             Arc::new(repository.clone()),
             Arc::new(FakePlaceLocator::new()),
+            Arc::new(FakeCropDirectory::seeded()),
             10,
         )
         .execute(&auth_context(), 7, an_edit())
@@ -378,7 +399,7 @@ mod tests {
                 EditFarmInput {
                     name: name("Lower field"),
                     outline: an_outline(),
-                    painted: vec![PaintedCell::new(a_cell_inside(), Crop::Wheat)],
+                    painted: vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))],
                 },
             )
             .await
@@ -399,5 +420,93 @@ mod tests {
                 .await
                 .is_err()
         );
+    }
+
+    fn use_case_with(
+        repository: &FakeFarmRepository,
+        crops: &FakeCropDirectory,
+    ) -> EditFarmUseCase {
+        EditFarmUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakePlaceLocator::new()),
+            Arc::new(crops.clone()),
+            MAX_CELLS,
+        )
+    }
+
+    #[tokio::test]
+    async fn an_edit_that_paints_an_unknown_or_switched_off_crop_is_refused_and_nothing_is_written()
+    {
+        let repository = FakeFarmRepository::holding(a_farm());
+        // The edit paints barley, and barley is not in the list.
+        let crops = FakeCropDirectory::with(&["wheat"]);
+
+        let result = use_case_with(&repository, &crops)
+            .execute(&auth_context(), 7, an_edit())
+            .await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Farm(FarmError::UnknownCrop(code))) if code == "barley"
+        ));
+        assert!(
+            !repository
+                .calls()
+                .iter()
+                .any(|call| matches!(call, RepositoryCall::Replace { .. }))
+        );
+    }
+
+    #[tokio::test]
+    async fn an_edit_may_keep_a_crop_that_was_switched_off_on_the_cells_that_had_it() {
+        // The stored farm has wheat on this cell; wheat is off now. The
+        // farmer only changes the name.
+        let repository = FakeFarmRepository::holding(a_farm());
+        let crops = FakeCropDirectory::with(&[]);
+
+        let (farm, _) = use_case_with(&repository, &crops)
+            .execute(
+                &auth_context(),
+                7,
+                EditFarmInput {
+                    name: name("Renamed"),
+                    outline: an_outline(),
+                    painted: vec![PaintedCell::new(a_cell_inside(), Crop::of("wheat"))],
+                },
+            )
+            .await
+            .expect("edit");
+
+        assert_eq!(farm.name().as_str(), "Renamed");
+        assert_eq!(farm.crop_areas()[0].crop(), Crop::of("wheat"));
+        assert_eq!(crops.asked(), 0, "no cell gets a crop it did not have");
+    }
+
+    #[tokio::test]
+    async fn the_crop_list_is_read_once_for_an_edit() {
+        let repository = FakeFarmRepository::holding(a_farm());
+        let crops = FakeCropDirectory::seeded();
+        let painted = another_outline()
+            .cells(MAX_CELLS)
+            .expect("cells")
+            .into_iter()
+            .map(|cell| PaintedCell::new(cell.position(), Crop::of("barley")))
+            .collect::<Vec<_>>();
+        assert!(painted.len() > 1, "the point is many cells");
+
+        use_case_with(&repository, &crops)
+            .execute(
+                &auth_context(),
+                7,
+                EditFarmInput {
+                    name: name("Lower field"),
+                    outline: another_outline(),
+                    painted,
+                },
+            )
+            .await
+            .expect("edit");
+
+        assert_eq!(crops.asked(), 1);
     }
 }

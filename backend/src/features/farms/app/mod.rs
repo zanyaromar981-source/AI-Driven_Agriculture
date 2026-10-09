@@ -5,4 +5,6 @@ pub mod testing;
 pub mod use_cases;
 
 pub use errors::AppError;
-pub use ports::{AreaDirectory, FarmRepository, FarmerDirectory, PlaceLocator, PublicTotalsSwitch};
+pub use ports::{
+    AreaDirectory, CropDirectory, FarmRepository, FarmerDirectory, PlaceLocator, PublicTotalsSwitch,
+};

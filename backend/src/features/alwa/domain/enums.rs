@@ -3,98 +3,6 @@ use crate::{
     shared::DomainError,
 };
 
-/// A crop traded at an alwa. Unlike a farm cell, a price or a listing always
-/// names a crop, so there is no `empty` here.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum Crop {
-    Wheat,
-    Barley,
-    Tomato,
-    Cucumber,
-    Potato,
-    Onion,
-    Watermelon,
-    Grape,
-    Olive,
-    Sunflower,
-    Chickpea,
-    Pomegranate,
-    Okra,
-    Eggplant,
-    Pepper,
-    Apple,
-}
-
-impl Crop {
-    pub const ALL: [Crop; 16] = [
-        Crop::Wheat,
-        Crop::Barley,
-        Crop::Tomato,
-        Crop::Cucumber,
-        Crop::Potato,
-        Crop::Onion,
-        Crop::Watermelon,
-        Crop::Grape,
-        Crop::Olive,
-        Crop::Sunflower,
-        Crop::Chickpea,
-        Crop::Pomegranate,
-        Crop::Okra,
-        Crop::Eggplant,
-        Crop::Pepper,
-        Crop::Apple,
-    ];
-}
-
-impl From<Crop> for String {
-    fn from(value: Crop) -> Self {
-        match value {
-            Crop::Wheat => "wheat".to_string(),
-            Crop::Barley => "barley".to_string(),
-            Crop::Tomato => "tomato".to_string(),
-            Crop::Cucumber => "cucumber".to_string(),
-            Crop::Potato => "potato".to_string(),
-            Crop::Onion => "onion".to_string(),
-            Crop::Watermelon => "watermelon".to_string(),
-            Crop::Grape => "grape".to_string(),
-            Crop::Olive => "olive".to_string(),
-            Crop::Sunflower => "sunflower".to_string(),
-            Crop::Chickpea => "chickpea".to_string(),
-            Crop::Pomegranate => "pomegranate".to_string(),
-            Crop::Okra => "okra".to_string(),
-            Crop::Eggplant => "eggplant".to_string(),
-            Crop::Pepper => "pepper".to_string(),
-            Crop::Apple => "apple".to_string(),
-        }
-    }
-}
-
-impl TryFrom<&str> for Crop {
-    type Error = AlwaError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "wheat" => Ok(Crop::Wheat),
-            "barley" => Ok(Crop::Barley),
-            "tomato" => Ok(Crop::Tomato),
-            "cucumber" => Ok(Crop::Cucumber),
-            "potato" => Ok(Crop::Potato),
-            "onion" => Ok(Crop::Onion),
-            "watermelon" => Ok(Crop::Watermelon),
-            "grape" => Ok(Crop::Grape),
-            "olive" => Ok(Crop::Olive),
-            "sunflower" => Ok(Crop::Sunflower),
-            "chickpea" => Ok(Crop::Chickpea),
-            "pomegranate" => Ok(Crop::Pomegranate),
-            "okra" => Ok(Crop::Okra),
-            "eggplant" => Ok(Crop::Eggplant),
-            "pepper" => Ok(Crop::Pepper),
-            "apple" => Ok(Crop::Apple),
-            _ => Err(DomainError::InvalidValue(format!("Invalid crop: {value}")).into()),
-        }
-    }
-}
-
 /// The quality grade a seller gives their produce. `A` is the best.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Grade {
@@ -329,29 +237,6 @@ impl FairPrice {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    /// Every variant must survive a trip to the database and back. A mismatch
-    /// between the two directions corrupts rows silently rather than failing.
-    #[test]
-    fn every_crop_round_trips() {
-        for crop in Crop::ALL {
-            let stored = String::from(crop);
-            let parsed = Crop::try_from(stored.as_str())
-                .unwrap_or_else(|err| panic!("{crop:?} stored as {stored:?} but {err:?}"));
-
-            assert_eq!(parsed, crop, "{stored:?} did not round trip");
-        }
-    }
-
-    #[test]
-    fn empty_is_not_a_crop_at_the_alwa() {
-        assert!(
-            Crop::try_from("empty").is_err(),
-            "an unpainted farm cell is not something that can be priced or sold"
-        );
-        assert!(Crop::try_from("Wheat").is_err());
-        assert!(Crop::try_from("").is_err());
-    }
 
     #[test]
     fn every_grade_round_trips() {

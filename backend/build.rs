@@ -116,6 +116,10 @@ fn main() {
                     "app_config,app_versions_seen",
                     "src/features/app_config/infra/persistence/postgres/entities",
                 ),
+                (
+                    "crops",
+                    "src/features/crops/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

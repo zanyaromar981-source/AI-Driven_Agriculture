@@ -5,7 +5,7 @@ use chrono::Utc;
 use crate::{
     app::{AppError as GlobalAppError, AuthContext},
     features::alwa::{
-        app::{AlwaRepository, AppError, listing_cards::assemble_cards},
+        app::{AlwaRepository, AppError, CropDirectory, listing_cards::assemble_cards},
         domain::{IdempotencyKey, Listing, ListingCard, ListingDraft, MarketSlug},
     },
 };
@@ -18,13 +18,19 @@ pub struct PostListingInput {
 
 pub struct PostListingUseCase {
     repository: Arc<dyn AlwaRepository>,
+    crops: Arc<dyn CropDirectory>,
     max_open_listings_per_seller: u64,
 }
 
 impl PostListingUseCase {
-    pub fn new(repository: Arc<dyn AlwaRepository>, max_open_listings_per_seller: u64) -> Self {
+    pub fn new(
+        repository: Arc<dyn AlwaRepository>,
+        crops: Arc<dyn CropDirectory>,
+        max_open_listings_per_seller: u64,
+    ) -> Self {
         Self {
             repository,
+            crops,
             max_open_listings_per_seller,
         }
     }
@@ -52,6 +58,17 @@ impl PostListingUseCase {
 
             return first_card(self.repository.as_ref(), existing, now).await;
         }
+
+        // A new listing must name a crop staff have switched on. A repeat of
+        // an earlier post never gets here: that listing was checked when it
+        // was made.
+        self.crops
+            .active()
+            .await?
+            .allow(input.draft.crop)
+            .inspect_err(
+                |error| tracing::info!(%error, "listing refused: the crop is not in use"),
+            )?;
 
         let Some(market) = self.repository.find_market_by_slug(&input.market).await? else {
             tracing::info!(
@@ -134,8 +151,8 @@ mod tests {
     use super::*;
     use crate::features::alwa::{
         app::testing::{
-            FakeAlwaRepository, MARKET, RepositoryCall, SELLER, a_listing, a_listing_draft,
-            an_open_listing, auth_context, market_slug,
+            FakeAlwaRepository, FakeCropDirectory, MARKET, RepositoryCall, SELLER, a_listing,
+            a_listing_draft, an_open_listing, auth_context, market_slug,
         },
         domain::{AlwaError, ListingStatus},
     };
@@ -159,7 +176,11 @@ mod tests {
     #[tokio::test]
     async fn posts_an_open_listing_for_the_signed_in_phone() {
         let repository = holding(MAX - 1);
-        let use_case = PostListingUseCase::new(Arc::new(repository.clone()), MAX);
+        let use_case = PostListingUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+        );
 
         let card = use_case
             .execute(&auth_context(SELLER), input())
@@ -176,7 +197,11 @@ mod tests {
     #[tokio::test]
     async fn rejects_once_the_open_listing_quota_is_reached() {
         let repository = holding(MAX);
-        let use_case = PostListingUseCase::new(Arc::new(repository.clone()), MAX);
+        let use_case = PostListingUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+        );
 
         let result = use_case.execute(&auth_context(SELLER), input()).await;
 
@@ -198,7 +223,11 @@ mod tests {
     async fn listings_that_are_no_longer_open_do_not_count_against_the_quota() {
         let repository =
             holding(MAX - 1).with_listing(a_listing(50, Utc::now() - Duration::days(5)));
-        let use_case = PostListingUseCase::new(Arc::new(repository.clone()), MAX);
+        let use_case = PostListingUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+        );
 
         assert!(
             use_case
@@ -212,7 +241,11 @@ mod tests {
     #[tokio::test]
     async fn a_closing_time_in_the_past_is_not_written() {
         let repository = FakeAlwaRepository::new();
-        let use_case = PostListingUseCase::new(Arc::new(repository.clone()), MAX);
+        let use_case = PostListingUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+        );
 
         let result = use_case
             .execute(
@@ -235,7 +268,11 @@ mod tests {
     #[tokio::test]
     async fn a_listing_at_an_unknown_alwa_is_not_found() {
         let repository = FakeAlwaRepository::new();
-        let use_case = PostListingUseCase::new(Arc::new(repository.clone()), MAX);
+        let use_case = PostListingUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded()),
+            MAX,
+        );
 
         let result = use_case
             .execute(
@@ -252,5 +289,60 @@ mod tests {
             Err(AppError::GlobalAppError(GlobalAppError::NotFound))
         ));
         assert!(!repository.wrote());
+    }
+
+    #[tokio::test]
+    async fn a_crop_staff_added_later_can_be_put_on_sale() {
+        let repository = FakeAlwaRepository::new();
+        let use_case = PostListingUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::with(&["rice"])),
+            MAX,
+        );
+        let mut input = input();
+        input.draft.crop = crate::features::alwa::domain::Crop::of("rice");
+
+        let card = use_case
+            .execute(&auth_context(SELLER), input)
+            .await
+            .expect("card");
+
+        assert_eq!(card.listing().crop().as_str(), "rice");
+    }
+
+    #[tokio::test]
+    async fn a_crop_that_is_unknown_or_switched_off_is_refused_by_name_and_nothing_is_posted() {
+        let repository = FakeAlwaRepository::new();
+        // The draft sells tomato, and tomato is not in the list.
+        let crops = FakeCropDirectory::with(&["wheat"]);
+        let use_case =
+            PostListingUseCase::new(Arc::new(repository.clone()), Arc::new(crops.clone()), MAX);
+
+        let result = use_case.execute(&auth_context(SELLER), input()).await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Alwa(AlwaError::UnknownCrop(code))) if code == "tomato"
+        ));
+        assert_eq!(crops.asked(), 1);
+        assert!(!repository.calls().contains(&RepositoryCall::CreateListing));
+    }
+
+    #[tokio::test]
+    async fn when_the_crop_list_cannot_be_read_nothing_is_posted() {
+        let repository = FakeAlwaRepository::new();
+        let use_case = PostListingUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::failing()),
+            MAX,
+        );
+
+        assert!(
+            use_case
+                .execute(&auth_context(SELLER), input())
+                .await
+                .is_err()
+        );
+        assert!(!repository.calls().contains(&RepositoryCall::CreateListing));
     }
 }

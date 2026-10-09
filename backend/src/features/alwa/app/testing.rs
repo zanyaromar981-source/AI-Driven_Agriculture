@@ -6,11 +6,14 @@ use chrono::{DateTime, Duration, NaiveDate, Utc};
 use crate::{
     app::{AuthContext, Pagination, User},
     features::alwa::{
-        app::{AlwaRepository, AppError, ListingFilter, ModerationFilter, StoredPriceFilter},
+        app::{
+            AlwaRepository, AppError, CropDirectory, ListingFilter, ModerationFilter,
+            StoredPriceFilter,
+        },
         domain::{
-            AlwaError, BuyerKind, Crop, Deal, DisplayName, Grade, IdempotencyKey, Listing,
-            ListingDraft, ListingStatus, Market, MarketName, MarketNames, MarketSlug, Offer,
-            OfferDraft, OfferStatus, Pickup, Price, PricePerKg, PriceSource, QuantityKg,
+            ActiveCrops, AlwaError, BuyerKind, Crop, Deal, DisplayName, Grade, IdempotencyKey,
+            Listing, ListingDraft, ListingStatus, Market, MarketName, MarketNames, MarketSlug,
+            Offer, OfferDraft, OfferStatus, Pickup, Price, PricePerKg, PriceSource, QuantityKg,
         },
     },
     shared::Phone,
@@ -26,6 +29,9 @@ pub const MARKET: &str = "sulaymaniyah";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RepositoryCall {
+    IsCropTraded {
+        crop: Crop,
+    },
     FindMarkets,
     FindMarketBySlug {
         slug: String,
@@ -963,6 +969,80 @@ impl AlwaRepository for FakeAlwaRepository {
 
         Ok(store.listings.len() < before)
     }
+
+    async fn is_crop_traded(&self, crop: Crop) -> Result<bool, AppError> {
+        self.record(RepositoryCall::IsCropTraded { crop });
+        self.guard()?;
+
+        let store = self.store.lock().expect("store lock");
+
+        Ok(store.listings.iter().any(|listing| *listing.crop() == crop)
+            || store.prices.iter().any(|price| *price.crop() == crop))
+    }
+}
+
+/// Stands in for the crops feature: the crops staff have switched on.
+#[derive(Debug, Clone, Default)]
+pub struct FakeCropDirectory {
+    active: Vec<Crop>,
+    failing: bool,
+    asked: Arc<Mutex<u32>>,
+}
+
+impl FakeCropDirectory {
+    /// The alwa crops that were fixed in code before staff kept the list.
+    pub fn seeded() -> Self {
+        Self::with(&[
+            "wheat",
+            "barley",
+            "tomato",
+            "cucumber",
+            "potato",
+            "onion",
+            "watermelon",
+            "grape",
+            "olive",
+            "sunflower",
+            "chickpea",
+            "pomegranate",
+            "okra",
+            "eggplant",
+            "pepper",
+            "apple",
+        ])
+    }
+
+    pub fn with(codes: &[&str]) -> Self {
+        Self {
+            active: codes.iter().map(|code| Crop::of(code)).collect(),
+            ..Self::default()
+        }
+    }
+
+    pub fn failing() -> Self {
+        Self {
+            failing: true,
+            ..Self::default()
+        }
+    }
+
+    /// How many times the list was asked for.
+    pub fn asked(&self) -> u32 {
+        *self.asked.lock().expect("asked lock")
+    }
+}
+
+#[async_trait]
+impl CropDirectory for FakeCropDirectory {
+    async fn active(&self) -> Result<ActiveCrops, AppError> {
+        *self.asked.lock().expect("asked lock") += 1;
+
+        if self.failing {
+            return Err(crate::app::AppError::InternalServerError.into());
+        }
+
+        Ok(ActiveCrops::new(self.active.iter().copied()))
+    }
 }
 
 fn same_key(one: &Price, other: &Price) -> bool {
@@ -1051,7 +1131,7 @@ pub fn markets() -> Vec<Market> {
 pub fn a_listing_draft(closes_at: DateTime<Utc>) -> ListingDraft {
     ListingDraft {
         seller_name: Some(DisplayName::new("Kak Azad".to_string()).expect("name")),
-        crop: Crop::Tomato,
+        crop: Crop::of("tomato"),
         quantity: QuantityKg::new(500).expect("quantity"),
         asking_price: PricePerKg::new(1_000).expect("price"),
         grade: Some(Grade::A),

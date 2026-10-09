@@ -314,7 +314,7 @@ pub async fn delete_price(
     >,
 ) -> Result<StatusCode, WebError> {
     let slug = MarketSlug::new(slug).map_err(crate::features::alwa::app::AppError::from)?;
-    let crop = Crop::try_from(crop.as_str()).map_err(crate::features::alwa::app::AppError::from)?;
+    let crop = Crop::new(crop.as_str()).map_err(crate::features::alwa::app::AppError::from)?;
     let day = parse_day(&day)?;
 
     state

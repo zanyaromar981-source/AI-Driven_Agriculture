@@ -23,61 +23,6 @@ use crate::{
     shared::Phone,
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum Crop {
-    Wheat,
-    Barley,
-    Tomato,
-    Cucumber,
-    Potato,
-    Onion,
-    Watermelon,
-    Grape,
-    Olive,
-    Sunflower,
-    Chickpea,
-    Empty,
-}
-
-impl From<Crop> for domain::Crop {
-    fn from(value: Crop) -> Self {
-        match value {
-            Crop::Wheat => domain::Crop::Wheat,
-            Crop::Barley => domain::Crop::Barley,
-            Crop::Tomato => domain::Crop::Tomato,
-            Crop::Cucumber => domain::Crop::Cucumber,
-            Crop::Potato => domain::Crop::Potato,
-            Crop::Onion => domain::Crop::Onion,
-            Crop::Watermelon => domain::Crop::Watermelon,
-            Crop::Grape => domain::Crop::Grape,
-            Crop::Olive => domain::Crop::Olive,
-            Crop::Sunflower => domain::Crop::Sunflower,
-            Crop::Chickpea => domain::Crop::Chickpea,
-            Crop::Empty => domain::Crop::Empty,
-        }
-    }
-}
-
-impl From<domain::Crop> for Crop {
-    fn from(value: domain::Crop) -> Self {
-        match value {
-            domain::Crop::Wheat => Crop::Wheat,
-            domain::Crop::Barley => Crop::Barley,
-            domain::Crop::Tomato => Crop::Tomato,
-            domain::Crop::Cucumber => Crop::Cucumber,
-            domain::Crop::Potato => Crop::Potato,
-            domain::Crop::Onion => Crop::Onion,
-            domain::Crop::Watermelon => Crop::Watermelon,
-            domain::Crop::Grape => Crop::Grape,
-            domain::Crop::Olive => Crop::Olive,
-            domain::Crop::Sunflower => Crop::Sunflower,
-            domain::Crop::Chickpea => Crop::Chickpea,
-            domain::Crop::Empty => Crop::Empty,
-        }
-    }
-}
-
 /// A GPS corner the farmer tapped: WGS84 decimal degrees, accuracy in metres,
 /// UTC time.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
@@ -90,17 +35,30 @@ pub struct PointParams {
 
 /// One painted cell of the 10 m grid (UTM zone 38N): `e = floor(easting / 10)`,
 /// `n = floor(northing / 10)`.
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct CellParams {
     pub e: i32,
     pub n: i32,
-    pub crop: Crop,
+    /// The code of a crop that is switched on in `GET /v1/crops`, or `empty`
+    /// to unpaint the cell.
+    pub crop: String,
 }
 
-impl From<CellParams> for PaintedCell {
-    fn from(value: CellParams) -> Self {
-        PaintedCell::new(GridCell::new(value.e, value.n), value.crop.into())
+impl TryFrom<CellParams> for PaintedCell {
+    type Error = AppError;
+
+    /// Only the shape of the code is checked here. Whether the crop may be
+    /// used is the use case's question, asked once for the whole request.
+    fn try_from(value: CellParams) -> Result<Self, Self::Error> {
+        Ok(PaintedCell::new(
+            GridCell::new(value.e, value.n),
+            domain::Crop::new(&value.crop)?,
+        ))
     }
+}
+
+fn painted(cells: Vec<CellParams>) -> Result<Vec<PaintedCell>, AppError> {
+    cells.into_iter().map(PaintedCell::try_from).collect()
 }
 
 #[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
@@ -130,7 +88,7 @@ impl CreateFarmParams {
         Ok(RegisterFarmInput {
             name: FarmName::new(self.name)?,
             outline: Outline::new(points)?,
-            painted: self.cells.into_iter().map(Into::into).collect(),
+            painted: painted(self.cells)?,
             idempotency_key: idempotency_key.map(IdempotencyKey::new).transpose()?,
             created_offline_at: self.created_offline_at,
         })
@@ -151,7 +109,7 @@ impl CreateFarmParams {
         Ok(EditFarmInput {
             name: FarmName::new(self.name)?,
             outline: Outline::new(points)?,
-            painted: self.cells.into_iter().map(Into::into).collect(),
+            painted: painted(self.cells)?,
         })
     }
 }
@@ -163,16 +121,16 @@ pub struct RepaintFarmCellsParams {
 }
 
 impl RepaintFarmCellsParams {
-    pub fn into_input(self) -> RepaintFarmCellsInput {
-        RepaintFarmCellsInput {
-            painted: self.cells.into_iter().map(Into::into).collect(),
-        }
+    pub fn into_input(self) -> Result<RepaintFarmCellsInput, AppError> {
+        Ok(RepaintFarmCellsInput {
+            painted: painted(self.cells)?,
+        })
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct CropAreaResponse {
-    pub crop: Crop,
+    pub crop: String,
     pub dunam: f64,
 }
 
@@ -215,11 +173,11 @@ impl From<&Point> for OutlinePointResponse {
 /// One cell of a farm. `inside_pct` is the share of the cell's 100 square
 /// metres inside the outline, above 0 and at most 100, not rounded: over a
 /// farm's cells it adds up to `area_dunam * 2500` square metres.
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct CellResponse {
     pub e: i32,
     pub n: i32,
-    pub crop: Crop,
+    pub crop: String,
     pub inside_pct: f64,
 }
 
@@ -392,7 +350,7 @@ impl TryFrom<(&Farm, &[GridCell])> for SavedFarmResponse {
 /// `null` and `level` stays `none` until a satellite reading exists.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct CropStatusResponse {
-    pub crop: Crop,
+    pub crop: String,
     pub dunam: f64,
     pub greenness_pct_of_normal: Option<i32>,
     pub level: Level,
@@ -460,7 +418,7 @@ fn given(value: Option<String>) -> Option<String> {
 }
 
 fn planted_crop(code: String) -> Result<PlantedCrop, AppError> {
-    Ok(PlantedCrop::new(domain::Crop::try_from(code.as_str())?)?)
+    Ok(PlantedCrop::new(domain::Crop::new(&code)?)?)
 }
 
 #[derive(Deserialize, Debug, Clone, Default, IntoParams)]
@@ -559,9 +517,9 @@ impl From<&FarmTotals> for FarmStatsTotalsResponse {
 
 /// One crop over the whole answer: the summed share of its cells inside
 /// their farms' outlines, and who grows it.
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct FarmStatsCropResponse {
-    pub crop: Crop,
+    pub crop: String,
     pub dunam: f64,
     pub farms: u64,
     pub farmers: u64,
@@ -579,9 +537,9 @@ impl From<&CropTotals> for FarmStatsCropResponse {
 }
 
 /// One crop inside one area.
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct FarmStatsAreaCropResponse {
-    pub crop: Crop,
+    pub crop: String,
     pub dunam: f64,
     pub farms: u64,
 }
@@ -1019,7 +977,7 @@ mod tests {
         assert_eq!(input.filter.sub_zone, Some(AreaFilter::Unknown));
         assert_eq!(
             input.filter.crop.map(|crop| crop.crop()),
-            Some(domain::Crop::Wheat)
+            Some(domain::Crop::of("wheat"))
         );
         assert_eq!(
             input.filter.search.as_ref().map(FarmSearch::as_str),
@@ -1042,9 +1000,10 @@ mod tests {
     }
 
     #[test]
-    fn an_unknown_crop_sort_or_order_and_an_over_long_search_are_refused() {
+    fn a_malformed_crop_an_unknown_sort_or_order_and_an_over_long_search_are_refused() {
         for query in [
-            serde_json::json!({"crop": "rice"}),
+            serde_json::json!({"crop": "Rice"}),
+            serde_json::json!({"crop": "rice!"}),
             serde_json::json!({"crop": "empty"}),
             serde_json::json!({"sort": "owner_phone"}),
             serde_json::json!({"order": "down"}),
@@ -1071,7 +1030,7 @@ mod tests {
         assert_eq!(input.zone, None);
         assert_eq!(
             input.crop.map(|crop| crop.crop()),
-            Some(domain::Crop::Barley)
+            Some(domain::Crop::of("barley"))
         );
 
         let empty_land = FarmStatsQuery {
@@ -1101,7 +1060,7 @@ mod tests {
         let wheat = |level, key| AreaCropSum {
             level,
             key,
-            crop: domain::Crop::Wheat,
+            crop: domain::Crop::of("wheat"),
             inside_pct: 15_000.0,
             farms: 1,
             farmers: 1,
@@ -1182,5 +1141,64 @@ mod tests {
         for hidden in ["sub_zone", "sangaw", "phone", "+964", "owner", "\"name\""] {
             assert!(!body.contains(hidden), "{hidden} must not be public");
         }
+    }
+
+    #[test]
+    fn the_crop_filter_takes_any_crop_code_also_one_staff_added_or_switched_off() {
+        let input = farms_query(serde_json::json!({"crop": "rice"})).expect("input");
+
+        assert_eq!(
+            input.filter.crop.map(|crop| crop.crop()),
+            Some(domain::Crop::of("rice")),
+            "farms painted with a crop are still there whatever the crop list says"
+        );
+    }
+
+    #[test]
+    fn a_painted_cell_carries_its_crop_as_the_same_lower_case_word() {
+        let cell: CellParams =
+            serde_json::from_value(serde_json::json!({"e": 1, "n": 2, "crop": "rice"}))
+                .expect("cell");
+        let painted = PaintedCell::try_from(cell).expect("painted");
+
+        assert_eq!(painted.crop(), domain::Crop::of("rice"));
+        assert_eq!(
+            serde_json::to_value(CropAreaResponse {
+                crop: painted.crop().into(),
+                dunam: 1.0
+            })
+            .expect("json")["crop"],
+            "rice",
+            "a crop is still a plain string on the wire"
+        );
+    }
+
+    #[test]
+    fn a_cell_whose_crop_could_not_be_a_code_is_refused_as_an_unknown_crop() {
+        use crate::app::ToErrorInfo;
+
+        for bad in ["Wheat", "", "w", "wheat 2"] {
+            let cell: CellParams =
+                serde_json::from_value(serde_json::json!({"e": 1, "n": 2, "crop": bad}))
+                    .expect("cell");
+            let error = PaintedCell::try_from(cell).expect_err("refused");
+
+            assert_eq!(error.to_error_info().code, "unknown_crop", "{bad:?}");
+            assert!(error.to_error_info().detail.contains(bad), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn empty_is_still_how_a_cell_is_unpainted() {
+        let cell: CellParams =
+            serde_json::from_value(serde_json::json!({"e": 1, "n": 2, "crop": "empty"}))
+                .expect("cell");
+
+        assert!(
+            PaintedCell::try_from(cell)
+                .expect("painted")
+                .crop()
+                .is_empty()
+        );
     }
 }

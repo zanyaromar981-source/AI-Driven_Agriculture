@@ -672,7 +672,7 @@ impl FarmRepository for FarmPostgresRepository {
                 )))),
                 "farmers",
             )
-            .filter(farm_cells::Column::Crop.ne(String::from(Crop::Empty)))
+            .filter(farm_cells::Column::Crop.ne(String::from(Crop::EMPTY)))
             .filter(kept_by(filter, false));
 
         if let Some(crop) = filter.crop {
@@ -716,7 +716,7 @@ impl FarmRepository for FarmPostgresRepository {
                         zone_slug: row.zone_slug,
                         sub_zone_slug: row.sub_zone_slug,
                     },
-                    crop: Crop::try_from(row.crop.as_str())?,
+                    crop: Crop::new(row.crop.as_str())?,
                     inside_pct: row.inside_pct.unwrap_or_default(),
                     farms: u64::try_from(row.farms).unwrap_or_default(),
                     farmers: u64::try_from(row.farmers).unwrap_or_default(),
@@ -859,6 +859,21 @@ impl FarmRepository for FarmPostgresRepository {
         }
 
         Ok(summaries)
+    }
+
+    async fn is_crop_painted(&self, crop: Crop) -> Result<bool, AppError> {
+        // One cell is enough to answer, so the scan stops at the first.
+        let found = farm_cells::Entity::find()
+            .select_only()
+            .column(farm_cells::Column::Id)
+            .filter(farm_cells::Column::Crop.eq(String::from(crop)))
+            .limit(1)
+            .into_tuple::<i32>()
+            .one(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        Ok(found.is_some())
     }
 }
 

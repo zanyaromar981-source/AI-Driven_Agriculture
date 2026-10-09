@@ -4,7 +4,7 @@ pub mod handlers;
 pub mod routes;
 
 pub use dtos::{
-    CellParams, CellResponse, CellStatusResponse, CentroidResponse, CreateFarmParams, Crop,
+    CellParams, CellResponse, CellStatusResponse, CentroidResponse, CreateFarmParams,
     CropAreaResponse, CropStatusResponse, DashboardCreateFarmParams, DashboardFarmResponse,
     DashboardFarmSummaryResponse, DashboardFarmsResponse, DashboardOneFarmResponse,
     DashboardRenameFarmParams, DashboardSavedFarmResponse, FarmResponse, FarmStatsAreaCropResponse,

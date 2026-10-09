@@ -307,6 +307,14 @@ pub struct AppConfigFeature {
 }
 
 #[derive(Clone)]
+pub struct CropFeature {
+    pub list_crops_use_case: Arc<crate::features::crops::app::use_cases::ListCropsUseCase>,
+    pub create_crop_use_case: Arc<crate::features::crops::app::use_cases::CreateCropUseCase>,
+    pub update_crop_use_case: Arc<crate::features::crops::app::use_cases::UpdateCropUseCase>,
+    pub delete_crop_use_case: Arc<crate::features::crops::app::use_cases::DeleteCropUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -325,6 +333,7 @@ pub struct Features {
     pub job: JobFeature,
     pub message: MessageFeature,
     pub app_config: AppConfigFeature,
+    pub crop: CropFeature,
 }
 
 #[derive(Clone)]

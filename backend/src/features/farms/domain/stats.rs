@@ -200,13 +200,11 @@ fn totals(count: &AreaCount) -> FarmTotals {
     }
 }
 
-/// Largest area first; ties keep the order the crop codes are declared in.
-/// `Empty` is never a crop.
+/// Largest area first; crops with the same area follow the alphabet of
+/// their codes. `empty` is never a crop.
 fn crop_totals<'a>(sums: impl Iterator<Item = &'a AreaCropSum>) -> Vec<CropTotals> {
-    let declared = |crop: &Crop| Crop::ALL.iter().position(|other| other == crop);
-
     let mut crops: Vec<CropTotals> = sums
-        .filter(|sum| sum.crop != Crop::Empty && sum.inside_pct > 0.0)
+        .filter(|sum| !sum.crop.is_empty() && sum.inside_pct > 0.0)
         .map(|sum| CropTotals {
             crop: sum.crop,
             dunam: GridCell::dunams(sum.inside_pct),
@@ -219,7 +217,7 @@ fn crop_totals<'a>(sums: impl Iterator<Item = &'a AreaCropSum>) -> Vec<CropTotal
         second
             .dunam
             .total_cmp(&first.dunam)
-            .then(declared(&first.crop).cmp(&declared(&second.crop)))
+            .then(first.crop.cmp(&second.crop))
     });
 
     crops
@@ -533,10 +531,22 @@ mod tests {
     fn crops_come_largest_first_and_empty_land_is_not_a_crop() {
         let region = key(None, None, None);
         let sums = vec![
-            crop(AreaLevel::Region, region.clone(), Crop::Tomato, 10.0, 1),
-            crop(AreaLevel::Region, region.clone(), Crop::Empty, 40.0, 4),
-            crop(AreaLevel::Region, region.clone(), Crop::Wheat, 50.0, 3),
-            crop(AreaLevel::Region, region, Crop::Barley, 10.0, 2),
+            crop(
+                AreaLevel::Region,
+                region.clone(),
+                Crop::of("tomato"),
+                10.0,
+                1,
+            ),
+            crop(AreaLevel::Region, region.clone(), Crop::EMPTY, 40.0, 4),
+            crop(
+                AreaLevel::Region,
+                region.clone(),
+                Crop::of("wheat"),
+                50.0,
+                3,
+            ),
+            crop(AreaLevel::Region, region, Crop::of("barley"), 10.0, 2),
         ];
 
         let stats = FarmStats::assemble(counts(), sums, &names(), now());
@@ -548,11 +558,11 @@ mod tests {
                 .map(|crop| (crop.crop(), crop.dunam(), crop.farms()))
                 .collect::<Vec<_>>(),
             vec![
-                (Crop::Wheat, 50.0, 3),
-                (Crop::Barley, 10.0, 2),
-                (Crop::Tomato, 10.0, 1),
+                (Crop::of("wheat"), 50.0, 3),
+                (Crop::of("barley"), 10.0, 2),
+                (Crop::of("tomato"), 10.0, 1),
             ],
-            "a tie keeps the order the crops are declared in"
+            "a tie follows the alphabet of the codes"
         );
     }
 
@@ -560,22 +570,28 @@ mod tests {
     fn each_area_gets_only_the_crops_summed_for_it_at_its_own_level() {
         let kalar = key(Some("Sulaymaniyah"), Some("kalar"), None);
         let sums = vec![
-            crop(AreaLevel::Zone, kalar.clone(), Crop::Wheat, 30.0, 2),
+            crop(AreaLevel::Zone, kalar.clone(), Crop::of("wheat"), 30.0, 2),
             crop(
                 AreaLevel::Zone,
                 key(Some("Erbil"), Some("koya"), None),
-                Crop::Barley,
+                Crop::of("barley"),
                 12.0,
                 1,
             ),
             crop(
                 AreaLevel::Governorate,
                 key(Some("Sulaymaniyah"), None, None),
-                Crop::Wheat,
+                Crop::of("wheat"),
                 30.0,
                 2,
             ),
-            crop(AreaLevel::Zone, key(None, None, None), Crop::Onion, 4.0, 1),
+            crop(
+                AreaLevel::Zone,
+                key(None, None, None),
+                Crop::of("onion"),
+                4.0,
+                1,
+            ),
         ];
 
         let stats = FarmStats::assemble(counts(), sums, &names(), now());
@@ -587,10 +603,13 @@ mod tests {
                 .collect()
         };
 
-        assert_eq!(crops(&stats.by_zone()[0]), vec![(Crop::Barley, 12.0)]);
-        assert_eq!(crops(&stats.by_zone()[1]), vec![(Crop::Wheat, 30.0)]);
-        assert_eq!(crops(&stats.by_zone()[2]), vec![(Crop::Onion, 4.0)]);
-        assert_eq!(crops(&stats.by_governorate()[1]), vec![(Crop::Wheat, 30.0)]);
+        assert_eq!(crops(&stats.by_zone()[0]), vec![(Crop::of("barley"), 12.0)]);
+        assert_eq!(crops(&stats.by_zone()[1]), vec![(Crop::of("wheat"), 30.0)]);
+        assert_eq!(crops(&stats.by_zone()[2]), vec![(Crop::of("onion"), 4.0)]);
+        assert_eq!(
+            crops(&stats.by_governorate()[1]),
+            vec![(Crop::of("wheat"), 30.0)]
+        );
         assert!(crops(&stats.by_governorate()[0]).is_empty());
     }
 
@@ -615,5 +634,33 @@ mod tests {
         assert!(stats.by_sub_zone().is_empty());
         assert!(stats.by_crop().is_empty());
         assert_eq!(*stats.as_of(), now());
+    }
+
+    #[test]
+    fn a_crop_staff_added_later_is_totalled_like_any_other() {
+        let region = key(None, None, None);
+        let sums = vec![
+            crop(
+                AreaLevel::Region,
+                region.clone(),
+                Crop::of("wheat"),
+                10.0,
+                1,
+            ),
+            crop(AreaLevel::Region, region.clone(), Crop::of("rice"), 10.0, 1),
+            crop(AreaLevel::Region, region, Crop::of("sugar_beet"), 30.0, 1),
+        ];
+
+        let stats = FarmStats::assemble(counts(), sums, &names(), now());
+
+        assert_eq!(
+            stats
+                .by_crop()
+                .iter()
+                .map(|crop| crop.crop())
+                .collect::<Vec<_>>(),
+            vec![Crop::of("sugar_beet"), Crop::of("rice"), Crop::of("wheat")],
+            "largest first, then by code"
+        );
     }
 }

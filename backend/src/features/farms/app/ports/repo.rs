@@ -6,8 +6,8 @@ use crate::{
     features::farms::{
         app::AppError,
         domain::{
-            AreaCount, AreaCropSum, AreaLevel, Farm, FarmFilter, FarmLocation, FarmName, FarmOrder,
-            FarmPlace, FarmSummary, IdempotencyKey, OwnedFarmSummary, UnplacedFarm,
+            AreaCount, AreaCropSum, AreaLevel, Crop, Farm, FarmFilter, FarmLocation, FarmName,
+            FarmOrder, FarmPlace, FarmSummary, IdempotencyKey, OwnedFarmSummary, UnplacedFarm,
         },
     },
     shared::Phone,
@@ -123,4 +123,8 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
     /// is still stored, whoever owns it, without the owners. For another
     /// feature that keeps a farm's id and needs what the farm is called.
     async fn find_summaries_by_ids(&self, ids: &[i32]) -> Result<Vec<FarmSummary>, AppError>;
+
+    /// Whether any cell of any farm is painted with the crop. For the
+    /// feature that keeps the crop list and may not remove a crop in use.
+    async fn is_crop_painted(&self, crop: Crop) -> Result<bool, AppError>;
 }

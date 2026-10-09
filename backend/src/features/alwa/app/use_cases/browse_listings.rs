@@ -94,7 +94,7 @@ mod tests {
             .with_offer(an_open_offer(1, &listing, BUYER, 950))
             .with_price(a_price(
                 MARKET_ID,
-                Crop::Tomato,
+                Crop::of("tomato"),
                 Utc::now().date_naive(),
                 1_000,
                 false,
@@ -142,7 +142,7 @@ mod tests {
         use_case
             .execute(BrowseListingsInput {
                 market: Some(market_slug(MARKET)),
-                crop: Some(Crop::Tomato),
+                crop: Some(Crop::of("tomato")),
                 status: ListingStatus::Sold,
                 pagination: Pagination::new(2, 10),
             })
@@ -152,7 +152,7 @@ mod tests {
         assert!(repository.calls().contains(&RepositoryCall::FindListings {
             filter: ListingFilter {
                 market_id: Some(MARKET_ID),
-                crop: Some(Crop::Tomato),
+                crop: Some(Crop::of("tomato")),
                 status: ListingStatus::Sold,
             },
             page: 2,

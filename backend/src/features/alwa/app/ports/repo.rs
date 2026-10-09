@@ -198,4 +198,9 @@ pub trait AlwaRepository: Send + Sync + std::fmt::Debug {
     /// Removes the listing with its offers and says whether there was one.
     /// Fails with `ListingHasDeal` when an offer on it was accepted.
     async fn delete_listing(&self, id: i32) -> Result<bool, AppError>;
+
+    /// Whether any listing, of any status, or any price names the crop. For
+    /// the feature that keeps the crop list and may not remove a crop in
+    /// use.
+    async fn is_crop_traded(&self, crop: Crop) -> Result<bool, AppError>;
 }

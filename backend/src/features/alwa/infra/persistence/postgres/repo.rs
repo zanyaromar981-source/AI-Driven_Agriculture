@@ -874,4 +874,37 @@ impl AlwaRepository for AlwaPostgresRepository {
             None => Ok(false),
         }
     }
+
+    async fn is_crop_traded(&self, crop: Crop) -> Result<bool, AppError> {
+        let code = String::from(crop);
+
+        // One row is enough to answer, so each scan stops at the first. A
+        // listing of any status counts: a sold or cancelled one still shows
+        // its crop.
+        let listed = alwa_listings::Entity::find()
+            .select_only()
+            .column(alwa_listings::Column::Id)
+            .filter(alwa_listings::Column::Crop.eq(code.clone()))
+            .limit(1)
+            .into_tuple::<i32>()
+            .one(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        if listed.is_some() {
+            return Ok(true);
+        }
+
+        let priced = alwa_prices::Entity::find()
+            .select_only()
+            .column(alwa_prices::Column::Id)
+            .filter(alwa_prices::Column::Crop.eq(code))
+            .limit(1)
+            .into_tuple::<i32>()
+            .one(&self.conn)
+            .await
+            .map_err(database_error)?;
+
+        Ok(priced.is_some())
+    }
 }

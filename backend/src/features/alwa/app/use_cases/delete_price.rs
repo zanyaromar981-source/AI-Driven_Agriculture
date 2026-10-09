@@ -54,13 +54,13 @@ mod tests {
     #[tokio::test]
     async fn removes_exactly_the_named_price() {
         let repository = FakeAlwaRepository::new()
-            .with_price(a_price(MARKET_ID, Crop::Tomato, day(1), 900, false))
-            .with_price(a_price(MARKET_ID, Crop::Tomato, day(2), 950, false))
-            .with_price(a_price(2, Crop::Tomato, day(1), 700, false));
+            .with_price(a_price(MARKET_ID, Crop::of("tomato"), day(1), 900, false))
+            .with_price(a_price(MARKET_ID, Crop::of("tomato"), day(2), 950, false))
+            .with_price(a_price(2, Crop::of("tomato"), day(1), 700, false));
         let use_case = DeletePriceUseCase::new(Arc::new(repository.clone()));
 
         use_case
-            .execute(9, market_slug(MARKET), Crop::Tomato, day(1))
+            .execute(9, market_slug(MARKET), Crop::of("tomato"), day(1))
             .await
             .expect("delete");
 
@@ -75,7 +75,7 @@ mod tests {
             repository.calls(),
             vec![RepositoryCall::DeletePrice {
                 market: MARKET.to_string(),
-                crop: Crop::Tomato,
+                crop: Crop::of("tomato"),
                 day: day(1),
             }],
             "one statement, with no lookup before it"
@@ -89,7 +89,7 @@ mod tests {
         for market in [MARKET, "baghdad"] {
             assert!(
                 use_case
-                    .execute(9, market_slug(market), Crop::Tomato, day(1))
+                    .execute(9, market_slug(market), Crop::of("tomato"), day(1))
                     .await
                     .is_ok()
             );
@@ -102,7 +102,7 @@ mod tests {
 
         assert!(
             use_case
-                .execute(9, market_slug(MARKET), Crop::Tomato, day(1))
+                .execute(9, market_slug(MARKET), Crop::of("tomato"), day(1))
                 .await
                 .is_err()
         );

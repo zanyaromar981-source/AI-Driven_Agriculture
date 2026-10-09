@@ -38,6 +38,9 @@ impl ToErrorInfo for AlwaError {
                 "status_not_allowed",
                 self.to_string(),
             ),
+            AlwaError::UnknownCrop(_) => {
+                ErrorInfo::with_code(ErrorKind::InvalidInput, "unknown_crop", self.to_string())
+            }
             // Answered exactly like a listing that does not exist, so the
             // answer does not say whose listing it is.
             AlwaError::NotTheSeller | AlwaError::OfferNotOnListing => {
@@ -126,12 +129,24 @@ mod tests {
                 ErrorKind::InvalidInput,
                 "status_not_allowed",
             ),
+            (
+                AlwaError::UnknownCrop("rice".to_string()),
+                ErrorKind::InvalidInput,
+                "unknown_crop",
+            ),
         ] {
             let info = error.to_error_info();
 
             assert_eq!(info.kind, kind, "{error:?}");
             assert_eq!(info.code, code, "{error:?}");
         }
+    }
+
+    #[test]
+    fn a_crop_that_cannot_be_used_is_named_in_the_detail() {
+        let info = AlwaError::UnknownCrop("rice".to_string()).to_error_info();
+
+        assert!(info.detail.contains("rice"), "{}", info.detail);
     }
 
     #[test]

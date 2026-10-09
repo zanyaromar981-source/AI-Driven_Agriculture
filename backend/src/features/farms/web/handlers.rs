@@ -231,7 +231,7 @@ pub async fn repaint_farm_cells(
     WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
     ValidatedJson(params): ValidatedJson<RepaintFarmCellsParams>,
 ) -> Result<ApiResponse<SavedFarmResponse>, WebError> {
-    let input = params.into_input();
+    let input = params.into_input()?;
 
     let (farm, dropped_cells) = state
         .features
