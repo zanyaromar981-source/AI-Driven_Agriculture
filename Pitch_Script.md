@@ -8,7 +8,7 @@ Length: about 4 minutes 30 seconds, of which 60 seconds is the live demo. Every 
 
 - Phone with the app installed, signed in once already, screen mirrored or held up.
 - One farm already saved on the phone, in case GPS is slow indoors.
-- Slide 4 stays on screen during the demo: it shows the same screens if the phone fails.
+- Slide 4 stays on screen during the demo: it shows the example message if the phone fails.
 - One person speaks, one person holds the phone.
 
 ## The script
@@ -18,7 +18,7 @@ Length: about 4 minutes 30 seconds, of which 60 seconds is the live demo. Every 
 | 1 | Cover | 15 s | "Khor means sun in Kurdish. The sun sees every field every day. Our app does the same from space, and advises the farmer every week." |
 | 2 | Problem | 35 s | "In the winter of 2024/25, Slemani's farmland got 57 percent of its normal rain. By the end of January the numbers already showed a bad season. Farmers found out months later, from their own fields. Why so late? Kurdistan has about 215 agricultural advisers for about 50,000 wheat farmers. That is one adviser for 230 farmers." |
 | 3 | Slemani water | 25 s | "Water swings just as hard. We measured the lakes from satellite pictures. Last September, Dukan covered 31 percent of its full area. This September, 92. Darbandikhan went from 42 to 63. No farmer can plan around that without information." |
-| 4 | Solution | 20 s | "This is Khor. The farmer signs in with a phone number, walks the corners of the field, and marks the crops. From then on, Khor checks every 10 metre square of that field from space." |
+| 4 | Solution: the message | 25 s | "This is what the farmer receives. One message, five parts. What is most likely wrong. How sure Khor is. Why, with the source of each reason: the satellite, the weather, his own photo, his neighbours. What to do this week, three steps at most. And what Khor cannot tell: it never gives a chemical dose." |
 | 4 | Live demo | 60 s | See the demo steps below. |
 | 5 | How well | 30 s | "How do we know it is right? For every field we compare how green it is today with its own normal from 25 years of satellite history. Our numbers match NASA's own service on 1,089 of 1,089 pixels. And over 26 past seasons, the method agreed with what really happened 88 percent of the time." |
 | 6 | Use of AI | 35 s | "Where is the AI? In three places. First, a language model reads the satellite, weather and report numbers and writes one plain answer in Sorani. Second, the same model looks at photos of a sick leaf and names the likely causes. Third, a vision model draws field borders on satellite pictures. And we built all of this with AI: Claude wrote the code and Pencil drew the screens. The satellite numbers themselves are plain calculations, and we say so." |
@@ -33,29 +33,30 @@ Length: about 4 minutes 30 seconds, of which 60 seconds is the live demo. Every 
 4. Open the farm. Point at the coloured squares: green is normal, yellow is watch, red is alarm. Tap one square to show its card. (15 s)
 5. Show "This week": the advice line that comes from the live weather forecast. (10 s)
 
-If the phone fails: stay on slide 4 and describe the three screens shown there.
+If the phone fails: stay on slide 4 and walk through the example message shown there.
 
 Not in the demo unless it is tested on the morning of the pitch: Ask the Doctor. The screens are built, but on 9 October the server route and the Gemini key were still in progress (`PROGRESS.md`).
 
 ## 3-minute version: the story deck
 
-For the 3-minute round use `design/pitch_deck_3min.pen` (6 slides). It tells one farmer's story instead of listing features. About 2 minutes 50 seconds.
+For the 3-minute round use `design/pitch_deck_3min.pen` (7 slides). It tells one farmer's story instead of listing features. About 2 minutes 55 seconds.
 
 | # | Slide | Time | Say |
 |---|---|---|---|
 | 1 | What the farmer sees | 20 s | "A farmer can walk through his field every day and still miss the first signs that part of it is failing." Pause. |
 | 2 | What the satellite sees | 25 s | "But from space, it already shows. These are real satellite pictures of the same fields near Koya. On the left, March 2025, the drought year: bare and brown. On the right, April 2026: green. The satellite passes every five days and sees every 10 metres." |
-| 3 | What Khor tells him | 45 s | "Khor turns those signals into something a farmer can use. He registers his field by walking its border. Khor builds the field map. The satellite checks which squares are weaker than normal. The weather planner says if this week suits sowing, spraying or fertilising. And the AI? AI is not the sensor. It is the translator. The satellite sees the field. The weather models see the forecast. The history sees the pattern. AI turns all of that into Sorani a farmer can understand." |
-| 4 | Before drought becomes obvious | 25 s | "Why does it matter? In the winter of 2024/25, by the end of January, Slemani had received half of its normal rain. Harvest was four months away. The data showed it. Most farmers had no way to see it." |
-| 5 | Built for Suli | 25 s | "Khor is built for Suli. We measure Dukan and Darbandikhan from space. Last September, Dukan covered 31 percent of its full area. This September, 92. That is the water a farmer's summer depends on." |
-| 6 | From one farm to a system | 30 s | "One farm is the start. The same data for all 33 districts gives the Ministry one map. We connect the sky, the field and the water into one local decision layer for Sulaimani. We checked the method on 26 past seasons: right 88 percent of the time. And we built the app, the server and this map in two days. Khor means sun. Thank you." |
+| 3 | What Khor tells him | 35 s | "Khor turns those signals into something a farmer can use. He registers his field by walking its border. Khor builds the field map, and the satellite checks which squares are weaker than normal. And the AI? AI is not the sensor. It is the translator. The satellite sees the field. The weather models see the forecast. The history sees the pattern. AI turns all of that into Sorani a farmer can understand." |
+| 4 | The message | 20 s | "This is what he receives. One message, five parts: what is most likely wrong, how sure we are, why, what to do this week, and what we cannot tell. It never gives a chemical dose." |
+| 5 | Before drought becomes obvious | 25 s | "Why does it matter? In the winter of 2024/25, by the end of January, Slemani had received half of its normal rain. Harvest was four months away. The data showed it. Most farmers had no way to see it." |
+| 6 | Built for Suli | 25 s | "Khor is built for Suli. We measure Dukan and Darbandikhan from space. Last September, Dukan covered 31 percent of its full area. This September, 92. That is the water a farmer's summer depends on." |
+| 7 | From one farm to a system | 25 s | "One farm is the start. The same data for all 33 districts gives the Ministry one map. We connect the sky, the field and the water into one local decision layer for Sulaimani. We checked the method on 26 past seasons: right 88 percent of the time. And we built the app, the server and this map in two days. Khor means sun. Thank you." |
 
 Notes for this version:
 
 - If there is time for a demo, do it on slide 3: hold up the phone and tap one coloured square. 20 seconds at most.
 - Slide 2 compares March 2025 with April 2026. They are different months, so say the dates as written and do not call it "the same day".
 - Koya is in Erbil governorate. The pictures show what the satellite sees; the Slemani numbers come on slides 4 and 5.
-- The dashboard picture on slide 6 is the team's design with sample numbers. Say "this is the design", not "this is live".
+- The dashboard picture on slide 7 is the team's design with sample numbers. Say "this is the design", not "this is live".
 
 ## Questions the judges may ask
 

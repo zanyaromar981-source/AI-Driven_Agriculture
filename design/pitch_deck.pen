@@ -77,7 +77,7 @@
           "type": "frame",
           "id": "tPL3M",
           "x": 120,
-          "y": 0,
+          "y": 40,
           "name": "Title Block",
           "width": 1000,
           "height": 1080,
@@ -89,8 +89,8 @@
               "type": "frame",
               "id": "fxLzK",
               "name": "Grain Sun",
-              "width": 150,
-              "height": 150,
+              "width": 316,
+              "height": 145,
               "layout": "none",
               "children": [
                 {
@@ -2040,7 +2040,7 @@
       "id": "mNvdi",
       "x": 6120,
       "y": 0,
-      "name": "04 Solution",
+      "name": "04 Solution · the message",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -2132,167 +2132,473 @@
           ]
         },
         {
+          "type": "text",
+          "id": "D7OxxJ",
+          "layoutPosition": "absolute",
+          "x": 120,
+          "y": 170,
+          "name": "Label",
+          "fill": "$gold",
+          "content": "WHAT THE FARMER RECEIVES",
+          "fontFamily": "$font-lat",
+          "fontSize": 22,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "text",
+          "id": "sT0U1",
+          "layoutPosition": "absolute",
+          "x": 120,
+          "y": 212,
+          "name": "Title",
+          "fill": "#FFFFFF",
+          "textGrowth": "fixed-width",
+          "width": 480,
+          "content": "One message, five parts",
+          "lineHeight": 1.1,
+          "fontFamily": "$font-lat",
+          "fontSize": 52,
+          "fontWeight": "800",
+          "letterSpacing": -1
+        },
+        {
           "type": "frame",
-          "id": "DxGrk",
-          "name": "Body",
-          "width": "fill_container",
-          "height": "fill_container",
-          "gap": 80,
+          "id": "q7nUZP",
+          "layoutPosition": "absolute",
+          "x": 750,
+          "y": 98,
+          "name": "Phone · Answer",
+          "clip": true,
+          "width": 420,
+          "height": 884,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "pitch_assets/screen_answer.png",
+            "mode": "cover",
+            "transform": [
+              1,
+              0,
+              0,
+              1.46,
+              0,
+              -0.139
+            ]
+          },
+          "cornerRadius": 36,
+          "stroke": "#FFFFFF33",
+          "strokeWidth": 2,
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000066",
+            "offset": {
+              "x": 0,
+              "y": 16
+            },
+            "blur": 48
+          }
+        },
+        {
+          "type": "rectangle",
+          "id": "aJgHq",
+          "layoutPosition": "absolute",
+          "x": 1180,
+          "y": 219,
+          "name": "Line 1",
+          "fill": "$gold",
+          "width": 100,
+          "height": 4
+        },
+        {
+          "type": "frame",
+          "id": "g6tms5",
+          "layoutPosition": "absolute",
+          "x": 1290,
+          "y": 166,
+          "name": "Callout 1",
+          "width": 520,
+          "gap": 20,
           "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "uLdRE",
-              "name": "Text",
-              "width": "fill_container",
-              "layout": "vertical",
-              "gap": 48,
+              "id": "x0tXUm",
+              "name": "Number",
+              "width": 64,
+              "height": 64,
+              "fill": "$gold",
+              "cornerRadius": 32,
+              "justifyContent": "center",
+              "alignItems": "center",
               "children": [
                 {
                   "type": "text",
-                  "id": "aHHJW",
-                  "name": "Label",
-                  "fill": "$gold",
-                  "content": "THE SOLUTION",
+                  "id": "QQxk7",
+                  "name": "N",
+                  "fill": "$soil",
+                  "content": "1",
                   "fontFamily": "$font-lat",
-                  "fontSize": 22,
-                  "fontWeight": "700",
-                  "letterSpacing": 3
-                },
-                {
-                  "type": "text",
-                  "id": "X9WA7R",
-                  "name": "Title",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "The whole farm on one phone",
-                  "lineHeight": 1.1,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 76,
-                  "fontWeight": "800",
-                  "letterSpacing": -1.5
+                  "fontSize": 32,
+                  "fontWeight": "800"
                 }
               ]
             },
             {
               "type": "frame",
-              "id": "eE8Gk",
-              "name": "Phones",
-              "gap": 32,
-              "alignItems": "center",
+              "id": "edEPk",
+              "name": "Text",
+              "layout": "vertical",
+              "gap": 4,
               "children": [
                 {
-                  "type": "frame",
-                  "id": "XK4oq",
-                  "name": "Phone Wrap screen_grid",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "VJW5o",
-                      "name": "Phone screen_grid",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_grid.png",
-                        "mode": "cover"
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
-                    }
-                  ]
+                  "type": "text",
+                  "id": "e0jWdS",
+                  "name": "Callout Title",
+                  "fill": "#FFFFFF",
+                  "content": "What is most likely",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
                 },
                 {
-                  "type": "frame",
-                  "id": "p2Btw",
-                  "name": "Phone Wrap screen_cellcard",
-                  "padding": [
-                    40,
-                    0,
-                    0,
-                    0
-                  ],
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "Vosik",
-                      "name": "Phone screen_cellcard",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_cellcard.png",
-                        "mode": "cover"
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "TMouI",
-                  "name": "Phone Wrap screen_cropview",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "X0boJZ",
-                      "name": "Phone screen_cropview",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_cropview.png",
-                        "mode": "cover"
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
-                    }
-                  ]
+                  "type": "text",
+                  "id": "o0n0m2",
+                  "name": "Callout Note",
+                  "fill": "$on-dark-muted",
+                  "content": "the problem, in plain words",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "500"
                 }
               ]
             }
           ]
+        },
+        {
+          "type": "rectangle",
+          "id": "ed9Yh",
+          "layoutPosition": "absolute",
+          "x": 1180,
+          "y": 296,
+          "name": "Line 2",
+          "fill": "$gold",
+          "width": 100,
+          "height": 4
+        },
+        {
+          "type": "frame",
+          "id": "gkoQL",
+          "layoutPosition": "absolute",
+          "x": 1290,
+          "y": 280,
+          "name": "Callout 2",
+          "width": 520,
+          "gap": 20,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "fx2xW",
+              "name": "Number",
+              "width": 64,
+              "height": 64,
+              "fill": "$gold",
+              "cornerRadius": 32,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "AfkfO",
+                  "name": "N",
+                  "fill": "$soil",
+                  "content": "2",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 32,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Pb21t",
+              "name": "Text",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "w4vH0",
+                  "name": "Callout Title",
+                  "fill": "#FFFFFF",
+                  "content": "How sure it is",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "P3HWv",
+                  "name": "Callout Note",
+                  "fill": "$on-dark-muted",
+                  "content": "sure, likely or unsure",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "t8weTJ",
+          "layoutPosition": "absolute",
+          "x": 640,
+          "y": 509,
+          "name": "Line 3",
+          "fill": "$gold",
+          "width": 100,
+          "height": 4
+        },
+        {
+          "type": "frame",
+          "id": "ESVtD",
+          "layoutPosition": "absolute",
+          "x": 110,
+          "y": 475,
+          "name": "Callout 3",
+          "width": 520,
+          "gap": 20,
+          "justifyContent": "end",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "C7f2u",
+              "name": "Text",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "gwcjH",
+                  "name": "Callout Title",
+                  "fill": "#FFFFFF",
+                  "content": "Why",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "W37ET9",
+                  "name": "Callout Note",
+                  "fill": "$on-dark-muted",
+                  "content": "satellite, weather, photo, neighbours",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PF057",
+              "name": "Number",
+              "width": 64,
+              "height": 64,
+              "fill": "$gold",
+              "cornerRadius": 32,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jMEU4",
+                  "name": "N",
+                  "fill": "$soil",
+                  "content": "3",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 32,
+                  "fontWeight": "800"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "iq0OG",
+          "layoutPosition": "absolute",
+          "x": 1180,
+          "y": 767,
+          "name": "Line 4",
+          "fill": "$gold",
+          "width": 100,
+          "height": 4
+        },
+        {
+          "type": "frame",
+          "id": "qU9eX",
+          "layoutPosition": "absolute",
+          "x": 1290,
+          "y": 733,
+          "name": "Callout 4",
+          "width": 520,
+          "gap": 20,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "PHWfF",
+              "name": "Number",
+              "width": 64,
+              "height": 64,
+              "fill": "$gold",
+              "cornerRadius": 32,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "gWpgh",
+                  "name": "N",
+                  "fill": "$soil",
+                  "content": "4",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 32,
+                  "fontWeight": "800"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "SjXvq",
+              "name": "Text",
+              "layout": "vertical",
+              "gap": 4,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "x1MRK",
+                  "name": "Callout Title",
+                  "fill": "#FFFFFF",
+                  "content": "What to do this week",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "S45PAE",
+                  "name": "Callout Note",
+                  "fill": "$on-dark-muted",
+                  "content": "three steps at most",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rectangle",
+          "id": "PAbhQ",
+          "layoutPosition": "absolute",
+          "x": 640,
+          "y": 928,
+          "name": "Line 5",
+          "fill": "$gold",
+          "width": 100,
+          "height": 4
+        },
+        {
+          "type": "frame",
+          "id": "q6VmgR",
+          "layoutPosition": "absolute",
+          "x": 110,
+          "y": 894,
+          "name": "Callout 5",
+          "width": 520,
+          "gap": 20,
+          "justifyContent": "end",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "X1kXXq",
+              "name": "Text",
+              "layout": "vertical",
+              "gap": 4,
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "N1waRQ",
+                  "name": "Callout Title",
+                  "fill": "#FFFFFF",
+                  "content": "What it cannot tell",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 34,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "OLOMB",
+                  "name": "Callout Note",
+                  "fill": "$on-dark-muted",
+                  "content": "never a chemical dose",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "t8uvV9",
+              "name": "Number",
+              "width": 64,
+              "height": 64,
+              "fill": "$gold",
+              "cornerRadius": 32,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "z4DjIu",
+                  "name": "N",
+                  "fill": "$soil",
+                  "content": "5",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 32,
+                  "fontWeight": "800"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "SYYfz",
+          "layoutPosition": "absolute",
+          "x": 1290,
+          "y": 990,
+          "name": "Source",
+          "fill": "$on-dark-muted",
+          "textGrowth": "fixed-width",
+          "width": 510,
+          "content": "Example answer from the app design. The farmer can switch it to Sorani.",
+          "lineHeight": 1.3,
+          "fontFamily": "$font-lat",
+          "fontSize": 20,
+          "fontWeight": "500"
         }
       ]
     },
