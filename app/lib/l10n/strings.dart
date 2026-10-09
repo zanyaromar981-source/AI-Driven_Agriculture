@@ -88,6 +88,14 @@ class S {
     'کێڵگەکە لە 2,500,000 م² گەورەترە. گۆشەکان بپشکنە',
     'The field is over 2,500,000 m². Check the corners.',
   );
+  String get tooSmall => t(
+    'کێڵگەکە لە چوارگۆشەیەکی 10 مەتری بچووکترە. گۆشەکان بپشکنە',
+    'The field is smaller than one 10 m square. Check the corners.',
+  );
+  String get tooManyCorners => t(
+    'زۆرترین 50 گۆشە. هەندێکیان بە لابردن لاببە',
+    'At most 50 corners. Remove some with Undo.',
+  );
   String corners(int n) => t('$n گۆشە', '$n corners');
 
   // Walk mode
@@ -116,8 +124,27 @@ class S {
   );
   String uploaded(int n) =>
       t('$n کێڵگە نێردرا', n == 1 ? '1 farm uploaded' : '$n farms uploaded');
-  String rejected(String name) =>
-      t('سێرڤەر "$name"ی وەرنەگرت', 'The server refused "$name"');
+  /// Why the server would not take a farm, in words the farmer can act on.
+  String refusedWhy(String code) => switch (code) {
+    'too_many_farms' => t(
+      'تۆ 20 کێڵگەت هەیە، ئەوە زۆرترینە. سەرەتا یەکێک بسڕەوە',
+      'You already have 20 farms, the most allowed. Delete one first.',
+    ),
+    'farm_too_large' => tooBig,
+    'bad_polygon' => t(
+      'سنوورەکە زۆر بچووکە یان گۆشەی زۆرە. گۆشەکان بپشکنە',
+      'The edge is too small or has too many corners. Check the corners.',
+    ),
+    _ => t('کێڵگەکە بپشکنە و دووبارە هەوڵ بدەرەوە', 'Check the farm and try again.'),
+  };
+  String refused(String name, String code) => t(
+    'سێرڤەر "$name"ی وەرنەگرت. ${refusedWhy(code)}',
+    'The server did not take "$name". ${refusedWhy(code)}',
+  );
+  String get edgeBack => t(
+    'سنوورەکەی لە زیادکردنی کێڵگەدا گەڕایەوە',
+    'Its edge is back in Add farm.',
+  );
   String get noInternet => t('ئینتەرنێت نییە', 'No internet');
 
   String get walkFirst => t('سەرەتا وەستان دابگرە', 'Press Stop first');

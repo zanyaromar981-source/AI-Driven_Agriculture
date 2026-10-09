@@ -273,7 +273,8 @@ class BackLink extends StatelessWidget {
 }
 
 /// Short dark pill at the bottom of the screen.
-void showToast(BuildContext context, String message) {
+/// [long]: a message the farmer must be able to read in full (a reason).
+void showToast(BuildContext context, String message, {bool long = false}) {
   final ku = AppScope.read(context).ku;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
@@ -288,7 +289,7 @@ void showToast(BuildContext context, String message) {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.fromLTRB(40, 0, 40, 92),
-        duration: const Duration(milliseconds: 1800),
+        duration: Duration(milliseconds: long ? 5000 : 1800),
       ),
     );
 }
