@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 13:36
+Last update: 2026-10-09 13:56
 
 ## Done
 - Control Room website `web/control_room/` (React + Vite): public View page and Admin behind a login, Kurdish (right to left) and English, phone to desktop; farmers and farms with create, edit, delete, support letter and government report; crop register and crop report; region data with hand corrections; alerts to everyone; inbox and news bar; the Doctor review, answer bank and problems map; Alwa read only with average prices; rules explained; app control; every text editable; data jobs status; settings. Sample data in the browser behind one data layer
