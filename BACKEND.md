@@ -21,7 +21,7 @@ Checked 2026-10-09 16:20 against `FRONTEND.md` v4 with its section 14 (commit 13
 | 7 | Daily brief: `GET /v1/farms/{id}/brief` | built | Nothing. The app card is next. |
 | 8 | Profile: `GET`/`PUT /v1/me` | built | Nothing. The Settings screen is next. |
 | 9 | Alwa market, farmer routes (FRONTEND.md 5) | built, with offers, grade, pickup, market and hidden phones | **Simpler Alwa (user decision 2026-10-09): see 2.14.** GPS point on each listing, phones shown, nearest first, mark as sold, markets with a point. |
-| 10 | **Marketplace (was Alwa): more than crops** (2.16, user decision 2026-10-09 18:30) | crops only, priced per kg | **New.** Fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit, each with its own unit (kg, tray of 30, litre, head). A `products` list with group and unit, and listings that carry `product`, `quantity` and a price per unit. |
+| 10 | **Marketplace (was Alwa): more than crops** (2.16, user decision 2026-10-09 18:29) | crops only, priced per kg | **New.** Fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit, each with its own unit (kg, tray of 30, litre, head). A `products` list with group and unit, and listings that carry `product`, `quantity` and a price per unit. |
 
 Needed next, because their screens are being built now:
 - `DELETE /v1/account` for Settings ("Delete my account and farms").
@@ -381,7 +381,7 @@ The fastest way, already tested on a Mac: run `farm_doctor/doctor_service.py` ne
    - If the answer is `502`, the reason is in `doctor.log`. Most often Codex took longer than 75 s or answered outside the JSON.
 5. **Two farmers at once:** the service is threaded, so each question runs its own `codex exec`; both fit in 90 s.
 
-### 2.16 Marketplace: the Alwa grows into a market for farm products (user decision, 2026-10-09 18:30)
+### 2.16 Marketplace: the Alwa grows into a market for farm products (user decision, 2026-10-09 18:29)
 
 The farmer app's Alwa becomes the **Marketplace** (Sorani: بازاڕ). It works the same way as 2.14: a seller posts what they have, where it is (GPS), the price, and buyers call the seller. What changes is **what can be sold**: not only the 16 crops, but also fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit. Some of these are not sold by the kg, so **every product has a unit**.
 
