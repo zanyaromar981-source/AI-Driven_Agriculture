@@ -38,7 +38,11 @@ impl AddStaffUseCase {
 
         let staff = Staff::new(input.email, input.name, password_hash, Utc::now());
 
-        let created = self.staff.create(&staff, &input.roles).await?;
+        let created = self
+            .staff
+            .create(&staff, &input.roles, *actor.staff_id())
+            .await
+            .inspect_err(|error| tracing::info!(%error, by_staff_id = *actor.staff_id(), "staff member not added"))?;
 
         tracing::info!(
             staff_id = created.id().unwrap_or_default(),
@@ -56,7 +60,8 @@ mod tests {
     use super::*;
     use crate::features::staff::{
         app::testing::{
-            Call, DAM_OFFICER_ROLE_ID, Fakes, OWNER_EMAIL, OWNER_ID, PASSWORD, actor, hash_of,
+            Call, DAM_OFFICER_ROLE_ID, Fakes, OWNER_EMAIL, OWNER_ID, OWNER_ROLE_ID, PASSWORD,
+            a_staff_member, actor, hash_of,
         },
         domain::StaffError,
     };
@@ -135,5 +140,42 @@ mod tests {
             result,
             Err(AppError::Staff(StaffError::UnknownRole))
         ));
+    }
+
+    fn with_a_dam_officer() -> Fakes {
+        Fakes::new().with_staff(a_staff_member(
+            2,
+            "dams@example.org",
+            true,
+            &[DAM_OFFICER_ROLE_ID],
+        ))
+    }
+
+    #[tokio::test]
+    async fn a_role_granting_only_what_the_actor_holds_can_be_handed_out() {
+        let staff = use_case(&with_a_dam_officer())
+            .execute(
+                &actor(2),
+                input("dilan@example.org", vec![DAM_OFFICER_ROLE_ID]),
+            )
+            .await
+            .expect("staff");
+
+        assert_eq!(staff.roles().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn the_owner_role_cannot_be_handed_out_by_someone_who_holds_less() {
+        let fakes = with_a_dam_officer();
+
+        let result = use_case(&fakes)
+            .execute(&actor(2), input("dilan@example.org", vec![OWNER_ROLE_ID]))
+            .await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Staff(StaffError::CannotGrant))
+        ));
+        assert!(fakes.stored_staff(3).is_none());
     }
 }

@@ -25,6 +25,16 @@ impl RoleSelection {
         &self.0
     }
 
+    /// The chosen roles that are not among `held`: the ones an edit hands
+    /// out, as opposed to the ones it leaves in place.
+    pub fn newly_assigned(&self, held: &[i32]) -> Vec<i32> {
+        self.0
+            .iter()
+            .copied()
+            .filter(|role_id| !held.contains(role_id))
+            .collect()
+    }
+
     pub fn contains(&self, role_id: i32) -> bool {
         self.0.binary_search(&role_id).is_ok()
     }
@@ -41,6 +51,14 @@ mod tests {
         assert_eq!(selection.ids(), [1, 2, 3]);
         assert!(selection.contains(2));
         assert!(!selection.contains(4));
+    }
+
+    #[test]
+    fn only_roles_not_held_before_count_as_newly_assigned() {
+        let selection = RoleSelection::new(vec![1, 2, 3]).expect("selection");
+
+        assert_eq!(selection.newly_assigned(&[2, 9]), [1, 3]);
+        assert!(selection.newly_assigned(&[1, 2, 3]).is_empty());
     }
 
     #[test]

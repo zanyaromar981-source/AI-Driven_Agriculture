@@ -38,7 +38,11 @@ impl EditRoleUseCase {
         role.edit(input.name, input.description, input.permissions, Utc::now())
             .inspect_err(|_| tracing::info!(role_id = id, "role edit refused: system role"))?;
 
-        let updated = self.roles.update(&role).await?;
+        let updated = self
+            .roles
+            .update(&role, *actor.staff_id())
+            .await
+            .inspect_err(|error| tracing::info!(%error, role_id = id, by_staff_id = *actor.staff_id(), "role not edited"))?;
 
         tracing::info!(
             role_id = id,
@@ -57,7 +61,9 @@ mod tests {
     use crate::{
         app::{Action, Resource},
         features::staff::{
-            app::testing::{Call, DAM_OFFICER_ROLE_ID, Fakes, OWNER_ID, OWNER_ROLE_ID, actor},
+            app::testing::{
+                Call, DAM_OFFICER_ROLE_ID, Fakes, OWNER_ID, OWNER_ROLE_ID, a_staff_member, actor,
+            },
             domain::StaffError,
         },
     };
@@ -134,5 +140,64 @@ mod tests {
             use_case.execute(&actor(OWNER_ID), 99, input("Ghost")).await,
             Err(AppError::GlobalAppError(GlobalAppError::NotFound))
         ));
+    }
+
+    fn with_a_dam_officer() -> Fakes {
+        Fakes::new().with_staff(a_staff_member(
+            2,
+            "dams@example.org",
+            true,
+            &[DAM_OFFICER_ROLE_ID],
+        ))
+    }
+
+    #[tokio::test]
+    async fn a_role_cannot_be_widened_beyond_what_the_actor_holds() {
+        let fakes = with_a_dam_officer();
+        let use_case = EditRoleUseCase::new(Arc::new(fakes.clone()));
+
+        let result = use_case
+            .execute(
+                &actor(2),
+                DAM_OFFICER_ROLE_ID,
+                EditRoleInput {
+                    permissions: vec![
+                        Permission::new(Resource::Dams, Action::Read),
+                        Permission::new(Resource::Roles, Action::Update),
+                    ],
+                    ..input("Dam officer")
+                },
+            )
+            .await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Staff(StaffError::CannotGrant))
+        ));
+        assert_eq!(
+            fakes
+                .stored_role(DAM_OFFICER_ROLE_ID)
+                .expect("stored")
+                .permissions()
+                .len(),
+            2,
+            "a refused edit must leave the role as it was"
+        );
+    }
+
+    #[tokio::test]
+    async fn narrowing_a_role_is_allowed_to_anyone_who_may_edit_roles() {
+        let fakes = with_a_dam_officer();
+        let use_case = EditRoleUseCase::new(Arc::new(fakes.clone()));
+
+        let role = use_case
+            .execute(&actor(2), DAM_OFFICER_ROLE_ID, input("Dam reader"))
+            .await
+            .expect("role");
+
+        assert_eq!(
+            *role.permissions(),
+            vec![Permission::new(Resource::Dams, Action::Read)]
+        );
     }
 }

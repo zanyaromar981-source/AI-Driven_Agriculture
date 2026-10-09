@@ -46,7 +46,11 @@ impl EditStaffUseCase {
             .ensure_not_deactivating_own_account(*actor.staff_id(), id)
             .inspect_err(|_| tracing::info!(staff_id = id, "staff edit refused: own account"))?;
 
-        let updated = self.staff.update(id, &change).await?;
+        let updated = self
+            .staff
+            .update(id, &change, *actor.staff_id())
+            .await
+            .inspect_err(|error| tracing::info!(%error, staff_id = id, by_staff_id = *actor.staff_id(), "staff member not edited"))?;
 
         tracing::info!(
             staff_id = id,
@@ -259,5 +263,104 @@ mod tests {
             result,
             Err(AppError::GlobalAppError(GlobalAppError::NotFound))
         ));
+    }
+
+    fn a_new_password(role_ids: Vec<i32>) -> EditStaffInput {
+        EditStaffInput {
+            password: Some(Password::new("a brand new password".to_string()).expect("ok")),
+            ..input(true, role_ids)
+        }
+    }
+
+    #[tokio::test]
+    async fn nobody_can_give_themselves_a_role_that_grants_more_than_they_hold() {
+        let fakes = with_a_dam_officer();
+
+        let result = use_case(&fakes)
+            .execute(
+                &actor(OTHER_ID),
+                OTHER_ID,
+                input(true, vec![OWNER_ROLE_ID, DAM_OFFICER_ROLE_ID]),
+            )
+            .await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Staff(StaffError::CannotGrant))
+        ));
+        assert!(
+            !fakes
+                .stored_staff(OTHER_ID)
+                .expect("stored")
+                .is_active_owner()
+        );
+    }
+
+    #[tokio::test]
+    async fn a_role_already_held_stays_without_the_actor_holding_it() {
+        // The dam officer renames the owner and leaves their roles alone.
+        let staff = use_case(&with_a_dam_officer())
+            .execute(&actor(OTHER_ID), OWNER_ID, input(true, vec![OWNER_ROLE_ID]))
+            .await
+            .expect("staff");
+
+        assert!(staff.is_active_owner());
+    }
+
+    #[tokio::test]
+    async fn removing_a_role_needs_no_permission_of_ones_own() {
+        let fakes = with_a_second_owner().with_staff(a_staff_member(
+            3,
+            "dams@example.org",
+            true,
+            &[DAM_OFFICER_ROLE_ID],
+        ));
+
+        let staff = use_case(&fakes)
+            .execute(&actor(3), OTHER_ID, input(true, Vec::new()))
+            .await
+            .expect("staff");
+
+        assert!(staff.roles().is_empty());
+    }
+
+    #[tokio::test]
+    async fn the_password_of_someone_who_can_do_more_cannot_be_reset() {
+        let fakes = with_a_dam_officer();
+
+        let result = use_case(&fakes)
+            .execute(
+                &actor(OTHER_ID),
+                OWNER_ID,
+                a_new_password(vec![OWNER_ROLE_ID]),
+            )
+            .await;
+
+        assert!(matches!(
+            result,
+            Err(AppError::Staff(StaffError::CannotGrant))
+        ));
+        assert_eq!(
+            *fakes
+                .stored_staff(OWNER_ID)
+                .expect("stored")
+                .password_hash(),
+            hash_of(PASSWORD),
+            "a new password for the owner would be the owner's account"
+        );
+    }
+
+    #[tokio::test]
+    async fn ones_own_password_can_always_be_changed() {
+        let staff = use_case(&with_a_dam_officer())
+            .execute(
+                &actor(OTHER_ID),
+                OTHER_ID,
+                a_new_password(vec![DAM_OFFICER_ROLE_ID]),
+            )
+            .await
+            .expect("staff");
+
+        assert_eq!(*staff.password_hash(), hash_of("a brand new password"));
     }
 }

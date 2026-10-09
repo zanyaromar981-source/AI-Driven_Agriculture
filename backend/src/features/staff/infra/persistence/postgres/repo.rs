@@ -14,7 +14,8 @@ use crate::{
     features::staff::{
         app::{AppError, RoleRepository, StaffRepository},
         domain::{
-            OwnerStanding, Role, RoleRef, RoleSelection, Staff, StaffChange, StaffEmail, StaffError,
+            Grantor, OwnerStanding, Role, RoleRef, RoleSelection, Staff, StaffChange, StaffEmail,
+            StaffError,
         },
         infra::persistence::postgres::{
             entities::{role_permissions, roles, staff, staff_roles},
@@ -48,6 +49,75 @@ fn foreign_key_violation_means(rule: StaffError) -> impl FnOnce(DbErr) -> AppErr
         Some(SqlErr::ForeignKeyConstraintViolation(_)) => rule.into(),
         _ => database_error(error),
     }
+}
+
+/// Takes the system role rows until the transaction ends and returns their
+/// ids. Every write that could remove an owner, hand out a permission or
+/// take one away takes them first, so such writes run one after another.
+/// Each one therefore counts the owners the one before it left, and checks
+/// a grant against what the one before it left the actor holding.
+async fn lock_system_roles<C: ConnectionTrait>(conn: &C) -> Result<Vec<i32>, AppError> {
+    let system_roles = roles::Entity::find()
+        .filter(roles::Column::System.eq(true))
+        .order_by_asc(roles::Column::Id)
+        .lock_exclusive()
+        .all(conn)
+        .await
+        .map_err(database_error)?;
+
+    Ok(system_roles.into_iter().map(|role| role.id).collect())
+}
+
+async fn permissions_of_roles<C: ConnectionTrait>(
+    conn: &C,
+    role_ids: &[i32],
+) -> Result<Vec<Permission>, AppError> {
+    let mut permissions = Vec::new();
+
+    for role_ids in role_ids.chunks(IDS_PER_QUERY) {
+        let granted = role_permissions::Entity::find()
+            .filter(role_permissions::Column::RoleId.is_in(role_ids.to_vec()))
+            .all(conn)
+            .await
+            .map_err(database_error)?;
+
+        for permission in &granted {
+            permissions.push(permission_from(permission)?);
+        }
+    }
+
+    Ok(permissions)
+}
+
+async fn roles_held_by<C: ConnectionTrait>(conn: &C, staff_id: i32) -> Result<Vec<i32>, AppError> {
+    let held = staff_roles::Entity::find()
+        .filter(staff_roles::Column::StaffId.eq(staff_id))
+        .all(conn)
+        .await
+        .map_err(database_error)?;
+
+    Ok(held.into_iter().map(|link| link.role_id).collect())
+}
+
+/// Reads what the acting staff member holds right now. Must run after
+/// `lock_system_roles` in the same transaction: the token was checked a
+/// moment ago, and a role or the account may have been changed since.
+async fn grantor<C: ConnectionTrait>(conn: &C, actor_id: i32) -> Result<Grantor, AppError> {
+    let actor = staff::Entity::find_by_id(actor_id)
+        .one(conn)
+        .await
+        .map_err(database_error)?;
+
+    let Some(actor) = actor else {
+        return Ok(Grantor::new(false, Vec::new()));
+    };
+
+    let held = roles_held_by(conn, actor_id).await?;
+
+    Ok(Grantor::new(
+        actor.active,
+        permissions_of_roles(conn, &held).await?,
+    ))
 }
 
 #[derive(FromQueryResult)]
@@ -184,8 +254,14 @@ impl RoleRepository for RolePostgresRepository {
         Self::load_one(&self.conn, id).await
     }
 
-    async fn create(&self, entity: &Role) -> Result<Role, AppError> {
+    async fn create(&self, entity: &Role, actor_id: i32) -> Result<Role, AppError> {
         let transaction = self.conn.begin().await.map_err(database_error)?;
+
+        lock_system_roles(&transaction).await?;
+
+        grantor(&transaction, actor_id)
+            .await?
+            .ensure_can_set_role_permissions(&[], entity.permissions())?;
 
         // The name is unique, so of two requests creating the same role at
         // the same moment the second waits for the first and is refused.
@@ -206,7 +282,7 @@ impl RoleRepository for RolePostgresRepository {
         Ok(role)
     }
 
-    async fn update(&self, entity: &Role) -> Result<Role, AppError> {
+    async fn update(&self, entity: &Role, actor_id: i32) -> Result<Role, AppError> {
         let Some(id) = *entity.id() else {
             return Err(GlobalAppError::MissingValue(
                 "Cannot update a role that has not been persisted".to_string(),
@@ -215,6 +291,16 @@ impl RoleRepository for RolePostgresRepository {
         };
 
         let transaction = self.conn.begin().await.map_err(database_error)?;
+
+        lock_system_roles(&transaction).await?;
+
+        // What the role holds is read here, under the lock, and not taken
+        // from the caller: only what this write adds to it is a grant.
+        let held_before = permissions_of_roles(&transaction, &[id]).await?;
+
+        grantor(&transaction, actor_id)
+            .await?
+            .ensure_can_set_role_permissions(&held_before, entity.permissions())?;
 
         // The statement itself refuses a system role. It also takes the
         // row, so two edits of one role run one after the other and the
@@ -364,22 +450,6 @@ impl StaffPostgresRepository {
         Ok(())
     }
 
-    /// Takes the system role rows until the transaction ends and returns
-    /// their ids. Every change that could remove an owner takes them first,
-    /// so such changes run one after another, and each one counts the
-    /// owners that the one before it left.
-    async fn lock_system_roles<C: ConnectionTrait>(conn: &C) -> Result<Vec<i32>, AppError> {
-        let system_roles = roles::Entity::find()
-            .filter(roles::Column::System.eq(true))
-            .order_by_asc(roles::Column::Id)
-            .lock_exclusive()
-            .all(conn)
-            .await
-            .map_err(database_error)?;
-
-        Ok(system_roles.into_iter().map(|role| role.id).collect())
-    }
-
     /// Reads the staff row and holds it until the transaction ends.
     async fn lock_staff<C: ConnectionTrait>(conn: &C, id: i32) -> Result<staff::Model, AppError> {
         staff::Entity::find_by_id(id)
@@ -482,8 +552,21 @@ impl StaffRepository for StaffPostgresRepository {
         granted.iter().map(permission_from).collect()
     }
 
-    async fn create(&self, entity: &Staff, roles: &RoleSelection) -> Result<Staff, AppError> {
+    async fn create(
+        &self,
+        entity: &Staff,
+        roles: &RoleSelection,
+        actor_id: i32,
+    ) -> Result<Staff, AppError> {
         let transaction = self.conn.begin().await.map_err(database_error)?;
+
+        lock_system_roles(&transaction).await?;
+
+        // A role that does not exist grants nothing here and is refused by
+        // the foreign key below.
+        grantor(&transaction, actor_id)
+            .await?
+            .ensure_can_assign(&permissions_of_roles(&transaction, roles.ids()).await?)?;
 
         // The email is unique, so of two requests adding the same person at
         // the same moment the second waits for the first and is refused.
@@ -501,11 +584,35 @@ impl StaffRepository for StaffPostgresRepository {
         Ok(created)
     }
 
-    async fn update(&self, id: i32, change: &StaffChange) -> Result<Staff, AppError> {
+    async fn update(
+        &self,
+        id: i32,
+        change: &StaffChange,
+        actor_id: i32,
+    ) -> Result<Staff, AppError> {
         let transaction = self.conn.begin().await.map_err(database_error)?;
 
-        let system_role_ids = Self::lock_system_roles(&transaction).await?;
+        let system_role_ids = lock_system_roles(&transaction).await?;
         let stored = Self::lock_staff(&transaction, id).await?;
+
+        let grantor = grantor(&transaction, actor_id).await?;
+        let held = roles_held_by(&transaction, id).await?;
+
+        // Roles the staff member already holds stay without a check: only
+        // the ones this edit hands out are a grant.
+        grantor.ensure_can_assign(
+            &permissions_of_roles(&transaction, &change.roles().newly_assigned(&held)).await?,
+        )?;
+
+        // The account is measured by the roles it holds, also while it is
+        // switched off: with its password it could be switched on again.
+        if change.password_hash().is_some() {
+            grantor.ensure_can_set_password(
+                actor_id,
+                id,
+                &permissions_of_roles(&transaction, &held).await?,
+            )?;
+        }
 
         Self::owner_standing(&transaction, &stored, &system_role_ids)
             .await?
@@ -561,7 +668,7 @@ impl StaffRepository for StaffPostgresRepository {
     async fn delete(&self, id: i32) -> Result<(), AppError> {
         let transaction = self.conn.begin().await.map_err(database_error)?;
 
-        let system_role_ids = Self::lock_system_roles(&transaction).await?;
+        let system_role_ids = lock_system_roles(&transaction).await?;
         let stored = Self::lock_staff(&transaction, id).await?;
 
         Self::owner_standing(&transaction, &stored, &system_role_ids)

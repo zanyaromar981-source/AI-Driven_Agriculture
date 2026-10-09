@@ -8,8 +8,8 @@ use crate::{
     features::staff::{
         app::{AppError, PasswordHasher, RoleRepository, StaffRepository, StaffTokenIssuer},
         domain::{
-            OwnerStanding, Password, PasswordHash, Role, RoleName, RoleRef, RoleSelection, Staff,
-            StaffChange, StaffEmail, StaffError, StaffName,
+            Grantor, OwnerStanding, Password, PasswordHash, Role, RoleName, RoleRef, RoleSelection,
+            Staff, StaffChange, StaffEmail, StaffError, StaffName,
         },
     },
 };
@@ -186,6 +186,33 @@ impl Script {
             .collect()
     }
 
+    fn permissions_of(&self, role_ids: &[i32]) -> Vec<Permission> {
+        self.roles
+            .iter()
+            .filter(|role| role.id().is_some_and(|id| role_ids.contains(&id)))
+            .flat_map(|role| role.permissions().clone())
+            .collect()
+    }
+
+    fn roles_held_by(staff: &Staff) -> Vec<i32> {
+        staff.roles().iter().map(|role| *role.id()).collect()
+    }
+
+    /// What the acting staff member holds at the moment of the write.
+    fn grantor(&self, actor_id: i32) -> Grantor {
+        match self
+            .staff
+            .iter()
+            .find(|staff| *staff.id() == Some(actor_id))
+        {
+            Some(actor) => Grantor::new(
+                *actor.active(),
+                self.permissions_of(&Self::roles_held_by(actor)),
+            ),
+            None => Grantor::new(false, Vec::new()),
+        }
+    }
+
     fn standing_of(&self, target: &Staff) -> OwnerStanding {
         OwnerStanding {
             target_is_active_owner: target.is_active_owner(),
@@ -214,13 +241,17 @@ impl RoleRepository for Fakes {
         Ok(self.stored_role(id))
     }
 
-    async fn create(&self, entity: &Role) -> Result<Role, AppError> {
+    async fn create(&self, entity: &Role, actor_id: i32) -> Result<Role, AppError> {
         self.record(Call::CreateRole {
             name: entity.name().into(),
         });
         self.guard()?;
 
         let mut script = self.script.lock().expect("script lock");
+
+        script
+            .grantor(actor_id)
+            .ensure_can_set_role_permissions(&[], entity.permissions())?;
 
         if script.roles.iter().any(|role| role.name() == entity.name()) {
             return Err(StaffError::RoleNameTaken.into());
@@ -241,7 +272,7 @@ impl RoleRepository for Fakes {
         Ok(created)
     }
 
-    async fn update(&self, entity: &Role) -> Result<Role, AppError> {
+    async fn update(&self, entity: &Role, actor_id: i32) -> Result<Role, AppError> {
         let id = entity.id().expect("a stored role");
 
         self.record(Call::UpdateRole { id });
@@ -257,11 +288,14 @@ impl RoleRepository for Fakes {
             return Err(StaffError::RoleNameTaken.into());
         }
 
+        let grantor = script.grantor(actor_id);
+
         let Some(stored) = script.roles.iter_mut().find(|role| *role.id() == Some(id)) else {
             return Err(GlobalAppError::NotFound.into());
         };
 
         stored.ensure_changeable()?;
+        grantor.ensure_can_set_role_permissions(stored.permissions(), entity.permissions())?;
         *stored = entity.clone();
 
         Ok(entity.clone())
@@ -352,7 +386,12 @@ impl StaffRepository for Fakes {
             .collect())
     }
 
-    async fn create(&self, entity: &Staff, roles: &RoleSelection) -> Result<Staff, AppError> {
+    async fn create(
+        &self,
+        entity: &Staff,
+        roles: &RoleSelection,
+        actor_id: i32,
+    ) -> Result<Staff, AppError> {
         self.record(Call::CreateStaff {
             email: entity.email().into(),
             role_ids: roles.ids().to_vec(),
@@ -360,6 +399,10 @@ impl StaffRepository for Fakes {
         self.guard()?;
 
         let mut script = self.script.lock().expect("script lock");
+
+        script
+            .grantor(actor_id)
+            .ensure_can_assign(&script.permissions_of(roles.ids()))?;
 
         if script
             .staff
@@ -384,7 +427,12 @@ impl StaffRepository for Fakes {
         Ok(created)
     }
 
-    async fn update(&self, id: i32, change: &StaffChange) -> Result<Staff, AppError> {
+    async fn update(
+        &self,
+        id: i32,
+        change: &StaffChange,
+        actor_id: i32,
+    ) -> Result<Staff, AppError> {
         self.record(Call::UpdateStaff {
             id,
             active: *change.active(),
@@ -403,6 +451,15 @@ impl StaffRepository for Fakes {
         else {
             return Err(GlobalAppError::NotFound.into());
         };
+
+        let grantor = script.grantor(actor_id);
+        let held = Script::roles_held_by(&stored);
+
+        grantor.ensure_can_assign(&script.permissions_of(&change.roles().newly_assigned(&held)))?;
+
+        if change.password_hash().is_some() {
+            grantor.ensure_can_set_password(actor_id, id, &script.permissions_of(&held))?;
+        }
 
         script
             .standing_of(&stored)

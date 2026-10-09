@@ -107,5 +107,5 @@ For the web dashboard, not the farmer app. Everything is under `/v1/dashboard`; 
 - `GET /v1/dashboard/permissions` lists the resources and actions a role can hold.
 - `/v1/dashboard/roles` and `/v1/dashboard/staff`: list, create, read, update, delete. Each needs its own permission (`roles:read`, `roles:create`, `staff:update`, ...).
 - A missing permission answers `403 {"error": "forbidden"}`; no token or a bad one answers `401`.
-- Codes to handle: `bad_credentials`, `system_role` (the Owner role cannot be changed), `role_in_use`, `role_name_taken`, `email_taken`, `unknown_role`, `own_account`, `last_owner`.
+- Codes to handle: `bad_credentials`, `system_role` (the Owner role cannot be changed), `role_in_use`, `role_name_taken`, `email_taken`, `unknown_role`, `own_account`, `last_owner`, and `cannot_grant` (403: you tried to give a permission, a role or a password reset that goes beyond what you hold yourself).
 - A change to a role, or deactivating a staff member, takes effect on that person's next request.

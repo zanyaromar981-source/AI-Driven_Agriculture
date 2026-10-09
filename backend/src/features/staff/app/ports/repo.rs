@@ -18,13 +18,17 @@ pub trait RoleRepository: Send + Sync + std::fmt::Debug {
 
     /// Creates a new role with its permissions. `entity.id()` must be
     /// `None`. Fails with `RoleNameTaken` when the name is in use; the
-    /// unique index decides, so of two requests at once one fails.
-    async fn create(&self, entity: &Role) -> Result<Role, AppError>;
+    /// unique index decides, so of two requests at once one fails. Fails
+    /// with `CannotGrant` when the role holds a permission that staff
+    /// member `actor_id` does not hold at the moment of the write.
+    async fn create(&self, entity: &Role, actor_id: i32) -> Result<Role, AppError>;
 
     /// Replaces the name, the description and the whole permission set of
     /// an existing role. `entity.id()` must be `Some`. A system role is
-    /// refused by the statement itself with `SystemRole`.
-    async fn update(&self, entity: &Role) -> Result<Role, AppError>;
+    /// refused by the statement itself with `SystemRole`. Fails with
+    /// `CannotGrant` when the role would gain a permission that staff
+    /// member `actor_id` does not hold, checked in the same transaction.
+    async fn update(&self, entity: &Role, actor_id: i32) -> Result<Role, AppError>;
 
     /// Deletes the role in one statement. Fails with `SystemRole` for a
     /// system role and with `RoleInUse` while any staff member holds it.
@@ -47,13 +51,24 @@ pub trait StaffRepository: Send + Sync + std::fmt::Debug {
     /// Creates a new staff member holding `roles`. `entity.id()` must be
     /// `None`. Fails with `EmailTaken` when the email is in use (the unique
     /// index decides) and with `UnknownRole` when a role does not exist
-    /// (the foreign key decides).
-    async fn create(&self, entity: &Staff, roles: &RoleSelection) -> Result<Staff, AppError>;
+    /// (the foreign key decides), and with `CannotGrant` when a role grants
+    /// something staff member `actor_id` does not hold at that moment.
+    async fn create(
+        &self,
+        entity: &Staff,
+        roles: &RoleSelection,
+        actor_id: i32,
+    ) -> Result<Staff, AppError>;
 
     /// Applies the change in one transaction. Fails with `LastOwner` when
     /// it would leave no active owner, checked with the rows locked, and
-    /// with `UnknownRole` when a role does not exist.
-    async fn update(&self, id: i32, change: &StaffChange) -> Result<Staff, AppError>;
+    /// with `UnknownRole` when a role does not exist. Fails with
+    /// `CannotGrant` when a newly assigned role grants something staff
+    /// member `actor_id` does not hold, or when it sets the password of
+    /// someone who can do more than they can; both are checked on what the
+    /// actor holds inside the same transaction.
+    async fn update(&self, id: i32, change: &StaffChange, actor_id: i32)
+    -> Result<Staff, AppError>;
 
     /// Deletes the staff member in one transaction. Fails with `LastOwner`
     /// when they are the last active owner, checked with the rows locked.

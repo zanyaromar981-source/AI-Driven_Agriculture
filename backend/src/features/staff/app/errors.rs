@@ -37,6 +37,9 @@ impl ToErrorInfo for StaffError {
             StaffError::UnknownRole => {
                 ErrorInfo::with_code(ErrorKind::InvalidInput, "unknown_role", self.to_string())
             }
+            StaffError::CannotGrant => {
+                ErrorInfo::with_code(ErrorKind::Authorization, "cannot_grant", self.to_string())
+            }
             StaffError::DomainError(err) => err.to_error_info(),
         }
     }
@@ -91,6 +94,14 @@ mod tests {
 
         assert_eq!(info.kind, ErrorKind::Authentication);
         assert_eq!(info.code, "bad_credentials");
+    }
+
+    #[test]
+    fn granting_beyond_ones_own_permissions_is_forbidden_with_its_own_code() {
+        let info = StaffError::CannotGrant.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Authorization);
+        assert_eq!(info.code, "cannot_grant");
     }
 
     #[test]

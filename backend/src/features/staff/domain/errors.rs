@@ -26,6 +26,9 @@ pub enum StaffError {
     #[error("A role that does not exist cannot be assigned")]
     UnknownRole,
 
+    #[error("You cannot give out a permission you do not hold yourself")]
+    CannotGrant,
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }
