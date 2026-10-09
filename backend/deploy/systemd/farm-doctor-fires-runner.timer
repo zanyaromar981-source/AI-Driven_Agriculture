@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the Farm Doctor fires runner every 3 hours
+
+[Timer]
+OnCalendar=*-*-* 00/3:40:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target
