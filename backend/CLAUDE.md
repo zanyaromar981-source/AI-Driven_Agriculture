@@ -42,7 +42,7 @@ Hard rules:
 ## 4. HTTP
 
 - JSON is snake_case. Success bodies are plain objects through `ApiResponse::ok` / `ApiResponse::created`, with no outer wrapper. A list is wrapped in a named key (`{"farms": [...]}`).
-- The farmer app reads the shapes in the root `BACKEND.md`; what the backend really does is in the root `FRONTEND.md`. Change a route the app uses and you change `FRONTEND.md` in the same commit.
+- The farmer app reads the shapes in the root `BACKEND.md`; what the backend really does is in the root `FRONTEND.md`. Change a route the app or the dashboard uses and you change `FRONTEND.md` and regenerate `API.md` (`python3 tools/api_reference.py <server> > API.md`) in the same commit.
 - Ids travel as strings. A non-numeric id is `404`, not `400`.
 - Timestamps are `DateTime<Utc>` (with the `Z`), days are `NaiveDate`. Database timestamps are naive UTC.
 - Text a person reads comes in Sorani and English (`*_ku`, `*_en`).

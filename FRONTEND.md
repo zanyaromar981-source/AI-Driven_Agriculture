@@ -1,157 +1,113 @@
-# FRONTEND.md: what the backend expects from the frontend
+# FRONTEND.md: how to use the backend
 
-This is the backend's side of the contract. `BACKEND.md` says what the app needs; this file says what the backend in `backend/` really does today. The app follows this file. Disagreements are settled here and in `BACKEND.md`, not in code.
+For everyone building the farmer app and the web dashboard. The backend in `backend/` is the one source of data: the app and the dashboard should read and write everything through it, and keep no numbers of their own.
 
-Status: v3, 2026-10-08. The backend now answers with the body shapes of `BACKEND.md` section 2, so the app's `HttpApi` works against it unchanged. (v1 of this file described `{data}` and `{errors}` wrappers; those are gone.) Added 2026-10-09 12:11: section 13, Ask the Doctor.
+Status: v4, 2026-10-09. Three places describe the API, from short to complete:
 
-## 1. How to point the app at it
+1. **This file**: how things work, which screen calls what, the rules, what is empty today.
+2. **`backend/API.md`**: every route (127 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
+3. **`/api-docs` on the server**: the same, clickable, with a "try it" button.
 
-Build with `--dart-define=API_URL=http://<host>:3000/v1`. Every route lives under `/v1`.
+`BACKEND.md` is still where the frontend writes what it needs. Where the two files disagree, say so in the files and we fix one of them.
 
-## 2. What is built
+## 1. Where it is
 
-Exact request and answer shapes for every route are in the live docs at `http://<host>:3000/api-docs`.
+- **Test server:** `http://95.217.14.92:8790`. Everything is under `/v1`, so the app is built with `--dart-define=API_URL=http://95.217.14.92:8790/v1`. It is a small shared server for the competition, plain `http`, not for real farmers' data.
+- **Clickable docs:** `http://95.217.14.92:8790/api-docs`.
+- **Is it up?** `GET /status` (the process) and `GET /health` (the database).
+- **Run your own:** `backend/README.md` (Rust, Docker, three commands).
 
-**Farmer app (token from sign-in)**
+## 2. Who calls what
 
-| BACKEND.md | Route | State |
+There are three kinds of callers. Each has its own way in, and none works on another's routes.
+
+| Caller | Gets in with | Routes |
 |---|---|---|
-| 2.1 | `POST /v1/auth/otp/send`, `POST /v1/auth/otp/verify` | built; see section 3 for how the code is delivered |
-| 2.2 | `GET /v1/farms`, `POST /v1/farms`, `GET /v1/farms/{id}`, `PUT /v1/farms/{id}/cells`, `DELETE /v1/farms/{id}` | built |
-| 2.3 | `GET /v1/farms/{id}/status` | built as a placeholder so Home opens. There is no table or write route for satellite readings yet, so it cannot show data even if a job runs: `picture_date`, `next_picture_expected`, `greenness_pct_of_normal`, `weak_where` are `null`, `cells` is empty, `crops` lists the farm's real crop plots with `level: "none"`. Home opens with "waiting for the first satellite picture" |
-| new | `GET /v1/farms/{id}/insights` | built: what is known about the farm, topic by topic (section 8) |
-| new | `GET /v1/me`, `PUT /v1/me` | built: the farmer's profile (`phone`, `name`, `lang`) |
-| new | Alwa market, 6 routes under `/v1/alwa` | built (section 9) |
-| 2.5 | `POST /v1/farms/{id}/ask` | built: Ask the Doctor (section 13). It needs the local Doctor service running; without it the answer is `502 doctor_failed` |
-| 2.4, 2.6, 2.7 | plan, reports, alerts, devices, `DELETE /v1/account` | not built yet |
+| The farmer app | a farmer token: `POST /v1/auth/otp/send`, then `/verify` | `/v1/me`, `/v1/farms...`, `/v1/alwa...` |
+| The dashboard | a staff token: `POST /v1/dashboard/auth/login` | everything under `/v1/dashboard` |
+| Anyone, no login | nothing | read-only region data: `/v1/region...`, `/v1/zones...`, `/v1/dams...`, `/v1/fires`, `/v1/outlooks...`, `/v1/water/plan`, `/v1/briefs...`, and the Alwa market's public pages |
+| Our data jobs | a service key | `/v1/ingest...`. Not for the app or the dashboard. |
 
-**Ministry dashboard (no login)**
+Send a token as `Authorization: Bearer <token>`. JSON in and out, UTF-8, field names in snake_case.
 
-| Route | What it answers |
+## 3. Rules that hold for every route
+
+- **No wrapper.** A success answer is the object itself. A list sits under a named key: `{"farms": [...]}`.
+- **Errors** are always `{"error": "<code>", "detail": "<English text>"}`, sometimes with `field` or `retry_after_s`. Act on `error`; `detail` is for logs. The codes are in section 12.
+- **Ids are text.** `"id": "12"`. Do not do sums with them.
+- **Times** are UTC with a `Z`. **Days** are `YYYY-MM-DD`, **months** `YYYY-MM`.
+- **Two languages.** Text for people comes as `..._ku` (Sorani) and `..._en`. A `..._ku` may be `null` where no Sorani has been written yet: show the English.
+- **Missing data is `null` or an empty list, never a made-up number.** Show "no data yet".
+- **Retries are safe.** Sending the same call again after a lost answer does not make a duplicate or an error: a second delete answers `204`, a second cancel `204`, a second accept `200` with the same thing. For `POST /v1/farms` and `POST /v1/alwa/listings` send an `Idempotency-Key` header (any unique text per thing you create) and repeat it on the retry.
+- **`401`** means the token is missing, wrong, expired, or its owner was deleted: go back to sign-in. **`403`** (dashboard only) means signed in but not allowed.
+- **Districts** are named by a slug: the English name in lower case with hyphens (`chamchamal`, `sulaymaniyah`). There are 33, with 72 sub-districts, the same as `web/map_demo/kri_map_data.js`. `GET /v1/dashboard/zones` lists them with Sorani names.
+
+## 4. The farmer app
+
+### Sign in (real codes now)
+
+- `POST /v1/auth/otp/send` with `{"phone": "+9647501234567", "lang": "ku"}` answers `{"sent": true, "retry_after_s": 60}`. **The code is really sent**, by SMS, WhatsApp or Telegram, through OTPIQ. The old demo code no longer works on the test server: you need a real Iraqi mobile number.
+- Asking again within 60 seconds answers `429` with `retry_after_s`: show a countdown.
+- If the message cannot be sent the answer is `503 {"error": "upstream_down"}` and the farmer can ask again at once.
+- `POST /v1/auth/otp/verify` with `{"phone", "code"}` answers `{"token": "...", "farms_count": 2}` or `401 {"error": "bad_code"}` (wrong, expired, too many tries, or never asked: always the same answer).
+- A code is 6 digits, lives 10 minutes and allows 5 tries. If the answer to `verify` is lost, sending the same `verify` again within 2 minutes works.
+- `lang` is `ku`, `kmr`, `ar` or `en`. It becomes the farmer's language on first sign-in.
+- The token lasts 30 days. Keep it; do not look inside it.
+- `GET /v1/me` and `PUT /v1/me` (`{"name": text or null, "lang"}`): the farmer's profile.
+
+### Farms
+
+| Call | What it does |
 |---|---|
-| `GET /v1/region/overview?month=YYYY-MM` | all 33 districts with dryness, band, rank, change against last year; region summary |
-| `GET /v1/zones/{slug}?month=` | one district: its reading, sub-districts, same month in earlier years |
-| `GET /v1/region/compare?year=&with=&month=` | two years side by side per district, region average by year |
-| `GET /v1/dams`, `GET /v1/dams/{slug}/history` | Dukan and Darbandikhan: latest level, a year ago, history |
-| `GET /v1/outlooks`, `GET /v1/outlooks/zones/{zone_slug}` | next-season outlook per district with confidence and the method's track record |
-| `GET /v1/water/plan` | districts ranked by water need, amounts per dam |
-| `GET /v1/fires?hours=24` | satellite fire detections and a summary |
-| `GET /v1/alwa/markets`, `/prices`, `/prices/{crop}/history`, `/listings`, `/listings/{id}`, `/deals` | the wholesale market: prices, crops on sale, offers, deals |
+| `GET /v1/farms` | the farmer's farms: `id`, `name`, `area_dunam`, `crops`, `centroid` |
+| `POST /v1/farms` | make a farm from walked corners and painted cells; answers the farm and `dropped_cells` |
+| `GET /v1/farms/{id}` | one farm with `outline` and `cells` |
+| `PUT /v1/farms/{id}` | **edit**: same body as create; replaces name, outline and cells; the farm keeps its id |
+| `PUT /v1/farms/{id}/cells` | repaint some cells only |
+| `DELETE /v1/farms/{id}` | delete it (`204`, also if it was already gone) |
 
-The districts are the 33 of `web/map_demo/kri_map_data.js` (4 governorates, 72 sub-districts). A district's slug is its English name in lower case with hyphens, for example `chamchamal`; a sub-district's is the same, for example `markaz-zakho`.
+What to know:
 
-**Every number above is empty until a data job pushes it.** The backend stores and serves; it does not compute satellite, weather or forecast values. The jobs write through `PUT /v1/ingest/...` with the `X-Service-Key` header (`backend/README.md`).
+- **Use `PUT /v1/farms/{id}` for an edit now.** The create-then-delete workaround is no longer needed, and with `PUT` the farm keeps its id, so its history and analysis stay attached.
+- **Cells:** every 10 m cell the outline touches, each with `inside_pct` (the share of the cell inside the outline, not rounded). It is computed the same way as `cellsTouching` in `app/lib/geo.dart`; on three test outlines the two agreed to within 0.00000002 m2. A cell needs more than 0.01 m2 inside to count.
+- **Areas:** `area_dunam` is the exact area inside the outline. `crops[].dunam` is the sum of that crop's cells' inside areas, so the crops plus the `empty` cells add up to the farm. `crops` does not list `empty`.
+- **Painted cells outside the outline** come back in `dropped_cells`. That is not an error.
+- **Limits:** 3 to 50 corners; the outline must not cross or touch itself (`bad_polygon`); 50,000 cells (`farm_too_large`); 20 farms per phone (`too_many_farms`); a name of 1 to 100 characters. Corners must lie in or near the region.
+- **Another farmer's farm** answers `404`, exactly like one that does not exist.
+- Farms saved before 9 October keep their old cells, all at `inside_pct` 100, until they are edited.
 
-## 3. Sign in
+### What the farm screens can show
 
-- `send` answers `200 {"sent": true, "retry_after_s": 60}`. Asking again before that time answers `429 {"error": "rate_limited", "retry_after_s": <seconds left>}`.
-- `verify` answers `200 {"token": "...", "farms_count": 2}` or `401 {"error": "bad_code"}`. A wrong code, an expired code, too many tries and a phone that never asked all give the same `bad_code`.
-- Codes are 6 digits, live 10 minutes and allow 5 tries. A code signs in once; if the answer is lost and the app sends the same `verify` again within 2 minutes, it succeeds again. After that the code is refused.
-- `lang` accepts `ku`, `kmr`, `ar`, `en`. It becomes the farmer's language on first sign-in.
-- **Delivery:** the server sends the code through OTPIQ (SMS, WhatsApp or Telegram, chosen by OTPIQ unless configured) when `OTPIQ__API_KEY` is set. Without a key it writes the code to its own log, and for a demo it can be started with one fixed code for every phone (`AUTH__FIXED_SIGN_IN_CODE`); neither is safe with real farmers. A key and a fixed code together are refused at start-up.
-- If the code cannot be delivered, `send` answers `503 {"error": "upstream_down"}` and the farmer can ask again at once.
-- A farmer who has been deleted (by staff, from the dashboard) gets `401` on every call from then on, so the app signs them out.
+| Call | What comes back | State today |
+|---|---|---|
+| `GET /v1/farms/{id}/status` | the farm from space: picture date, greenness, per-cell levels | a placeholder: every measured field is `null`, `cells` is empty, `crops` lists the real crop plots with `level: "none"`. There is no store for satellite readings yet. |
+| `GET /v1/farms/{id}/insights` | what is known about the farm, topic by topic | filled by the per-farm analysis job; see below |
+| `GET /v1/farms/{id}/brief` | the nightly brief for the farm's district | `brief` is `null` until the nightly job has run |
+| `POST /v1/farms/{id}/ask` | Ask the Doctor | section 6 |
 
-## 4. Farms
+**Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
 
-Shapes are those of `BACKEND.md` 2.2. Notes on what the backend does with them:
+The `groundwater` topic is new. Read this before designing a screen for it: it is **not** a well depth. It is a percentile (50 is normal for the time of year; 10 means only 10% of past years were this dry) from a NASA model for a square of about 25 km, so every farm in that square gets the same number, and it cannot see local pumping. It comes with `confidence: "unsure"`. Say "the wider area", never "your well". Its measure codes are `groundwater_percentile`, `root_zone_moisture_percentile` and `surface_moisture_percentile`.
 
-- `id` is a string holding a number, for example `"12"`. Treat it as opaque.
-- `area_dunam` is the area inside the walked outline (not rounded). `crops[].dunam` counts painted cells, 25 cells to a dunam. `crops` never lists `empty`; largest crop first.
-- The farm's cells are every 10 m cell whose centre is inside the outline. The backend works this list out itself; cells the app did not paint come back as `empty`.
-- A painted cell that is not inside the outline is left out and listed in `dropped_cells` as `{"e", "n"}`. This is not an error.
-- `Idempotency-Key` on `POST /v1/farms` (and on `POST /v1/alwa/listings`) is honoured: a repeat with the same key and phone returns the farm created the first time, with status `201` and an empty `dropped_cells`.
-- `PUT /v1/farms/{id}/cells` changes only the cells listed. To clear a cell, send it with `"crop": "empty"`.
-- A farm of another phone answers `404`, the same as a farm that does not exist.
-- Retries are safe: `DELETE /v1/farms/{id}` answers `204` whether or not the farm was still there; cancelling an Alwa listing twice answers `204` both times; accepting the same offer twice answers `200` with the same listing both times.
-- Not sent yet, because there are no satellite readings in the database: `status`, `last_picture`, `picture_date`, and on cells `greenness_pct`, `level`, `inside_pct`. The app already treats them as optional.
-- Cells are every 10 m cell the outline touches, each with `inside_pct` (the share of the cell inside the outline, not rounded; a cell needs more than 0.01 m2 inside to count), computed the same way as the app's `cellsTouching`. `crops[].dunam` is the sum of its cells' inside areas, so the crops plus `empty` add up to `area_dunam`. Farms saved before this change keep their old cells at 100 until they are edited.
-- `PUT /v1/farms/{id}` edits a farm (BACKEND.md 2.2): same body as create; replaces the name, the outline and the cells; the farm keeps its id; `404` for a missing farm or another phone's. Sending the same edit again answers `200` with the same farm. `Idempotency-Key` is accepted and ignored. `created_offline_at` in an edit is ignored: the farm keeps the one it was created with.
-- The outline is returned as the farmer walked it. It is not snapped to the grid.
-- Extra fields the app can ignore: `created_at`, `updated_at`, `created_offline_at`.
+**Brief.** `{"farm_id", "zone_slug", "brief"}`. A brief is `{"day", "scope", "headline_en", "headline_ku", "summary_en", "summary_ku", "points": [{"level": "info|watch|alarm", "text_en", "text_ku"}], "sources": [{"title", "url"}], "author", "generated_at"}`. It is written by an AI agent from our stored numbers and a web search. Show the `sources`, and treat it as a draft, not as checked advice.
 
-## 5. Errors
+### Not built yet for the app
 
-Always `{"error": "<code>", "detail": "<English text>"}`, plus `field` or `retry_after_s` when they apply.
+`GET /v1/farms/{id}/plan` (the 10-day weather plan), reports, alerts, push devices, `DELETE /v1/account`. They answer `404`.
 
-| Status | Codes |
-|---|---|
-| 400 | `bad_request` (body or parameter cannot be read, including an unknown crop code) |
-| 401 | `unauthorized`, `bad_code` |
-| 404 | `not_found` |
-| 422 | `invalid`, `bad_polygon` (outline crosses itself, has fewer than 3 or more than 50 corners, or holds no cell), `farm_too_large` (over 50,000 cells), `too_many_farms` (over 20 per phone), `empty_question` and `bad_photo` (Ask the Doctor, section 13) |
-| 429 | `rate_limited` |
-| 500 | `server_error` (the detail is always `An unexpected error occurred`) |
-| 502 | `doctor_failed` (Ask the Doctor: the Doctor service is down or failed; same detail) |
-| 503 | `doctor_not_ready` (Ask the Doctor: the Doctor service cannot answer yet; same detail) |
+## 5. The Alwa market
 
-## 6. One number in BACKEND.md looks wrong
+Sellers set their own price on each listing. There is no automatic price feed: the "price at the alwa today" board only shows what Ministry staff have typed in through the dashboard.
 
-The `POST /farms` example has `{"e": 462337, "n": 398812}`. With the definition in section 1 (`e = floor(easting / 10)`, UTM zone 38N), a point at lat 36.0312, lon 44.6021 has easting 464,152 m and northing 3,987,482 m, so the cell is `{"e": 46415, "n": 398748}`. The example `e` is ten times too large. The backend uses the definition; the app's own test data (`e: 46415`) already agrees with it.
+- **No login:** `GET /v1/alwa/markets`, `/v1/alwa/markets/{slug}/prices`, `/prices/{crop}/history`, `GET /v1/alwa/listings` (filters `market`, `crop`, `status`; `page`, `rows_per_page`), `GET /v1/alwa/listings/{id}` (with its offers), `GET /v1/alwa/deals`.
+- **With the farmer token:** `POST /v1/alwa/listings`, `GET /v1/alwa/listings/mine`, `DELETE /v1/alwa/listings/{id}` (cancel), `POST /v1/alwa/listings/{id}/offers`, `POST /v1/alwa/listings/{id}/offers/{offer_id}/accept`, `GET /v1/alwa/offers/mine`.
+- **Phones are hidden** until a deal. After the seller accepts, the seller's answer shows the buyer's phone and the buyer's answer shows the seller's.
+- **Rules:** at most 20 open listings per phone; a listing closes at `closes_at` (at most 14 days ahead); you cannot offer on your own listing; a buyer has one open offer per listing (a new one replaces it); accepting any offer sells the whole listing and declines the others.
+- **`fair_price`** on a listing is `fair`, `high`, `low` or `unknown`. It is `unknown` unless staff have entered a price for that crop at that market in the last 7 days.
+- **Codes:** `too_many_listings`, `own_listing`, `listing_not_open`, `offer_not_open`, `offer_too_large`, `bad_closes_at`.
+- Crop codes here: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple.
 
-## 7. Open questions for the frontend
-
-Answered in BACKEND.md 0.3 (thank you). Still open:
-
-1. Insights (section 8): which topics should the farm screen show first?
-2. Alwa (section 9): who may make offers, and does accepting part of the quantity close the whole listing? Today any signed-in phone may offer, and accepting any offer marks the listing sold.
-
-## 8. Farm insights
-
-`GET /v1/farms/{id}/insights` answers `{"farm_id", "topics": [...]}`. Each topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather` and carries `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means nothing is known yet. Show `source` and `as_of` next to the numbers. No job fills these yet, and no source for groundwater depth at farm scale is known, so expect that topic to stay missing.
-
-## 9. Alwa market
-
-With the farmer's token: `POST /v1/alwa/listings` (put a crop on sale), `GET /v1/alwa/listings/mine`, `DELETE /v1/alwa/listings/{id}` (cancel), `POST /v1/alwa/listings/{id}/offers` (make an offer), `POST /v1/alwa/listings/{id}/offers/{offer_id}/accept` (seller only), `GET /v1/alwa/offers/mine`. Phone numbers stay hidden until a deal: then the seller sees the buyer's and the buyer sees the seller's. Error codes: `too_many_listings`, `own_listing`, `listing_not_open`, `offer_not_open`, `offer_too_large`, `bad_closes_at`.
-
-## 10. Dashboard sign-in and roles
-
-For the web dashboard, not the farmer app. Everything is under `/v1/dashboard`; shapes are in `/api-docs`.
-
-- `POST /v1/dashboard/auth/login` with `{"email", "password"}` answers `{"token", "staff", "permissions": [{"resource", "action"}]}`. Send the token as `Authorization: Bearer`. It is a different kind of token from the farmer's: neither works on the other's routes.
-- `GET /v1/dashboard/me` answers the signed-in staff member and their permissions. Use it to decide which buttons to show; the server still checks every call.
-- `GET /v1/dashboard/permissions` lists the resources and actions a role can hold.
-- `/v1/dashboard/roles` and `/v1/dashboard/staff`: list, create, read, update, delete. Each needs its own permission (`roles:read`, `roles:create`, `staff:update`, ...).
-- A missing permission answers `403 {"error": "forbidden"}`; no token or a bad one answers `401`.
-- Codes to handle: `bad_credentials`, `system_role` (the Owner role cannot be changed), `role_in_use`, `role_name_taken`, `email_taken`, `unknown_role`, `own_account`, `last_owner`, and `cannot_grant` (403: you tried to give a permission, a role or a password reset that goes beyond what you hold yourself).
-- A change to a role, or deactivating a staff member, takes effect on that person's next request.
-
-## 11. Dashboard data routes
-
-For the web dashboard, with a staff token. All under `/v1/dashboard`; exact shapes are in `/api-docs`. Every method needs its own permission, named `<resource>:<action>`: `GET` needs `read`, `POST` needs `create`, `PUT` needs `update`, `DELETE` needs `delete`. Without it the answer is `403 {"error": "forbidden"}`.
-
-| Resource | Routes |
-|---|---|
-| `zones` | `/zones` (districts with sub-districts), `/zones/{slug}/readings[/{month}]`, `/zones/{slug}/sub-zones/{sub_slug}/readings[/{month}]` |
-| `dams` | `/dams`, `/dams/{slug}/readings[/{day}]` |
-| `outlooks` | `/outlooks`, `/outlooks/{season}/{issued}/zones/{zone_slug}`, `/outlook-runs[/{season}/{issued}]` |
-| `water` | `/water/seasons`, `/water/plan/{season}/entries[/{zone_slug}]` |
-| `fires` | `/fires[/{id}]` |
-| `insights` | `/farms/{id}/insights[/{topic}]` |
-| `alwa` | `/alwa/markets[/{slug}]`, `/alwa/markets/{slug}/prices[/{crop}/{day}]`, `/alwa/listings[/{id}]` (moderation: close or delete; shows phone numbers) |
-| `farmers` | `/farmers[/{id}]` (shows phone numbers) |
-| `farms` | `/farms[/{id}]` (shows the owner's phone) |
-| `roles`, `staff` | section 10 |
-
-The same rules everywhere:
-
-- `POST` creates. If the thing already exists the answer is `409 {"error": "already_exists"}` and nothing changes.
-- `PUT` changes an existing thing. If there is none the answer is `404`.
-- `DELETE` answers `204`, also when the thing was already gone.
-- Lists that can grow take `page` and `rows_per_page` and answer with `count`, `page`, `rows_per_page`.
-- A reading changed by hand looks like any other; the next data-job push for the same key replaces it.
-- The public read routes of section 2 are unchanged and still need no login.
-
-## 12. Daily briefs
-
-A job writes a short brief each night (Sorani and English): one for the region and one per district that has farms. Until that job is running these routes answer with nothing.
-
-- `GET /v1/farms/{id}/brief` (farmer token) answers `{"farm_id", "zone_slug", "brief"}`: the newest brief of the farm's district, or the region brief if the district has none. `brief` is `null` when nothing is stored yet: show "no brief yet", it is not an error.
-- `GET /v1/briefs/latest?scope=` and `GET /v1/briefs?scope=&from=&to=` (no login): `scope` is `region` (default) or a district slug.
-- A brief is `{"day", "scope", "headline_en", "headline_ku", "summary_en", "summary_ku", "points": [{"level": "info|watch|alarm", "text_en", "text_ku"}], "sources": [{"title", "url"}], "author", "generated_at", "updated_at"}`.
-- The text is written by an AI agent from our stored numbers plus a web search. Show `sources` and `author`, and treat it as a draft that staff can correct (`/v1/dashboard/briefs`, permission `briefs:*`).
-
-## 13. Ask the Doctor
+## 6. Ask the Doctor
 
 `POST /v1/farms/{id}/ask` with the farmer's token. The body is `multipart/form-data`:
 
@@ -190,3 +146,109 @@ Errors, in the order they are checked:
 | 502 | `doctor_failed` | The Doctor service is down, took over 90 s, failed, or answered something that cannot be used. |
 | 503 | `doctor_not_ready` | The Doctor service is up but cannot answer yet (it has no AI key). Try later. |
 
+## 7. Region data anyone can read
+
+No login. These are what a public page or the app's region screens use; the dashboard may use them too.
+
+| Call | What it answers |
+|---|---|
+| `GET /v1/region/overview?month=` | all 33 districts with `dryness`, `band`, `rank`, change against last year; a region summary |
+| `GET /v1/zones/{slug}?month=` | one district: its reading, its sub-districts, the same month in earlier years |
+| `GET /v1/region/compare?year=&with=&month=` | two years side by side per district |
+| `GET /v1/dams`, `GET /v1/dams/{slug}/history` | Dukan and Darbandikhan: latest level, a year ago, history |
+| `GET /v1/fires?hours=24` | fire detections and a summary |
+| `GET /v1/outlooks`, `/v1/outlooks/zones/{zone_slug}` | next-season outlook per district, with the method's track record |
+| `GET /v1/water/plan` | districts ranked by water need |
+| `GET /v1/briefs/latest?scope=`, `GET /v1/briefs` | the nightly brief (`scope` is `region` or a district slug) |
+
+## 8. What has real data on the test server today
+
+Be honest on screen about this: most of the dashboard has nothing to show yet.
+
+| Data | State | Where it comes from |
+|---|---|---|
+| District rain and `dryness` | **live**, all 33 districts, refreshed every 12 hours | rain of the last 365 days against the 10 years before (Open-Meteo, ERA5). `dryness` is only that rain figure on a 0 to 100 scale (50 = normal rain, lower = wetter). It is **not** soil moisture or crop condition: label it "rain against normal". `greenness`, `water_need`, `best_crops` are empty. |
+| Fires | **live**, refreshed every 3 hours | NASA satellite detections inside the 33 districts, gas flares removed by a rule. About 3 hours behind the satellite. Nobody has checked the list by hand: call them "satellite fire detections", not confirmed fires. `area_ha`, wind and `farmers_alerted` are empty. |
+| Groundwater per farm | runs daily, but there are no farms on the server yet | see section 4 |
+| Dams | **empty** | the satellite job is not on the server yet |
+| Season outlook, water plan | **empty** | no job; they can be typed in through the dashboard |
+| Alwa prices | **empty** until staff type them in | by hand |
+| Nightly brief | **empty** | the job is ready but not switched on |
+| Farm status from space | placeholder | no store yet |
+| Per-farm history (soil, rain, frost, greenness) | filled only where the analysis job runs | that job is not in the repo yet |
+
+## 9. The dashboard: sign in and roles
+
+Everything is under `/v1/dashboard`.
+
+- `POST /v1/dashboard/auth/login` with `{"email", "password"}` answers `{"token", "staff", "permissions": [{"resource", "action"}]}`. The token lasts 12 hours.
+- `GET /v1/dashboard/me` answers the signed-in staff member and their permissions. Use it to decide which buttons to show. The server checks every call anyway.
+- `GET /v1/dashboard/permissions` lists the resources and actions a role can hold.
+- **A permission is `<resource>:<action>`.** Resources: `zones`, `dams`, `outlooks`, `water`, `fires`, `alwa`, `farmers`, `farms`, `insights`, `briefs`, `staff`, `roles`. Actions: `create`, `read`, `update`, `delete`. So `GET` needs `read`, `POST` needs `create`, `PUT` needs `update`, `DELETE` needs `delete`.
+- **Roles are made by staff.** `/v1/dashboard/roles` and `/v1/dashboard/staff`: list, create, read, update, delete. A role is a name and a set of permissions; a staff member holds one or more roles.
+- The `Owner` role holds everything and cannot be changed or deleted.
+- A change to a role, or deactivating someone, takes effect on that person's next request.
+- **Codes:** `bad_credentials`, `forbidden` (403), `system_role`, `role_in_use`, `role_name_taken`, `email_taken`, `unknown_role`, `own_account`, `last_owner`, and `cannot_grant` (403: you tried to give a permission, a role or a password reset beyond what you hold yourself).
+- **Getting an account:** there is no sign-up. The first account is made on the server by Arya; ask him for one.
+
+## 10. The dashboard: data
+
+Every list, create, change and delete the dashboard does goes through these. Each method needs its own permission.
+
+| Resource | Routes under `/v1/dashboard` |
+|---|---|
+| `zones` | `/zones` (districts with sub-districts), `/zones/{slug}/readings[/{month}]`, `/zones/{slug}/sub-zones/{sub_slug}/readings[/{month}]` |
+| `dams` | `/dams`, `/dams/{slug}/readings[/{day}]` |
+| `outlooks` | `/outlooks`, `/outlooks/{season}/{issued}/zones/{zone_slug}`, `/outlook-runs[/{season}/{issued}]` |
+| `water` | `/water/seasons`, `/water/plan/{season}/entries[/{zone_slug}]` |
+| `fires` | `/fires[/{id}]` |
+| `insights` | `/farms/{id}/insights[/{topic}]` |
+| `alwa` | `/alwa/markets[/{slug}]`, `/alwa/markets/{slug}/prices[/{crop}/{day}]`, `/alwa/listings[/{id}]` (close or delete a listing) |
+| `farmers` | `/farmers[/{id}]` |
+| `farms` | `/farms[/{id}]` |
+| `briefs` | `/briefs[/{day}/{scope}]` (read, correct, delete; only the nightly job creates) |
+| `roles`, `staff` | section 9 |
+
+The same rules everywhere:
+
+- `POST` creates. If the thing already exists: `409 {"error": "already_exists"}`, nothing changes.
+- `PUT` changes an existing thing. If there is none: `404`.
+- `DELETE` answers `204`, also when it was already gone.
+- Lists that can grow take `page` and `rows_per_page` (at most 100) and answer with `count`, `page`, `rows_per_page`.
+- A number changed by hand looks like any other, and the next data-job run for the same district and month replaces it.
+- **Phone numbers:** the `farmers`, `farms` and `alwa` listing routes show full phone numbers to staff who hold the permission. `BACKEND.md` asks for a "protected mode" (masked phones, farms shown at 1 km); that is **not built**. Until it is, give those permissions only to people who should see phones.
+- Deleting a farmer deletes their farms and signs them out at once.
+
+## 11. Things that will trip you up
+
+- **Unknown values in a body** (a crop code not on the list, a wrong `status`) answer `400 bad_request`, not `422`.
+- **An empty `page=`** in a query answers `400`. Leave the parameter out instead.
+- **A `+` in a query string** must be sent as `%2B` (for example a phone filter).
+- **`Ask the Doctor` needs a 90 second timeout** and each photo part's own content type; see section 6.
+- **`BACKEND.md`'s create example has a wrong cell number** (`e` is ten times too large there). Use `e = floor(easting / 10)` in UTM zone 38N, as `geo.dart` already does.
+- **An outline that only touches itself at a point** is refused by the backend (`bad_polygon`), while the app's own check allows it.
+- **`created_offline_at` in an edit** is ignored: the farm keeps the one it was created with.
+- **The backend does not round.** `inside_pct`, `area_dunam` and `dunam` come with all their decimals; round when you show them.
+
+## 12. Error codes
+
+| Status | Codes |
+|---|---|
+| 400 | `bad_request` (the body or a parameter cannot be read) |
+| 401 | `unauthorized`, `bad_code`, `bad_credentials` |
+| 403 | `forbidden`, `cannot_grant` |
+| 404 | `not_found` |
+| 409 | `already_exists`, `listing_not_open`, `offer_not_open`, `listing_has_deal`, `market_in_use`, `system_role`, `role_in_use`, `role_name_taken`, `email_taken`, `own_account`, `last_owner` |
+| 422 | `invalid` (with `field` when one field is at fault), `bad_polygon`, `farm_too_large`, `too_many_farms`, `too_many_listings`, `own_listing`, `offer_too_large`, `bad_closes_at`, `bad_month`, `bad_range`, `empty_question`, `bad_photo`, `unknown_role`, and other `bad_...` codes that name the field |
+| 429 | `rate_limited` (with `retry_after_s`) |
+| 500 | `server_error` (the detail is always "An unexpected error occurred") |
+| 502 | `doctor_failed` |
+| 503 | `upstream_down` (a sign-in code could not be sent), `doctor_not_ready` |
+
+## 13. Open questions for the frontend
+
+1. **Farm status:** the app reads `/status`, but the per-farm analysis writes to `/insights` (the "now" measures inside the `greenness` topic). Should `/status` be built from those, or should the app drop `/status`?
+2. **Alwa:** may any signed-in phone make an offer, and should accepting part of the quantity close the whole listing? Today: yes and yes.
+3. **Protected mode** for phones and farm positions on the dashboard (`BACKEND.md` 2.11): which screens need it first?
+4. **The per-farm analysis job** is not in the repo. It should be, so it can run on the test server whenever a farm is created or edited.
+5. Is anything you need missing from `backend/API.md`? Write it in `BACKEND.md`.

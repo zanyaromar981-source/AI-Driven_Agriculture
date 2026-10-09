@@ -130,3 +130,12 @@ The API then answers on `PUBLIC_PORT` (default 8790). Migrations run on every st
 ## Rules of the code
 
 `CLAUDE.md` in this folder.
+
+## Telling the frontend
+
+- `FRONTEND.md` at the repo root is the guide for the app and dashboard teams: update it in the same commit as any route they use.
+- `API.md` in this folder is the route-by-route reference. It is generated, never edited by hand. After changing a route, run the server and:
+
+```sh
+python3 tools/api_reference.py http://localhost:3000 > API.md
+```
