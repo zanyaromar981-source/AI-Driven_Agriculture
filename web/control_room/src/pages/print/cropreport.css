@@ -1,0 +1,31 @@
+/* Crop report: an A4 page on screen and on paper. */
+.cr-wrap { background: #E9ECE5; min-height: 100vh; padding: 0 0 40px; }
+.cr-bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.cr-page { width: 210mm; max-width: calc(100vw - 24px); min-height: 297mm; margin: 20px auto; background: #fff; color: var(--ink);
+  padding: 16mm 15mm; box-shadow: 0 6px 24px #14201A1F; }
+.cr-head { display: flex; align-items: center; gap: 14px; border-bottom: 2px solid var(--brand); padding-bottom: 12px; margin-bottom: 14px; }
+.cr-head .org { flex: 1; min-width: 0; }
+.cr-head .org b { display: block; font-size: 15px; }
+.cr-head .meta { text-align: end; font-size: 12px; color: var(--ink-2); }
+.cr-page h1 { font-size: 22px; margin: 0 0 4px; }
+.cr-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 14px 0; }
+.cr-kpis div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.cr-kpis small { display: block; color: var(--ink-3); font-size: 11px; }
+.cr-kpis b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.cr-page h2 { font-size: 14px; margin: 18px 0 8px; }
+.cr-page table.t td, .cr-page table.t th { padding: 6px 8px; font-size: 12px; }
+.cr-foot { margin-top: 18px; font-size: 11px; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 8px; }
+@media (max-width: 640px) {
+  .cr-page { padding: 16px 12px; min-height: 0; }
+  .cr-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cr-head { flex-wrap: wrap; }
+}
+@media print {
+  @page { size: A4; margin: 12mm; }
+  html, body, .cr-wrap { background: #fff !important; }
+  .cr-bar, .cursor-dot, .cursor-ring, .toasts { display: none !important; }
+  .cr-page { margin: 0; width: auto; max-width: none; min-height: 0; padding: 0; box-shadow: none; }
+  .cr-page tr, .cr-page .hbar { break-inside: avoid; }
+  .bar > i, .dotc { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
