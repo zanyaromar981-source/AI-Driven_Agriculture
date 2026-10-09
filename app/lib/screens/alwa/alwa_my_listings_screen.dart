@@ -242,7 +242,10 @@ class _MyCard extends StatelessWidget {
     final l = listing;
     final crop = alwaCrop(l.crop);
     final left = timeLeft(l.closesAt);
-    final days = (l.closesAt.difference(l.createdAt).inHours / 24).round();
+    final posted = l.createdAt;
+    final days = posted == null
+        ? null
+        : (l.closesAt.difference(posted).inHours / 24).round();
     // Sold and closed listings are faded (design: 85%).
     return Opacity(
       opacity: l.isOpen ? 1 : 0.85,
@@ -271,7 +274,9 @@ class _MyCard extends StatelessWidget {
                         style: latText(size: 15, weight: FontWeight.w700),
                       ),
                       Text(
-                        '${fmtInt(l.priceIqdPerKg)} IQD/kg · posted ${fmtDay(l.createdAt)}',
+                        posted == null
+                            ? '${fmtInt(l.priceIqdPerKg)} IQD/kg'
+                            : '${fmtInt(l.priceIqdPerKg)} IQD/kg · posted ${fmtDay(posted)}',
                         style: latText(
                           size: 12,
                           weight: FontWeight.w500,
@@ -356,6 +361,8 @@ class _MyCard extends StatelessWidget {
                             ? l.soldAt == null
                                   ? 'Sold. Buyers no longer see it.'
                                   : 'You marked it sold on ${fmtDay(l.soldAt!)}. Buyers no longer see it.'
+                            : days == null
+                            ? 'Closed by itself on ${fmtDay(l.closesAt)}.'
                             : 'Closed by itself on ${fmtDay(l.closesAt)}, after $days ${days == 1 ? 'day' : 'days'}.',
                         style: latText(
                           size: 12,

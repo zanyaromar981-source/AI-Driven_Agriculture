@@ -93,7 +93,9 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
                       StatusPill(l.status),
                       Flexible(
                         child: Text(
-                          'Posted ${fmtDay(l.createdAt)}',
+                          l.createdAt == null
+                              ? 'Posted'
+                              : 'Posted ${fmtDay(l.createdAt!)}',
                           style: latText(
                             size: 13,
                             weight: FontWeight.w500,
@@ -207,7 +209,7 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
               _Fact(
                 icon: Icons.calendar_today_outlined,
                 label: 'Posted',
-                value: fmtDayTime(l.createdAt),
+                value: l.createdAt == null ? '-' : fmtDayTime(l.createdAt!),
               ),
               _Fact(
                 icon: Icons.timer_outlined,

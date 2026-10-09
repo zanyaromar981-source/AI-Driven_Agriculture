@@ -40,6 +40,25 @@ class _Server {
     'zone_slug': null,
   };
 
+  /// A list row exactly as the test server sent it on 2026-10-09: list rows
+  /// have no `created_at` (only one listing by id has it).
+  static const row = {
+    'id': '1',
+    'crop': 'tomato',
+    'quantity_kg': 200,
+    'asking_price_iqd_per_kg': 500,
+    'grade': null,
+    'pickup': 'farm',
+    'market': 'sulaymaniyah',
+    'zone_slug': null,
+    'seller_name': null,
+    'closes_at': '2026-10-23T14:47:26Z',
+    'status': 'open',
+    'offers': 0,
+    'best_offer_iqd_per_kg': null,
+    'fair_price': 'unknown',
+  };
+
   Future<void> start() async {
     http = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     http.listen((req) async {
@@ -65,10 +84,10 @@ class _Server {
       switch ((req.method, path)) {
         case ('GET', '/alwa/listings'):
           send(200, {
-            'count': 1,
+            'count': 2,
             'page': 1,
             'rows_per_page': 100,
-            'listings': [listing],
+            'listings': [listing, row],
           });
         case ('GET', '/alwa/listings/7'):
           send(200, {'listing': listing});
@@ -109,14 +128,23 @@ void main() {
     api = HttpApi(server.url)..useToken('tok123');
   });
 
+  test('a list row without created_at is shown, not dropped', () async {
+    final all = await api.alwaListings();
+    final r = all.firstWhere((l) => l.id == '1');
+    expect(r.crop, 'tomato');
+    expect(r.quantityKg, 200);
+    expect(r.isOpen, isTrue);
+    expect(r.createdAt, isNull, reason: 'unknown, never guessed');
+  });
+
   tearDown(() => server.http.close(force: true));
 
   test(
     'listings from today\'s server: missing fields are null, not made up',
     () async {
       final list = await api.alwaListings(lat: 35.56, lon: 45.43);
-      expect(list, hasLength(1));
-      final l = list.single;
+      expect(list, hasLength(2));
+      final l = list.firstWhere((x) => x.id == '7');
       expect(l.crop, 'tomato');
       expect(l.quantityKg, 4000);
       expect(l.priceIqdPerKg, 700);

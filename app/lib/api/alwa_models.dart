@@ -92,7 +92,10 @@ class AlwaListing {
 
   /// `open`, `sold`, `closed` or `cancelled`.
   final String status;
-  final DateTime createdAt;
+
+  /// When it was posted. The server's list rows leave it out (only one
+  /// listing by id has it), so it can be unknown; never guessed.
+  final DateTime? createdAt;
   final DateTime closesAt;
 
   /// Where the crop is. Server: not built yet (BACKEND.md 2.14 #2).
@@ -125,7 +128,7 @@ class AlwaListing {
     quantityKg: _d(j['quantity_kg']) ?? 0,
     priceIqdPerKg: _d(j['asking_price_iqd_per_kg']) ?? 0,
     status: j['status'] as String? ?? 'open',
-    createdAt: DateTime.parse(j['created_at'] as String).toLocal(),
+    createdAt: DateTime.tryParse(j['created_at'] as String? ?? '')?.toLocal(),
     closesAt: DateTime.parse(j['closes_at'] as String).toLocal(),
     lat: _d(j['lat']),
     lon: _d(j['lon']),

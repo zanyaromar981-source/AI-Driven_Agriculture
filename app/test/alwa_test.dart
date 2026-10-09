@@ -213,7 +213,7 @@ void main() {
     expect(made.quantityKg, 4000);
     expect(made.priceIqdPerKg, 700);
     expect(made.lat, _here.lat);
-    expect(made.closesAt.difference(made.createdAt).inDays, 13);
+    expect(made.closesAt.difference(made.createdAt!).inDays, 13);
   });
 
   testWidgets('sell: 20 open listings shows the too-many banner', (t) async {
