@@ -39,9 +39,19 @@ pub trait FarmRepository: Send + Sync + std::fmt::Debug {
     /// database assigns the ids.
     async fn create(&self, entity: &Farm) -> Result<Farm, AppError>;
 
-    /// Updates an existing entity and the crop on its cells. `entity.id()`
-    /// must be `Some`. The set of cells never changes after creation.
+    /// Stores a repaint: the crop on the cells it changed, and nothing else
+    /// of the farm. `entity.id()` must be `Some`. It never adds or removes a
+    /// cell, and it does not write the name or the outline, so it cannot
+    /// undo an edit or a rename that ran at the same moment. Returns the
+    /// farm as it is stored afterwards.
     async fn update(&self, entity: &Farm) -> Result<Farm, AppError>;
+
+    /// Stores an edit: replaces the name, the outline and the whole set of
+    /// cells of the owner's farm in one transaction, holding the farm's row
+    /// so that a repaint or a second edit of the same farm waits its turn.
+    /// `entity.id()` must be `Some`; the farm keeps that id. Fails with
+    /// `NotFound` when the owner has no such farm any more.
+    async fn replace(&self, entity: &Farm) -> Result<Farm, AppError>;
 
     async fn delete(&self, id: i32, owner: &Phone) -> Result<(), AppError>;
 

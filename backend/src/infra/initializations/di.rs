@@ -71,10 +71,10 @@ use crate::{
             app::{
                 FarmRepository, FarmerDirectory,
                 use_cases::{
-                    ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
-                    RegisterFarmUseCase, RemoveAnyFarmUseCase, RemoveFarmUseCase,
-                    RenameFarmUseCase, RepaintFarmCellsUseCase, ViewAnyFarmUseCase,
-                    ViewFarmUseCase,
+                    EditFarmUseCase, ListAllFarmsUseCase, ListFarmsUseCase,
+                    RegisterFarmForFarmerUseCase, RegisterFarmUseCase, RemoveAnyFarmUseCase,
+                    RemoveFarmUseCase, RenameFarmUseCase, RepaintFarmCellsUseCase,
+                    ViewAnyFarmUseCase, ViewFarmUseCase,
                 },
             },
             infra::{FarmPostgresRepository, FarmersFeatureFarmerDirectory},
@@ -181,6 +181,10 @@ pub async fn di_init(
         view_farm_use_case: Arc::new(ViewFarmUseCase::new(farm_repository.clone())),
         repaint_farm_cells_use_case: Arc::new(RepaintFarmCellsUseCase::new(
             farm_repository.clone(),
+        )),
+        edit_farm_use_case: Arc::new(EditFarmUseCase::new(
+            farm_repository.clone(),
+            config.farm.max_cells_per_farm,
         )),
         remove_farm_use_case: Arc::new(RemoveFarmUseCase::new(farm_repository.clone())),
         list_all_farms_use_case: Arc::new(ListAllFarmsUseCase::new(farm_repository.clone())),

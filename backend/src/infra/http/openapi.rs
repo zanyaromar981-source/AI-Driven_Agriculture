@@ -129,6 +129,7 @@ impl Modify for BearerAuth {
         farm_handlers::get_farms,
         farm_handlers::create_farm,
         farm_handlers::get_farm,
+        farm_handlers::edit_farm,
         farm_handlers::get_farm_status,
         farm_handlers::repaint_farm_cells,
         farm_handlers::delete_farm,

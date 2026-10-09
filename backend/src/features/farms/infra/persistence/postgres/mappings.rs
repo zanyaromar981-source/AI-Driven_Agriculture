@@ -35,7 +35,7 @@ impl From<&Point> for StoredPoint {
     }
 }
 
-fn stored_outline(outline: &Outline) -> serde_json::Value {
+pub fn stored_outline(outline: &Outline) -> serde_json::Value {
     let points: Vec<StoredPoint> = outline.points().iter().map(StoredPoint::from).collect();
 
     serde_json::json!(points)
@@ -62,6 +62,7 @@ impl TryFrom<farm_cells::Model> for Cell {
             model.id,
             GridCell::new(model.e, model.n),
             Crop::try_from(model.crop.as_str())?,
+            model.inside_pct,
         ))
     }
 }
@@ -89,22 +90,22 @@ impl TryFrom<(farms::Model, Vec<farm_cells::Model>)> for Farm {
     }
 }
 
-impl TryFrom<(farms::Model, Vec<(String, usize)>)> for FarmSummary {
+impl TryFrom<(farms::Model, Vec<(String, f64)>)> for FarmSummary {
     type Error = AppError;
 
     fn try_from(
-        (model, cells_per_crop): (farms::Model, Vec<(String, usize)>),
+        (model, inside_per_crop): (farms::Model, Vec<(String, f64)>),
     ) -> Result<Self, Self::Error> {
-        let cells_per_crop = cells_per_crop
+        let inside_per_crop = inside_per_crop
             .into_iter()
-            .map(|(crop, cells)| Ok((Crop::try_from(crop.as_str())?, cells)))
+            .map(|(crop, inside_pct)| Ok((Crop::try_from(crop.as_str())?, inside_pct)))
             .collect::<Result<Vec<_>, AppError>>()?;
 
         Ok(FarmSummary::rehydrate(
             model.id,
             FarmName::new(model.name)?,
             &outline_from(model.outline)?,
-            cells_per_crop,
+            inside_per_crop,
             model.created_at.and_utc(),
         ))
     }
@@ -149,5 +150,6 @@ pub fn cell_active_model(farm_id: i32, cell: &Cell) -> farm_cells::ActiveModel {
         e: Set(cell.position().e()),
         n: Set(cell.position().n()),
         crop: Set(cell.crop().into()),
+        inside_pct: Set(cell.inside_pct()),
     }
 }

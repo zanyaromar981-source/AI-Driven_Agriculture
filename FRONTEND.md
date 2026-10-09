@@ -65,7 +65,8 @@ Shapes are those of `BACKEND.md` 2.2. Notes on what the backend does with them:
 - A farm of another phone answers `404`, the same as a farm that does not exist.
 - Retries are safe: `DELETE /v1/farms/{id}` answers `204` whether or not the farm was still there; cancelling an Alwa listing twice answers `204` both times; accepting the same offer twice answers `200` with the same listing both times.
 - Not sent yet, because there are no satellite readings in the database: `status`, `last_picture`, `picture_date`, and on cells `greenness_pct`, `level`, `inside_pct`. The app already treats them as optional.
-- Cells are still "centre inside the outline", and `crops[].dunam` still counts whole cells. BACKEND.md 0.2 asks for every touched cell with `inside_pct`; that is not done yet.
+- Cells are every 10 m cell the outline touches, each with `inside_pct` (the share of the cell inside the outline, not rounded; a cell needs more than 0.01 m2 inside to count), computed the same way as the app's `cellsTouching`. `crops[].dunam` is the sum of its cells' inside areas, so the crops plus `empty` add up to `area_dunam`. Farms saved before this change keep their old cells at 100 until they are edited.
+- `PUT /v1/farms/{id}` edits a farm (BACKEND.md 2.2): same body as create; replaces the name, the outline and the cells; the farm keeps its id; `404` for a missing farm or another phone's. Sending the same edit again answers `200` with the same farm. `Idempotency-Key` is accepted and ignored. `created_offline_at` in an edit is ignored: the farm keeps the one it was created with.
 - The outline is returned as the farmer walked it. It is not snapped to the grid.
 - Extra fields the app can ignore: `created_at`, `updated_at`, `created_offline_at`.
 

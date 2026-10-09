@@ -33,7 +33,7 @@ use crate::{
             ViewProfileUseCase,
         },
         farms::app::use_cases::{
-            ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
+            EditFarmUseCase, ListAllFarmsUseCase, ListFarmsUseCase, RegisterFarmForFarmerUseCase,
             RegisterFarmUseCase, RemoveAnyFarmUseCase, RemoveFarmUseCase, RenameFarmUseCase,
             RepaintFarmCellsUseCase, ViewAnyFarmUseCase, ViewFarmUseCase,
         },
@@ -80,6 +80,7 @@ pub struct FarmFeature {
     pub view_farm_use_case: Arc<ViewFarmUseCase>,
     pub remove_farm_use_case: Arc<RemoveFarmUseCase>,
     pub repaint_farm_cells_use_case: Arc<RepaintFarmCellsUseCase>,
+    pub edit_farm_use_case: Arc<EditFarmUseCase>,
     pub list_all_farms_use_case: Arc<ListAllFarmsUseCase>,
     pub view_any_farm_use_case: Arc<ViewAnyFarmUseCase>,
     pub register_farm_for_farmer_use_case: Arc<RegisterFarmForFarmerUseCase>,

@@ -27,6 +27,7 @@ pub enum RepositoryCall {
     Exists { id: i32 },
     Create,
     Update,
+    Replace { id: i32, owner: String },
     Delete { id: i32, owner: String },
     FindPage { owner: Option<String>, page: u64 },
     FindById { id: i32 },
@@ -41,6 +42,7 @@ struct Script {
     existing: Option<Farm>,
     fail_with_database_error: bool,
     nothing_to_delete: bool,
+    gone_before_the_write: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -70,6 +72,16 @@ impl FakeFarmRepository {
     pub fn holding_nothing_to_delete() -> Self {
         let fake = Self::new();
         fake.script.lock().expect("script lock").nothing_to_delete = true;
+        fake
+    }
+
+    /// The farm is there when it is looked up and deleted before the write.
+    pub fn holding_one_that_vanishes(existing: Farm) -> Self {
+        let fake = Self::holding(existing);
+        fake.script
+            .lock()
+            .expect("script lock")
+            .gone_before_the_write = true;
         fake
     }
 
@@ -196,6 +208,27 @@ impl FarmRepository for FakeFarmRepository {
         self.guard()?;
 
         Ok(entity.clone())
+    }
+
+    async fn replace(&self, entity: &Farm) -> Result<Farm, AppError> {
+        let id = entity.id().unwrap_or_default();
+
+        self.record(RepositoryCall::Replace {
+            id,
+            owner: String::from(entity.owner()),
+        });
+        self.guard()?;
+
+        let mut script = self.script.lock().expect("script lock");
+
+        if script.gone_before_the_write {
+            return Err(crate::app::AppError::NotFound.into());
+        }
+
+        let replaced = persisted(entity, id);
+        script.existing = Some(replaced.clone());
+
+        Ok(replaced)
     }
 
     async fn delete(&self, id: i32, owner: &Phone) -> Result<(), AppError> {
@@ -348,7 +381,9 @@ fn persisted(entity: &Farm, id: i32) -> Farm {
         .cells()
         .iter()
         .zip(1..)
-        .map(|(cell, cell_id)| Cell::rehydrate(cell_id, cell.position(), cell.crop()))
+        .map(|(cell, cell_id)| {
+            Cell::rehydrate(cell_id, cell.position(), cell.crop(), cell.inside_pct())
+        })
         .collect();
 
     Farm::rehydrate(
@@ -365,12 +400,12 @@ fn persisted(entity: &Farm, id: i32) -> Farm {
 }
 
 fn summary_of(farm: &Farm) -> FarmSummary {
-    let cells_per_crop = Crop::ALL
+    let inside_per_crop = Crop::ALL
         .into_iter()
         .map(|crop| {
             let cells = farm.cells().iter().filter(|cell| cell.crop() == crop);
 
-            (crop, cells.count())
+            (crop, cells.map(|cell| cell.inside_pct()).sum())
         })
         .collect();
 
@@ -378,7 +413,7 @@ fn summary_of(farm: &Farm) -> FarmSummary {
         farm.id().unwrap_or_default(),
         farm.name().clone(),
         farm.outline(),
-        cells_per_crop,
+        inside_per_crop,
         *farm.created_at(),
     )
 }
@@ -402,7 +437,18 @@ pub fn an_outline() -> Outline {
 }
 
 pub fn a_cell_inside() -> GridCell {
-    an_outline().cells(MAX_CELLS).expect("cells")[0]
+    an_outline().cells(MAX_CELLS).expect("cells")[0].position()
+}
+
+/// A smaller field inside `an_outline`, for an edit that moves the border.
+pub fn another_outline() -> Outline {
+    Outline::new(vec![
+        Point::new(36.0302, 44.6002, None, None).expect("point"),
+        Point::new(36.0302, 44.6008, None, None).expect("point"),
+        Point::new(36.0307, 44.6008, None, None).expect("point"),
+        Point::new(36.0307, 44.6002, None, None).expect("point"),
+    ])
+    .expect("outline")
 }
 
 pub fn a_cell_outside() -> GridCell {

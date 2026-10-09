@@ -10,6 +10,8 @@ pub struct GridCell {
 impl GridCell {
     pub const SIZE_M: f64 = 10.0;
 
+    pub const AREA_M2: f64 = Self::SIZE_M * Self::SIZE_M;
+
     /// 1 dunam = 2,500 square metres = 25 cells.
     pub const PER_DUNAM: f64 = 25.0;
 
@@ -33,8 +35,18 @@ impl GridCell {
         )
     }
 
-    pub fn dunams(cells: usize) -> f64 {
-        cells as f64 / Self::PER_DUNAM
+    /// The south-west corner of the cell as `(easting, northing)` in metres.
+    pub fn south_west(&self) -> (f64, f64) {
+        (
+            f64::from(self.e) * Self::SIZE_M,
+            f64::from(self.n) * Self::SIZE_M,
+        )
+    }
+
+    /// The dunams in cells whose shares inside an outline add up to
+    /// `inside_pct`: one whole cell is 100, so 2,500 is one dunam.
+    pub fn dunams(inside_pct: f64) -> f64 {
+        inside_pct / 100.0 / Self::PER_DUNAM
     }
 }
 
@@ -51,8 +63,21 @@ mod tests {
     }
 
     #[test]
-    fn twenty_five_cells_make_one_dunam() {
-        assert_eq!(GridCell::dunams(25), 1.0);
-        assert_eq!(GridCell::dunams(3_000), 120.0);
+    fn the_south_west_corner_is_the_cell_index_times_ten_metres() {
+        assert_eq!(
+            GridCell::new(46_415, 398_748).south_west(),
+            (464_150.0, 3_987_480.0)
+        );
+    }
+
+    #[test]
+    fn twenty_five_whole_cells_make_one_dunam() {
+        assert_eq!(GridCell::dunams(25.0 * 100.0), 1.0);
+        assert_eq!(GridCell::dunams(3_000.0 * 100.0), 120.0);
+    }
+
+    #[test]
+    fn half_a_cell_is_half_a_cells_share_of_a_dunam() {
+        assert_eq!(GridCell::dunams(50.0), 0.02);
     }
 }

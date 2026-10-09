@@ -129,6 +129,52 @@ pub async fn get_farm(
     Ok(ApiResponse::ok(OneFarmResponse::try_from(&farm)?))
 }
 
+/// Edit a farm: replace its outline, its cells and its name
+///
+/// The body is the one `POST /v1/farms` takes and is checked the same way.
+/// The farm keeps its id. `Idempotency-Key` is accepted and not used: the
+/// request carries the whole farm, so sending it again leaves the same farm
+/// and answers `200` with it, with no key needed to tell a repeat apart.
+#[utoipa::path(
+    put,
+    path = "/v1/farms/{id}",
+    tag = "farms",
+    params(
+        ("id" = String, Path, description = "Farm ID"),
+        ("Idempotency-Key" = Option<String>, Header, description = "Accepted and not used: repeating an edit is safe without it")
+    ),
+    request_body = CreateFarmParams,
+    responses(
+        (status = 200, description = "Farm edited successfully", body = SavedFarmResponse),
+        (status = 400, description = "Invalid request body", body = ErrorBody),
+        (status = 401, description = "Unauthorized", body = ErrorBody),
+        (status = 404, description = "Farm not found", body = ErrorBody),
+        (status = 422, description = "Validation error", body = ErrorBody),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn edit_farm(
+    State(state): State<AppState>,
+    Extension(auth_context): Extension<AuthContext>,
+    WithRejection(Path(id), _): WithRejection<Path<String>, WebError>,
+    ValidatedJson(params): ValidatedJson<CreateFarmParams>,
+) -> Result<ApiResponse<SavedFarmResponse>, WebError> {
+    let input = params.into_edit_input()?;
+
+    let (farm, dropped_cells) = state
+        .features
+        .farm
+        .edit_farm_use_case
+        .execute(&auth_context, farm_id(&id)?, input)
+        .await?;
+
+    Ok(ApiResponse::ok(SavedFarmResponse::try_from((
+        &farm,
+        dropped_cells.as_slice(),
+    ))?))
+}
+
 /// Get a farm's status from space
 ///
 /// A placeholder so the app's Home opens: there is no store for satellite

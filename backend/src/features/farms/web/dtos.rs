@@ -9,7 +9,8 @@ use crate::{
         app::{
             AppError,
             use_cases::{
-                ListAllFarmsInput, RegisterFarmInput, RenameFarmInput, RepaintFarmCellsInput,
+                EditFarmInput, ListAllFarmsInput, RegisterFarmInput, RenameFarmInput,
+                RepaintFarmCellsInput,
             },
         },
         domain::{
@@ -105,7 +106,9 @@ pub struct CreateFarmParams {
     pub name: String,
     /// 3 to 50 corners in walking order. The polygon closes itself.
     pub points: Vec<PointParams>,
-    /// Every painted cell. Unpainted cells inside the outline become `empty`.
+    /// Every painted cell. Cells the outline touches that are not listed
+    /// become `empty`; listed cells it does not touch come back in
+    /// `dropped_cells`.
     #[serde(default)]
     pub cells: Vec<CellParams>,
     pub created_offline_at: Option<DateTime<Utc>>,
@@ -128,6 +131,25 @@ impl CreateFarmParams {
             painted: self.cells.into_iter().map(Into::into).collect(),
             idempotency_key: idempotency_key.map(IdempotencyKey::new).transpose()?,
             created_offline_at: self.created_offline_at,
+        })
+    }
+}
+
+impl CreateFarmParams {
+    /// The same body sent to edit a farm. `created_offline_at` is accepted
+    /// and not used: it would say when the edit was made on the phone, and
+    /// the farm keeps the time it was first drawn.
+    pub fn into_edit_input(self) -> Result<EditFarmInput, AppError> {
+        let points = self
+            .points
+            .into_iter()
+            .map(|point| Point::new(point.lat, point.lon, point.acc_m, point.t))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(EditFarmInput {
+            name: FarmName::new(self.name)?,
+            outline: Outline::new(points)?,
+            painted: self.cells.into_iter().map(Into::into).collect(),
         })
     }
 }
@@ -188,11 +210,15 @@ impl From<&Point> for OutlinePointResponse {
     }
 }
 
+/// One cell of a farm. `inside_pct` is the share of the cell's 100 square
+/// metres inside the outline, above 0 and at most 100, not rounded: over a
+/// farm's cells it adds up to `area_dunam * 2500` square metres.
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, ToSchema)]
 pub struct CellResponse {
     pub e: i32,
     pub n: i32,
     pub crop: Crop,
+    pub inside_pct: f64,
 }
 
 impl From<&Cell> for CellResponse {
@@ -201,6 +227,7 @@ impl From<&Cell> for CellResponse {
             e: cell.position().e(),
             n: cell.position().n(),
             crop: cell.crop().into(),
+            inside_pct: cell.inside_pct(),
         }
     }
 }
@@ -306,7 +333,7 @@ impl TryFrom<&Farm> for OneFarmResponse {
 }
 
 /// A farm after a write, with the painted cells that were left out because
-/// they fall outside its outline.
+/// its outline does not touch them.
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct SavedFarmResponse {
     pub farm: FarmResponse,
@@ -554,6 +581,62 @@ mod tests {
             .expect("object")
             .remove("owner_phone");
         assert_eq!(dashboard, app);
+    }
+
+    #[test]
+    fn every_cell_carries_inside_pct_in_the_app_shape_and_the_dashboard_shape() {
+        let farm = a_farm();
+        let app =
+            serde_json::to_value(OneFarmResponse::try_from(&farm).expect("farm")).expect("json");
+        let dashboard =
+            serde_json::to_value(DashboardOneFarmResponse::try_from(&farm).expect("farm"))
+                .expect("json");
+
+        for body in [app, dashboard] {
+            let cells = body["farm"]["cells"].as_array().expect("cells").clone();
+
+            assert_eq!(cells.len(), farm.cells().len());
+            assert!(cells.iter().zip(farm.cells()).all(|(cell, stored)| {
+                cell["inside_pct"].as_f64() == Some(stored.inside_pct())
+            }));
+        }
+    }
+
+    #[test]
+    fn the_edit_body_is_the_create_body_and_is_checked_the_same_way() {
+        let body = |points: serde_json::Value| -> CreateFarmParams {
+            serde_json::from_value(serde_json::json!({
+                "name": "Lower field",
+                "points": points,
+                "cells": [{"e": 46_415, "n": 398_748, "crop": "wheat"}],
+                "created_offline_at": "2026-10-08T14:10:00Z"
+            }))
+            .expect("body")
+        };
+
+        let input = body(serde_json::json!([
+            {"lat": 36.0300, "lon": 44.6000},
+            {"lat": 36.0300, "lon": 44.6010},
+            {"lat": 36.0310, "lon": 44.6010}
+        ]))
+        .into_edit_input()
+        .expect("input");
+
+        assert_eq!(input.name.as_str(), "Lower field");
+        assert_eq!(input.painted.len(), 1);
+
+        let crossing = body(serde_json::json!([
+            {"lat": 36.0300, "lon": 44.6000},
+            {"lat": 36.0300, "lon": 44.6010},
+            {"lat": 36.0310, "lon": 44.6000},
+            {"lat": 36.0310, "lon": 44.6010}
+        ]))
+        .into_edit_input();
+
+        assert!(matches!(
+            crossing,
+            Err(AppError::Farm(domain::FarmError::OutlineSelfIntersects))
+        ));
     }
 
     #[test]
