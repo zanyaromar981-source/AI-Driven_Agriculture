@@ -2,7 +2,7 @@
 // Writes: one request at a time per form (buttons disabled while pending); PUT /dashboard/farmers/{id}
 // is a full replace, so every field is always sent (FRONTEND.md 9).
 import { useMemo, useRef, useState } from 'react';
-import { FileText, Pencil, Trash2, Ban, CircleCheck, MapPin, UserRound, TriangleAlert } from 'lucide-react';
+import { FileText, Pencil, Trash2, Ban, CircleCheck, MapPin, UserRound, TriangleAlert, ChevronRight } from 'lucide-react';
 import { useI18n } from '../../../i18n';
 import { useAuth } from '../../../auth/auth';
 import { api, qs, ApiError } from '../../../api/client';
@@ -43,6 +43,7 @@ export function FarmerForm({ farmer, onClose, onSaved }: { farmer: Farmer | null
   // one key per form, and the farmer once created: a retry after a failed details save only redoes the PUT
   const key = useRef(newKey());
   const created = useRef<Farmer | null>(null);
+  const posted = useRef(false); // a create was sent before (its answer may have been lost)
   const set = (k: keyof typeof f, v: string) => setF(p => ({ ...p, [k]: v, ...(k === 'governorate' ? { zone_slug: '', sub_zone_slug: '' } : k === 'zone_slug' ? { sub_zone_slug: '' } : {}) }));
   const nm = (p: { en: string; ku: string }) => (uiLang === 'ku' ? p.ku : p.en);
   const zoneEn = DISTRICT_BY_SLUG.get(f.zone_slug)?.en;
@@ -66,11 +67,25 @@ export function FarmerForm({ farmer, onClose, onSaved }: { farmer: Farmer | null
     setBusy(true);
     try {
       let base: Farmer;
-      if (farmer) base = farmer;
+      // PUT replaces the whole farmer, so it is built from a fresh read, never from the copy the form
+      // opened with (a block or another edit meanwhile would be undone)
+      if (farmer) base = (await api.get<{ farmer: Farmer }>('/dashboard/farmers/' + farmer.id)).farmer;
       else if (created.current) base = created.current;
       else {
-        const r = await api.post<{ farmer: Farmer }>('/dashboard/farmers', { phone: normPhone(f.phone), name: f.name.trim() || null, lang: f.lang }, key.current);
-        base = created.current = r.farmer;
+        const phone = normPhone(f.phone);
+        const retry = posted.current;
+        posted.current = true;
+        try {
+          const r = await api.post<{ farmer: Farmer }>('/dashboard/farmers', { phone, name: f.name.trim() || null, lang: f.lang }, key.current);
+          base = created.current = r.farmer;
+        } catch (e) {
+          // the server ignores Idempotency-Key here: if an earlier send of THIS form went through but its
+          // answer was lost, the retry says already_exists. Then the farmer is the one we created.
+          if (!(retry && e instanceof ApiError && e.code === 'already_exists')) throw e;
+          const found = await api.get<{ farmers: Farmer[] }>('/dashboard/farmers' + qs({ phone, rows_per_page: 1 }));
+          if (!found.farmers[0]) throw e;
+          base = created.current = found.farmers[0];
+        }
         invalidate('farmers');
       }
       const details: Partial<Farmer> = {
@@ -137,8 +152,8 @@ export function FarmerDrawer({ id, onClose, onOpenFarm, onEdit }: { id: string; 
     if (!f || busy) return;
     setBusy(true);
     try {
-      if (what === 'delete') { await api.del('/dashboard/farmers/' + f.id); invalidate('farmers', 'farms'); toast(t('common.deleted'), 'good'); onClose(); }
-      else { await api.put('/dashboard/farmers/' + f.id, farmerBody(f, { blocked: !f.blocked })); invalidate('farmers'); toast(f.blocked ? t('farms.unblocked') : t('farms.blocked_done'), 'good'); }
+      if (what === 'delete') { await api.del('/dashboard/farmers/' + f.id).catch(e => { if (!(e instanceof ApiError && e.status === 404)) throw e; }); invalidate('farmers', 'farms'); toast(t('common.deleted'), 'good'); onClose(); }
+      else { const fresh = (await api.get<{ farmer: Farmer }>('/dashboard/farmers/' + f.id)).farmer; await api.put('/dashboard/farmers/' + f.id, farmerBody(fresh, { blocked: !f.blocked })); invalidate('farmers'); toast(f.blocked ? t('farms.unblocked') : t('farms.blocked_done'), 'good'); }
     } catch (e) { toast(errText(e as ApiError), 'danger'); } finally { setBusy(false); }
   };
 
@@ -172,7 +187,10 @@ export function FarmerDrawer({ id, onClose, onOpenFarm, onEdit }: { id: string; 
           <button key={x.id} className="card farm-card click" onClick={() => onOpenFarm(x.id)} style={{ textAlign: 'start', font: 'inherit', cursor: 'pointer' }}>
             <div className="spread" style={{ flexWrap: 'nowrap' }}>
               <div style={{ minWidth: 0 }}><b><bdi>{x.name}</bdi></b><div className="muted small">{[place.sub(x.sub_zone_slug), place.dist(x.zone_slug)].filter(Boolean).join('، ') || t('farms.no_place')}</div></div>
-              <div className="end"><b className="tabular" style={{ fontSize: 18 }}>{num(x.area_dunam, 1)}</b><div className="muted small">{t('common.dunam')}</div></div>
+              <div className="row" style={{ gap: 8, flexWrap: 'nowrap' }}>
+                <div className="end"><b className="tabular" style={{ fontSize: 18 }}>{num(x.area_dunam, 1)}</b><div className="muted small">{t('common.dunam')}</div></div>
+                <ChevronRight className="chev flip-rtl" aria-hidden="true" />
+              </div>
             </div>
             {x.crops.length > 0 && <><div style={{ margin: '8px 0 6px' }}><FarmCropStrip crops={x.crops} area={x.area_dunam} /></div>
               <div className="row small">{x.crops.map(c => <span key={c.crop}><CropTag code={c.crop} /> {num(c.dunam, 1)}</span>)}</div></>}
@@ -213,7 +231,7 @@ export function FarmDrawer({ id, onClose, onOpenFarmer }: { id: string; onClose:
   const doDelete = async () => {
     if (!farm || busy) return;
     setBusy(true);
-    try { await api.del('/dashboard/farms/' + farm.id); invalidate('farms', 'farmers'); toast(t('common.deleted'), 'good'); onClose(); }
+    try { await api.del('/dashboard/farms/' + farm.id).catch(e => { if (!(e instanceof ApiError && e.status === 404)) throw e; }); invalidate('farms', 'farmers'); toast(t('common.deleted'), 'good'); onClose(); }
     catch (e) { toast(errText(e as ApiError), 'danger'); } finally { setBusy(false); }
   };
 

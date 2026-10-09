@@ -52,11 +52,13 @@ export function BandPill({ band }: { band?: Band | null }) {
 }
 
 /** +9647501234567 -> +964 750 123 4567, always left to right. */
+export function prettyPhone(value: string) {
+  const p = value.replace(/\s/g, '');
+  return p.length === 14 ? `${p.slice(0, 4)} ${p.slice(4, 7)} ${p.slice(7, 10)} ${p.slice(10)}` : value;
+}
 export function Phone({ value }: { value?: string | null }) {
   if (!value) return <span className="muted">-</span>;
-  const p = value.replace(/\s/g, '');
-  const pretty = p.length === 14 ? `${p.slice(0, 4)} ${p.slice(4, 7)} ${p.slice(7, 10)} ${p.slice(10)}` : value;
-  return <span className="ltr tabular">{pretty}</span>;
+  return <span className="ltr tabular">{prettyPhone(value)}</span>;
 }
 
 /** Calm states for a block of data: empty, error (with the cache note), no permission, coming soon. */

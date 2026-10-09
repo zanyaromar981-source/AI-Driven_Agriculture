@@ -14,6 +14,8 @@ import { Phone, StateBox, useErrorText } from '../../components/domain';
 import './staff.css';
 
 interface RoleRow { id: string; name: string; system: boolean; staff_count: number; permissions: Permission[] }
+// system roles are named in English on the server; show them in the site language
+const useRoleName = () => { const { t } = useI18n(); return (n: string) => { const k = 'roles.sys_' + n.toLowerCase(); const v = t(k); return v === k ? n : v; }; };
 const initials = (n: string) => n.split(/\s+/).map(s => s[0]).join('').slice(0, 2).toUpperCase();
 
 export default function StaffPage() {
@@ -24,6 +26,8 @@ export default function StaffPage() {
   const [del, setDel] = useState<Staff | null>(null);
   const toast = useToast();
   const errText = useErrorText();
+  const roleName = useRoleName();
+  const [busy, setBusy] = useState(false);
 
   if (!can('staff')) return <><PageHead eyebrow={t('nav.g_people')} title={t('nav.staff')} /><StateBox kind="locked" /></>;
 
@@ -33,20 +37,22 @@ export default function StaffPage() {
       <span className="staff-name"><span className="avatar" style={{ background: r.active ? 'var(--brand)' : 'var(--ink-3)' }}>{initials(r.name)}</span><b>{r.name}</b>{r.id === me?.id && <Pill tone="water">{t('staff.you')}</Pill>}</span>) },
     { key: 'contact', label: t('staff.contact'), cell: r => <span className="stack-sm"><span className="ltr small">{r.email}</span><span className="muted small"><Phone value={r.phone} /></span></span> },
     { key: 'job', label: t('staff.job_title'), sort: r => r.job_title ?? '', cell: r => r.job_title || <span className="muted">-</span> },
-    { key: 'roles', label: t('staff.roles'), cell: r => <span className="row">{r.roles.map(x => <Pill key={x.id} tone={x.name === 'Owner' ? 'dark' : 'brand'}>{x.name}</Pill>)}</span> },
+    { key: 'roles', label: t('staff.roles'), cell: r => <span className="row">{r.roles.map(x => <Pill key={x.id} tone={x.name === 'Owner' ? 'dark' : 'brand'}>{roleName(x.name)}</Pill>)}</span> },
     { key: 'created', label: t('staff.created'), optional: true, sort: r => r.created_at, cell: r => <span className="small muted">{date(r.created_at, 'short')}</span> },
     { key: 'state', label: t('common.status'), sort: r => (r.active ? 0 : 1), cell: r => <Pill tone={r.active ? 'good' : ''}>{t(r.active ? 'common.active' : 'common.inactive')}</Pill> },
     { key: 'act', label: '', className: 'act', cell: r => (
       <span className="row" style={{ justifyContent: 'flex-end' }}>
         {can('staff', 'update') && <button className="btn sm icon" onClick={e => { e.stopPropagation(); setForm(r); }} aria-label={t('common.edit')}><Pencil /></button>}
-        {can('staff', 'delete') && r.id !== me?.id && <button className="btn sm icon danger" onClick={e => { e.stopPropagation(); setDel(r); }} aria-label={t('common.delete')}><Trash2 /></button>}
+        {can('staff', 'delete') && r.id !== me?.id && <button className="btn sm icon danger" disabled={busy} onClick={e => { e.stopPropagation(); setDel(r); }} aria-label={t('common.delete')}><Trash2 /></button>}
       </span>) },
   ];
 
   const remove = async (s: Staff) => {
+    if (busy) return;
+    setBusy(true);
     try { await api.del('/dashboard/staff/' + s.id); toast(t('common.deleted'), 'good'); }
     catch (e) { (e as ApiError).status === 404 ? toast(t('common.deleted'), 'good') : toast(errText(e as ApiError), 'danger'); }
-    finally { invalidate('staff_roles'); }
+    finally { setBusy(false); invalidate('staff_roles'); }
   };
 
   return (
@@ -72,6 +78,7 @@ function StaffForm({ staff, onClose }: { staff: Staff | null; onClose: () => voi
   const roles = useApi<{ roles: RoleRow[] }>('/dashboard/roles', ['staff_roles'], { auth: true });
   const toast = useToast();
   const errText = useErrorText();
+  const roleName = useRoleName();
   const isNew = !staff, self = staff?.id === me?.id;
   const [name, setName] = useState(staff?.name ?? '');
   const [email, setEmail] = useState(staff?.email ?? '');
@@ -88,6 +95,7 @@ function StaffForm({ staff, onClose }: { staff: Staff | null; onClose: () => voi
   const grantable = useMemo(() => new Map((roles.data?.roles ?? []).map(r => [r.id, r.permissions.every(p => perms.has(p.resource + ':' + p.action))])), [roles.data, perms]);
 
   const save = async () => {
+    if (busy) return;
     setErr(null);
     if (!name.trim()) return setErr({ field: 'name', text: t('v.needed') });
     if (isNew && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setErr({ field: 'email', text: t('v.email_bad') });
@@ -109,7 +117,7 @@ function StaffForm({ staff, onClose }: { staff: Staff | null; onClose: () => voi
   const fe = (f: string) => (err?.field === f ? err.text : undefined);
   return (
     <Modal title={isNew ? t('staff.new') : t('staff.edit_title', { name: staff!.name })} onClose={onClose} wide
-      foot={<><button className="btn" onClick={onClose}>{t('common.cancel')}</button><button className="btn primary" disabled={busy} onClick={save}>{t('common.save')}</button></>}>
+      foot={<><button className="btn" onClick={onClose} disabled={busy}>{t('common.cancel')}</button><button className="btn primary" disabled={busy} onClick={save}>{busy ? t('common.loading') : t('common.save')}</button></>}>
       <div className="form-grid">
         <Field label={t('staff.name')} error={fe('name')}><input type="text" value={name} onChange={e => setName(e.target.value)} autoFocus /></Field>
         <Field label={t('login.email')} hint={isNew ? undefined : t('staff.email_fixed')} error={fe('email')}>
@@ -126,7 +134,7 @@ function StaffForm({ staff, onClose }: { staff: Staff | null; onClose: () => voi
                 return (
                   <label key={r.id} className={'role-pick' + (on ? ' on' : '') + (!ok ? ' off' : '')} title={!ok ? t('staff.cannot_grant_role') : undefined}>
                     <input type="checkbox" checked={on} disabled={!ok && !on} onChange={e => setRoleIds(ids => (e.target.checked ? [...ids, r.id] : ids.filter(x => x !== r.id)))} />
-                    <b>{r.name}</b>{r.system && <Pill tone="dark">{t('roles.system')}</Pill>}
+                    <b>{roleName(r.name)}</b>{r.system && <Pill tone="dark">{t('roles.system')}</Pill>}
                   </label>
                 );
               })}

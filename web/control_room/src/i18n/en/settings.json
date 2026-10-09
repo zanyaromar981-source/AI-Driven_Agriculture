@@ -28,5 +28,10 @@
   "change_pw": "Change my password",
   "pw_current": "Current password",
   "pw_again": "New password again",
-  "pw_mismatch": "The two new passwords are not the same."
+  "pw_mismatch": "The two new passwords are not the same.",
+  "pub_totals": "Farm totals",
+  "pub_totals_sub": "Farmers, farms and land per district and crop on the public page. Counts only: no names, no phones. Switched off, the public page hides that part.",
+  "pub_always": "Dryness map, dams, satellite fire detections and the daily brief",
+  "pub_always_sub": "Always public: they hold no personal data.",
+  "pub_shown": "Shown"
 }

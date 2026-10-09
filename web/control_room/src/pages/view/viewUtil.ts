@@ -14,7 +14,9 @@ export const NO_DATA = '#E3E6DE';
 export const dryColor = (v?: number | null) => (v == null ? NO_DATA : (DRY_STEPS.find(s => v < s.max) ?? DRY_STEPS[DRY_STEPS.length - 1]).color);
 
 /** "Open-Meteo ERA5, district centre: 365-day ..." -> "Open-Meteo ERA5, district centre" */
-export const shortSource = (s?: string | null) => (s ? s.split(':')[0].trim() : '');
+// the job's own words up to the first ':', without the place detail (", district centre") that only
+// repeats the district already on screen
+export const shortSource = (s?: string | null) => (s ? s.split(':')[0].replace(/,?\s*district cent(re|er)\b.*$/i, '').trim() : '');
 
 export type ViewTab = 'map' | 'water' | 'fires' | 'compare' | 'market';
 export const TABS: { key: ViewTab; icon: string }[] = [

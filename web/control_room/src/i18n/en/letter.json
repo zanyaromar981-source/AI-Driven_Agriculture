@@ -12,7 +12,6 @@
   "kicker": "Support letter",
   "title": "Confirmation of farm registration",
   "to": "To whom it may concern,",
-  "body": "We confirm that {name}, mobile number {phone}, living in {place}, is registered in the Jutyar farm register with {n} farm(s) covering {area} dunam in total, as listed below.",
   "farmer_details": "Farmer",
   "name": "Name",
   "farmer_no": "Farmer number",
@@ -47,5 +46,12 @@
   "check_title": "Check a letter",
   "check_btn": "Check",
   "check_ok": "This letter was issued by the Jutyar Control Room.",
-  "check_none": "No letter has the number {no}."
+  "check_none": "No letter has the number {no}.",
+  "body_a": "We confirm that {who}",
+  "body_who": "{name}",
+  "body_who_none": "the farmer below",
+  "body_phone": ", mobile number {phone}",
+  "body_place": ", living in {place}",
+  "body_b": ", is registered in the Jutyar farm register with {n} farm(s) covering {area} dunam in total, as listed below.",
+  "reprint_note": "Letter {no} was already issued. This is a reprint of the same number; the farms are shown as they are today."
 }

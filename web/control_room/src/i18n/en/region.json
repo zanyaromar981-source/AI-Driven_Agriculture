@@ -3,11 +3,11 @@
   "how": "Numbers arrive by themselves from the data jobs: rain every 12 hours, fires every 3 hours. You can correct a number by hand with a reason; it is marked \"edited by hand\" until the next job run replaces it.",
   "t_districts": "Districts",
   "t_dams": "Dams",
-  "t_fires": "Fires",
+  "t_fires": "Fire detections",
   "t_outlooks": "Season outlook",
   "t_water": "Water plan",
   "c_district": "District",
-  "c_dryness": "Dryness (rain)",
+  "c_dryness": "Dryness (rain against normal)",
   "c_band": "Against normal",
   "c_rank": "Rank",
   "c_change": "Against last year",
@@ -50,7 +50,7 @@
   "del_title": "Delete this reading?",
   "del_text": "The reading of {day} is removed for everyone.",
   "dam_source": "Lake area from Sentinel-2 satellite pictures; percent full is the lake area against the full lake.",
-  "fires_map": "Fire detections on the map",
+  "fires_map": "Satellite fire detections on the map",
   "fires_note": "Satellite detections, about 3 hours behind; not checked by hand.",
   "c_seen": "Seen",
   "c_point": "Point",
@@ -77,5 +77,6 @@
   "c_need": "Need",
   "c_send": "Send (million m³)",
   "c_note": "Note",
-  "urgent": "Urgent"
+  "urgent": "Urgent",
+  "no_reading_yet": "This district has no reading for this month yet. Saving creates one."
 }

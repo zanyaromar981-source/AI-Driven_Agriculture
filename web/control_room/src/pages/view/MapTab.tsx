@@ -51,8 +51,11 @@ export function MapTab({ ov, stats, slug, setSlug }: { ov?: RegionOverview; stat
             )}
           </div>
         </div>
-        <DistrictMap fill={fill} styleKey={(ov?.month ?? '') + (slug ?? '')} focus={focusEn} onBack={() => setSlug(null)}
-          onDistrict={en => { const d = DISTRICT_BY_EN.get(en); if (d) setSlug(d.slug); }} />
+        {/* whole region on a phone: 33 names overlap, so they hide until a district is opened */}
+        <div className={focusEn ? undefined : 'view-map-all'}>
+          <DistrictMap fill={fill} styleKey={(ov?.month ?? '') + (slug ?? '')} focus={focusEn} onBack={() => setSlug(null)}
+            onDistrict={en => { const d = DISTRICT_BY_EN.get(en); if (d) setSlug(d.slug); }} />
+        </div>
         <div className="view-legend" aria-label={t('view.legend')}>
           <b className="wet">{t('view.wetter')}</b>
           {DRY_STEPS.map(s => <span key={s.label} className="key"><i style={{ background: s.color }} /><small className="ltr">{s.label}</small></span>)}

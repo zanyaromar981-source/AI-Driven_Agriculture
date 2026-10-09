@@ -1,16 +1,17 @@
 // Settings (design 20). My account (PUT /dashboard/me), how this browser shows the site (language,
-// Kurdish digits, sidebar), where the public page switch lives, and facts about the connection.
+// Kurdish digits, sidebar), what the public page shows (the one switch the server has:
+// public_farm_totals in the app config), and facts about the connection.
 // The organisation name and the letter signer of the design are not stored by the server yet.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { KeyRound, Check, Trash2, ExternalLink, Info } from 'lucide-react';
 import { useI18n, type Lang } from '../../i18n';
 import { useAuth } from '../../auth/auth';
-import { useApi, wipeAll } from '../../api/cache';
+import { useApi, wipeAll, invalidate } from '../../api/cache';
 import { api, ApiError, API_BASE } from '../../api/client';
 import { prefs } from '../../data/store';
 import { PageHead, SetRow, Switch, Field, Note, Confirm, Select, Pill, useToast } from '../../components/ui';
-import { useErrorText } from '../../components/domain';
+import { useErrorText, prettyPhone } from '../../components/domain';
 import './settings.css';
 
 export default function SettingsPage() {
@@ -58,11 +59,8 @@ export default function SettingsPage() {
         </div>
         <div className="stack">
           <MyAccount />
-          <div className="card">
-            <div className="eyebrow">{t('settings.public_title')}</div>
-            <p className="muted small">{t('settings.public_text')}</p>
-            {can('app') ? <Link to="/admin/app" className="btn sm"><ExternalLink />{t('settings.public_go')}</Link> : <Pill>{t('settings.public_no_perm')}</Pill>}
-          </div>
+          <PublicPage />
+          {!can('app') && <div className="card"><Pill>{t('settings.public_no_perm')}</Pill></div>}
         </div>
       </div>
       {wipe && <Confirm title={t('settings.clear')} text={t('settings.clear_confirm')} okLabel={t('settings.clear_btn')} onOk={clearSaved} onClose={() => setWipe(false)} />}
@@ -70,10 +68,48 @@ export default function SettingsPage() {
   );
 }
 
+/** What the public View page shows. Only the farm totals can be switched; the rest is always public. */
+function PublicPage() {
+  const { t } = useI18n();
+  const { can } = useAuth();
+  const toast = useToast();
+  const errText = useErrorText();
+  const cfg = useApi<Record<string, unknown> & { public_farm_totals: boolean }>(can('app') ? '/dashboard/app/config' : null, ['app_config'], { auth: true });
+  const [busy, setBusy] = useState(false);
+  if (!can('app')) return null;
+  const on = cfg.data?.public_farm_totals;
+
+  const setTotals = async (v: boolean) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      // PUT replaces the whole config: send back the server's current object, with this one switch changed
+      const cur = await api.get<Record<string, unknown>>('/dashboard/app/config');
+      const { updated_at: _a, updated_by: _b, ...body } = cur;
+      await api.put('/dashboard/app/config', { ...body, public_farm_totals: v });
+      invalidate('app_config');
+      toast(t('common.saved'), 'good');
+    } catch (e) { toast(errText(e as ApiError), 'danger'); } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="card">
+      <div className="eyebrow">{t('settings.public_title')}</div>
+      <p className="muted small">{t('settings.public_text')}</p>
+      <SetRow title={t('settings.pub_totals')} sub={t('settings.pub_totals_sub')}>
+        {on == null ? <i className="sk" style={{ width: 40 }} /> : <Switch on={on} onChange={setTotals} disabled={busy || !can('app', 'update')} label={t('settings.pub_totals')} />}
+      </SetRow>
+      <SetRow title={t('settings.pub_always')} sub={t('settings.pub_always_sub')}><Pill tone="good">{t('settings.pub_shown')}</Pill></SetRow>
+      <Link to="/admin/app" className="btn sm"><ExternalLink />{t('settings.public_go')}</Link>
+    </div>
+  );
+}
+
 function MyAccount() {
   const { t } = useI18n();
   const { me, refreshMe } = useAuth();
   const toast = useToast();
+  const roleName = (n: string) => { const k = 'roles.sys_' + n.toLowerCase(); const v = t(k); return v === k ? n : v; };
   const errText = useErrorText();
   const [name, setName] = useState(me?.name ?? '');
   const [phone, setPhone] = useState(me?.phone ?? '');
@@ -87,6 +123,7 @@ function MyAccount() {
   const changed = name.trim() !== me.name || (phone.trim() || null) !== (me.phone || null) || (pwOpen && !!next);
 
   const save = async () => {
+    if (busy) return;
     setErr(null);
     if (!name.trim()) return setErr({ field: 'name', text: t('v.needed') });
     if (pwOpen && next) {
@@ -97,6 +134,7 @@ function MyAccount() {
     setBusy(true);
     try {
       await api.put('/dashboard/me', { name: name.trim(), phone: phone.trim() || null, ...(pwOpen && next ? { current_password: cur, new_password: next } : {}) });
+      invalidate('staff_roles'); // the staff list shows my name and phone too
       await refreshMe();
       setCur(''); setNext(''); setAgain(''); setPwOpen(false);
       toast(t('common.saved'), 'good');
@@ -111,7 +149,7 @@ function MyAccount() {
     <div className="card">
       <div className="eyebrow">{t('settings.account_title')}</div>
       <div className="account-head"><span className="avatar">{me.name.split(/\s+/).map(s => s[0]).join('').slice(0, 2).toUpperCase()}</span>
-        <div><b>{me.email}</b><div className="row">{me.roles.map(r => <Pill key={r.id} tone={r.name === 'Owner' ? 'dark' : 'brand'}>{r.name}</Pill>)}</div></div></div>
+        <div><b className="ltr">{me.email}</b>{me.phone && <div className="muted small ltr tabular">{prettyPhone(me.phone)}</div>}<div className="row">{me.roles.map(r => <Pill key={r.id} tone={r.name === 'Owner' ? 'dark' : 'brand'}>{roleName(r.name)}</Pill>)}</div></div></div>
       <div className="form-grid">
         <Field label={t('staff.name')} error={fe('name')}><input type="text" value={name} onChange={e => setName(e.target.value)} /></Field>
         <Field label={t('staff.phone')} error={fe('phone')}><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+9647501234567" /></Field>

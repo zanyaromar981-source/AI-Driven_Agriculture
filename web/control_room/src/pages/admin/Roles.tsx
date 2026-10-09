@@ -17,6 +17,8 @@ interface Role { id: string; name: string; description?: string | null; system: 
 const ACTIONS: Action[] = ['read', 'create', 'update', 'delete'];
 const RESOURCES: Resource[] = ['farmers', 'farms', 'insights', 'zones', 'dams', 'fires', 'outlooks', 'water', 'briefs', 'alwa', 'crops', 'rules', 'messages', 'app', 'jobs', 'staff', 'roles'];
 const key = (r: string, a: string) => r + ':' + a;
+// system roles are named in English on the server; show them in the site language
+const useRoleName = () => { const { t } = useI18n(); return (n: string) => { const k = 'roles.sys_' + n.toLowerCase(); const v = t(k); return v === k ? n : v; }; };
 
 export default function RolesPage() {
   const { t } = useI18n();
@@ -25,6 +27,7 @@ export default function RolesPage() {
   const cat = useApi<{ resources: Resource[]; actions: Action[] }>('/dashboard/permissions', ['staff_roles'], { auth: true });
   const toast = useToast();
   const errText = useErrorText();
+  const roleName = useRoleName();
   const roles = list.data?.roles ?? [];
   const [sel, setSel] = useState<string | 'new' | null>(null);
   const cur = sel === 'new' ? null : roles.find(r => r.id === sel) ?? null;
@@ -61,6 +64,7 @@ export default function RolesPage() {
   const toggleMany = (ks: string[], on: boolean) => setSet(s => { const n = new Set(s); for (const k of ks) if (mayGive(k)) on ? n.add(k) : n.delete(k); return n; });
 
   const save = async () => {
+    if (busy) return;
     setErr(null);
     if (!name.trim()) return setErr(t('roles.name_needed'));
     setBusy(true);
@@ -85,13 +89,14 @@ export default function RolesPage() {
     finally { setBusy(false); invalidate('staff_roles'); }
   };
   const remove = async () => {
-    if (!cur) return;
+    if (!cur || busy) return;
+    setBusy(true);
     try { await api.del('/dashboard/roles/' + cur.id); toast(t('common.deleted'), 'good'); setBase(null); setSel(null); }
     catch (e) {
       // already gone (a second click, or another admin) counts as deleted
       if ((e as ApiError).status === 404) { toast(t('common.deleted'), 'good'); setBase(null); setSel(null); } else toast(errText(e as ApiError), 'danger');
     }
-    finally { invalidate('staff_roles'); }
+    finally { setBusy(false); invalidate('staff_roles'); }
   };
 
   if (!can('roles')) return <><PageHead eyebrow={t('nav.g_people')} title={t('nav.roles')} /><StateBox kind="locked" /></>;
@@ -107,7 +112,7 @@ export default function RolesPage() {
             {list.loading && <><i className="sk" /><i className="sk" /><i className="sk" /></>}
             {roles.map(r => (
               <button key={r.id} className={'role-item' + (sel === r.id ? ' on' : '')} onClick={() => choose(r.id)}>
-                <span className="role-item-main"><b>{r.name}</b>{r.system && <Pill tone="dark">{t('roles.system')}</Pill>}</span>
+                <span className="role-item-main"><b>{roleName(r.name)}</b>{r.system && <Pill tone="dark">{t('roles.system')}</Pill>}</span>
                 <span className="muted small">{r.description || t('roles.perm_count', { n: r.permissions.length })}</span>
                 <span className="role-holders muted small"><Users />{r.staff_count}</span>
               </button>
@@ -120,13 +125,13 @@ export default function RolesPage() {
               <>
                 <div className="spread">
                   <div>
-                    <h2>{sel === 'new' ? t('roles.new') : cur!.name}</h2>
+                    <h2>{sel === 'new' ? t('roles.new') : roleName(cur!.name)}</h2>
                     {cur && <span className="muted small">{t('roles.holders', { n: cur.staff_count })}</span>}
                   </div>
                   {!readOnly && (
                     <div className="row">
                       {cur && can('roles', 'delete') && <button className="btn danger" disabled={busy || cur.staff_count > 0} title={cur.staff_count > 0 ? t('err.role_in_use') : undefined}
-                        onClick={() => setAsk({ title: t('roles.delete_title', { name: cur.name }), text: t('roles.delete_text'), ok: t('common.delete'), run: remove })}><Trash2 />{t('roles.delete')}</button>}
+                        onClick={() => setAsk({ title: t('roles.delete_title', { name: roleName(cur.name) }), text: t('roles.delete_text'), ok: t('common.delete'), run: remove })}><Trash2 />{t('roles.delete')}</button>}
                       <button className="btn primary" disabled={busy || !dirty} onClick={save}><Check />{sel === 'new' ? t('roles.create') : t('roles.save')}</button>
                     </div>
                   )}

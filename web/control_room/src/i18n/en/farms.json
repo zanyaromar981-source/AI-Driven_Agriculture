@@ -79,5 +79,6 @@
   "point": "Centre point",
   "planted": "Planted",
   "delete_farm_q": "Delete the farm \"{name}\"?",
-  "delete_farm_text": "The farm, its cells and its readings are deleted for good. The farmer stays."
+  "delete_farm_text": "The farm, its cells and its readings are deleted for good. The farmer stays.",
+  "more": "More actions"
 }

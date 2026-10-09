@@ -1,6 +1,6 @@
-// Districts tab: this month's rain-against-normal reading for the 33 districts, a map, and a hand
-// correction (PUT /dashboard/zones/{slug}/readings/{month}). The next data-job run replaces a hand
-// change (FRONTEND.md 9), so the page says so and marks it.
+// Districts tab: this month's dryness reading for the 33 districts, a map, and a hand correction
+// (PUT /dashboard/zones/{slug}/readings/{month}, or POST when the district has no reading that month).
+// The next data-job run replaces a hand change (FRONTEND.md 9), so the page says so and marks it.
 import { useMemo, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { useI18n } from '../../../i18n';
@@ -81,21 +81,30 @@ function EditReading({ zone, month, onClose }: { zone: ZoneOverview; month: stri
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const v = f ?? (r ? { dryness: String(r.dryness), rain: r.rain_pct_of_normal == null ? '' : String(r.rain_pct_of_normal), green: r.greenness_pct_vs_normal == null ? '' : String(r.greenness_pct_vs_normal), need: r.water_need == null ? '' : String(r.water_need), hold: r.nitrogen_hold } : null);
-  const set = (k: string, val: string | boolean) => setF({ ...(v ?? { dryness: '', rain: '', green: '', need: '', hold: false }), [k]: val });
+  const blank = { dryness: '', rain: '', green: '', need: '', hold: false };
+  // no reading this month (the list answered without one): start from an empty form and create it
+  const v = f ?? (r ? { dryness: String(r.dryness), rain: r.rain_pct_of_normal == null ? '' : String(r.rain_pct_of_normal), green: r.greenness_pct_vs_normal == null ? '' : String(r.greenness_pct_vs_normal), need: r.water_need == null ? '' : String(r.water_need), hold: r.nitrogen_hold } : cur.data ? blank : null);
+  const set = (k: string, val: string | boolean) => setF({ ...(v ?? blank), [k]: val });
   const n = (s: string) => (s.trim() === '' ? null : Number(s));
 
   const save = async () => {
-    if (!v) return;
+    if (!v || busy) return;
     const d = Number(v.dryness);
-    if (!(d >= 0 && d <= 100)) { setErr(t('region.dry_range')); return; }
+    if (v.dryness.trim() === '' || !(d >= 0 && d <= 100)) { setErr(t('region.dry_range')); return; }
     if (reason.trim().length < 3) { setErr(t('region.reason_needed')); return; }
     setBusy(true); setErr('');
     try {
-      await api.put(`/dashboard/zones/${zone.slug}/readings/${month}`, {
+      const body = {
         dryness: d, rain_pct_of_normal: n(v.rain), greenness_pct_vs_normal: n(v.green), water_need: n(v.need), nitrogen_hold: v.hold,
         best_crops: r?.best_crops ?? [], source: `${HAND}${me?.name ?? ''}: ${reason.trim()}`.slice(0, 100),
-      });
+      };
+      const put = () => api.put(`/dashboard/zones/${zone.slug}/readings/${month}`, body);
+      if (r) await put();
+      else {
+        // a job (or another person) may have stored this month meanwhile: then correct that one instead
+        try { await api.post(`/dashboard/zones/${zone.slug}/readings`, { month, ...body }); }
+        catch (e) { if (e instanceof ApiError && e.code === 'already_exists') await put(); else throw e; }
+      }
       invalidate('zones');
       toast(t('common.saved'), 'good');
       onClose();
@@ -104,11 +113,12 @@ function EditReading({ zone, month, onClose }: { zone: ZoneOverview; month: stri
 
   return (
     <Modal title={t('region.edit_title', { name: lang === 'ku' ? zone.name_ku : zone.name_en, month: date(month + '-01', 'month') })} onClose={onClose}
-      foot={<><button className="btn" onClick={onClose}>{t('common.cancel')}</button><button className="btn primary" disabled={busy || !v} onClick={save}>{t('common.save')}</button></>}>
+      foot={<><button className="btn" onClick={onClose} disabled={busy}>{t('common.cancel')}</button><button className="btn primary" disabled={busy || !v} onClick={save}>{busy ? t('common.loading') : t('common.save')}</button></>}>
       <div className="stack">
         <Note tone="warn">{t('region.hand_note')}</Note>
         {r && <div className="small muted">{t('region.now_source')}: {isHand(r.source) ? <Pill tone="warn">{t('common.edited_by_hand')}</Pill> : <Pill>{t('common.from_job')}</Pill>} <bdi>{r.source}</bdi></div>}
         {cur.loading && <i className="sk" />}
+        {cur.data && !r && <Note tone="info">{t('region.no_reading_yet')}</Note>}
         {v && (
           <div className="form-grid">
             <Field label={t('region.f_dryness')} hint={t('region.f_dryness_h')}><input type="number" min={0} max={100} value={v.dryness} onChange={e => set('dryness', e.target.value)} /></Field>

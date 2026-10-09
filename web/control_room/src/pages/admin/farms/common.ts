@@ -1,5 +1,5 @@
-import { CROP } from '../../../data/crops';
 // Shapes and helpers for the farmers, farms, letter and report pages (backend/API.md, API 1.6.0).
+import { CROP } from '../../../data/crops';
 
 export type FarmerLang = 'ku' | 'kmr' | 'ar' | 'en';
 export interface Farmer {

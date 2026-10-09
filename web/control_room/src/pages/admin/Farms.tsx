@@ -1,15 +1,15 @@
 // Farmers and farms (design HWGis, kMILR, nsu3f). Both lists are paged, filtered and sorted by the
 // server; totals come from /dashboard/stats/farms. Drawers open from ?farmer= and ?farm= so a search
 // hit or a link lands on them.
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, Map as MapIcon, Ruler, Ban, Download, FileText, UserPlus, Search, Scale, Pencil } from 'lucide-react';
+import { Users, Map as MapIcon, Ruler, Ban, Download, FileText, UserPlus, Search, Scale, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
-import { api, qs } from '../../api/client';
-import { useApi } from '../../api/cache';
+import { api, qs, ApiError as ApiErr } from '../../api/client';
+import { useApi, invalidate } from '../../api/cache';
 import type { FarmStats } from '../../api/types';
-import { PageHead, Kpi, Tabs, Select, useDebounced, useToast } from '../../components/ui';
+import { PageHead, Kpi, Tabs, Select, Confirm, useDebounced, useToast } from '../../components/ui';
 import { DataTable, type Col } from '../../components/DataTable';
 import { CropTag, Phone, StateBox, usePlace, useErrorText } from '../../components/domain';
 import { GOVERNORATES, DISTRICTS, GOV_BY_NAME } from '../../data/places';
@@ -36,14 +36,20 @@ export default function Farms() {
   const [zone, setZone] = useState('');
   const [crop, setCrop] = useState('');
   const [blocked, setBlocked] = useState('');
-  const [page, setPage] = useState(1);
   const [sort, setSort] = useState<[string, 1 | -1] | null>(null);
+  // a new filter starts again from page 1, in the same render (an effect would first ask the old page
+  // with the new filter: one wasted request per change)
+  const filterKey = JSON.stringify([dq, gov, zone, crop, blocked, tab, sort]);
+  const [pg, setPg] = useState({ k: filterKey, n: 1 });
+  const page = pg.k === filterKey ? pg.n : 1;
+  const setPage = (n: number) => setPg({ k: filterKey, n });
   const [form, setForm] = useState<Farmer | null | undefined>(undefined); // undefined = closed, null = new
   const [exporting, setExporting] = useState(false);
+  const [more, setMore] = useState(false); // phone: the export and report actions behind one button
+  const [del, setDel] = useState<{ kind: 'farmer'; row: Farmer } | { kind: 'farm'; row: FarmSummary } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const farmerId = params.get('farmer'), farmId = params.get('farm');
 
-  // a new filter starts again from page 1
-  useEffect(() => { setPage(1); }, [dq, gov, zone, crop, blocked, tab, sort]);
 
   const nm = (p: { en: string; ku: string }) => (lang === 'ku' ? p.ku : p.en);
   // the farmers list filters by the governorate slug; farms and stats take the English name
@@ -81,8 +87,9 @@ export default function Farms() {
     { key: 'actions', label: '', cell: f => <div className="row-acts" onClick={e => e.stopPropagation()}>
       {can('farmers', 'create') && <a className="btn ghost sm icon" href={'#/print/letter/' + f.id} title={t('farms.letter')} aria-label={t('farms.letter')}><FileText /></a>}
       {can('farmers', 'update') && <button className="btn ghost sm icon" onClick={() => setForm(f)} title={t('farms.edit_farmer')} aria-label={t('farms.edit_farmer')}><Pencil /></button>}
+      {can('farmers', 'delete') && <button className="btn ghost sm icon danger" disabled={deleting} onClick={() => setDel({ kind: 'farmer', row: f })} title={t('common.delete')} aria-label={t('common.delete')}><Trash2 /></button>}
     </div> },
-  ], [t, num, date, place, can]);
+  ], [t, num, date, place, can, deleting]);
   const farmCols: Col<FarmSummary>[] = useMemo(() => [
     { key: 'name', label: t('farms.c_farm'), serverSort: true, cell: f => <div><b><bdi>{f.name}</bdi></b><div className="muted small tabular">#{f.id}</div></div> },
     { key: 'owner', label: t('farms.owner'), cell: f => <Phone value={f.owner_phone} /> },
@@ -90,7 +97,22 @@ export default function Farms() {
     { key: 'area', label: t('common.dunam'), num: true, serverSort: true, cell: f => num(f.area_dunam, 1) },
     { key: 'crops', label: t('farms.crops'), cell: f => f.crops.length ? <div className="row" style={{ gap: 6 }}>{f.crops.slice(0, 3).map(c => <CropTag key={c.crop} code={c.crop} />)}</div> : <span className="muted small">{t('farms.no_crops')}</span> },
     { key: 'joined', label: t('farms.registered'), serverSort: true, cell: f => <span className="nowrap">{date(f.created_at, 'short')}</span> },
-  ], [t, num, date, place]);
+    ...(can('farms', 'delete') ? [{ key: 'actions', label: '', cell: (f: FarmSummary) => <div className="row-acts" onClick={e => e.stopPropagation()}>
+      <button className="btn ghost sm icon danger" disabled={deleting} onClick={() => setDel({ kind: 'farm', row: f })} title={t('common.delete')} aria-label={t('common.delete')}><Trash2 /></button>
+    </div> }] : []),
+  ], [t, num, date, place, can, deleting]);
+
+  // a second delete (double click, another tab) finds it gone: that is done too
+  const doDelete = async () => {
+    if (!del || deleting) return;
+    setDeleting(true);
+    try {
+      await api.del((del.kind === 'farmer' ? '/dashboard/farmers/' : '/dashboard/farms/') + del.row.id).catch(e => { if (!(e instanceof ApiErr && e.status === 404)) throw e; });
+      invalidate('farmers', 'farms');
+      if ((del.kind === 'farmer' && farmerId === del.row.id) || (del.kind === 'farm' && farmId === del.row.id)) closeDrawer();
+      toast(t('common.deleted'), 'good');
+    } catch (e) { toast(errText(e as ApiError), 'danger'); } finally { setDeleting(false); }
+  };
 
   const exportCsv = async () => {
     if (exporting) return;
@@ -121,11 +143,18 @@ export default function Farms() {
   const reportHref = '#/print/government' + qs({ governorate: gov, zone });
 
   return (
-    <div>
+    <div className="farms-page">
       <PageHead eyebrow={t('nav.g_people')} title={t('nav.farms')} sub={t('farms.sub')} actions={<>
-        <button className="btn" onClick={exportCsv} disabled={exporting}><Download />{exporting ? t('common.loading') : t('common.export_csv')}</button>
-        {can('farms') && <a className="btn" href={reportHref} target="_blank" rel="noopener"><FileText />{t('farms.gov_report')}</a>}
-        {can('farmers', 'create') && <button className="btn primary" onClick={() => setForm(null)}><UserPlus />{t('farms.add_farmer')}</button>}
+        <button className="btn hide-phone" onClick={exportCsv} disabled={exporting}><Download />{exporting ? t('common.loading') : t('common.export_csv')}</button>
+        {can('farms') && <a className="btn hide-phone" href={reportHref} target="_blank" rel="noopener"><FileText />{t('farms.gov_report')}</a>}
+        <span className="farms-more only-phone">
+          <button className="btn icon" onClick={() => setMore(m => !m)} aria-expanded={more} aria-label={t('farms.more')} title={t('farms.more')}><MoreHorizontal /></button>
+          {more && <div className="farms-more-menu" onClick={() => setMore(false)}>
+            <button className="btn ghost" onClick={exportCsv} disabled={exporting}><Download />{exporting ? t('common.loading') : t('common.export_csv')}</button>
+            {can('farms') && <a className="btn ghost" href={reportHref} target="_blank" rel="noopener"><FileText />{t('farms.gov_report')}</a>}
+          </div>}
+        </span>
+        {can('farmers', 'create') && <button className="btn primary farms-add" onClick={() => setForm(null)} aria-label={t('farms.add_farmer')}><UserPlus /><span className="lbl">{t('farms.add_farmer')}</span></button>}
       </>} />
       <div className="grid farms-kpis mb">
         <Kpi label={t('common.farmers')} icon={<Users />} value={T ? num(T.farmers) : '-'} note={blockedCount.data ? t('farms.n_blocked', { n: num(blockedCount.data.count) }) : ' '} />
@@ -161,6 +190,8 @@ export default function Farms() {
       </div>
       {farmerId && <FarmerDrawer id={farmerId} onClose={closeDrawer} onOpenFarm={openFarm} onEdit={f => setForm(f)} />}
       {farmId && <FarmDrawer id={farmId} onClose={closeDrawer} onOpenFarmer={openFarmer} />}
+      {del && <Confirm title={del.kind === 'farmer' ? t('farms.delete_farmer_q', { name: del.row.name || del.row.phone }) : t('farms.delete_farm_q', { name: del.row.name })}
+        text={del.kind === 'farmer' ? t('farms.delete_farmer_text', { n: num(del.row.farms_count) }) : t('farms.delete_farm_text')} okLabel={t('common.delete')} onOk={doDelete} onClose={() => setDel(null)} />}
       {form !== undefined && <FarmerForm farmer={form} onClose={() => setForm(undefined)} onSaved={f => { setForm(undefined); openFarmer(f.id); }} />}
     </div>
   );

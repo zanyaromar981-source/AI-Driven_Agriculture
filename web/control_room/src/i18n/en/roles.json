@@ -47,5 +47,6 @@
   "r_app": "Farmer app",
   "r_jobs": "Data jobs",
   "r_staff": "Staff",
-  "r_roles": "Roles"
+  "r_roles": "Roles",
+  "sys_owner": "Owner"
 }

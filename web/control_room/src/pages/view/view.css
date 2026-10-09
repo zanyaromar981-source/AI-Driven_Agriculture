@@ -147,3 +147,5 @@
 .view-dams b { font: 800 28px/1.15 var(--display); color: var(--water); }
 .view-dams small { font-size: 13px; color: var(--ink-3); }
 @media (max-width: 640px) { .view-dams { gap: 6px; justify-content: center; } .view-dams b { font-size: 17px; } .view-dams small { font-size: 11px; display: block; } }
+
+@media (max-width: 640px) { .view-map-all .leaflet-tooltip.map-label { display: none; } }

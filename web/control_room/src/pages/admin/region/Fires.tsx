@@ -9,7 +9,7 @@ import { DataTable, type Col } from '../../../components/DataTable';
 import { DistrictMap } from '../../../components/DistrictMap';
 import { StateBox, usePlace, usePlaceOptions, useErrorText } from '../../../components/domain';
 import { Pill, Select, useToast, type Tone } from '../../../components/ui';
-import type { DashFire } from './types';
+import { isHand, type DashFire } from './types';
 
 const STATUSES = ['active', 'spreading', 'under_control', 'out'] as const;
 const TONE: Record<DashFire['status'], Tone> = { active: 'danger', spreading: 'danger', under_control: 'warn', out: 'good' };
@@ -31,10 +31,12 @@ export function Fires() {
   const points = useMemo(() => rows.map(f => ({ id: f.id, lat: f.lat, lon: f.lon, color: f.status === 'out' ? '#7A8A80' : '#E0533F', label: place.dist(f.zone_slug) + ' · ' + date(f.detected_at, 'datetime') })), [rows, place, date]);
 
   const setFireStatus = async (f: DashFire, s: DashFire['status']) => {
-    if (s === f.status) return;
+    if (s === f.status || busy) return;
     setBusy(f.id);
     try {
-      const { id: _i, external_id: _e, updated_at: _u, ...body } = f;
+      // PUT replaces every field: build it from a fresh read, so a job update meanwhile is not undone
+      const fresh = (await api.get<{ fire: DashFire }>(`/dashboard/fires/${f.id}`)).fire;
+      const { id: _i, external_id: _e, updated_at: _u, ...body } = fresh;
       await api.put(`/dashboard/fires/${f.id}`, { ...body, status: s });
       invalidate('fires');
       toast(t('common.saved'), 'good');
@@ -49,8 +51,9 @@ export function Fires() {
     { key: 'pt', label: t('region.c_point'), cell: f => <span className="ltr mono">{f.lat.toFixed(3)}, {f.lon.toFixed(3)}</span>, optional: true },
     { key: 'near', label: t('region.c_near'), num: true, cell: f => (f.farms_within_5km == null ? '-' : num(f.farms_within_5km)) },
     { key: 'st', label: t('common.status'), cell: f => (can('fires', 'update')
-      ? <Select value={f.status} disabled={busy === f.id} onChange={v => setFireStatus(f, v as DashFire['status'])} options={STATUSES.map(s => [s, t('region.fs_' + s)])} />
+      ? <Select value={f.status} disabled={busy != null} onChange={v => setFireStatus(f, v as DashFire['status'])} options={STATUSES.map(s => [s, t('region.fs_' + s)])} />
       : <Pill tone={TONE[f.status]}>{t('region.fs_' + f.status)}</Pill>) },
+    { key: 'upd', label: t('common.updated'), cell: f => <div><span className="small">{ago(f.updated_at)}</span><div>{isHand(f.source) ? <Pill tone="warn">{t('common.edited_by_hand')}</Pill> : <Pill>{t('common.from_job')}</Pill>}</div></div>, optional: true },
     { key: 'src', label: t('common.source'), cell: f => <bdi className="muted small rg-src" title={f.source}>{f.source}</bdi>, optional: true },
   ];
 

@@ -20,3 +20,17 @@
 .farm-card { width: 100%; padding: 12px 14px; }
 .farm-card:hover { border-color: var(--line); background: #FAFBF7; }
 .row-acts { display: flex; gap: 4px; justify-content: flex-end; }
+
+/* phone: the list starts high. No subtitle or totals, one add button, the rest behind "more" */
+.farms-page .only-phone { display: none; }
+.farms-more { position: relative; }
+.farms-more-menu { position: absolute; inset-inline-end: 0; top: calc(100% + 6px); z-index: 30; display: flex; flex-direction: column; min-width: 200px; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow, 0 8px 24px rgba(0, 0, 0, .12)); }
+.farms-more-menu .btn { justify-content: flex-start; }
+@media (max-width: 600px) {
+  .farms-page .page-head .sub, .farms-page .farms-kpis { display: none; }
+  .farms-page .hide-phone { display: none; }
+  .farms-page .only-phone { display: inline-flex; }
+  .farms-page .farms-add .lbl { display: none; }
+  .farms-page .farms-add { padding-inline: 10px; }
+}
+.farm-card .chev { width: 16px; height: 16px; color: var(--ink-3); flex: none; }
