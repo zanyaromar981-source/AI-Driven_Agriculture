@@ -16,7 +16,7 @@ Checked 2026-10-09 16:20 against `FRONTEND.md` v4 with its section 14 (commit 13
 | 2 | My farms, save, open, edit, delete: `/v1/farms` (2.2) | built, edit with `PUT /v1/farms/{id}` | Nothing. |
 | 3 | Farm from space: `GET /v1/farms/{id}/status` (2.3) | placeholder, every measured field `null` | **Blocks the main picture on Home.** See 0.2, answer to FRONTEND.md 13.1. |
 | 4 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built (`404`) | **The most wanted route for farmers.** The 10-day plan from the forecast with the Weather Planner rules in 2.4. The app shows "10-day plan coming soon" until it exists. It goes through the server only: the app does not call Open-Meteo itself. |
-| 5 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5) | route built | Please check that the Doctor service runs next to the test server (`curl 127.0.0.1:8090/health` on that machine). If it does, `GEMINI_API_KEY` must be in its `farm_doctor/.env` there: until now it was only set up in the Codespace. Without it every question fails. |
+| 5 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5) | route built; on the test server nothing runs behind it, so every question answers `502 doctor_failed` (FRONTEND.md v5, 6) | **The centre button of the app. See 2.15:** the server gathers the farm's data, gives it with the photos to Codex (already signed in there) and returns the checked answer. No Gemini key needed. |
 | 6 | Insights: `GET /v1/farms/{id}/insights` | built, groundwater filled daily | Nothing for the route. Other topics wait for the per-farm analysis job (FRONTEND.md 13.4). |
 | 7 | Daily brief: `GET /v1/farms/{id}/brief` | built | Nothing. The app card is next. |
 | 8 | Profile: `GET`/`PUT /v1/me` | built | Nothing. The Settings screen is next. |
@@ -345,6 +345,17 @@ What the app needs changed or added:
 | 5 | Each market (`AlwaMarketResponse`) carries `lat` and `lon`. | The app shows the price board of the market nearest the phone. |
 
 Not used by the app: the offer and accept routes, `/v1/alwa/offers/mine`, `/v1/alwa/deals`, `grade`, `pickup`, `buyer_kind`. They can stay for the website.
+
+### 2.15 Ask the Doctor on the test server: Codex reads the photos and the farm's data (user decision, 2026-10-09)
+
+The app's centre button (Ask the Doctor) already sends `POST /v1/farms/{id}/ask` exactly as FRONTEND.md 6 says and already shows the `200` answer. On the test server every question answers `502 doctor_failed` because nothing runs behind the route. To make the button work, the server must do this for every question:
+
+1. **Gather the farm's data** (about 15 s, all at once): the farm (centre, exact area, crops, outline, the tapped cell if any), what `/insights` knows about it, the newest Sentinel-2 reading of the field (Field Eye), the 10-day forecast with the Weather Planner rules (2.4), the season so far (Season Check) and the dam levels (Dam Watch). All of this is fetched by the server; the app calls no outside service.
+2. **Ask Codex**, the `codex exec` program that is already signed in on the test server for the nightly brief: the question, `lang`, every photo attached as an image (`codex exec --image <file>`), the gathered data, and the Doctor's rulebook (`RULEBOOK` in `farm_doctor/doctor.py`: answer only in the JSON below, never a pesticide or fertilizer dose, say `unsure` and refer to an officer when unsure). No Gemini key is needed: this replaces Gemini (2.10) on the test server.
+3. **Check the answer and return it** in the shape the app reads (FRONTEND.md 6): `{"likely", "confidence": "sure|likely|unsure", "why": [...], "actions_this_week": [...] (at most 3), "cannot_tell": [...], "refer_to_officer", "ku", "en", "inputs_used": [...]}`. Anything that is not this shape becomes `502 doctor_failed`, as today.
+4. **Answer within 90 s.** The app waits 120 s. Two farmers asking at the same time must both get an answer (run Codex calls side by side or one after the other, both fit in 90 s for the demo).
+
+The fastest way, already tested on a Mac: run `farm_doctor/doctor_service.py` next to the backend on the test server (`DOCTOR_URL=http://127.0.0.1:8090`). It already does steps 1 and 3 and today calls Gemini or Claude in step 2 (`FARM_DOCTOR_PROVIDER`). A `codex` provider that runs `codex exec` with the photos is the only missing piece; it lives in `farm_doctor/` and the app side can add it. The other way is for the backend to call `codex exec` itself, as `backend/jobs/daily_brief.py` does.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
