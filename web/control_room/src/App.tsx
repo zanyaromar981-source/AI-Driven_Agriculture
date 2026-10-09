@@ -8,6 +8,15 @@ import { ToastProvider, Skeleton } from './components/ui';
 import { Preloader, introWanted } from './motion/Preloader';
 import { AdminLayout } from './layouts/AdminLayout';
 import { startVersionWatch } from './api/cache';
+import { Link } from 'react-router-dom';
+import { StateBox } from './components/domain';
+import { useI18n } from './i18n';
+
+/** An unknown /admin/... address: say so instead of landing on the public page. */
+function AdminNotFound() {
+  const { t } = useI18n();
+  return <section className="card"><StateBox kind="empty" title={t('state.notfound_title')} text={t('state.notfound_text')} action={<Link className="btn" to="/admin">{t('state.notfound_back')}</Link>} /></section>;
+}
 
 const View = lazy(() => import('./pages/view/ViewPage'));
 const Login = lazy(() => import('./pages/Login'));
@@ -54,6 +63,7 @@ export function App() {
                   <Route path="rules" element={<Rules />} />
                   <Route path="jobs" element={<Jobs />} />
                   <Route path="settings" element={<SettingsPage />} />
+                  <Route path="*" element={<AdminNotFound />} />
                 </Route>
                 <Route path="/print/letter/:farmerId" element={<RequireStaff><SupportLetter /></RequireStaff>} />
                 <Route path="/print/government" element={<RequireStaff><GovReport /></RequireStaff>} />

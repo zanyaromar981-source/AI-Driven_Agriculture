@@ -6,5 +6,8 @@
   "locked_title": "This part is not open for your role",
   "locked_text": "You need the right permission. Ask an Owner or admin.",
   "soon_title": "Coming soon",
-  "soon_text": "The server does not have this yet."
+  "soon_text": "The server does not have this yet.",
+  "notfound_title": "This page does not exist",
+  "notfound_text": "The address may be old or mistyped.",
+  "notfound_back": "Back to the overview"
 }

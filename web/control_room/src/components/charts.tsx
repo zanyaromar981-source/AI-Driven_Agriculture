@@ -17,7 +17,7 @@ export function HBars({ items, max, unit = '', digits = 0, showShare }: { items:
           <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.label}</span>
           <div className="bar"><i style={{ width: (i.value / m * 100) + '%', background: i.color ?? 'var(--brand)' }} /></div>
           <span className="nowrap tabular end"><b>{num(i.value, digits)}</b>{unit && <span className="muted small"> {unit}</span>}
-            {showShare && <span className="muted small"> · {num(i.value / sum * 100, 1)}%</span>}{i.note}</span>
+            {showShare && <span className="muted small"> · <bdi dir="ltr">{num(i.value / sum * 100, 1)}%</bdi></span>}{i.note}</span>
         </div>
       ))}
     </div>

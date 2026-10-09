@@ -7,6 +7,8 @@
 .al-link:hover { background: #FAFBF7; }
 .al-row .ico { width: 40px; height: 40px; border-radius: 12px; }
 .al-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.al-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.al-title { display: flex; align-items: center; gap: 8px; }
+.al-title b { min-width: 0; }
+.al-title .pill { flex: none; }
 .al-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 12.5px; color: var(--ink-2); text-align: end; flex: none; max-width: 160px; }
 @media (max-width: 640px) { .al-row { flex-wrap: wrap; } .al-meta { flex-direction: row; gap: 8px; max-width: none; width: 100%; padding-inline-start: 54px; align-items: center; } }

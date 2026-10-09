@@ -31,8 +31,9 @@
 .pre-say { height: 24px; overflow: hidden; font: 600 15px var(--ui); color: #BFD8CB; }
 .pre-say span { display: inline-block; animation: flick .34s var(--ease); }
 @keyframes flick { from { transform: translateY(100%); opacity: 0; } }
-.pre-count { position: absolute; inset-inline-end: 48px; bottom: 64px; font: 800 72px/1 var(--latin); font-variant-numeric: tabular-nums; transform-origin: right bottom; color: #F6EDD9; direction: ltr; }
-[dir=rtl] .pre-count { transform-origin: left bottom; }
+.pre-count { position: absolute; right: 48px; bottom: 64px; font: 800 72px/1 var(--latin); font-variant-numeric: tabular-nums; transform-origin: right bottom; color: #F6EDD9; direction: ltr; }
+/* physical sides: direction ltr on the counter would turn inset-inline-end into right in Kurdish too */
+[dir=rtl] .pre-count { right: auto; left: 48px; transform-origin: left bottom; }
 .pre-count small { font-size: .35em; margin-inline-start: 4px; color: #E8C77A; }
 .pre-marquee { position: absolute; inset-inline: 0; bottom: 18px; overflow: hidden; white-space: nowrap; font: 800 13px var(--latin); letter-spacing: .3em; color: #ffffff33; direction: ltr; }
 .pre-marquee .mq-track { animation: marquee 18s linear infinite; }
@@ -50,7 +51,8 @@
 @media (max-width: 640px) {
   .pre-word .en { font-size: 46px; } .pre-word .ku { font-size: 26px; }
   .pre-center .sun { width: 112px; height: 112px; }
-  .pre-count { inset-inline-end: 20px; bottom: 48px; font-size: 52px; }
+  .pre-count { right: 20px; bottom: 48px; font-size: 52px; }
+  [dir=rtl] .pre-count { right: auto; left: 20px; }
   .pre-skip { inset-inline-start: 20px; bottom: 54px; }
 }
 body.pre-on { overflow: hidden; }

@@ -2,7 +2,7 @@
 // an Owner resets a password from the Staff page (FRONTEND.md 8).
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, ArrowLeft, Info } from 'lucide-react';
+import { Eye, EyeOff, LogIn, ArrowLeft, Info, Mail, Lock } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { useAuth } from '../auth/auth';
 import { ApiError } from '../api/client';
@@ -57,10 +57,11 @@ export default function Login() {
           <h1>{t('login.title')}</h1>
           <p className="muted" style={{ marginTop: 0 }}>{t('login.sub')}</p>
           <Field label={t('login.email')}>
-            <input type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} autoFocus dir="ltr" />
+            <div className="in-ico"><Mail aria-hidden /><input type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} autoFocus dir="ltr" /></div>
           </Field>
           <Field label={t('login.password')}>
-            <div style={{ position: 'relative' }}>
+            <div className="in-ico">
+              <Lock aria-hidden />
               <input type={show ? 'text' : 'password'} autoComplete="current-password" value={pw} onChange={e => setPw(e.target.value)} dir="ltr" style={{ paddingInlineEnd: 44 }} />
               <button type="button" className="btn ghost sm icon" onClick={() => setShow(s => !s)} aria-label={t(show ? 'login.hide' : 'login.show')}
                 style={{ position: 'absolute', insetInlineEnd: 3, top: 3 }}>{show ? <EyeOff /> : <Eye />}</button>
@@ -68,7 +69,7 @@ export default function Login() {
           </Field>
           {err && <Note tone="danger">{t(err)}</Note>}
           <button className="btn primary" type="submit" disabled={busy} style={{ width: '100%' }}><LogIn className="flip-rtl" />{t('login.submit')}</button>
-          <button type="button" className="btn ghost sm" onClick={() => setForgot(true)} style={{ alignSelf: 'center' }}>{t('login.forgot')}</button>
+          <button type="button" className="btn ghost sm login-forgot" onClick={() => setForgot(true)} style={{ alignSelf: 'center' }}>{t('login.forgot')}</button>
         </form>
       </div>
       {forgot && (

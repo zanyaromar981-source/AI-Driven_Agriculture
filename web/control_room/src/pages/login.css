@@ -17,3 +17,9 @@
   .login-art { display: none; }
   .login-side { min-height: 100vh; padding: 14px 16px; }
 }
+
+/* design 05: mail and lock icons inside the inputs (the inputs are ltr, so the icon sits on the left) */
+.in-ico { position: relative; }
+.in-ico > svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
+.in-ico > input { padding-left: 38px; }
+.login-forgot { color: var(--brand); }

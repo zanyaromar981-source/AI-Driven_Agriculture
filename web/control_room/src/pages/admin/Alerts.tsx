@@ -38,7 +38,7 @@ export default function Alerts() {
       g.set(k, e);
     }
     for (const [z, e] of g) out.push({
-      key: 'f-' + z, kind: 'fires', level: e.near > 0 ? 'alarm' : 'watch', icon: Flame,
+      key: 'f-' + z, kind: 'fires', level: 'alarm', icon: Flame,
       title: t('alerts.fires_in', { n: num(e.n), place: z === '?' ? t('alerts.unknown_place') : place.dist(z) }),
       sub: e.near > 0 ? t('alerts.fires_near', { n: num(e.near) }) : t('alerts.fires_far'), source: 'NASA FIRMS', at: e.last, to: '/admin/region?tab=fires',
     });
@@ -62,8 +62,10 @@ export default function Alerts() {
       key: 'j-' + j.job, kind: 'jobs', level: j.state === 'failed' ? 'alarm' : j.state === 'late' ? 'watch' : 'info', icon: Activity,
       title: t('alerts.job_' + j.state, { name: pick(j.name_ku, j.name_en) }), sub: j.message ?? '', source: t('alerts.jobs_src'), at: j.last_run?.finished_at ?? null, to: '/admin/jobs',
     });
+    // design 12: by level, fires first within a level, then newest
     const rank = { alarm: 0, watch: 1, info: 2 };
-    return out.sort((a, b) => rank[a.level] - rank[b.level] || (b.at ?? '').localeCompare(a.at ?? ''));
+    const kr = { fires: 0, dryness: 1, jobs: 2, brief: 3 };
+    return out.sort((a, b) => rank[a.level] - rank[b.level] || kr[a.kind] - kr[b.kind] || (b.at ?? '').localeCompare(a.at ?? ''));
   }, [fires.data, ov.data, brief.data, dams.data, jobs.data, t, num, pick, place, lang]);
 
   const shown = kind === 'all' ? items : items.filter(i => i.kind === kind);
