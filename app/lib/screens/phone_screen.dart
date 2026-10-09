@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../api/api.dart';
 import '../app_scope.dart';
-import '../config.dart';
 import '../phone.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
@@ -89,7 +88,9 @@ class _PhoneScreenState extends State<PhoneScreen> {
         PrimaryButton(
           label: s.send,
           loading: _busy,
-          onPressed: kTestMode || isValidIraqiMobile(_digits) ? _send : null,
+          // Always checked, also in test mode: the server refuses any other
+          // number (422 invalid) now that it sends real codes.
+          onPressed: isValidIraqiMobile(_digits) ? _send : null,
         ),
         const SizedBox(height: 16),
         InfoNote(title: s.noteTitle, body: s.noteBody),
