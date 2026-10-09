@@ -318,11 +318,13 @@ class AlwaCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.radius = 14,
     this.border,
+    this.borderWidth = 1,
   });
   final Widget child;
   final EdgeInsetsGeometry padding;
   final double radius;
   final Color? border;
+  final double borderWidth;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -331,7 +333,9 @@ class AlwaCard extends StatelessWidget {
     decoration: BoxDecoration(
       color: JColors.card,
       borderRadius: BorderRadius.circular(radius),
-      border: border == null ? null : Border.all(color: border!),
+      border: border == null
+          ? null
+          : Border.all(color: border!, width: borderWidth),
     ),
     child: child,
   );
@@ -354,9 +358,21 @@ class AlwaButton extends StatelessWidget {
   final bool loading;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
+  Widget build(BuildContext context) => Container(
     height: height,
     width: double.infinity,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(14),
+      boxShadow: onPressed == null
+          ? null
+          : const [
+              BoxShadow(
+                color: Color(0x331E7A5A),
+                offset: Offset(0, 6),
+                blurRadius: 16,
+              ),
+            ],
+    ),
     child: FilledButton(
       style: FilledButton.styleFrom(
         backgroundColor: JColors.accent,
@@ -381,7 +397,7 @@ class AlwaButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               spacing: 10,
               children: [
-                Icon(icon, size: 18),
+                Icon(icon, size: height > 50 ? 20 : 18),
                 Flexible(
                   child: Text(
                     label,
@@ -408,10 +424,14 @@ class AlwaGhostButton extends StatelessWidget {
     required this.label,
     required this.icon,
     this.onPressed,
+    this.filled = true,
   });
   final String label;
   final IconData icon;
   final VoidCallback? onPressed;
+
+  /// White fill (My listings); off for "Show more", as designed.
+  final bool filled;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -419,10 +439,10 @@ class AlwaGhostButton extends StatelessWidget {
     width: double.infinity,
     child: OutlinedButton(
       style: OutlinedButton.styleFrom(
-        backgroundColor: JColors.card,
+        backgroundColor: filled ? JColors.card : Colors.transparent,
         foregroundColor: JColors.ink,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        side: const BorderSide(color: JColors.line),
+        side: const BorderSide(color: JColors.line, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       onPressed: onPressed,

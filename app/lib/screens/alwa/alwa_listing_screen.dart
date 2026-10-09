@@ -229,6 +229,7 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
             AlwaCard(
               radius: 16,
               border: JColors.accent,
+              borderWidth: 1.5,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 14,
