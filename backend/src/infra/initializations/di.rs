@@ -309,6 +309,43 @@ pub async fn di_init(
         ),
     );
 
+    let plan = {
+        use crate::features::plans::{
+            app::{
+                PlanFarms, PlanRepository,
+                use_cases::{
+                    ListPlanCoverageUseCase, RecordFarmPlanUseCase, ViewFarmPlanUseCase,
+                    ViewStoredFarmPlanUseCase,
+                },
+            },
+            infra::{FarmsFeaturePlanFarms, PlanPostgresRepository},
+        };
+
+        let plan_repository: Arc<dyn PlanRepository> =
+            Arc::new(PlanPostgresRepository::new(db_context.conn_clone()));
+        let plan_farms: Arc<dyn PlanFarms> =
+            Arc::new(FarmsFeaturePlanFarms::new(farm_repository.clone()));
+
+        crate::shared::PlanFeature {
+            view_farm_plan_use_case: Arc::new(ViewFarmPlanUseCase::new(
+                plan_repository.clone(),
+                plan_farms.clone(),
+            )),
+            record_farm_plan_use_case: Arc::new(RecordFarmPlanUseCase::new(
+                plan_repository.clone(),
+                plan_farms.clone(),
+            )),
+            list_plan_coverage_use_case: Arc::new(ListPlanCoverageUseCase::new(
+                plan_repository.clone(),
+                plan_farms.clone(),
+            )),
+            view_stored_farm_plan_use_case: Arc::new(ViewStoredFarmPlanUseCase::new(
+                plan_repository,
+                plan_farms,
+            )),
+        }
+    };
+
     let insight = InsightFeature {
         view_farm_insights_use_case: Arc::new(ViewFarmInsightsUseCase::new(
             insight_repository.clone(),
@@ -904,5 +941,6 @@ pub async fn di_init(
         app_config,
         crop,
         history,
+        plan,
     })
 }

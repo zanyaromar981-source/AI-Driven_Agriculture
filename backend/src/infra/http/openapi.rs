@@ -295,7 +295,11 @@ impl Modify for BearerAuth {
         crate::features::history::web::handlers::get_history_coverage,
         crate::features::history::web::handlers::put_farm_history,
         crate::features::history::web::handlers::get_dashboard_farm_history,
-        crate::features::history::web::handlers::delete_dashboard_farm_history
+        crate::features::history::web::handlers::delete_dashboard_farm_history,
+        crate::features::plans::web::handlers::get_farm_plan,
+        crate::features::plans::web::handlers::get_plan_coverage,
+        crate::features::plans::web::handlers::put_farm_plan,
+        crate::features::plans::web::handlers::get_dashboard_farm_plan
     ),
     components(schemas(
         CreateFarmParams,
@@ -576,6 +580,19 @@ impl Modify for BearerAuth {
         crate::features::history::web::HistoryCoverageResponse,
         crate::features::history::web::HistoryFarmCoverageResponse,
         crate::features::history::web::HistoryMetricCoverageResponse,
+        crate::features::plans::web::PlanAlertType,
+        crate::features::plans::web::PlanAlertLevel,
+        crate::features::plans::web::PlanDecisionCode,
+        crate::features::plans::web::PlanAlertParams,
+        crate::features::plans::web::PlanDecisionParams,
+        crate::features::plans::web::RecordFarmPlanParams,
+        crate::features::plans::web::PlanAlertResponse,
+        crate::features::plans::web::PlanDecisionResponse,
+        crate::features::plans::web::FarmPlanResponse,
+        crate::features::plans::web::PlanCoverageFarmResponse,
+        crate::features::plans::web::PlanCoverageResponse,
+        crate::features::plans::web::PlanDashboardStoredResponse,
+        crate::features::plans::web::PlanDashboardResponse,
         ErrorBody
     )),
     modifiers(&BearerAuth),
@@ -598,7 +615,8 @@ impl Modify for BearerAuth {
         (name = "messages", description = "The inbox: messages farmers send to the Ministry, with photos, and the replies"),
         (name = "app", description = "App control: what the farmer app reads at start, and which versions are in use"),
         (name = "crops", description = "The crop list staff keep: the codes farms, listings and prices may use, with names and colours"),
-        (name = "history", description = "Ten years of monthly history per farm: rain, temperature, evapotranspiration, soil moisture, greenness and groundwater")
+        (name = "history", description = "Ten years of monthly history per farm: rain, temperature, evapotranspiration, soil moisture, greenness and groundwater"),
+        (name = "plans", description = "This week's plan: the next 10 days of weather turned into farm work, pushed per farm by the plan job")
     ),
     info(
         title = "farm-doctor-api",

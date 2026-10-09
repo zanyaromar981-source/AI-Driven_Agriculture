@@ -111,6 +111,8 @@ What to know:
 | Call | What comes back | State today |
 |---|---|---|
 | `GET /v1/farms/{id}/status` | the farm from space: picture date, greenness, per-cell levels | a placeholder: every measured field is `null`, `cells` is empty, `crops` lists the real crop plots with `level: "none"`. There is no store for satellite readings yet. |
+| `GET /v1/farms/{id}/plan` | **the 10-day plan**: the JSON of `BACKEND.md` 2.4 exactly (`from`, `days`, `rain_mm`, `tmin`, `tmax`, `alerts`, `decisions`, `source`, `issued`) | built; a job makes a plan for every farm every 6 hours, and for a new farm within about 10 minutes. `404 plan_not_ready` until the first one, `404 plan_stale` if the newest is over 2 days old: show "10-day plan coming soon" for both. Days already past are left out. |
+| `GET /v1/farms/{id}/history?metrics=&from=&to=` | **ten years, month by month**: rain, highest and lowest temperature, evaporation, soil moisture, greenness | built; see "History" below |
 | `GET /v1/farms/{id}/insights` | what is known about the farm, topic by topic | groundwater is filled daily; other topics wait for the per-farm analysis job |
 | `GET /v1/farms/{id}/brief` | the nightly brief for the farm's district | filled each night; `brief` is `null` for a district with none yet |
 | `POST /v1/farms/{id}/ask` | Ask the Doctor | section 6 |
@@ -120,6 +122,10 @@ What to know:
 The `groundwater` topic is **not** a well depth. It is a percentile (50 is normal for the time of year; 10 means only 10% of past years were this dry) from a NASA model for a square of about 25 km, so every farm in that square gets the same number, and it cannot see local pumping. It comes with `confidence: "unsure"`. Say "the wider area", never "your well". Its measure codes are `groundwater_percentile`, `root_zone_moisture_percentile` and `surface_moisture_percentile`.
 
 **Brief.** `{"farm_id", "zone_slug", "brief"}`. A brief is `{"day", "scope", "headline_en", "headline_ku", "summary_en", "summary_ku", "points": [{"level": "info|watch|alarm", "text_en", "text_ku"}], "sources": [{"title", "url"}], "author", "generated_at"}`. It is written by an AI agent from our stored numbers and a web search. Show the `sources`, and treat it as a draft, not as checked advice.
+
+**Plan.** The forecast is Open-Meteo at the farm's centre; the rules are those of `farm_doctor/weather_planner.py`, with their thresholds read from the website's Rules page (so changing `frost_c`, `heat_c`, `sowing_rain_mm`, `dust_pm10` and the others there changes the next plan). Honest limits: **`ku` is the same text as `en` for now**, because the repo has no Sorani for these sentences (build the Sorani in the app from `type` and `code`, or give us the sentences); wheat is assumed for every farm; the alert types `heavy_rain`, `dry_spell`, `spray_window` and `sunn_pest` are never raised because the reference rules never raise them.
+
+**History.** `GET /v1/farms/{id}/history` answers `{"farm_id", "series": [{"metric", "unit", "source", "as_of", "months": [{"month": "2016-10", "value": 13.4}], "years": [{"year": 2025, "value": 558.1, "months": 12}], "normal": [12 numbers, January first]}]}`. Metrics: `rain_mm`, `temp_max_c`, `temp_min_c`, `et0_mm`, `soil_moisture`, `greenness` (NDVI 0 to 1). Default: every metric, the last 120 months; `metrics` is a comma list, `from` and `to` are `YYYY-MM`, a window over 120 months is `422 bad_window`. A metric with nothing stored yet is simply absent: show "collecting". A new farm has the weather metrics within about 10 minutes; greenness takes up to half an hour. Always show `source`: rain comes from a 25 km grid and temperature from a 9 km grid, far larger than a farm.
 
 ### Messages to the Ministry (inbox)
 
@@ -177,12 +183,12 @@ Errors, in the order they are checked:
 
 | Status | Code | When |
 |---|---|---|
-| 404 | `not_found` | The id is not a number. |
+| 404 | `not_found`, `plan_not_ready`, `plan_stale` | The id is not a number. |
 | 400 | `bad_request` | The body is not a multipart form, `cell` is not the JSON above, or a text field is not UTF-8. |
 | 422 | `bad_photo` | A seventh photo, a photo over 4 MB, a type other than JPEG or PNG, or bytes that are not the declared type. |
 | 422 | `empty_question` | No question and no photo. |
 | 422 | `invalid` | A question over 1000 characters, or `lang` other than `ku` or `en`. |
-| 404 | `not_found` | The farm is another phone's or does not exist (the same answer; the Doctor is not asked). |
+| 404 | `not_found`, `plan_not_ready`, `plan_stale` | The farm is another phone's or does not exist (the same answer; the Doctor is not asked). |
 | 502 | `doctor_failed` | The Doctor service is down, took over 90 s, failed, or answered something that cannot be used. |
 | 503 | `doctor_not_ready` | The Doctor service is up but cannot answer yet (it has no AI key). Try later. |
 
@@ -302,7 +308,7 @@ The same rules everywhere:
 - 15 rules are seeded with the numbers in the code today: nine weather planner rules (frost 0, hard frost -2, heat 31, heavy rain 12 mm, sowing rain 20 mm, rust weather 24 h, spray window 6 h, sunn pest 84 degree-days, dust PM10 150), four dryness band edges (25, 45, 60, 80), and two Field Eye rules.
 - **Field Eye differs from the list in `BACKEND.md`.** `farm_doctor/field_eye.py` has no "watch below 85%" or "alarm below 70% of normal", and its cloud limit is 60%, not 30%. What it has was seeded: `field_eye_max_cloud_pct` 60 and `field_eye_weak_pixel_pct` 70. Tell us if the 85 / 70 / 30 numbers live somewhere else.
 - Sorani names and meanings of the rules are null: they need a native speaker. Show the English until then.
-- **Honest limit: changing a rule changes nothing yet.** The weather planner, the dryness bands and Field Eye still use their built-in numbers. Say so on the Rules page, or hide the save button, until this line is removed.
+- **What a rule change does today:** the nine weather planner rules are read by the 10-day plan job, so a change shows in each farm's next plan (within 6 hours). The four dryness band edges and the two Field Eye rules are not read by anything yet: say so next to them.
 
 ### App control (`app`)
 
@@ -343,7 +349,8 @@ Be honest on screen about this.
 | App settings | the starting values | section 4 |
 | Messages | empty until a farmer sends one | the app |
 | Farm status from space | placeholder | no store yet |
-| Per-farm history (ten years of rain, heat, greenness) | not on the server yet | being built; section 14 |
+| 10-day plan per farm | filled for every farm every 6 hours | Open-Meteo forecast and the weather planner rules |
+| Per-farm history (ten years, monthly) | filled for every farm | ERA5 through Open-Meteo, MODIS greenness |
 
 ## 12. Things that will trip you up
 
@@ -366,9 +373,9 @@ Be honest on screen about this.
 | 400 | `bad_request` (the body or a parameter cannot be read) |
 | 401 | `unauthorized`, `bad_code`, `bad_credentials` |
 | 403 | `forbidden`, `cannot_grant`, `blocked` (a blocked farmer), `wrong_password` |
-| 404 | `not_found` |
+| 404 | `not_found`, `plan_not_ready`, `plan_stale` |
 | 409 | `already_exists`, `crop_in_use`, `listing_not_open`, `offer_not_open`, `listing_has_deal`, `market_in_use`, `system_role`, `role_in_use`, `role_name_taken`, `email_taken`, `own_account`, `last_owner` |
-| 422 | `invalid` (with `field` when one field is at fault), `bad_polygon`, `farm_too_large`, `too_many_farms`, `too_many_listings`, `own_listing`, `offer_too_large`, `bad_closes_at`, `bad_month`, `bad_range`, `bad_reason`, `empty_question`, `bad_photo`, `no_reply`, `missing_text`, `unknown_crop`, `reserved_code`, `unknown_role`, and other `bad_...` codes that name the field |
+| 422 | `invalid` (with `field` when one field is at fault), `bad_polygon`, `farm_too_large`, `too_many_farms`, `too_many_listings`, `own_listing`, `offer_too_large`, `bad_closes_at`, `bad_month`, `bad_range`, `bad_window`, `bad_reason`, `empty_question`, `bad_photo`, `no_reply`, `missing_text`, `unknown_crop`, `reserved_code`, `unknown_role`, and other `bad_...` codes that name the field |
 | 426 | `update_required` (the app is older than `min_version`) |
 | 429 | `rate_limited` (with `retry_after_s`) |
 | 500 | `server_error` (the detail is always "An unexpected error occurred") |
@@ -381,13 +388,11 @@ These answer `404` today. Build the screens so that a `404` or an empty answer s
 
 | Thing | State |
 |---|---|
-| Per-farm history: ten years of monthly rain, heat, evaporation, soil moisture and greenness (`GET /v1/farms/{id}/history`) | being built now |
 | The simpler Alwa of `BACKEND.md` 2.14 (GPS point, phones shown, nearest first, mark as sold) | next |
-| `GET /v1/farms/{id}/plan`, the 10-day weather plan | not started |
 | Real data in `GET /v1/farms/{id}/status` | not started; needs a satellite job and a store |
 | `DELETE /v1/account`, alerts, `POST /v1/devices` (push), reports | not started |
 | Protected mode for phones and farm positions (`BACKEND.md` 2.11) | not started; the website team said it is not needed for now |
-| Rules read by the jobs; limits and feature switches enforced by the server | not started |
+| Dryness and Field Eye rules read by their jobs; limits and feature switches enforced by the server | not started |
 
 ## 15. Open questions for the frontend
 

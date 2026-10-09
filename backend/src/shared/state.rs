@@ -328,6 +328,17 @@ pub struct HistoryFeature {
 }
 
 #[derive(Clone)]
+pub struct PlanFeature {
+    pub view_farm_plan_use_case: Arc<crate::features::plans::app::use_cases::ViewFarmPlanUseCase>,
+    pub record_farm_plan_use_case:
+        Arc<crate::features::plans::app::use_cases::RecordFarmPlanUseCase>,
+    pub list_plan_coverage_use_case:
+        Arc<crate::features::plans::app::use_cases::ListPlanCoverageUseCase>,
+    pub view_stored_farm_plan_use_case:
+        Arc<crate::features::plans::app::use_cases::ViewStoredFarmPlanUseCase>,
+}
+
+#[derive(Clone)]
 pub struct Features {
     pub farm: FarmFeature,
     pub farmer: FarmerFeature,
@@ -348,6 +359,7 @@ pub struct Features {
     pub app_config: AppConfigFeature,
     pub crop: CropFeature,
     pub history: HistoryFeature,
+    pub plan: PlanFeature,
 }
 
 #[derive(Clone)]

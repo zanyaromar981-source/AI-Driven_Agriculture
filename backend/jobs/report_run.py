@@ -5,7 +5,8 @@ Usage:  report_run.py <job> <command> [arguments...]
 Example: report_run.py dryness /usr/bin/python3 region_runner.py
 
 <job> is one of the jobs the backend knows (GET /v1/dashboard/jobs):
-dryness, fires, groundwater, dams, briefs, farm_analysis.
+dryness, fires, groundwater, dams, briefs, farm_analysis, plans. (farm_plan.py
+reports its own `plans` runs and is not started through this wrapper.)
 
 What it does:
   1. Tells the backend the run started (PUT /v1/ingest/jobs/<job>/runs/<start>).

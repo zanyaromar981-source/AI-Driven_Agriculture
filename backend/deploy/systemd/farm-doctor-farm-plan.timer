@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the Farm Doctor farm plan every 10 minutes (it works only on farms whose plan is missing or over 6 hours old)
+
+[Timer]
+OnCalendar=*-*-* *:05/10:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

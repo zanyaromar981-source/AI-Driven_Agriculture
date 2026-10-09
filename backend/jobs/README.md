@@ -79,7 +79,7 @@ The dashboard's job status page (`GET /v1/dashboard/jobs`) shows what each job r
 python3 report_run.py dryness /usr/bin/python3 region_runner.py
 ```
 
-Job names: `dryness` (region runner), `fires`, `groundwater`, `briefs`, `dams`, `farm_analysis`. If the backend cannot be reached the job still runs and keeps its own exit code. A job run by hand without the wrapper is not shown on the status page.
+Job names: `dryness` (region runner), `fires`, `groundwater`, `briefs`, `dams`, `farm_analysis`. The job `plans` (`farm_plan.py`) is the one exception: it reports itself, see its section. If the backend cannot be reached the job still runs and keeps its own exit code. A job run by hand without the wrapper is not shown on the status page.
 
 ## dams_runner.py
 
@@ -144,3 +144,43 @@ FARM_HISTORY_SOURCES=weather python3 farm_history.py   # leave a source out
 ```
 
 Groundwater is off by default, because its first fill is slow: switch it on with `FARM_HISTORY_SOURCES=weather,greenness,groundwater`. It needs `rasterio` (the same venv as `groundwater_runner.py`); without it the job logs one line and runs the other two sources. On the server it runs from `farm-doctor-farm-history.timer`. See its last runs with `journalctl -u farm-doctor-farm-history -n 100`.
+
+## farm_plan.py
+
+"This week's plan" in the farmer app (`GET /v1/farms/{id}/plan`): the next 10 days of weather at each farm, turned into farm work. Source: Open-Meteo forecast (free, no key; daily rain, lowest and highest temperature, and hourly temperature, humidity, rain and wind), the Open-Meteo air-quality forecast (PM10, 5 days) and, for sunn pest, the Open-Meteo archive (daily mean temperature since 1 January).
+
+- **Measured by nobody:** every number is a forecast for one model cell of several km, not a reading at the farm. `rain_mm`, `tmin` and `tmax` are pushed as the weather service gave them; a day it gave no number for stays `null`.
+- **Derived:** the alerts and decisions. They are the rules of `farm_doctor/weather_planner.py`, in the shape and with the English sentences of `planFromWeather` in the app (`app/lib/api/fake_api.dart`): sowing rain (October to December), urea before rain (January to March), spray windows, frost and hard frost, heat (April and May), rust weather, sunn pest, dust.
+- **Sorani:** the app has no Sorani sentence for any of these yet, so `ku` is the English sentence. Nobody here writes Sorani for farmers without a speaker checking it.
+- **Crops are not looked at.** Like `weather_planner.py` the job assumes winter wheat: a farm with only vegetables still gets the sowing, urea and rust lines.
+- **Not in the plan:** soil moisture, evapotranspiration and river flow, which `weather_planner.py` reports but turns into no decision; and the alert types `heavy_rain`, `dry_spell`, `spray_window` and `sunn_pest`, which no rule in either reference raises.
+- **Never more than 10 days.** The backend refuses an eleventh.
+
+**The numbers come from the dashboard's Rules page.** Each run starts with `GET /v1/ingest/rules?used_by=weather_planner`; a rule that is missing, or a backend that does not answer that call, falls back to the number built into the job.
+
+| Rule | What it changes |
+|---|---|
+| `frost_c` | a night at or below it gets a `frost` alert |
+| `hard_frost_c` | a night at or below it makes the alert an `alarm` and adds `frost_check` |
+| `heat_c` | April and May: a day at or above it gets a `heat` alert and `heat_check` |
+| `heavy_rain_mm` | January to March: the first day with this much rain gets `urea_rain` and `urea_go`; none means `urea_hold` |
+| `sowing_rain_mm` | October to December: three days with this much rain together give `sowing_rain` and `sow_go`; none means `sow_wait` |
+| `rust_weather_hours` | this many cool wet hours make rust weather "high" (an `alarm`); "some" starts at 8 hours, built in |
+| `spray_window_hours` | how many good daytime hours in a row make a day a spray day (`spray_ok`) |
+| `sunn_pest_degree_days` | from this sum of degree-days `count_sunn_pest` is shown, until 223 (built in) |
+| `dust_pm10` | a PM10 peak at or above it gives a `dust` alert and `dust_delay` |
+
+**How it runs.** The timer fires every 10 minutes. The job asks `GET /v1/ingest/farms/plans/coverage` and works only on farms whose plan is missing or was issued more than 6 hours ago, so a new farm has its plan within minutes and a run with nothing to do costs that one call. A lock file (`farm_plan.lock` in the cache folder) makes a run leave at once while another is still going. Farm centres are grouped on a grid of 0.05 degrees (about 5 km); one forecast is fetched per group, at the middle of the farms in it, 40 groups per Open-Meteo call. In the mountains two farms of one group can differ by hundreds of metres in height, so their real nights differ by more than the one forecast says. The degree-days already counted are kept per group in `farm_plan_degree_days.json`, so the archive is asked only for the days since, and not at all once a group is past 223 for the year.
+
+One farm that fails does not stop the others. The last line is `done: N pushed, N fresh, N failed`, and the job exits 1 if any farm failed; those farms are still due and are tried again 10 minutes later.
+
+**Reporting.** A wrapper report every 10 minutes would bury the run history in runs that did nothing, so this job is not started through `report_run.py`. It reports itself under the job `plans`: every run that pushed or failed, and one quiet run every 6 hours so a healthy job with no farms due is not shown as late.
+
+```sh
+INGEST__SERVICE_KEY=... FARM_DOCTOR_API=http://localhost:8790/v1 python3 farm_plan.py
+python3 farm_plan.py --dry-run             # fetches and prints the plans, pushes and reports nothing
+python3 farm_plan.py --force               # every farm, however fresh its plan is (after a rule change)
+python3 farm_plan.py --keep-raw /tmp/raw   # also saves the raw forecasts, to check a plan by hand
+```
+
+On the server it runs from `farm-doctor-farm-plan.timer`. See its last runs with `journalctl -u farm-doctor-farm-plan -n 50`.

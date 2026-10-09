@@ -12,6 +12,7 @@ pub mod insights;
 pub mod jobs;
 pub mod messages;
 pub mod outlooks;
+pub mod plans;
 pub mod rules;
 pub mod staff;
 pub mod versions;

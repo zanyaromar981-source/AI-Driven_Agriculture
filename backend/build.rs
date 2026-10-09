@@ -124,6 +124,10 @@ fn main() {
                     "farm_history,farm_history_series",
                     "src/features/history/infra/persistence/postgres/entities",
                 ),
+                (
+                    "farm_plans",
+                    "src/features/plans/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

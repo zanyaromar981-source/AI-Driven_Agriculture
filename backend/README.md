@@ -76,6 +76,7 @@ cargo test
 | `farmers` | `/v1/auth/otp/send`, `/v1/auth/otp/verify`, `/v1/me` | sign in, profile |
 | `farms` | `/v1/farms`, `/v1/farms/{id}`, `/{id}/cells`, `/{id}/status` | a farmer's farms |
 | `insights` | `/v1/farms/{id}/insights` | water, groundwater, soil, rain per farm |
+| `plans` | `/v1/farms/{id}/plan` | this week's plan: 10 days of weather turned into farm work, pushed by `jobs/farm_plan.py` |
 | `doctor` | `/v1/farms/{id}/ask` | Ask the Doctor: passes the farmer's question to the local Doctor service |
 | `zones` | `/v1/region/overview`, `/v1/zones/{slug}`, `/v1/region/compare` | dashboard: 33 districts |
 | `dams` | `/v1/dams`, `/v1/dams/{slug}/history` | dashboard: dam levels |

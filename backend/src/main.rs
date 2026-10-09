@@ -54,6 +54,10 @@ use farm_doctor_api::{
             dashboard_routes as outlook_dashboard_routes, ingest_routes as outlook_ingest_routes,
             public_routes as outlook_public_routes,
         },
+        plans::web::{
+            dashboard_routes as plan_dashboard_routes, ingest_routes as plan_ingest_routes,
+            routes as plan_routes,
+        },
         rules::web::{
             dashboard_routes as rule_dashboard_routes, ingest_routes as rule_ingest_routes,
         },
@@ -144,6 +148,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(farm_routes())
                 .merge(farmer_routes())
                 .merge(insight_routes())
+                .merge(plan_routes())
                 .merge(alwa_routes())
                 .merge(brief_routes())
                 .merge(doctor_routes())
@@ -172,6 +177,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     Router::new()
                         .merge(fire_ingest_routes())
                         .merge(insight_ingest_routes())
+                        .merge(plan_ingest_routes())
                         .merge(zone_ingest_routes())
                         .merge(dam_ingest_routes())
                         .merge(outlook_ingest_routes())
@@ -200,6 +206,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         .merge(job_dashboard_routes())
                         .merge(message_dashboard_routes())
                         .merge(outlook_dashboard_routes())
+                        .merge(plan_dashboard_routes())
                         .merge(rule_dashboard_routes())
                         .merge(version_dashboard_routes())
                         .merge(water_dashboard_routes())
