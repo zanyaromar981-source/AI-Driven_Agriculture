@@ -31,14 +31,9 @@ impl MigrationTrait for Migration {
                         ])),
                     )
                     .col(text(Messages::Text))
-                    .col(
-                        string_len(Messages::State, 20)
-                            .default("new")
-                            .check(
-                                Expr::col(Messages::State)
-                                    .is_in(["new", "read", "replied", "closed"]),
-                            ),
-                    )
+                    .col(string_len(Messages::State, 20).default("new").check(
+                        Expr::col(Messages::State).is_in(["new", "read", "replied", "closed"]),
+                    ))
                     .col(text_null(Messages::ReplyTextKu))
                     .col(text_null(Messages::ReplyTextEn))
                     .col(integer_null(Messages::RepliedBy))

@@ -14,9 +14,9 @@ use crate::{
             },
         },
         domain::{
-            self, Deal, DealsSummary, DisplayName, GeoPoint, HistoryDays, IdempotencyKey, Listing,
-            ListingCard, ListingDraft, Market, MarketSlug, Note, Offer, OfferDraft, PlacedOffer,
-            Price, PricePerKg, PriceSource, QuantityKg, ZoneSlug,
+            self, AlwaError, Deal, DealsSummary, DisplayName, GeoPoint, HistoryDays,
+            IdempotencyKey, Listing, ListingCard, ListingDraft, Market, MarketSlug, Note, Offer,
+            OfferDraft, PlacedOffer, Price, PricePerKg, PriceSource, QuantityKg, ZoneSlug,
         },
     },
     shared::{DomainError, Phone},
@@ -71,6 +71,77 @@ impl From<domain::Pickup> for AlwaPickup {
         match value {
             domain::Pickup::Farm => AlwaPickup::Farm,
             domain::Pickup::Alwa => AlwaPickup::Alwa,
+        }
+    }
+}
+
+/// The shelf of the Marketplace a product stands on.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum AlwaProductGroup {
+    Crops,
+    FishMeatEggs,
+    HoneyDairy,
+    Animals,
+    NutsDried,
+}
+
+impl From<AlwaProductGroup> for domain::ProductGroup {
+    fn from(value: AlwaProductGroup) -> Self {
+        match value {
+            AlwaProductGroup::Crops => domain::ProductGroup::Crops,
+            AlwaProductGroup::FishMeatEggs => domain::ProductGroup::FishMeatEggs,
+            AlwaProductGroup::HoneyDairy => domain::ProductGroup::HoneyDairy,
+            AlwaProductGroup::Animals => domain::ProductGroup::Animals,
+            AlwaProductGroup::NutsDried => domain::ProductGroup::NutsDried,
+        }
+    }
+}
+
+impl From<domain::ProductGroup> for AlwaProductGroup {
+    fn from(value: domain::ProductGroup) -> Self {
+        match value {
+            domain::ProductGroup::Crops => AlwaProductGroup::Crops,
+            domain::ProductGroup::FishMeatEggs => AlwaProductGroup::FishMeatEggs,
+            domain::ProductGroup::HoneyDairy => AlwaProductGroup::HoneyDairy,
+            domain::ProductGroup::Animals => AlwaProductGroup::Animals,
+            domain::ProductGroup::NutsDried => AlwaProductGroup::NutsDried,
+        }
+    }
+}
+
+/// What one of a product is: a kilogram, a tray of 30 eggs, a litre, one
+/// animal.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
+pub enum AlwaUnit {
+    #[serde(rename = "kg")]
+    Kg,
+    #[serde(rename = "tray_30")]
+    Tray30,
+    #[serde(rename = "litre")]
+    Litre,
+    #[serde(rename = "head")]
+    Head,
+}
+
+impl From<AlwaUnit> for domain::Unit {
+    fn from(value: AlwaUnit) -> Self {
+        match value {
+            AlwaUnit::Kg => domain::Unit::Kg,
+            AlwaUnit::Tray30 => domain::Unit::Tray30,
+            AlwaUnit::Litre => domain::Unit::Litre,
+            AlwaUnit::Head => domain::Unit::Head,
+        }
+    }
+}
+
+impl From<domain::Unit> for AlwaUnit {
+    fn from(value: domain::Unit) -> Self {
+        match value {
+            domain::Unit::Kg => AlwaUnit::Kg,
+            domain::Unit::Tray30 => AlwaUnit::Tray30,
+            domain::Unit::Litre => AlwaUnit::Litre,
+            domain::Unit::Head => AlwaUnit::Head,
         }
     }
 }
@@ -210,6 +281,51 @@ pub(super) fn given(value: Option<String>) -> Option<String> {
     value.filter(|value| !value.is_empty())
 }
 
+/// A value of a body or a query that cannot be used, named for the app.
+fn invalid(field: &'static str, detail: impl Into<String>) -> AppError {
+    AlwaError::InvalidField {
+        field,
+        detail: detail.into(),
+    }
+    .into()
+}
+
+/// One value that may arrive under its new name, its old name or both.
+/// Sent under both, the two must agree.
+fn one_of<T: PartialEq>(
+    new: Option<T>,
+    new_name: &'static str,
+    old: Option<T>,
+    old_name: &'static str,
+) -> Result<Option<T>, AppError> {
+    match (new, old) {
+        (Some(new), Some(old)) if new != old => Err(invalid(
+            new_name,
+            format!("`{new_name}` and `{old_name}` say different things: send one of them"),
+        )),
+        (new, old) => Ok(new.or(old)),
+    }
+}
+
+/// How the old kg fields of a listing read: filled only for the kilogram.
+pub(super) struct KgFields {
+    pub crop: Option<String>,
+    pub quantity_kg: Option<i32>,
+    pub asking_price_iqd_per_kg: Option<i32>,
+}
+
+impl From<&Listing> for KgFields {
+    fn from(listing: &Listing) -> Self {
+        let by_kg = listing.is_by_kg();
+
+        Self {
+            crop: by_kg.then(|| (*listing.crop()).into()),
+            quantity_kg: by_kg.then(|| listing.quantity().value()),
+            asking_price_iqd_per_kg: by_kg.then(|| listing.asking_price().value()),
+        }
+    }
+}
+
 pub(super) fn missing_id(what: &str) -> AppError {
     AppError::GlobalAppError(GlobalAppError::MissingValue(format!(
         "{what} is missing its id"
@@ -261,7 +377,13 @@ impl AlwaPricesQuery {
 
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaPriceResponse {
+    /// The product code. `crop` says the same and stays for older apps.
+    pub product: String,
     pub crop: String,
+    /// What the price is for one of.
+    pub unit: AlwaUnit,
+    /// For one `unit`, whatever the name says: for one kg only when the
+    /// unit is `kg`.
     pub price_iqd_per_kg: i32,
     /// A government-set price, as for wheat.
     pub fixed: bool,
@@ -273,7 +395,9 @@ pub struct AlwaPriceResponse {
 impl From<&PriceOnBoard> for AlwaPriceResponse {
     fn from(row: &PriceOnBoard) -> Self {
         Self {
+            product: (*row.price.crop()).into(),
             crop: (*row.price.crop()).into(),
+            unit: (*row.price.unit()).into(),
             price_iqd_per_kg: row.price.price().value(),
             fixed: *row.price.fixed(),
             change_pct_7d: row.change_pct_7d,
@@ -337,6 +461,8 @@ impl From<&Price> for AlwaPricePointResponse {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaPriceHistoryResponse {
     pub market: String,
+    /// The product code. `crop` says the same and stays for older apps.
+    pub product: String,
     pub crop: String,
     /// Oldest first. A day without a price is left out.
     pub history: Vec<AlwaPricePointResponse>,
@@ -373,8 +499,14 @@ impl RecordAlwaPriceParams {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaRecordedPriceResponse {
     pub market: String,
+    /// The product code. `crop` says the same and stays for older sites.
+    pub product: String,
     pub crop: String,
     pub day: NaiveDate,
+    /// What the price is for one of: the product's unit when the price
+    /// was entered.
+    pub unit: AlwaUnit,
+    /// For one `unit`, whatever the name says.
     pub price_iqd_per_kg: i32,
     pub fixed: bool,
     pub source: String,
@@ -391,8 +523,10 @@ impl From<(&Market, &Price)> for AlwaOnePriceResponse {
         Self {
             price: AlwaRecordedPriceResponse {
                 market: market.slug().into(),
+                product: (*price.crop()).into(),
                 crop: (*price.crop()).into(),
                 day: *price.day(),
+                unit: (*price.unit()).into(),
                 price_iqd_per_kg: price.price().value(),
                 fixed: *price.fixed(),
                 source: price.source().into(),
@@ -407,8 +541,12 @@ impl From<(&Market, &Price)> for AlwaOnePriceResponse {
 pub struct AlwaListingsQuery {
     /// Market slug, for example `sulaymaniyah`.
     pub market: Option<String>,
-    /// Crop code, for example `tomato`.
+    /// Product code, for example `tomato` or `eggs`.
+    pub product: Option<String>,
+    /// The older name of `product`. Sent with it, the two must agree.
     pub crop: Option<String>,
+    /// `crops`, `fish_meat_eggs`, `honey_dairy`, `animals` or `nuts_dried`.
+    pub group: Option<String>,
     /// `open` (the default), `sold`, `closed` or `cancelled`.
     pub status: Option<String>,
     /// Where the reader stands, WGS84. With `lon`, the listings come
@@ -438,9 +576,13 @@ impl AlwaListingsQuery {
     ) -> Result<BrowseListingsInput, AppError> {
         Ok(BrowseListingsInput {
             market: given(self.market).map(MarketSlug::new).transpose()?,
-            crop: given(self.crop)
+            crop: one_of(given(self.product), "product", given(self.crop), "crop")?
                 .as_deref()
                 .map(domain::Crop::new)
+                .transpose()?,
+            group: given(self.group)
+                .as_deref()
+                .map(domain::ProductGroup::try_from)
                 .transpose()?,
             status: given(self.status)
                 .as_deref()
@@ -461,9 +603,22 @@ impl AlwaListingsQuery {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaListingSummaryResponse {
     pub id: String,
-    pub crop: String,
-    pub quantity_kg: i32,
-    pub asking_price_iqd_per_kg: i32,
+    /// The product code, from `GET /v1/products`.
+    pub product: String,
+    pub group: AlwaProductGroup,
+    /// What `quantity` counts and what `asking_price_iqd` is for one of,
+    /// as the product had it when the listing was posted.
+    pub unit: AlwaUnit,
+    /// A whole number of `unit`.
+    pub quantity: i32,
+    /// For one `unit`.
+    pub asking_price_iqd: i32,
+    /// The same as `product`, `quantity` and `asking_price_iqd` when the
+    /// unit is `kg`, for apps from before products had units; `null` for
+    /// every other unit.
+    pub crop: Option<String>,
+    pub quantity_kg: Option<i32>,
+    pub asking_price_iqd_per_kg: Option<i32>,
     pub grade: Option<AlwaGrade>,
     /// `null` when the seller did not say.
     pub pickup: Option<AlwaPickup>,
@@ -501,12 +656,18 @@ impl AlwaListingSummaryResponse {
     /// login, who is not shown the seller's phone.
     pub fn new(card: &ListingCard, viewer: Option<&Phone>) -> Result<Self, AppError> {
         let listing = card.listing();
+        let kg = KgFields::from(listing);
 
         Ok(Self {
             id: listing_id(listing)?,
-            crop: (*listing.crop()).into(),
-            quantity_kg: listing.quantity().value(),
-            asking_price_iqd_per_kg: listing.asking_price().value(),
+            product: (*listing.crop()).into(),
+            group: (*listing.group()).into(),
+            unit: (*listing.unit()).into(),
+            quantity: listing.quantity().value(),
+            asking_price_iqd: listing.asking_price().value(),
+            crop: kg.crop,
+            quantity_kg: kg.quantity_kg,
+            asking_price_iqd_per_kg: kg.asking_price_iqd_per_kg,
             grade: listing.grade().map(Into::into),
             pickup: listing.pickup().map(Into::into),
             market: listing.market().as_ref().map(Into::into),
@@ -611,10 +772,20 @@ impl TryFrom<&Offer> for AlwaOneOfferResponse {
 
 #[derive(Serialize, Deserialize, Validate, Debug, Clone, ToSchema)]
 pub struct PostAlwaListingParams {
-    pub crop: String,
-    /// 1 to 1,000,000 kg.
-    pub quantity_kg: i64,
-    pub asking_price_iqd_per_kg: i64,
+    /// A product code from `GET /v1/products`. The server reads the unit
+    /// from the product; it is never sent.
+    pub product: Option<String>,
+    /// A whole number of the product's unit: 1 to 1,000,000 kg, 10,000
+    /// trays of 30, 100,000 litres or 1,000 head.
+    pub quantity: Option<i64>,
+    /// For one unit.
+    pub asking_price_iqd: Option<i64>,
+    /// The older body, for a product sold by the kg only: `crop`,
+    /// `quantity_kg` and `asking_price_iqd_per_kg` in place of the three
+    /// above. A value sent under both names must be the same in both.
+    pub crop: Option<String>,
+    pub quantity_kg: Option<i64>,
+    pub asking_price_iqd_per_kg: Option<i64>,
     pub grade: Option<AlwaGrade>,
     pub pickup: Option<AlwaPickup>,
     /// Market slug, for example `sulaymaniyah`. Left out: the alwa nearest
@@ -637,14 +808,38 @@ pub struct PostAlwaListingParams {
 
 impl PostAlwaListingParams {
     pub fn into_input(self, idempotency_key: Option<String>) -> Result<PostListingInput, AppError> {
+        // Whoever speaks in kilograms means a product sold by the kg; the
+        // domain refuses the listing when the product is not.
+        let in_kg = self.quantity_kg.is_some() || self.asking_price_iqd_per_kg.is_some();
+
+        let product = one_of(self.product, "product", self.crop, "crop")?
+            .ok_or_else(|| invalid("product", "`product` is required"))?;
+        let (quantity_name, price_name) = if self.quantity.is_some() || !in_kg {
+            ("quantity", "asking_price_iqd")
+        } else {
+            ("quantity_kg", "asking_price_iqd_per_kg")
+        };
+        let quantity = one_of(self.quantity, "quantity", self.quantity_kg, "quantity_kg")?
+            .ok_or_else(|| invalid("quantity", "`quantity` is required"))?;
+        let asking_price = one_of(
+            self.asking_price_iqd,
+            "asking_price_iqd",
+            self.asking_price_iqd_per_kg,
+            "asking_price_iqd_per_kg",
+        )?
+        .ok_or_else(|| invalid("asking_price_iqd", "`asking_price_iqd` is required"))?;
+
         Ok(PostListingInput {
             idempotency_key: idempotency_key.map(IdempotencyKey::new).transpose()?,
             market: self.market.map(MarketSlug::new).transpose()?,
             draft: ListingDraft {
                 seller_name: self.seller_name.map(DisplayName::new).transpose()?,
-                crop: domain::Crop::new(&self.crop)?,
-                quantity: QuantityKg::new(self.quantity_kg)?,
-                asking_price: PricePerKg::new(self.asking_price_iqd_per_kg)?,
+                crop: domain::Crop::new(&product)?,
+                quantity: QuantityKg::new(quantity)
+                    .map_err(|error| invalid(quantity_name, error.to_string()))?,
+                asking_price: PricePerKg::new(asking_price)
+                    .map_err(|error| invalid(price_name, error.to_string()))?,
+                in_kg,
                 grade: self.grade.map(Into::into),
                 pickup: self.pickup.map(Into::into),
                 zone_slug: self.zone_slug.map(ZoneSlug::new).transpose()?,
@@ -661,9 +856,22 @@ impl PostAlwaListingParams {
 #[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
 pub struct AlwaListingResponse {
     pub id: String,
-    pub crop: String,
-    pub quantity_kg: i32,
-    pub asking_price_iqd_per_kg: i32,
+    /// The product code, from `GET /v1/products`.
+    pub product: String,
+    pub group: AlwaProductGroup,
+    /// What `quantity` counts and what `asking_price_iqd` is for one of,
+    /// as the product had it when the listing was posted.
+    pub unit: AlwaUnit,
+    /// A whole number of `unit`.
+    pub quantity: i32,
+    /// For one `unit`.
+    pub asking_price_iqd: i32,
+    /// The same as `product`, `quantity` and `asking_price_iqd` when the
+    /// unit is `kg`, for apps from before products had units; `null` for
+    /// every other unit.
+    pub crop: Option<String>,
+    pub quantity_kg: Option<i32>,
+    pub asking_price_iqd_per_kg: Option<i32>,
     pub grade: Option<AlwaGrade>,
     /// `null` when the seller did not say.
     pub pickup: Option<AlwaPickup>,
@@ -712,6 +920,11 @@ impl AlwaListingResponse {
 
         Ok(Self {
             id: summary.id,
+            product: summary.product,
+            group: summary.group,
+            unit: summary.unit,
+            quantity: summary.quantity,
+            asking_price_iqd: summary.asking_price_iqd,
             crop: summary.crop,
             quantity_kg: summary.quantity_kg,
             asking_price_iqd_per_kg: summary.asking_price_iqd_per_kg,
@@ -1024,6 +1237,206 @@ mod tests {
         assert!(!one.to_string().contains(BUYER));
     }
 
+    fn post(body: serde_json::Value) -> Result<PostListingInput, AppError> {
+        serde_json::from_value::<PostAlwaListingParams>(body)
+            .expect("params")
+            .into_input(None)
+    }
+
+    fn field_of(result: Result<PostListingInput, AppError>) -> &'static str {
+        match result {
+            Err(AppError::Alwa(AlwaError::InvalidField { field, .. })) => field,
+            Err(other) => panic!("not a field error: {other:?}"),
+            Ok(_) => panic!("accepted"),
+        }
+    }
+
+    fn closes_at() -> String {
+        (Utc::now() + chrono::Duration::days(2)).to_rfc3339()
+    }
+
+    #[test]
+    fn a_listing_is_posted_the_new_way_the_old_way_or_both_to_the_same_draft() {
+        let new = post(serde_json::json!({
+            "product": "tomato", "quantity": 4000, "asking_price_iqd": 750,
+            "closes_at": closes_at()
+        }))
+        .expect("new form");
+        let old = post(serde_json::json!({
+            "crop": "tomato", "quantity_kg": 4000, "asking_price_iqd_per_kg": 750,
+            "closes_at": closes_at()
+        }))
+        .expect("old form");
+        let both = post(serde_json::json!({
+            "product": "tomato", "quantity": 4000, "asking_price_iqd": 750,
+            "crop": "tomato", "quantity_kg": 4000, "asking_price_iqd_per_kg": 750,
+            "closes_at": closes_at()
+        }))
+        .expect("both forms");
+
+        for input in [&new, &old, &both] {
+            assert_eq!(input.draft.crop.as_str(), "tomato");
+            assert_eq!(input.draft.quantity.value(), 4_000);
+            assert_eq!(input.draft.asking_price.value(), 750);
+        }
+
+        assert!(!new.draft.in_kg);
+        assert!(old.draft.in_kg, "kilograms were named");
+        assert!(both.draft.in_kg, "kilograms were named");
+    }
+
+    #[test]
+    fn the_two_forms_sent_together_must_agree_value_by_value() {
+        let body = |name: &str, value: serde_json::Value| {
+            let mut body = serde_json::json!({
+                "product": "tomato", "quantity": 4000, "asking_price_iqd": 750,
+                "closes_at": closes_at()
+            });
+            body[name] = value;
+            body
+        };
+
+        assert_eq!(field_of(post(body("crop", "onion".into()))), "product");
+        assert_eq!(field_of(post(body("quantity_kg", 4001.into()))), "quantity");
+        assert_eq!(
+            field_of(post(body("asking_price_iqd_per_kg", 700.into()))),
+            "asking_price_iqd"
+        );
+    }
+
+    #[test]
+    fn a_missing_or_out_of_range_value_names_the_field_as_it_was_sent() {
+        let new = |quantity: i64, price: i64| {
+            post(serde_json::json!({
+                "product": "eggs", "quantity": quantity, "asking_price_iqd": price,
+                "closes_at": closes_at()
+            }))
+        };
+        let old = |quantity: i64, price: i64| {
+            post(serde_json::json!({
+                "crop": "tomato", "quantity_kg": quantity, "asking_price_iqd_per_kg": price,
+                "closes_at": closes_at()
+            }))
+        };
+
+        assert_eq!(field_of(new(0, 6_000)), "quantity");
+        assert_eq!(field_of(new(1_000_001, 6_000)), "quantity");
+        assert_eq!(field_of(new(12, 0)), "asking_price_iqd");
+        assert_eq!(field_of(old(0, 750)), "quantity_kg");
+        assert_eq!(field_of(old(10, 0)), "asking_price_iqd_per_kg");
+        assert_eq!(
+            field_of(post(
+                serde_json::json!({ "quantity": 1, "closes_at": closes_at() })
+            )),
+            "product"
+        );
+        assert_eq!(
+            field_of(post(
+                serde_json::json!({ "product": "eggs", "closes_at": closes_at() })
+            )),
+            "quantity"
+        );
+        assert_eq!(
+            field_of(post(serde_json::json!({
+                "product": "eggs", "quantity": 1, "closes_at": closes_at()
+            }))),
+            "asking_price_iqd"
+        );
+    }
+
+    #[test]
+    fn a_kg_listing_answers_in_both_forms_and_any_other_leaves_the_kg_fields_null() {
+        let by_kg = ListingCard::assemble(an_open_listing(7), &[], &[], Utc::now());
+        let body = json(&AlwaListingSummaryResponse::new(&by_kg, None).expect("body"));
+
+        assert_eq!(body["product"], "tomato");
+        assert_eq!(body["group"], "crops");
+        assert_eq!(body["unit"], "kg");
+        assert_eq!(body["quantity"], 500);
+        assert_eq!(body["asking_price_iqd"], 1_000);
+        assert_eq!(body["crop"], "tomato");
+        assert_eq!(body["quantity_kg"], 500);
+        assert_eq!(body["asking_price_iqd_per_kg"], 1_000);
+
+        let trays =
+            an_open_listing(8).sold_as(domain::ProductGroup::FishMeatEggs, domain::Unit::Tray30);
+        let card = ListingCard::assemble(trays, &[], &[], Utc::now());
+
+        for body in [
+            json(&AlwaListingSummaryResponse::new(&card, None).expect("body")),
+            json(&AlwaListingResponse::new(&card, None).expect("body")),
+        ] {
+            assert_eq!(body["group"], "fish_meat_eggs");
+            assert_eq!(body["unit"], "tray_30");
+            assert_eq!(body["quantity"], 500);
+            assert_eq!(body["asking_price_iqd"], 1_000);
+
+            // Present and null, not left out: an older app reads the keys.
+            for key in ["crop", "quantity_kg", "asking_price_iqd_per_kg"] {
+                assert!(
+                    body.as_object().expect("object").contains_key(key) && body[key].is_null(),
+                    "{key} must be null for a listing not sold by the kg"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_board_is_narrowed_by_group_and_by_product_under_either_name() {
+        let query = |product: Option<&str>, crop: Option<&str>, group: Option<&str>| {
+            AlwaListingsQuery {
+                market: None,
+                product: product.map(str::to_string),
+                group: group.map(str::to_string),
+                crop: crop.map(str::to_string),
+                status: None,
+                lat: None,
+                lon: None,
+            }
+            .into_input(crate::app::Pagination::new(1, 20))
+        };
+
+        let by_product = query(Some("eggs"), None, None).expect("input");
+        let by_crop = query(None, Some("eggs"), None).expect("input");
+        let by_both = query(Some("eggs"), Some("eggs"), Some("fish_meat_eggs")).expect("input");
+
+        assert_eq!(by_product.crop, Some(domain::Crop::of("eggs")));
+        assert_eq!(
+            by_crop.crop, by_product.crop,
+            "`crop` is an alias of `product`"
+        );
+        assert_eq!(by_both.crop, by_product.crop);
+        assert_eq!(by_both.group, Some(domain::ProductGroup::FishMeatEggs));
+        assert_eq!(by_product.group, None);
+
+        assert!(query(Some("eggs"), Some("milk"), None).is_err());
+        assert!(query(None, None, Some("fish")).is_err());
+        assert!(query(None, None, Some("")).expect("input").group.is_none());
+    }
+
+    #[test]
+    fn a_price_row_says_which_product_it_is_for_and_in_which_unit() {
+        let day = NaiveDate::from_ymd_opt(2026, 10, 8).expect("day");
+        let price = crate::features::alwa::app::testing::a_price(
+            1,
+            domain::Crop::of("eggs"),
+            day,
+            6_000,
+            false,
+        )
+        .per(domain::Unit::Tray30);
+
+        let row = json(&AlwaPriceResponse::from(&PriceOnBoard {
+            price,
+            change_pct_7d: None,
+        }));
+
+        assert_eq!(row["product"], "eggs");
+        assert_eq!(row["crop"], "eggs");
+        assert_eq!(row["unit"], "tray_30");
+        assert_eq!(row["price_iqd_per_kg"], 6_000);
+    }
+
     #[test]
     fn a_listing_with_no_market_pickup_or_grade_says_so_with_nulls() {
         let now = Utc::now();
@@ -1143,6 +1556,8 @@ mod tests {
         let query = |lat: Option<&str>, lon: Option<&str>| {
             AlwaListingsQuery {
                 market: None,
+                product: None,
+                group: None,
                 crop: None,
                 status: None,
                 lat: lat.map(str::to_string),
@@ -1243,6 +1658,8 @@ mod tests {
     fn an_empty_filter_is_a_filter_not_set() {
         let input = AlwaListingsQuery {
             market: Some(String::new()),
+            product: None,
+            group: None,
             crop: Some(String::new()),
             status: None,
             lat: None,
@@ -1260,6 +1677,8 @@ mod tests {
     fn an_unknown_crop_status_or_day_in_a_query_is_refused() {
         let query = |crop: Option<&str>, status: Option<&str>| AlwaListingsQuery {
             market: None,
+            product: None,
+            group: None,
             crop: crop.map(str::to_string),
             status: status.map(str::to_string),
             lat: None,
@@ -1279,6 +1698,8 @@ mod tests {
         let pagination = crate::app::Pagination::new(1, 20);
         let input = AlwaListingsQuery {
             market: None,
+            product: None,
+            group: None,
             crop: Some("rice".to_string()),
             status: None,
             lat: None,
@@ -1300,6 +1721,8 @@ mod tests {
         for bad in ["Tomato", "tomato 1", "t"] {
             let error = AlwaListingsQuery {
                 market: None,
+                product: None,
+                group: None,
                 crop: Some(bad.to_string()),
                 status: None,
                 lat: None,

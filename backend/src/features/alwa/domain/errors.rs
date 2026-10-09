@@ -38,6 +38,14 @@ pub enum AlwaError {
     #[error("`{0}` is not a crop that can be used: see the crop list")]
     UnknownCrop(String),
 
+    /// A value of the request that breaks a rule, named so the app can
+    /// point at it.
+    #[error("{detail}")]
+    InvalidField { field: &'static str, detail: String },
+
+    #[error("Offers are made by the kg, and this listing is sold by the {0}: call the seller")]
+    OffersOnlyByKg(String),
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

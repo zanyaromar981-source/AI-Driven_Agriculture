@@ -8,7 +8,8 @@ use crate::{
     features::crops::{
         app::{AppError, CropRepository, CropUsage},
         domain::{
-            Crop, CropCategory, CropCode, CropColor, CropDetails, CropName, CropSeason, SortOrder,
+            Crop, CropCategory, CropCode, CropColor, CropDetails, CropName, CropSeason,
+            ProductGroup, ProductUnit, SortOrder,
         },
     },
 };
@@ -16,6 +17,7 @@ use crate::{
 #[derive(Clone, Debug, PartialEq)]
 pub enum RepositoryCall {
     FindAll { only_active: bool },
+    FindByCode { code: String },
     Create { code: String },
     Update { code: String, details: CropDetails },
     Delete { code: String },
@@ -105,6 +107,13 @@ impl CropRepository for FakeCropRepository {
         });
 
         Ok(crops)
+    }
+
+    async fn find_by_code(&self, code: &CropCode) -> Result<Option<Crop>, AppError> {
+        self.record(RepositoryCall::FindByCode { code: code.into() });
+        self.guard()?;
+
+        Ok(self.stored(code.as_str()))
     }
 
     async fn create(&self, crop: &Crop) -> Result<Option<Crop>, AppError> {
@@ -235,6 +244,8 @@ pub fn details(name_en: &str, sort_order: i32, active: bool) -> CropDetails {
         name_en: CropName::new(name_en.to_string()).expect("name"),
         name_ku: None,
         color: CropColor::new("#e0b13a".to_string()).expect("colour"),
+        group: ProductGroup::Crops,
+        unit: ProductUnit::Kg,
         category: CropCategory::Cereal,
         season: CropSeason::Winter,
         yield_kg_per_dunam: None,
@@ -247,6 +258,25 @@ pub fn a_crop(code_value: &str, sort_order: i32, active: bool) -> Crop {
     Crop::rehydrate(
         code(code_value),
         details(code_value, sort_order, active),
+        at(8),
+        at(8),
+    )
+}
+
+/// A product that is not a crop, switched on.
+pub fn a_product(
+    code_value: &str,
+    sort_order: i32,
+    group: ProductGroup,
+    unit: ProductUnit,
+) -> Crop {
+    Crop::rehydrate(
+        code(code_value),
+        CropDetails {
+            group,
+            unit,
+            ..details(code_value, sort_order, true)
+        },
         at(8),
         at(8),
     )

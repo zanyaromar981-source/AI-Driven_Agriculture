@@ -43,8 +43,12 @@ impl CropDirectory for CropsFeatureCropDirectory {
             .await
             .map_err(|error| failed(&error))?;
 
+        // The list now also holds what the Marketplace sells besides
+        // crops. Only what grows in a field can be painted on one, so eggs
+        // or sheep are as unknown to a farm as a code nobody added.
         let codes = crops
             .iter()
+            .filter(|crop| crop.is_field_crop())
             .map(|crop| Crop::new(crop.code().as_str()))
             .collect::<Result<Vec<_>, _>>()
             .map_err(|error| failed(&error))?;
@@ -76,6 +80,28 @@ mod tests {
             repository.calls(),
             vec![RepositoryCall::FindAll { only_active: true }]
         );
+    }
+
+    #[tokio::test]
+    async fn a_product_that_is_not_a_crop_cannot_be_painted_though_it_is_switched_on() {
+        use crate::features::crops::{
+            app::testing::a_product,
+            domain::{ProductGroup, ProductUnit},
+        };
+
+        let directory =
+            CropsFeatureCropDirectory::new(Arc::new(FakeCropRepository::holding(vec![
+                a_crop("wheat", 10, true),
+                a_product("eggs", 230, ProductGroup::FishMeatEggs, ProductUnit::Tray30),
+                // By the kg like a crop, and still not something that grows.
+                a_product("honey", 240, ProductGroup::HoneyDairy, ProductUnit::Kg),
+            ])));
+
+        let active = directory.active().await.expect("active crops");
+
+        assert!(active.allow([Crop::of("wheat")]).is_ok());
+        assert!(active.allow([Crop::of("eggs")]).is_err());
+        assert!(active.allow([Crop::of("honey")]).is_err());
     }
 
     #[tokio::test]

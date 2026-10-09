@@ -17,6 +17,7 @@ pub struct Model {
     pub fixed: bool,
     pub source: String,
     pub updated_at: DateTime,
+    pub unit: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

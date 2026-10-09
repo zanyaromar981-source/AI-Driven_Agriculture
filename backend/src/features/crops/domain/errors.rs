@@ -11,6 +11,9 @@ pub enum CropError {
     #[error("The crop is in use by a farm, a listing or a price; switch it off instead")]
     InUse,
 
+    #[error("Listings or prices already count in this product's unit, so it cannot change")]
+    UnitInUse,
+
     #[error(transparent)]
     DomainError(#[from] DomainError),
 }

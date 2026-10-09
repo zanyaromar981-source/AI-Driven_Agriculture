@@ -234,9 +234,139 @@ impl FairPrice {
     }
 }
 
+/// The shelf of the Marketplace a product stands on, which the board can
+/// be narrowed to.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ProductGroup {
+    Crops,
+    FishMeatEggs,
+    HoneyDairy,
+    Animals,
+    NutsDried,
+}
+
+impl ProductGroup {
+    pub const ALL: [ProductGroup; 5] = [
+        ProductGroup::Crops,
+        ProductGroup::FishMeatEggs,
+        ProductGroup::HoneyDairy,
+        ProductGroup::Animals,
+        ProductGroup::NutsDried,
+    ];
+}
+
+impl From<ProductGroup> for String {
+    fn from(value: ProductGroup) -> Self {
+        match value {
+            ProductGroup::Crops => "crops".to_string(),
+            ProductGroup::FishMeatEggs => "fish_meat_eggs".to_string(),
+            ProductGroup::HoneyDairy => "honey_dairy".to_string(),
+            ProductGroup::Animals => "animals".to_string(),
+            ProductGroup::NutsDried => "nuts_dried".to_string(),
+        }
+    }
+}
+
+impl TryFrom<&str> for ProductGroup {
+    type Error = AlwaError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "crops" => Ok(ProductGroup::Crops),
+            "fish_meat_eggs" => Ok(ProductGroup::FishMeatEggs),
+            "honey_dairy" => Ok(ProductGroup::HoneyDairy),
+            "animals" => Ok(ProductGroup::Animals),
+            "nuts_dried" => Ok(ProductGroup::NutsDried),
+            _ => Err(DomainError::InvalidValue(format!("Invalid product group: {value}")).into()),
+        }
+    }
+}
+
+/// What one of a product is. A listing's quantity is a whole number of it
+/// and every price is for one of it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Unit {
+    Kg,
+    /// A tray of 30 eggs.
+    Tray30,
+    Litre,
+    /// One animal.
+    Head,
+}
+
+impl Unit {
+    pub const ALL: [Unit; 4] = [Unit::Kg, Unit::Tray30, Unit::Litre, Unit::Head];
+
+    /// The most of it one listing may offer. Each is far above a real
+    /// sale and keeps a mistyped number out.
+    pub fn max_quantity(&self) -> i32 {
+        match self {
+            Unit::Kg => 1_000_000,
+            Unit::Tray30 => 10_000,
+            Unit::Litre => 100_000,
+            Unit::Head => 1_000,
+        }
+    }
+}
+
+impl From<Unit> for String {
+    fn from(value: Unit) -> Self {
+        match value {
+            Unit::Kg => "kg".to_string(),
+            Unit::Tray30 => "tray_30".to_string(),
+            Unit::Litre => "litre".to_string(),
+            Unit::Head => "head".to_string(),
+        }
+    }
+}
+
+impl TryFrom<&str> for Unit {
+    type Error = AlwaError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "kg" => Ok(Unit::Kg),
+            "tray_30" => Ok(Unit::Tray30),
+            "litre" => Ok(Unit::Litre),
+            "head" => Ok(Unit::Head),
+            _ => Err(DomainError::InvalidValue(format!("Invalid unit: {value}")).into()),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_group_and_unit_round_trips() {
+        for group in ProductGroup::ALL {
+            let stored = String::from(group);
+
+            assert_eq!(
+                ProductGroup::try_from(stored.as_str()).expect("group"),
+                group
+            );
+        }
+
+        for unit in Unit::ALL {
+            let stored = String::from(unit);
+
+            assert_eq!(Unit::try_from(stored.as_str()).expect("unit"), unit);
+        }
+
+        assert!(ProductGroup::try_from("fish").is_err());
+        assert!(Unit::try_from("tray").is_err());
+        assert!(Unit::try_from("Kg").is_err());
+    }
+
+    #[test]
+    fn each_unit_has_the_limit_the_contract_gives_it() {
+        assert_eq!(Unit::Kg.max_quantity(), 1_000_000);
+        assert_eq!(Unit::Tray30.max_quantity(), 10_000);
+        assert_eq!(Unit::Litre.max_quantity(), 100_000);
+        assert_eq!(Unit::Head.max_quantity(), 1_000);
+    }
 
     #[test]
     fn every_grade_round_trips() {

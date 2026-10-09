@@ -496,6 +496,22 @@ pub async fn di_init(
             device_repository.clone(),
         ),
     );
+    let worker_repository: Arc<dyn crate::features::workers::app::WorkerRepository> = Arc::new(
+        crate::features::workers::infra::WorkerPostgresRepository::new(db_context.conn_clone()),
+    );
+    let worker_accounts: Arc<dyn crate::features::workers::app::AccountDirectory> = Arc::new(
+        crate::features::workers::infra::FarmersFeatureAccountDirectory::new(
+            farmer_repository.clone(),
+        ),
+    );
+    // Removing a farmer also removes their worker card: this wraps the
+    // remover above, so both the staff delete and `DELETE /v1/account` do it.
+    let farmer_data_remover: Arc<dyn crate::features::farmers::app::FarmerDataRemover> = Arc::new(
+        crate::features::farmers::infra::WorkersFeatureFarmerDataRemover::new(
+            farmer_data_remover,
+            worker_repository.clone(),
+        ),
+    );
     let dashboard_farmer_repository = farmer_repository.clone();
     let letter_repository: Arc<dyn LetterRepository> =
         Arc::new(LetterPostgresRepository::new(db_context.conn_clone()));
@@ -752,6 +768,10 @@ pub async fn di_init(
         delete_listing_use_case: Arc::new(DeleteListingUseCase::new(alwa_repository.clone())),
     };
 
+    let alwa_crop_usage: Arc<dyn crate::features::crops::app::CropUsage> = Arc::new(
+        crate::features::crops::infra::AlwaFeatureCropUsage::new(alwa_repository),
+    );
+
     let crop = crate::shared::CropFeature {
         list_crops_use_case: Arc::new(
             crate::features::crops::app::use_cases::ListCropsUseCase::new(crop_repository.clone()),
@@ -760,17 +780,15 @@ pub async fn di_init(
             crate::features::crops::app::use_cases::CreateCropUseCase::new(crop_repository.clone()),
         ),
         update_crop_use_case: Arc::new(
-            crate::features::crops::app::use_cases::UpdateCropUseCase::new(crop_repository.clone()),
+            crate::features::crops::app::use_cases::UpdateCropUseCase::new(
+                crop_repository.clone(),
+                alwa_crop_usage.clone(),
+            ),
         ),
         delete_crop_use_case: Arc::new(
             crate::features::crops::app::use_cases::DeleteCropUseCase::new(
                 crop_repository,
-                vec![
-                    farm_crop_usage,
-                    Arc::new(crate::features::crops::infra::AlwaFeatureCropUsage::new(
-                        alwa_repository,
-                    )),
-                ],
+                vec![farm_crop_usage, alwa_crop_usage],
             ),
         ),
     };
@@ -987,6 +1005,24 @@ pub async fn di_init(
         }
     };
 
+    let worker = {
+        use crate::features::workers::app::use_cases::*;
+
+        crate::shared::WorkerFeature {
+            put_my_card_use_case: Arc::new(PutMyCardUseCase::new(worker_repository.clone())),
+            view_my_card_use_case: Arc::new(ViewMyCardUseCase::new(worker_repository.clone())),
+            remove_my_card_use_case: Arc::new(RemoveMyCardUseCase::new(worker_repository.clone())),
+            browse_workers_use_case: Arc::new(BrowseWorkersUseCase::new(
+                worker_repository.clone(),
+                worker_accounts,
+            )),
+            list_all_workers_use_case: Arc::new(ListAllWorkersUseCase::new(
+                worker_repository.clone(),
+            )),
+            delete_worker_use_case: Arc::new(DeleteWorkerUseCase::new(worker_repository)),
+        }
+    };
+
     Ok(Features {
         farm,
         farmer,
@@ -1009,5 +1045,6 @@ pub async fn di_init(
         history,
         plan,
         alert,
+        worker,
     })
 }

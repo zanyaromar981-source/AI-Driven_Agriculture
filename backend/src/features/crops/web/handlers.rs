@@ -7,23 +7,26 @@ use axum_extra::extract::WithRejection;
 use chrono::Utc;
 
 use super::{
-    dtos::{CreateCropParams, CropResponse, CropsResponse, OneCropResponse, UpdateCropParams},
+    dtos::{
+        CreateCropParams, CropResponse, CropsResponse, OneCropResponse, ProductResponse,
+        ProductsResponse, UpdateCropParams,
+    },
     errors::WebError,
 };
 
 use crate::{
     app::StaffContext,
-    features::crops::domain::CropCode,
+    features::crops::{app::use_cases::CropList, domain::CropCode},
     infra::http::{ApiResponse, ErrorBody, ValidatedJson},
     shared::AppState,
 };
 
-async fn crops(state: &AppState, only_active: bool) -> Result<CropsResponse, WebError> {
+async fn crops(state: &AppState, list: CropList) -> Result<CropsResponse, WebError> {
     let crops = state
         .features
         .crop
         .list_crops_use_case
-        .execute(only_active)
+        .execute(list)
         .await?;
 
     Ok(CropsResponse {
@@ -44,10 +47,35 @@ async fn crops(state: &AppState, only_active: bool) -> Result<CropsResponse, Web
 pub async fn get_crops(
     State(state): State<AppState>,
 ) -> Result<ApiResponse<CropsResponse>, WebError> {
-    Ok(ApiResponse::ok(crops(&state, true).await?))
+    Ok(ApiResponse::ok(crops(&state, CropList::FieldCrops).await?))
 }
 
 /// List every crop as stored, also the ones switched off
+/// Everything that can be sold at the Marketplace, crops first.
+#[utoipa::path(
+    get,
+    path = "/v1/products",
+    tag = "crops",
+    responses(
+        (status = 200, description = "Products retrieved successfully", body = ProductsResponse),
+        (status = 500, description = "Internal server error", body = ErrorBody)
+    )
+)]
+pub async fn get_products(
+    State(state): State<AppState>,
+) -> Result<ApiResponse<ProductsResponse>, WebError> {
+    let products = state
+        .features
+        .crop
+        .list_crops_use_case
+        .execute(CropList::Products)
+        .await?;
+
+    Ok(ApiResponse::ok(ProductsResponse {
+        products: products.iter().map(ProductResponse::from).collect(),
+    }))
+}
+
 #[utoipa::path(
     get,
     path = "/v1/dashboard/crops",
@@ -63,7 +91,7 @@ pub async fn get_crops(
 pub async fn dashboard_get_crops(
     State(state): State<AppState>,
 ) -> Result<ApiResponse<CropsResponse>, WebError> {
-    Ok(ApiResponse::ok(crops(&state, false).await?))
+    Ok(ApiResponse::ok(crops(&state, CropList::Everything).await?))
 }
 
 /// Add a crop
@@ -113,6 +141,7 @@ pub async fn dashboard_create_crop(
         (status = 401, description = "Unauthorized", body = ErrorBody),
         (status = 403, description = "Needs crops:update", body = ErrorBody),
         (status = 404, description = "Crop not found", body = ErrorBody),
+        (status = 409, description = "The unit was changed and an Alwa listing or price names the product (`crop_in_use`)", body = ErrorBody),
         (status = 422, description = "Validation error", body = ErrorBody),
         (status = 500, description = "Internal server error", body = ErrorBody)
     ),

@@ -14,7 +14,7 @@ use crate::{
             ActiveCrops, AlwaError, BuyerKind, Crop, Deal, DisplayName, GeoPoint, Grade,
             IdempotencyKey, Listing, ListingDraft, ListingStatus, Market, MarketName, MarketNames,
             MarketSlug, Offer, OfferDraft, OfferStatus, Pickup, Price, PricePerKg, PriceSource,
-            QuantityKg, ZoneSlug,
+            Product, QuantityKg, ZoneSlug,
         },
     },
     shared::Phone,
@@ -381,7 +381,8 @@ impl AlwaRepository for FakeAlwaRepository {
             *price.fixed(),
             price.source().clone(),
             *price.updated_at(),
-        );
+        )
+        .per(*price.unit());
 
         let mut store = self.store.lock().expect("store lock");
         store.prices.retain(|other| {
@@ -420,6 +421,7 @@ impl AlwaRepository for FakeAlwaRepository {
                     .is_none_or(|market_id| *listing.market_id() == Some(market_id))
             })
             .filter(|listing| filter.crop.is_none_or(|crop| *listing.crop() == crop))
+            .filter(|listing| filter.group.is_none_or(|group| *listing.group() == group))
             .cloned()
             .collect();
         let count = matching.len() as u64;
@@ -1057,7 +1059,7 @@ impl AlwaRepository for FakeAlwaRepository {
 /// Stands in for the crops feature: the crops staff have switched on.
 #[derive(Debug, Clone, Default)]
 pub struct FakeCropDirectory {
-    active: Vec<Crop>,
+    active: Vec<Product>,
     failing: bool,
     asked: Arc<Mutex<u32>>,
 }
@@ -1087,9 +1089,15 @@ impl FakeCropDirectory {
 
     pub fn with(codes: &[&str]) -> Self {
         Self {
-            active: codes.iter().map(|code| Crop::of(code)).collect(),
+            active: codes.iter().map(|code| Product::crop(code)).collect(),
             ..Self::default()
         }
+    }
+
+    /// The same list with one more product switched on.
+    pub fn and(mut self, product: Product) -> Self {
+        self.active.push(product);
+        self
     }
 
     pub fn failing() -> Self {
@@ -1182,6 +1190,7 @@ fn price_with(entity: &Price, id: i32) -> Price {
         entity.source().clone(),
         *entity.updated_at(),
     )
+    .per(*entity.unit())
 }
 
 fn listing_with(entity: &Listing, id: i32) -> Listing {
@@ -1204,6 +1213,7 @@ fn listing_with(entity: &Listing, id: i32) -> Listing {
         *entity.updated_at(),
     )
     .placed_at(*entity.point())
+    .sold_as(*entity.group(), *entity.unit())
 }
 
 fn offer_with(entity: &Offer, id: i32, status: OfferStatus, updated_at: DateTime<Utc>) -> Offer {
@@ -1267,6 +1277,7 @@ pub fn a_listing_draft(closes_at: DateTime<Utc>) -> ListingDraft {
         crop: Crop::of("tomato"),
         quantity: QuantityKg::new(500).expect("quantity"),
         asking_price: PricePerKg::new(1_000).expect("price"),
+        in_kg: false,
         grade: Some(Grade::A),
         pickup: Some(Pickup::Farm),
         zone_slug: None,
@@ -1283,6 +1294,7 @@ pub fn a_listing(id: i32, created_at: DateTime<Utc>) -> Listing {
         phone(SELLER),
         Some(&markets()[0]),
         a_listing_draft(created_at + Duration::days(3)),
+        Product::crop("tomato"),
         created_at,
     )
     .expect("listing");

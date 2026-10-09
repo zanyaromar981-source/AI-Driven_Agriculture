@@ -43,9 +43,7 @@ const ZONES: [ZoneSeed; 33] = [
         name: "Bardarash",
         ku: "بەردەڕەش",
         governorate: "Duhok",
-        sub_zones: &[
-            ("Bardarash", "بەردەڕەش"),
-        ],
+        sub_zones: &[("Bardarash", "بەردەڕەش")],
     },
     ZoneSeed {
         name: "Duhok",
@@ -92,43 +90,31 @@ const ZONES: [ZoneSeed; 33] = [
         name: "Chuman",
         ku: "چۆمان",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Balak", "باڵەکایەتی"),
-            ("Haji Omaran", "حاجی ئۆمەران"),
-        ],
+        sub_zones: &[("Balak", "باڵەکایەتی"), ("Haji Omaran", "حاجی ئۆمەران")],
     },
     ZoneSeed {
         name: "Erbil",
         ku: "هەولێر",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Markaz Erbil", "ناوەندی هەولێر"),
-        ],
+        sub_zones: &[("Markaz Erbil", "ناوەندی هەولێر")],
     },
     ZoneSeed {
         name: "Harir",
         ku: "هەریر",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Harir", "هەریر"),
-        ],
+        sub_zones: &[("Harir", "هەریر")],
     },
     ZoneSeed {
         name: "Khalifan",
         ku: "خەلیفان",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Khailfan", "خەلیفان"),
-        ],
+        sub_zones: &[("Khailfan", "خەلیفان")],
     },
     ZoneSeed {
         name: "Koya",
         ku: "کۆیە",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Shorsh", "شۆڕش"),
-            ("Markaz Koysinjaq", "ناوەندی کۆیە"),
-        ],
+        sub_zones: &[("Shorsh", "شۆڕش"), ("Markaz Koysinjaq", "ناوەندی کۆیە")],
     },
     ZoneSeed {
         name: "Makhmur",
@@ -155,57 +141,43 @@ const ZONES: [ZoneSeed; 33] = [
         name: "Pirmam",
         ku: "پیرمام",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Salah Al-Din", "سەڵاحەدین"),
-        ],
+        sub_zones: &[("Salah Al-Din", "سەڵاحەدین")],
     },
     ZoneSeed {
         name: "Qushtapa",
         ku: "قوشتەپە",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Qushtappa", "قوشتەپە"),
-        ],
+        sub_zones: &[("Qushtappa", "قوشتەپە")],
     },
     ZoneSeed {
         name: "Rawanduz",
         ku: "ڕەواندز",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Markaz Rawanduz", "ناوەندی ڕەواندز"),
-        ],
+        sub_zones: &[("Markaz Rawanduz", "ناوەندی ڕەواندز")],
     },
     ZoneSeed {
         name: "Shaqlawa",
         ku: "شەقڵاوە",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Khoshnaw", "خۆشناو"),
-        ],
+        sub_zones: &[("Khoshnaw", "خۆشناو")],
     },
     ZoneSeed {
         name: "Sidakan",
         ku: "سیدەکان",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Bradost", "برادۆست"),
-        ],
+        sub_zones: &[("Bradost", "برادۆست")],
     },
     ZoneSeed {
         name: "Soran",
         ku: "سۆران",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Diana", "دیانا"),
-        ],
+        sub_zones: &[("Diana", "دیانا")],
     },
     ZoneSeed {
         name: "Taqtaq",
         ku: "تەقتەق",
         governorate: "Erbil",
-        sub_zones: &[
-            ("Taq Taq", "تەقتەق"),
-        ],
+        sub_zones: &[("Taq Taq", "تەقتەق")],
     },
     ZoneSeed {
         name: "Chamchamal",
@@ -222,18 +194,13 @@ const ZONES: [ZoneSeed; 33] = [
         name: "Darbandikhan",
         ku: "دەربەندیخان",
         governorate: "Sulaymaniyah",
-        sub_zones: &[
-            ("Markaz Derbendikhan", "ناوەندی دەربەندیخان"),
-        ],
+        sub_zones: &[("Markaz Derbendikhan", "ناوەندی دەربەندیخان")],
     },
     ZoneSeed {
         name: "Dukan",
         ku: "دوکان",
         governorate: "Sulaymaniyah",
-        sub_zones: &[
-            ("Gnareen", "None"),
-            ("Sourdash", "سورداش"),
-        ],
+        sub_zones: &[("Gnareen", "None"), ("Sourdash", "سورداش")],
     },
     ZoneSeed {
         name: "Kalar",
@@ -249,10 +216,7 @@ const ZONES: [ZoneSeed; 33] = [
         name: "Penjwen",
         ku: "پێنجوێن",
         governorate: "Sulaymaniyah",
-        sub_zones: &[
-            ("Karmak", "None"),
-            ("Markaz Panjwin", "ناوەندی پێنجوێن"),
-        ],
+        sub_zones: &[("Karmak", "None"), ("Markaz Panjwin", "ناوەندی پێنجوێن")],
     },
     ZoneSeed {
         name: "Pshdar",
@@ -278,9 +242,7 @@ const ZONES: [ZoneSeed; 33] = [
         name: "Sharazur",
         ku: "شارەزوور",
         governorate: "Sulaymaniyah",
-        sub_zones: &[
-            ("Shahrazur", "زەڕایەن"),
-        ],
+        sub_zones: &[("Shahrazur", "زەڕایەن")],
     },
     ZoneSeed {
         name: "Sharbazher",
@@ -307,18 +269,13 @@ const ZONES: [ZoneSeed; 33] = [
         name: "Halabja",
         ku: "هەڵەبجە",
         governorate: "Halabja",
-        sub_zones: &[
-            ("Beyara", "بیارە"),
-            ("Markaz Halabja", "هەڵەبجە و سیروان"),
-        ],
+        sub_zones: &[("Beyara", "بیارە"), ("Markaz Halabja", "هەڵەبجە و سیروان")],
     },
     ZoneSeed {
         name: "Khurmal",
         ku: "خورماڵ",
         governorate: "Halabja",
-        sub_zones: &[
-            ("Khourmal", "خورماڵ"),
-        ],
+        sub_zones: &[("Khourmal", "خورماڵ")],
     },
 ];
 

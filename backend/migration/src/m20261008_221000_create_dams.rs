@@ -29,12 +29,7 @@ impl MigrationTrait for Migration {
 
         let mut seed = Query::insert()
             .into_table(Dams::Table)
-            .columns([
-                Dams::Slug,
-                Dams::NameEn,
-                Dams::NameKu,
-                Dams::CapacityBnM3,
-            ])
+            .columns([Dams::Slug, Dams::NameEn, Dams::NameKu, Dams::CapacityBnM3])
             .on_conflict(OnConflict::column(Dams::Slug).do_nothing().to_owned())
             .to_owned();
 

@@ -132,6 +132,10 @@ fn main() {
                     "farm_plans",
                     "src/features/plans/infra/persistence/postgres/entities",
                 ),
+                (
+                    "workers",
+                    "src/features/workers/infra/persistence/postgres/entities",
+                ),
             ];
 
             for (table, output_dir) in entity_targets {

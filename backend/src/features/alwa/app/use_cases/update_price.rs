@@ -27,11 +27,10 @@ impl UpdatePriceUseCase {
     ) -> Result<(Market, Price), AppError> {
         // A changed price is new data, so its crop must be one staff have
         // switched on. A price of a crop switched off since stays as it is.
-        self.crops
-            .active()
-            .await?
-            .allow(input.crop)
-            .inspect_err(|error| tracing::info!(%error, "price refused: the crop is not in use"))?;
+        let product =
+            self.crops.active().await?.allow(input.crop).inspect_err(
+                |error| tracing::info!(%error, "price refused: the crop is not in use"),
+            )?;
 
         let Some(market) = self.repository.find_market_by_slug(&input.market).await? else {
             tracing::info!(
@@ -43,9 +42,10 @@ impl UpdatePriceUseCase {
             return Err(GlobalAppError::NotFound.into());
         };
 
+        // The price is for one of the product's unit as it is today.
         let price = Price::new(
             &market,
-            input.crop,
+            product,
             input.day,
             input.price,
             input.fixed,

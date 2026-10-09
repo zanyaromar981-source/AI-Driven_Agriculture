@@ -1,20 +1,20 @@
 use crate::{features::alwa::domain::AlwaError, shared::DomainError};
 
-/// Far above any real price for a kilogram. It keeps a mistyped number out
+/// Far above any real price for a kilogram, a tray or an animal. It keeps a mistyped number out
 /// and the value inside the integer column.
 const MAX_IQD: i64 = 100_000_000;
 
-/// A price in whole Iraqi dinars for one kilogram.
+/// A price in whole Iraqi dinars for one unit of a product. It began as a
+/// price per kilogram of a crop and keeps that name.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PricePerKg(i32);
 
 impl PricePerKg {
     pub fn new(value: i64) -> Result<Self, AlwaError> {
         if !(1..=MAX_IQD).contains(&value) {
-            return Err(DomainError::InvalidValue(format!(
-                "Price must be 1 to {MAX_IQD} IQD per kg"
-            ))
-            .into());
+            return Err(
+                DomainError::InvalidValue(format!("Price must be 1 to {MAX_IQD} IQD")).into(),
+            );
         }
 
         Ok(Self(value as i32))

@@ -18,4 +18,5 @@ pub mod rules;
 pub mod staff;
 pub mod versions;
 pub mod water;
+pub mod workers;
 pub mod zones;

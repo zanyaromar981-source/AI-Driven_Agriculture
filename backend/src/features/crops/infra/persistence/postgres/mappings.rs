@@ -3,8 +3,8 @@ use sea_orm::ActiveValue::Set;
 use crate::features::crops::{
     app::AppError,
     domain::{
-        Crop, CropCategory, CropCode, CropColor, CropDetails, CropName, CropSeason, SortOrder,
-        YieldKgPerDunam,
+        Crop, CropCategory, CropCode, CropColor, CropDetails, CropName, CropSeason, ProductGroup,
+        ProductUnit, SortOrder, YieldKgPerDunam,
     },
     infra::persistence::postgres::entities::crops,
 };
@@ -19,6 +19,8 @@ impl TryFrom<crops::Model> for Crop {
                 name_en: CropName::new(model.name_en)?,
                 name_ku: model.name_ku.map(CropName::new).transpose()?,
                 color: CropColor::new(model.color)?,
+                group: ProductGroup::try_from(model.grp.as_str())?,
+                unit: ProductUnit::try_from(model.unit.as_str())?,
                 category: CropCategory::try_from(model.category.as_str())?,
                 season: CropSeason::try_from(model.season.as_str())?,
                 yield_kg_per_dunam: model
@@ -50,6 +52,8 @@ impl From<&Crop> for crops::ActiveModel {
             sort_order: Set(details.sort_order.value()),
             created_at: Set(crop.created_at().naive_utc()),
             updated_at: Set(crop.updated_at().naive_utc()),
+            grp: Set(details.group.into()),
+            unit: Set(details.unit.into()),
         }
     }
 }

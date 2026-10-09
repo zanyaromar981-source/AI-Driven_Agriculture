@@ -251,6 +251,7 @@ impl AlwaRepository for AlwaPostgresRepository {
                 ])
                 .update_columns([
                     alwa_prices::Column::PriceIqdPerKg,
+                    alwa_prices::Column::Unit,
                     alwa_prices::Column::Fixed,
                     alwa_prices::Column::Source,
                     alwa_prices::Column::UpdatedAt,
@@ -290,6 +291,10 @@ impl AlwaRepository for AlwaPostgresRepository {
 
         if let Some(crop) = filter.crop {
             query = query.filter(alwa_listings::Column::Crop.eq(String::from(crop)));
+        }
+
+        if let Some(group) = filter.group {
+            query = query.filter(alwa_listings::Column::Grp.eq(String::from(group)));
         }
 
         let count = query
