@@ -21,13 +21,13 @@ Rules from the organizers: 3 minutes to pitch, 2 minutes of questions, one judge
 
 | Time | Criterion | Do | Say |
 |---|---|---|---|
-| 0:00 to 0:20 | Problem and local impact | Slide 1 | "Kurdistan has about 50,000 wheat farmers and about 215 agricultural advisers. In the winter of 2024/25 Slemani got 57 percent of its normal rain, and most farmers found out from their own fields. Jutyar gives every farmer an adviser in his pocket." |
-| 0:20 to 1:20 | Build and Demo (double) | Phone in the judges' hands or held up | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm: I walked its corners and marked my crops. Each square is 10 metres, checked from space. Here are my alerts and my 10-day plan from the live forecast. Here I asked a question with a photo, and this is the answer, in Sorani: the problem, how sure, why, what to do, and what it cannot tell. And here is the Marketplace, where I put my tomatoes on sale and another farmer's phone sees them." |
-| 1:20 to 2:00 | AI Integration and Use (double) | Slide 4 (the message), then the website | "AI is in the product in two places. First, the answer you just saw: the satellite, the weather forecast and the field's history are numbers. An AI model turns them and the farmer's photo into advice in Sorani, and it must say when it is unsure. Second, every night an AI agent reads all 33 districts, does its own research, and writes the daily brief for the Ministry. And we built it with AI: Claude and Codex wrote the app and the server with us, and Pencil's AI drew the screens." |
-| 2:00 to 2:30 | Feasibility and scope | Slide 5 (website) | "Is it realistic? The satellite and weather data are free. The server is already hosted, with about 2,000 automated tests. One AI answer costs about half a cent. The natural partner is the Ministry's extension offices: this website is their side, with the farms, the alerts and the region on one map. We start with wheat farmers in Slemani and grow from there." |
-| 2:30 to 2:45 | Close | Slide 7 | "Built in two days: the app, the server, the website. Jutyar: from one farm to a smarter Kurdistan. Thank you." |
+| 0:00 to 0:20 | Problem and local impact | Slide 1, then slide 2 | "Kurdistan has about 50,000 wheat farmers and about 215 agricultural advisers. In the winter of 2024/25 Slemani got 57 percent of its normal rain, and most farmers found out from their own fields. Jutyar gives every farmer an adviser in his pocket." |
+| 0:20 to 1:20 | Build and Demo (double) | Slide 3 on the laptop, phone in the judges' hands or held up | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm: I walked its corners and marked my crops. Each square is 10 metres, checked from space. Here are my alerts and my 10-day plan from the live forecast. Here I asked a question with a photo, and this is the answer, in Sorani: the problem, how sure, why, what to do, and what it cannot tell. And here is the Marketplace, where I put my tomatoes on sale and another farmer's phone sees them." |
+| 1:20 to 2:00 | AI Integration and Use (double) | Slide 4 (AI is the translator) | "AI is in the product in two places. First, the answer you just saw: the satellite, the weather forecast and the field's history are numbers. An AI model turns them and the farmer's photo into advice in Sorani, and it must say when it is unsure. Second, every night an AI agent reads all 33 districts, does its own research, and writes the daily brief for the Ministry. And we built it with AI: Claude and Codex wrote the app and the server with us, and Pencil's AI drew the screens." |
+| 2:00 to 2:30 | Feasibility and scope | Slide 7 (Ready to grow), slide 5 for the website | "Is it realistic? The satellite and weather data are free. The server is already hosted, with about 2,000 automated tests. One AI answer costs about half a cent. The natural partner is the Ministry's extension offices: this website is their side, with the farms, the alerts and the region on one map. We start with wheat farmers in Slemani and grow from there." |
+| 2:30 to 2:45 | Close | Slide 8 | "Built in two days: the app, the server, the website. Jutyar: from one farm to a smarter Kurdistan. Thank you." |
 
-If the phone or the network fails: say "the network is against us" once, switch to slides 3 and 4, and keep going. Do not debug in front of the judges.
+If the phone or the network fails: say "the network is against us" once, switch to slide 3 (the five screens) and slide 4, and keep going. Do not debug in front of the judges.
 
 ### Two minutes of questions
 
@@ -81,28 +81,28 @@ If the phone fails: stay on slide 4 and walk through the example message shown t
 
 Not in the demo unless it is tested on the morning of the pitch: Ask the Doctor. The screens are built, but on 9 October the server route and the Gemini key were still in progress (`PROGRESS.md`).
 
-## 3-minute version: the story deck
+## The Round 1 deck, slide by slide
 
-For the 3-minute round use `design/pitch_deck_3min.pen` (7 slides, name Jutyar). The slides carry almost no text, so the numbers are spoken. About 3 minutes.
+`design/pitch_deck_3min.pen` now has 8 slides that follow the five criteria. The speaker lines are in the Round 1 table above; this is only the map.
 
-| # | Slide | Time | Say |
+| # | Slide | Criterion | What it shows |
 |---|---|---|---|
-| 1 | AI-Driven Agriculture (title, sun logo) | 25 s | "We are AI-Driven Agriculture, and this is Jutyar. A farmer knows his field better than anyone. He walks it every day. And he can still miss the first signs that part of it is failing. Jutyar makes that easier." |
-| 2 | Space sees more. | 25 s | "From space, weak areas appear early. A satellite passes every five days and sees every 10 metres of the field. Jutyar compares each square with its own normal and colours it: green, yellow, orange, red." |
-| 3 | Simple to use. | 25 s | "For the farmer it is simple. He signs in with his phone number, walks the border of his field once, and marks his crops. After that: one farm, one view." |
-| 4 | One message. | 35 s | "And he receives one message, in Sorani, with five parts. The problem. How confident we are. Why, with the source of each reason. What to do this week. And the limits: what we cannot tell. It never gives a chemical dose. This is where the AI works. AI is not the sensor. It is the translator." |
-| 5 | Farmers and government, connected. | 25 s | "The farmer is one side. The government is the other. One website connects them. Farmers' fields and reports come in, alerts go out, and the Ministry sees the whole region on one dashboard: all 33 districts, the crops, the water in Dukan and Darbandikhan." |
-| 6 | Sell at a fair price. | 20 s | "And when the crop is ready, Jutyar helps him sell it. This is Alwa, the farmers' marketplace. He sees today's price, puts his crop on sale, and accepts the best offer from the buyers." |
-| 7 | From one farm to a smarter Kurdistan. | 25 s | "One farm is the start. The same view for every farm gives the region one picture. We checked the method on 26 past seasons: right 88 percent of the time. And we built the app, the server and the map in two days. Thank you." |
+| 1 | AI-Driven Agriculture | | Title, sun logo, "He knows his field. Jutyar makes it easier." |
+| 2 | 50,000 farmers. 215 advisers. | Problem and local impact | "Help comes too late." and Slemani at 57% of normal rain |
+| 3 | Built in two days. | Build and Demo | Five app screens: sign in by SMS, walk the field, see it from space, alerts and plan, ask in Sorani |
+| 4 | AI is the translator. | AI | The Sorani answer with its five parts, the nightly AI brief, built with Claude, Codex and Pencil AI |
+| 5 | Farmers and government, connected. | Build, Feasibility | The website: Control Room and region dashboard |
+| 6 | Sell at a fair price. | Build | The Marketplace: see what is on sale, call the seller, put yours on sale |
+| 7 | Ready to grow. | Feasibility and scope | Free data, live server with about 2,000 tests, half a cent per AI answer, the Ministry as partner |
+| 8 | From one farm to a smarter Kurdistan. | Close | Vision picture |
 
-Notes for this version:
+Notes:
 
-- If there is time for a demo, do it on slide 3: hold up the phone and tap one coloured square. 20 seconds at most.
-- The coloured grid on slide 2 is an illustration drawn on a real Sentinel-2 picture, not a real result for that field. Say "this is how it looks", not "this is what we found".
-- The picture on slide 7 is AI-made. The glowing network is a vision, not a map of real farms.
-- The message on slide 4 is a sample in Sorani that a native speaker still has to check.
-- The Alwa screens on slide 6 are the older design with sample prices and buyers. The app now has a simpler Marketplace that works on the test server, so show the real one on the phone.
-- The website pictures on slide 5 are the team's Control Room and dashboard designs with sample data. The Control Room demo is not connected to the server yet, so say "this is the website we designed", not "this is live".
+- Slides 3 and 6 show the app design screens. Use the real phone for the demo and the slides as the backdrop.
+- The Sorani message on slide 4 was translated for the slide and still needs a native speaker's check.
+- The website pictures on slide 5 are the earlier designs with sample numbers.
+- "Partner" on slide 7 is the partner we would approach. Nobody has signed.
+- The pictures on slides 1, 2 and 8 are AI-made.
 
 ## Questions the judges may ask
 

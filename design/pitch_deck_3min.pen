@@ -168,7 +168,7 @@
       "id": "c6ptt",
       "x": 2040,
       "y": 0,
-      "name": "02 Hidden signal",
+      "name": "02 Problem",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -177,22 +177,22 @@
       "children": [
         {
           "type": "frame",
-          "id": "KKecV",
-          "x": 0,
+          "id": "YQRh2",
+          "x": 860,
           "y": 0,
-          "name": "Satellite Photo",
-          "width": 1920,
+          "name": "Farmer Photo",
+          "width": 1060,
           "height": 1080,
           "fill": {
             "type": "image",
             "enabled": true,
-            "url": "pitch_assets/sat_koya_2026-04-17.png",
+            "url": "generated-1.png",
             "mode": "cover"
           }
         },
         {
           "type": "rectangle",
-          "id": "WXHNv",
+          "id": "ElDMM",
           "x": 0,
           "y": 0,
           "name": "Overlay",
@@ -206,15 +206,19 @@
             },
             "colors": [
               {
-                "color": "#16200FF5",
+                "color": "#16200FFF",
                 "position": 0
               },
               {
-                "color": "#16200FA6",
-                "position": 0.45
+                "color": "#16200FFF",
+                "position": 0.42
               },
               {
-                "color": "#16200F33",
+                "color": "#16200F99",
+                "position": 0.62
+              },
+              {
+                "color": "#16200F1A",
                 "position": 1
               }
             ]
@@ -223,1674 +227,25 @@
           "height": 1080
         },
         {
-          "type": "frame",
-          "id": "gtBdE",
-          "x": 1010,
-          "y": 170,
-          "name": "Field Heatmap",
-          "width": 780,
-          "height": 740,
-          "layout": "none",
-          "children": [
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "G0Vya",
-              "x": 728,
-              "y": 0,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "UW35l",
-              "x": 312,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "swV7W",
-              "x": 364,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "EjMKJ",
-              "x": 416,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "dZKC4",
-              "x": 468,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "M2Erh",
-              "x": 520,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "C1805m",
-              "x": 572,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "KlHvo",
-              "x": 624,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "S5JtJA",
-              "x": 676,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "A0tqC9",
-              "x": 728,
-              "y": 52,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "B3mvz",
-              "x": 104,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "jhZJU",
-              "x": 156,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "jzJ0D",
-              "x": 208,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Uaqoj",
-              "x": 260,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "furJV",
-              "x": 312,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "qmueJ",
-              "x": 364,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "OQ36j",
-              "x": 416,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "oPfLU",
-              "x": 468,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Jvkz4",
-              "x": 520,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "kKVzm",
-              "x": 572,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "vSl2c",
-              "x": 624,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "wtTdi",
-              "x": 676,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "OV3YI",
-              "x": 728,
-              "y": 104,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "s2t70",
-              "x": 104,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "P7USQx",
-              "x": 156,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "y0550",
-              "x": 208,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "T0GqOd",
-              "x": 260,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "wj06u",
-              "x": 312,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "wAmnU",
-              "x": 364,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "pa1z2",
-              "x": 416,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "iPRUu",
-              "x": 468,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "dBp3E",
-              "x": 520,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "ztqYe",
-              "x": 572,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "ns1AX",
-              "x": 624,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Hn8j1",
-              "x": 676,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "y2ooDx",
-              "x": 728,
-              "y": 156,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "uxLNv",
-              "x": 52,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "A8HUY",
-              "x": 104,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "nPZ7i",
-              "x": 156,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "cYPw5",
-              "x": 208,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "K2cjB",
-              "x": 260,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "SNJ6r",
-              "x": 312,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "XVtp5",
-              "x": 364,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Drs28",
-              "x": 416,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "g4sH1",
-              "x": 468,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "cC2Db",
-              "x": 520,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "aNpdo",
-              "x": 572,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "EDsBq",
-              "x": 624,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "RmJ1j",
-              "x": 676,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "akjS1",
-              "x": 728,
-              "y": 208,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "rXN6A",
-              "x": 52,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "YTClR",
-              "x": 104,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "qxwsA",
-              "x": 156,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "R8SEHk",
-              "x": 208,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Rn7Yf",
-              "x": 260,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "hNY45",
-              "x": 312,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "z7VIhw",
-              "x": 364,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "E2EfN",
-              "x": 416,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "gx6Qa",
-              "x": 468,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "AWCNA",
-              "x": 520,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Wj9tZ",
-              "x": 572,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#C8402FD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "xrJNv",
-              "x": 624,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "c9pGGt",
-              "x": 676,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "fckji",
-              "x": 728,
-              "y": 260,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "qASc7",
-              "x": 52,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "bqoxW",
-              "x": 104,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "YNaJ4",
-              "x": 156,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "cyIEg",
-              "x": 208,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "hRB1y",
-              "x": 260,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "D5U01",
-              "x": 312,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "IrvWX",
-              "x": 364,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "B1FOY",
-              "x": 416,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "ttX9a",
-              "x": 468,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "OSEmU",
-              "x": 520,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "g9mri",
-              "x": 572,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "meZIC",
-              "x": 624,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Jlhgz",
-              "x": 676,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "PZPEG",
-              "x": 728,
-              "y": 312,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "db0Ca",
-              "x": 52,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "kDdKR",
-              "x": 104,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "SggD0",
-              "x": 156,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "V5vfA",
-              "x": 208,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "swg8K",
-              "x": 260,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "mjQZI",
-              "x": 312,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "s0wrd2",
-              "x": 364,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "MLPBa",
-              "x": 416,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "xZIx8",
-              "x": 468,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "pK6v4",
-              "x": 520,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "bNiCk",
-              "x": 572,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "bX7Lz",
-              "x": 624,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#E07B2AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "NEdcF",
-              "x": 676,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "WZLZS",
-              "x": 728,
-              "y": 364,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "cs5JM",
-              "x": 52,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "D4y9Fa",
-              "x": 104,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "J4gJUF",
-              "x": 156,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "CJhgJ",
-              "x": 208,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "R1QPCR",
-              "x": 260,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "D01vcj",
-              "x": 312,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "hbTVz",
-              "x": 364,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "GOZnt",
-              "x": 416,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "lXAVS",
-              "x": 468,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "J6GjQt",
-              "x": 520,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "cVu2Q",
-              "x": 572,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "vUvnQ",
-              "x": 624,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "XiY1O",
-              "x": 676,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "KU4PF",
-              "x": 728,
-              "y": 416,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "sYBR5",
-              "x": 52,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "J4VrNG",
-              "x": 104,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "lpZbR",
-              "x": 156,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "RMskw",
-              "x": 208,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "vJZCr",
-              "x": 260,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "d07DW",
-              "x": 312,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "S300Rq",
-              "x": 364,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Pf4iN",
-              "x": 416,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "DCzUH",
-              "x": 468,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "WD6P3",
-              "x": 520,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "ZoY2z",
-              "x": 572,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "SyItf",
-              "x": 624,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "crkt3",
-              "x": 676,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "T5Sjn",
-              "x": 728,
-              "y": 468,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "KYGae",
-              "x": 52,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Foowl",
-              "x": 104,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "WY4hU",
-              "x": 156,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "P3iQxf",
-              "x": 208,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "z61XU",
-              "x": 260,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "n4YdTc",
-              "x": 312,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "S0lYt4",
-              "x": 364,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "ZmbHq",
-              "x": 416,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Xyxc8",
-              "x": 468,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "A9trqu",
-              "x": 520,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "mwitN",
-              "x": 572,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "gBYzo",
-              "x": 624,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "aeSgu",
-              "x": 676,
-              "y": 520,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "OqsYK",
-              "x": 52,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "T2zFNE",
-              "x": 104,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "HKn9y",
-              "x": 156,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "lTAxA",
-              "x": 208,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "gft59",
-              "x": 260,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "xDm60",
-              "x": 312,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "PyJ5K",
-              "x": 364,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "Q3mdI",
-              "x": 416,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "IcZYN",
-              "x": 468,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "I7cAJu",
-              "x": 520,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "YLpjj",
-              "x": 572,
-              "y": 572,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "r4nIs",
-              "x": 52,
-              "y": 624,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "nhI5N",
-              "x": 104,
-              "y": 624,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "ORq7q",
-              "x": 156,
-              "y": 624,
-              "name": "Cell",
-              "fill": "#E3C13AD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "RznkI",
-              "x": 208,
-              "y": 624,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "H4OUJj",
-              "x": 260,
-              "y": 624,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            },
-            {
-              "type": "rectangle",
-              "cornerRadius": 6,
-              "id": "AWTfe",
-              "x": 0,
-              "y": 676,
-              "name": "Cell",
-              "fill": "#58A53CD9",
-              "width": 48,
-              "height": 48
-            }
-          ]
+          "type": "text",
+          "id": "L1Qpez",
+          "x": 120,
+          "y": 110,
+          "name": "Brand",
+          "fill": "$gold",
+          "content": "THE PROBLEM",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
         },
         {
           "type": "frame",
-          "id": "QfBUm",
+          "id": "pyYbO",
           "x": 120,
           "y": 0,
           "name": "Title Block",
-          "width": 820,
+          "width": 900,
           "height": 1080,
           "layout": "vertical",
           "gap": 28,
@@ -1898,55 +253,66 @@
           "children": [
             {
               "type": "text",
-              "id": "OH5BY",
+              "id": "IhsEN",
               "name": "Headline",
               "fill": "#FFFFFF",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "Space sees more.",
+              "content": "50,000 farmers.\n215 advisers.",
               "lineHeight": 1.02,
               "fontFamily": "$font-lat",
-              "fontSize": 140,
+              "fontSize": 108,
               "fontWeight": "800",
               "letterSpacing": -4
             },
             {
               "type": "text",
-              "id": "a5ZOZ",
+              "id": "ERWr7",
               "name": "Secondary",
               "fill": "$gold",
-              "content": "Weak areas appear early.",
-              "lineHeight": 1.2,
+              "content": "Help comes too late.",
               "fontFamily": "$font-lat",
               "fontSize": 52,
               "fontWeight": "500"
+            },
+            {
+              "type": "frame",
+              "id": "cC5b7",
+              "name": "Local Fact",
+              "fill": "#FFFFFF14",
+              "cornerRadius": 40,
+              "stroke": "#FFFFFF33",
+              "strokeWidth": 2,
+              "gap": 14,
+              "padding": [
+                14,
+                26
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "VTnoc",
+                  "name": "Icon",
+                  "width": 32,
+                  "height": 32,
+                  "icon": "cloud-rain",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "CD4tV",
+                  "name": "Fact",
+                  "fill": "#FFFFFF",
+                  "content": "Slemani, winter 2024/25: 57% of normal rain",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 28,
+                  "fontWeight": "600"
+                }
+              ]
             }
           ]
-        },
-        {
-          "type": "text",
-          "id": "jYWZQ",
-          "x": 120,
-          "y": 110,
-          "name": "Brand",
-          "fill": "$gold",
-          "content": "JUTYAR",
-          "fontFamily": "$font-lat",
-          "fontSize": 24,
-          "fontWeight": "700",
-          "letterSpacing": 3
-        },
-        {
-          "type": "text",
-          "id": "c672Dl",
-          "x": 120,
-          "y": 1000,
-          "name": "Note",
-          "fill": "$on-dark-muted",
-          "content": "Illustration of the field-health map on a real Sentinel-2 picture.",
-          "fontFamily": "$font-lat",
-          "fontSize": 20,
-          "fontWeight": "500"
         }
       ]
     },
@@ -1955,13 +321,13 @@
       "id": "mNvdi",
       "x": 4080,
       "y": 0,
-      "name": "03 Product reveal",
+      "name": "03 Build and demo",
       "clip": true,
       "width": 1920,
       "height": 1080,
       "fill": "$deep",
       "layout": "vertical",
-      "gap": 56,
+      "gap": 36,
       "padding": [
         90,
         120,
@@ -2054,170 +420,456 @@
         },
         {
           "type": "frame",
-          "id": "DxGrk",
-          "name": "Body",
+          "id": "JZcIr",
+          "name": "Title Row",
+          "width": "fill_container",
+          "gap": 36,
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "text",
+              "id": "dyqZp",
+              "name": "Headline",
+              "fill": "#FFFFFF",
+              "content": "Built in two days.",
+              "lineHeight": 1,
+              "fontFamily": "$font-lat",
+              "fontSize": 92,
+              "fontWeight": "800",
+              "letterSpacing": -3
+            },
+            {
+              "type": "text",
+              "id": "n0YHj",
+              "name": "Secondary",
+              "fill": "$gold",
+              "content": "Running now, on a real server.",
+              "fontFamily": "$font-lat",
+              "fontSize": 40,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "OkjN1",
+          "name": "Features",
           "width": "fill_container",
           "height": "fill_container",
-          "gap": 80,
+          "gap": 30,
           "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "uLdRE",
-              "name": "Text",
+              "id": "fcDEt",
+              "name": "Feature 1",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": 48,
+              "gap": 20,
+              "alignItems": "center",
               "children": [
                 {
-                  "type": "text",
-                  "id": "X9WA7R",
-                  "name": "Title",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "Simple to use.",
-                  "lineHeight": 1.1,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 76,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
+                  "type": "frame",
+                  "id": "BjcUV",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 262,
+                  "height": 567,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "pitch_assets/screen_code.png",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": 28,
+                  "stroke": "#FFFFFF33",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 12
+                    },
+                    "blur": 36
+                  }
                 },
                 {
-                  "type": "text",
-                  "id": "IwLd2",
-                  "name": "Sub",
-                  "fill": "$gold",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "One farm. One view.",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 44,
-                  "fontWeight": "500"
+                  "type": "frame",
+                  "id": "cwU2s",
+                  "name": "Label",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mCTEF",
+                      "name": "Number",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "$gold",
+                      "cornerRadius": 20,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "bTScf",
+                          "name": "N",
+                          "fill": "$soil",
+                          "content": "1",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 22,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "GXQ1i",
+                      "name": "Feature Text",
+                      "fill": "#FFFFFF",
+                      "content": "Sign in by SMS",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
                 }
               ]
             },
             {
               "type": "frame",
-              "id": "eE8Gk",
-              "name": "Phones",
-              "gap": 32,
+              "id": "y8I3Rz",
+              "name": "Feature 2",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
               "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
-                  "id": "XK4oq",
-                  "name": "Phone Wrap screen_grid",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "VJW5o",
-                      "name": "Phone screen_grid",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_grid.png",
-                        "mode": "cover"
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
-                    }
-                  ]
+                  "id": "lr7jY",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 262,
+                  "height": 567,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "pitch_assets/screen_grid.png",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": 28,
+                  "stroke": "#FFFFFF33",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 12
+                    },
+                    "blur": 36
+                  }
                 },
                 {
                   "type": "frame",
-                  "id": "p2Btw",
-                  "name": "Phone Wrap screen_cellcard",
-                  "padding": [
-                    40,
-                    0,
-                    0,
-                    0
-                  ],
+                  "id": "at7tt",
+                  "name": "Label",
+                  "gap": 12,
+                  "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "Vosik",
-                      "name": "Phone screen_cellcard",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_cellcard_v2.png",
-                        "mode": "cover"
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
+                      "id": "rMzBV",
+                      "name": "Number",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "$gold",
+                      "cornerRadius": 20,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "b2ZGP",
+                          "name": "N",
+                          "fill": "$soil",
+                          "content": "2",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 22,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "UWUk0",
+                      "name": "Feature Text",
+                      "fill": "#FFFFFF",
+                      "content": "Walk the field",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "700"
                     }
                   ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "qLZuT",
+              "name": "Feature 3",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "zPB2z",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 262,
+                  "height": 567,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "pitch_assets/screen_cellcard_v3.png",
+                    "mode": "cover"
+                  },
+                  "cornerRadius": 28,
+                  "stroke": "#FFFFFF33",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 12
+                    },
+                    "blur": 36
+                  }
                 },
                 {
                   "type": "frame",
-                  "id": "TMouI",
-                  "name": "Phone Wrap screen_cropview",
+                  "id": "WYKWi",
+                  "name": "Label",
+                  "gap": 12,
+                  "alignItems": "center",
                   "children": [
                     {
                       "type": "frame",
-                      "id": "X0boJZ",
-                      "name": "Phone screen_cropview",
-                      "clip": true,
-                      "width": 340,
-                      "height": 735,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "pitch_assets/screen_answer.png",
-                        "mode": "cover",
-                        "transform": [
-                          1,
-                          0,
-                          0,
-                          1.42,
-                          0,
-                          0
-                        ]
-                      },
-                      "cornerRadius": 32,
-                      "stroke": "#FFFFFF22",
-                      "strokeWidth": 2,
-                      "effect": {
-                        "type": "shadow",
-                        "shadowType": "outer",
-                        "color": "#16201922",
-                        "offset": {
-                          "x": 0,
-                          "y": 12
-                        },
-                        "blur": 32
-                      }
+                      "id": "egq4R",
+                      "name": "Number",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "$gold",
+                      "cornerRadius": 20,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rDpNU",
+                          "name": "N",
+                          "fill": "$soil",
+                          "content": "3",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 22,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "mcp81",
+                      "name": "Feature Text",
+                      "fill": "#FFFFFF",
+                      "content": "See it from space",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RI4Pf",
+              "name": "Feature 4",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "t2UXyJ",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 262,
+                  "height": 567,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "pitch_assets/screen_alerts.png",
+                    "mode": "cover",
+                    "transform": [
+                      1,
+                      0,
+                      0,
+                      1.217,
+                      0,
+                      0
+                    ]
+                  },
+                  "cornerRadius": 28,
+                  "stroke": "#FFFFFF33",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 12
+                    },
+                    "blur": 36
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "coD5K",
+                  "name": "Label",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jHIur",
+                      "name": "Number",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "$gold",
+                      "cornerRadius": 20,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "F6xFzp",
+                          "name": "N",
+                          "fill": "$soil",
+                          "content": "4",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 22,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "FG0c6",
+                      "name": "Feature Text",
+                      "fill": "#FFFFFF",
+                      "content": "Alerts and plan",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "N2PRNK",
+              "name": "Feature 5",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XfYLW",
+                  "name": "Phone",
+                  "clip": true,
+                  "width": 262,
+                  "height": 567,
+                  "fill": {
+                    "type": "image",
+                    "enabled": true,
+                    "url": "pitch_assets/screen_answer.png",
+                    "mode": "cover",
+                    "transform": [
+                      1,
+                      0,
+                      0,
+                      1.418,
+                      0,
+                      0
+                    ]
+                  },
+                  "cornerRadius": 28,
+                  "stroke": "#FFFFFF33",
+                  "strokeWidth": 2,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 12
+                    },
+                    "blur": 36
+                  }
+                },
+                {
+                  "type": "frame",
+                  "id": "k6NQKQ",
+                  "name": "Label",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "r5wP25",
+                      "name": "Number",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "$gold",
+                      "cornerRadius": 20,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "t6XfiL",
+                          "name": "N",
+                          "fill": "$soil",
+                          "content": "5",
+                          "fontFamily": "$font-lat",
+                          "fontSize": 22,
+                          "fontWeight": "800"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "U0bCVV",
+                      "name": "Feature Text",
+                      "fill": "#FFFFFF",
+                      "content": "Ask in Sorani",
+                      "fontFamily": "$font-lat",
+                      "fontSize": 26,
+                      "fontWeight": "700"
                     }
                   ]
                 }
@@ -2232,7 +884,7 @@
       "id": "QiOBy",
       "x": 6120,
       "y": 0,
-      "name": "04 The message",
+      "name": "04 AI",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -2264,11 +916,11 @@
           "name": "Title",
           "fill": "#FFFFFF",
           "textGrowth": "fixed-width",
-          "width": 600,
-          "content": "One message.",
+          "width": 620,
+          "content": "AI is the translator.",
           "lineHeight": 1.1,
           "fontFamily": "$font-lat",
-          "fontSize": 72,
+          "fontSize": 60,
           "fontWeight": "800",
           "letterSpacing": -2
         },
@@ -3181,15 +1833,15 @@
           "type": "text",
           "id": "TMDKg",
           "x": 120,
-          "y": 206,
+          "y": 196,
           "name": "Secondary",
           "fill": "$gold",
           "textGrowth": "fixed-width",
           "width": 520,
-          "content": "Everything the farmer needs.",
+          "content": "Numbers in. Sorani advice out.",
           "lineHeight": 1.2,
           "fontFamily": "$font-lat",
-          "fontSize": 40,
+          "fontSize": 36,
           "fontWeight": "500"
         },
         {
@@ -3199,11 +1851,100 @@
           "y": 70,
           "name": "Brand",
           "fill": "$gold",
-          "content": "JUTYAR",
+          "content": "AI IN THE PRODUCT",
           "fontFamily": "$font-lat",
           "fontSize": 24,
           "fontWeight": "700",
           "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "jXVJP",
+          "x": 1290,
+          "y": 880,
+          "name": "More AI",
+          "layout": "vertical",
+          "gap": 14,
+          "children": [
+            {
+              "type": "frame",
+              "id": "N4sboH",
+              "name": "AI Chip",
+              "fill": "#FFFFFF14",
+              "cornerRadius": 32,
+              "stroke": "#FFFFFF33",
+              "strokeWidth": 2,
+              "gap": 12,
+              "padding": [
+                12,
+                22,
+                12,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Nls4a",
+                  "name": "Icon",
+                  "width": 28,
+                  "height": 28,
+                  "icon": "moon-star",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "b6Vjnv",
+                  "name": "Chip Text",
+                  "fill": "#FFFFFF",
+                  "content": "Nightly AI brief for 33 districts",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "pJsq8",
+              "name": "AI Chip",
+              "fill": "#FFFFFF14",
+              "cornerRadius": 32,
+              "stroke": "#FFFFFF33",
+              "strokeWidth": 2,
+              "gap": 12,
+              "padding": [
+                12,
+                22,
+                12,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ukhVI",
+                  "name": "Icon",
+                  "width": 28,
+                  "height": 28,
+                  "icon": "sparkles",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "jNpJI",
+                  "name": "Chip Text",
+                  "fill": "#FFFFFF",
+                  "content": "Built with Claude, Codex and Pencil AI",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -3212,7 +1953,7 @@
       "id": "RU9ku",
       "x": 8160,
       "y": 0,
-      "name": "05 The website",
+      "name": "05 Website",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -3445,9 +2186,8 @@
         {
           "type": "frame",
           "id": "PtMJW",
-          "layoutPosition": "absolute",
-          "x": 900,
-          "y": 120,
+          "x": 880,
+          "y": 117,
           "name": "Control Room",
           "clip": true,
           "width": 1080,
@@ -3569,7 +2309,7 @@
       "id": "HIPSy",
       "x": 10200,
       "y": 0,
-      "name": "06 Alwa marketplace",
+      "name": "06 Marketplace",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -3599,7 +2339,7 @@
           "y": 110,
           "name": "Brand",
           "fill": "$gold",
-          "content": "JUTYAR · ALWA",
+          "content": "JUTYAR · MARKETPLACE",
           "fontFamily": "$font-lat",
           "fontSize": 24,
           "fontWeight": "700",
@@ -3638,7 +2378,7 @@
               "fill": "$gold",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "Alwa: the farmers' marketplace.",
+              "content": "Farmer to buyer, directly.",
               "lineHeight": 1.2,
               "fontFamily": "$font-lat",
               "fontSize": 42,
@@ -3670,12 +2410,20 @@
                   "name": "Phone",
                   "clip": true,
                   "width": 330,
-                  "height": 558,
+                  "height": 660,
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "pitch_assets/alwa_prices.png",
-                    "mode": "cover"
+                    "url": "pitch_assets/market_home.png",
+                    "mode": "cover",
+                    "transform": [
+                      1,
+                      0,
+                      0,
+                      1.69,
+                      0,
+                      0
+                    ]
                   },
                   "cornerRadius": 30,
                   "stroke": "#FFFFFF33",
@@ -3726,7 +2474,7 @@
                       "id": "PHfGX",
                       "name": "Step Text",
                       "fill": "#FFFFFF",
-                      "content": "See today's price",
+                      "content": "See what is on sale",
                       "fontFamily": "$font-lat",
                       "fontSize": 26,
                       "fontWeight": "700"
@@ -3749,12 +2497,20 @@
                   "name": "Phone",
                   "clip": true,
                   "width": 330,
-                  "height": 672,
+                  "height": 660,
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "pitch_assets/alwa_sell.png",
-                    "mode": "cover"
+                    "url": "pitch_assets/market_listing.png",
+                    "mode": "cover",
+                    "transform": [
+                      1,
+                      0,
+                      0,
+                      1.365,
+                      0,
+                      0
+                    ]
                   },
                   "cornerRadius": 30,
                   "stroke": "#FFFFFF33",
@@ -3805,7 +2561,7 @@
                       "id": "B40IWo",
                       "name": "Step Text",
                       "fill": "#FFFFFF",
-                      "content": "Put your crop on sale",
+                      "content": "Call the seller",
                       "fontFamily": "$font-lat",
                       "fontSize": 26,
                       "fontWeight": "700"
@@ -3828,12 +2584,20 @@
                   "name": "Phone",
                   "clip": true,
                   "width": 330,
-                  "height": 609,
+                  "height": 660,
                   "fill": {
                     "type": "image",
                     "enabled": true,
-                    "url": "pitch_assets/alwa_offers.png",
-                    "mode": "cover"
+                    "url": "pitch_assets/market_sell.png",
+                    "mode": "cover",
+                    "transform": [
+                      1,
+                      0,
+                      0,
+                      1.78,
+                      0,
+                      0
+                    ]
                   },
                   "cornerRadius": 30,
                   "stroke": "#FFFFFF33",
@@ -3884,7 +2648,7 @@
                       "id": "asq8I",
                       "name": "Step Text",
                       "fill": "#FFFFFF",
-                      "content": "Accept the best offer",
+                      "content": "Put yours on sale",
                       "fontFamily": "$font-lat",
                       "fontSize": 26,
                       "fontWeight": "700"
@@ -3899,10 +2663,303 @@
     },
     {
       "type": "frame",
-      "id": "XxvPB",
+      "id": "B3ZcNO",
       "x": 12240,
       "y": 0,
-      "name": "07 Vision and scale",
+      "name": "07 Feasibility",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$deep",
+      "layout": "vertical",
+      "gap": 60,
+      "padding": [
+        110,
+        120
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "P6m5M",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Topo Texture",
+          "opacity": 0.5,
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-6.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "text",
+          "id": "O2onTq",
+          "name": "Brand",
+          "fill": "$gold",
+          "content": "FEASIBILITY",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "sgndk",
+          "name": "Title Row",
+          "width": "fill_container",
+          "gap": 36,
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "text",
+              "id": "RKHiP",
+              "name": "Headline",
+              "fill": "#FFFFFF",
+              "content": "Ready to grow.",
+              "lineHeight": 1,
+              "fontFamily": "$font-lat",
+              "fontSize": 112,
+              "fontWeight": "800",
+              "letterSpacing": -3
+            },
+            {
+              "type": "text",
+              "id": "b0EX9",
+              "name": "Secondary",
+              "fill": "$gold",
+              "content": "Small cost. Clear partner.",
+              "fontFamily": "$font-lat",
+              "fontSize": 42,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "kVAKi",
+          "name": "Facts",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 28,
+          "children": [
+            {
+              "type": "frame",
+              "id": "UMRCV",
+              "name": "Fact Free",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "kDFuh",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "satellite",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "ij8DB",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Free",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "hNhq4",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "satellite and weather data",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dBoRV",
+              "name": "Fact Live",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "C3Y0s",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "server",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "O5pizO",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Live",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "u2F9i9",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "server hosted, about 2,000 tests",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gJWPd",
+              "name": "Fact ½ cent",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "j21DZl",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "coins",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "dLdqj",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "½ cent",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "F5ahe",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "per AI answer",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "i66Mg",
+              "name": "Fact Partner",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "VDHCz",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "landmark",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "OUoDS",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Partner",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "L7lXh",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "the Ministry's extension offices",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "XxvPB",
+      "x": 14280,
+      "y": 0,
+      "name": "08 Vision and scale",
       "clip": true,
       "width": 1920,
       "height": 1080,
