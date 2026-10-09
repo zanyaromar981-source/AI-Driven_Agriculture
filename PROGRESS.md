@@ -2,9 +2,10 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-09 16:32
+Last update: 2026-10-09 16:33
 
 ## Done
+- Alwa market design in Pencil (2026-10-09), `design/jutyar_app.pen` section "Alwa market": 8 phone screens (home with price board and listings, listing, make an offer, my offers, sell a crop, my listings, my listing with Accept, deal done) and a board of empty and error states; Alwa is now a tab in the Tab Bar. Previews `design/jutyar_alwa_*_preview.png`. The user saves the .pen with Cmd+S
 - Flutter app follows FRONTEND.md v4 (2026-10-09): the phone number is always checked before a code is sent, also in test mode; sign-in errors in words (429 countdown from retry_after_s, 503 try again, 422 check the number); Home shows a calm "10-day plan coming soon" for the plan route's 404; Ask the Doctor sends each photo as the type its bytes are (timeout of 120 s and per-part types were already right); Field history shows the groundwater topic as the wider area with source and as_of; an outline that touches itself at one point is refused with the existing message; area and inside_pct rounding checked (already rounded everywhere)
 - Control Room website `web/control_room/` (React + Vite): public View page and Admin behind a login, Kurdish (right to left) and English, phone to desktop; farmers and farms with create, edit, delete, support letter and government report; crop register and crop report; region data with hand corrections; alerts to everyone; inbox and news bar; the Doctor review, answer bank and problems map; Alwa read only with average prices; rules explained; app control; every text editable; data jobs status; settings. Sample data in the browser behind one data layer
 - Scope: Farm Doctor, 5 AIs + one Claude doctor, no long-range forecasts (`Scope_and_Build_Plan_FINAL.md`)
@@ -49,6 +50,7 @@ Last update: 2026-10-09 16:32
 - Map source: user dislikes the current map (asked for Google, then Leaflet). Leaflet map demo built in `web/map_demo/` for review
 
 ## Next
+- Flutter: Alwa market screens from `design/jutyar_app.pen` (design done 2026-10-09; backend routes built)
 - Write the Kurdish in `Desktop/Jutyar_Translation/jutyar_texts.xlsx`, then `npm run texts:import` in `web/control_room`
 - Flutter: Report, Alerts, Settings (Home and Ask the Doctor done; the Report button says "not built yet")
 - Flutter: Home labels to Sorani after a native speaker check
