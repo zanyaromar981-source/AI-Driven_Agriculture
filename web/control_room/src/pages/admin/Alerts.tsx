@@ -1,157 +1,103 @@
-// Alerts: one message to every farmer. Write it in Kurdish and English, see the phone preview, save a
-// draft or send it. The list keeps every alert; drafts can be edited or deleted, sent alerts only copied.
+// Alerts (design 12 l4Sbxx): a read-only feed built from live data, no route of its own (decided
+// 2026-10-09): satellite fire detections per district, the dryness picture, the daily brief's points,
+// and data jobs that never ran or failed. Sending messages to farmers waits for push (BACKEND.md 2.7).
 import { useMemo, useState } from 'react';
-import { BellRing, CloudSun, Bug, Droplets, Store, Megaphone, MoreHorizontal, Send, Save, Copy, Trash2, Pencil, Smartphone } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Flame, CloudRain, Newspaper, Activity, Waves, type LucideIcon } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
-import { db } from '../../data/db';
-import { useRows } from '../../data/store';
-import { newId, nowIso } from '../../data/api';
-import type { Alert, AlertType } from '../../data/types';
-import { Card, Confirm, Drawer, Field, Note, PageHead, Pill, Tabs, useToast } from '../../components/ui';
-import { DataTable, type Col } from '../../components/DataTable';
+import { useApi } from '../../api/cache';
+import { useBrief, useDams, useFires, useOverview } from '../../api/public';
+import { PageHead, Pill, type Tone } from '../../components/ui';
+import { StateBox, usePlace } from '../../components/domain';
+import type { JobStatus } from './region/types';
 import './alerts.css';
 
-const TYPES: [AlertType, JSX.Element][] = [
-  ['general', <Megaphone key="g" />], ['weather', <CloudSun key="w" />], ['pest', <Bug key="p" />],
-  ['water', <Droplets key="d" />], ['market', <Store key="m" />], ['other', <MoreHorizontal key="o" />],
-];
-const LIMIT = 160;
-const blank = (): Alert => ({ id: '', type: 'general', title: { en: '', ku: '' }, body: { en: '', ku: '' }, status: 'draft', by: '', created: '', sent: null });
+type Kind = 'fires' | 'dryness' | 'brief' | 'jobs';
+type Level = 'alarm' | 'watch' | 'info';
+interface Item { key: string; kind: Kind; level: Level; icon: LucideIcon; title: string; sub: string; source: string; at: string | null; to?: string }
+const LEVEL_TONE: Record<Level, Tone> = { alarm: 'danger', watch: 'warn', info: '' };
+const ICON_TONE: Record<Level, string> = { alarm: 'danger', watch: 'warn', info: 'good' };
 
 export default function Alerts() {
-  const { t, b, num, date } = useI18n();
-  const { me } = useAuth();
-  const toast = useToast();
-  const alerts = useRows(db.alerts);
-  const farmers = useRows(db.farmers);
-  const [tab, setTab] = useState<'new' | 'list'>('new');
-  const [draft, setDraft] = useState<Alert>(blank);
-  const [confirm, setConfirm] = useState(false);
-  const [view, setView] = useState<Alert | null>(null);
-  const [del, setDel] = useState<Alert | null>(null);
-  const [err, setErr] = useState('');
+  const { t, num, ago, pick, lang } = useI18n();
+  const { can } = useAuth();
+  const place = usePlace();
+  const fires = useFires(), ov = useOverview(), brief = useBrief(), dams = useDams();
+  const jobs = useApi<{ jobs: JobStatus[] }>(can('jobs') ? '/dashboard/jobs' : null, ['jobs'], { auth: true, everyMs: 120000 });
+  const [kind, setKind] = useState<Kind | 'all'>('all');
 
-  const reach = useMemo(() => farmers.reduce((n, f) => n + (f.status === 'active' ? 1 : 0), 0), [farmers]);
-  const rows = useMemo(() => [...alerts].sort((a, z) => (z.sent ?? z.created).localeCompare(a.sent ?? a.created)), [alerts]);
+  const items = useMemo<Item[]>(() => {
+    const out: Item[] = [];
+    // fires grouped by district, newest detection first
+    const g = new Map<string, { n: number; near: number; last: string }>();
+    for (const f of fires.data?.fires ?? []) {
+      const k = f.zone_slug ?? '?';
+      const e = g.get(k) ?? { n: 0, near: 0, last: f.detected_at };
+      e.n++; e.near += f.farms_within_5km ?? 0; if (f.detected_at > e.last) e.last = f.detected_at;
+      g.set(k, e);
+    }
+    for (const [z, e] of g) out.push({
+      key: 'f-' + z, kind: 'fires', level: e.near > 0 ? 'alarm' : 'watch', icon: Flame,
+      title: t('alerts.fires_in', { n: num(e.n), place: z === '?' ? t('alerts.unknown_place') : place.dist(z) }),
+      sub: e.near > 0 ? t('alerts.fires_near', { n: num(e.near) }) : t('alerts.fires_far'), source: 'NASA FIRMS', at: e.last, to: '/admin/region?tab=fires',
+    });
+    // dryness: one line per band present, plus the driest
+    if (ov.data) {
+      const bands = new Map<string, number>();
+      for (const z of ov.data.zones) if (z.band) bands.set(z.band, (bands.get(z.band) ?? 0) + 1);
+      for (const [b, n] of bands) out.push({
+        key: 'd-' + b, kind: 'dryness', level: b === 'very_dry' ? 'alarm' : b === 'dry' ? 'watch' : 'info', icon: CloudRain,
+        title: t('alerts.band_count', { n: num(n), band: t('band.' + b) }),
+        sub: t('alerts.band_sub', { avg: ov.data.summary.average_dryness == null ? '-' : num(ov.data.summary.average_dryness, 1), driest: ov.data.summary.driest.slice(0, 3).map(s => place.dist(s)).join(lang === 'ku' ? '، ' : ', ') }),
+        source: 'Open-Meteo ERA5', at: null, to: '/admin/region',
+      });
+    }
+    // the brief's points
+    const b = brief.data?.brief;
+    if (b) b.points.forEach((p, i) => out.push({ key: 'b-' + i, kind: 'brief', level: p.level, icon: Newspaper, title: pick(p.text_ku, p.text_en), sub: t('alerts.brief_sub'), source: t('alerts.brief_src'), at: b.generated_at }));
+    // dams with no reading, jobs that never ran or failed
+    for (const d of dams.data?.dams ?? []) if (!d.latest) out.push({ key: 'dam-' + d.slug, kind: 'jobs', level: 'info', icon: Waves, title: t('alerts.dam_none', { name: pick(d.name_ku, d.name_en) }), sub: t('alerts.dam_none_sub'), source: t('alerts.jobs_src'), at: null, to: '/admin/region?tab=dams' });
+    for (const j of jobs.data?.jobs ?? []) if (j.state !== 'ok') out.push({
+      key: 'j-' + j.job, kind: 'jobs', level: j.state === 'failed' ? 'alarm' : j.state === 'late' ? 'watch' : 'info', icon: Activity,
+      title: t('alerts.job_' + j.state, { name: pick(j.name_ku, j.name_en) }), sub: j.message ?? '', source: t('alerts.jobs_src'), at: j.last_run?.finished_at ?? null, to: '/admin/jobs',
+    });
+    const rank = { alarm: 0, watch: 1, info: 2 };
+    return out.sort((a, b) => rank[a.level] - rank[b.level] || (b.at ?? '').localeCompare(a.at ?? ''));
+  }, [fires.data, ov.data, brief.data, dams.data, jobs.data, t, num, pick, place, lang]);
 
-  const set = (p: Partial<Alert>) => setDraft(d => ({ ...d, ...p }));
-  const valid = () => {
-    if (!draft.title.ku.trim() && !draft.title.en.trim()) { setErr('alerts.need_title'); return false; }
-    if (!draft.body.ku.trim() && !draft.body.en.trim()) { setErr('alerts.need_body'); return false; }
-    setErr(''); return true;
-  };
-  const store = (status: 'draft' | 'sent') => {
-    const now = nowIso();
-    const a: Alert = { ...draft, id: draft.id || newId('a'), status, by: me?.name ?? '', created: draft.created || now, sent: status === 'sent' ? now : null };
-    db.alerts.put(a);
-    setDraft(blank());
-    toast(t(status === 'sent' ? 'alerts.sent_toast' : 'alerts.draft_toast', { n: num(reach) }), 'good');
-    if (status === 'sent') setTab('list');
-  };
-  const edit = (a: Alert) => { setDraft({ ...a }); setView(null); setTab('new'); };
-  const copy = (a: Alert) => { setDraft({ ...a, id: '', status: 'draft', created: '', sent: null }); setView(null); setTab('new'); toast(t('alerts.copied')); };
-
-  const typeLabel = (k: AlertType) => t('alerts.type_' + k);
-  const cols: Col<Alert>[] = [
-    { key: 'title', label: t('alerts.c_title'), cell: a => <b><bdi>{b(a.title)}</bdi></b>, sort: a => b(a.title) },
-    { key: 'type', label: t('alerts.c_type'), cell: a => typeLabel(a.type), sort: a => a.type },
-    { key: 'status', label: t('alerts.c_status'), cell: a => <Pill tone={a.status === 'sent' ? 'good' : 'warn'}>{t('alerts.s_' + a.status)}</Pill>, sort: a => a.status },
-    { key: 'when', label: t('alerts.c_when'), cell: a => date(a.sent ?? a.created, 'datetime'), sort: a => a.sent ?? a.created },
-    { key: 'by', label: t('alerts.c_by'), cell: a => a.by, sort: a => a.by },
-    { key: 'ku', label: t('alerts.c_ku'), cell: a => a.title.ku && a.body.ku ? <Pill tone="good">{t('common.yes')}</Pill> : <Pill tone="warn">{t('common.ku_missing')}</Pill>, optional: true },
-  ];
-
-  const count = (s: string) => <small className={s.length > LIMIT ? 'err' : ''}>{t('alerts.count', { n: num(s.length), max: num(LIMIT) })}</small>;
-  const previewTitle = draft.title.ku || draft.title.en || t('alerts.preview_title');
-  const previewBody = draft.body.ku || draft.body.en || t('alerts.preview_body');
+  const shown = kind === 'all' ? items : items.filter(i => i.kind === kind);
+  const loading = !fires.data && !ov.data && !brief.data;
+  const count = (k: Kind) => items.filter(i => i.kind === k).length;
 
   return (
-    <>
-      <PageHead eyebrow={t('nav.g_act')} title={t('nav.alerts')} sub={t('alerts.sub', { n: num(reach) })} />
-      <Tabs value={tab} onChange={setTab} items={[['new', draft.id ? t('alerts.tab_edit') : t('alerts.tab_new')], ['list', t('alerts.tab_list', { n: num(alerts.length) })]]} />
-
-      {tab === 'new' ? (
-        <div className="grid g-main">
-          <Card>
-            <div className="eyebrow" style={{ marginBottom: 8 }}>{t('alerts.kind')}</div>
-            <div className="chips mb">
-              {TYPES.map(([k, ic]) => <button key={k} className={'chip' + (draft.type === k ? ' on' : '')} onClick={() => set({ type: k })}>{ic}{typeLabel(k)}</button>)}
-            </div>
-            <div className="form-grid">
-              <Field label={t('alerts.title_ku')} full>
-                <input type="text" dir="rtl" lang="ckb" className="ku-text" value={draft.title.ku} onChange={e => set({ title: { ...draft.title, ku: e.target.value } })} />
-              </Field>
-              <Field label={t('alerts.body_ku')} full>
-                <textarea dir="rtl" lang="ckb" className="ku-text" rows={3} value={draft.body.ku} onChange={e => set({ body: { ...draft.body, ku: e.target.value } })} />
-                {count(draft.body.ku)}
-              </Field>
-              <Field label={t('alerts.title_en')} full>
-                <input type="text" dir="ltr" value={draft.title.en} onChange={e => set({ title: { ...draft.title, en: e.target.value } })} />
-              </Field>
-              <Field label={t('alerts.body_en')} full>
-                <textarea dir="ltr" rows={3} value={draft.body.en} onChange={e => set({ body: { ...draft.body, en: e.target.value } })} />
-                {count(draft.body.en)}
-              </Field>
-            </div>
-            {err && <div className="mt"><Note tone="danger">{t(err)}</Note></div>}
-            <div className="mt"><Note tone="info">{t('alerts.rule_note')}</Note></div>
-            <div className="row mt">
-              <button className="btn primary" onClick={() => valid() && setConfirm(true)}><Send className="flip-rtl" />{t('alerts.send_all')}</button>
-              <button className="btn" onClick={() => valid() && store('draft')}><Save />{t('alerts.save_draft')}</button>
-              {draft.id && <button className="btn ghost" onClick={() => { setDraft(blank()); setErr(''); }}>{t('alerts.new_instead')}</button>}
-            </div>
-          </Card>
-          <div className="stack">
-            <Card title={t('alerts.preview')} extra={<Smartphone className="muted" />}>
-              <div className="al-phone">
-                <div className="al-clock">09:41</div>
-                <div className="al-push" dir="rtl" lang="ckb">
-                  <div className="row small" style={{ flexWrap: 'nowrap' }}><b>JUTYAR</b><span className="muted" style={{ marginInlineStart: 'auto' }}>{t('alerts.now')}</span></div>
-                  <div className="al-push-title"><bdi>{previewTitle}</bdi></div>
-                  <div className="small" dir="auto">{previewBody.length > LIMIT ? previewBody.slice(0, LIMIT) + '…' : previewBody}</div>
-                </div>
-              </div>
-              <p className="muted small">{t('alerts.preview_note')}</p>
-            </Card>
-            <Card title={t('alerts.who')}>
-              <dl className="facts">
-                <dt>{t('alerts.who_all')}</dt><dd>{num(reach)}</dd>
-                <dt>{t('alerts.who_blocked')}</dt><dd>{num(farmers.length - reach)}</dd>
-              </dl>
-            </Card>
-          </div>
-        </div>
-      ) : (
-        <Card>
-          <DataTable id="alerts" rows={rows} cols={cols} onRow={setView} defaultSort={['when', -1]} />
-        </Card>
-      )}
-
-      {confirm && (
-        <Confirm danger={false} title={t('alerts.confirm_title')} okLabel={t('alerts.send_all')} onClose={() => setConfirm(false)} onOk={() => store('sent')}
-          text={t('alerts.confirm_text', { n: num(reach) })} />
-      )}
-      {del && <Confirm title={t('alerts.delete_title')} okLabel={t('common.delete')} onClose={() => setDel(null)}
-        onOk={() => { db.alerts.remove(del.id); setView(null); toast(t('common.deleted')); }} text={t('alerts.delete_text')} />}
-      {view && (
-        <Drawer title={<bdi>{b(view.title)}</bdi>} eyebrow={typeLabel(view.type)} onClose={() => setView(null)}>
-          <div className="row mb"><Pill tone={view.status === 'sent' ? 'good' : 'warn'} icon={<BellRing />}>{t('alerts.s_' + view.status)}</Pill>
-            <span className="muted small">{view.by} · {date(view.sent ?? view.created, 'datetime')}</span></div>
-          <div className="stack">
-            <div><div className="eyebrow">{t('common.kurdish')}</div>
-              {view.title.ku ? <><b dir="rtl" lang="ckb" className="ku-text" style={{ display: 'block' }}>{view.title.ku}</b><p dir="rtl" lang="ckb" className="ku-text" style={{ margin: '4px 0' }}>{view.body.ku}</p></> : <p className="muted">{t('common.ku_missing')}</p>}</div>
-            <div><div className="eyebrow">{t('common.english')}</div>
-              <b dir="ltr" style={{ display: 'block' }}>{view.title.en}</b><p dir="ltr" style={{ margin: '4px 0' }}>{view.body.en}</p></div>
-          </div>
-          <div className="foot">
-            {view.status === 'draft' && <button className="btn danger" onClick={() => setDel(view)}><Trash2 />{t('common.delete')}</button>}
-            <button className="btn" onClick={() => copy(view)}><Copy />{t('alerts.duplicate')}</button>
-            {view.status === 'draft' && <button className="btn primary" onClick={() => edit(view)}><Pencil />{t('common.edit')}</button>}
-          </div>
-          {view.status === 'sent' && <p className="muted small">{t('alerts.sent_locked')}</p>}
-        </Drawer>
-      )}
-    </>
+    <div>
+      <PageHead eyebrow={t('nav.g_act')} title={t('nav.alerts')} sub={t('alerts.sub')} />
+      <div className="chips mb al-chips" role="tablist">
+        {(['all', 'fires', 'dryness', 'brief', 'jobs'] as const).map(k => (
+          <button key={k} className={'chip' + (kind === k ? ' on' : '')} onClick={() => setKind(k)} aria-pressed={kind === k}>
+            {t('alerts.k_' + k)}{k !== 'all' && <span className="al-n">{num(count(k))}</span>}
+          </button>
+        ))}
+      </div>
+      <section className="card al-feed">
+        {loading && Array.from({ length: 5 }, (_, i) => <div key={i} className="al-row"><i className="sk" style={{ width: '60%' }} /></div>)}
+        {!loading && !shown.length && <StateBox kind="empty" title={t('alerts.none')} text={t('alerts.none_t')} />}
+        {shown.map(i => {
+          const body = (
+            <>
+              <span className={'ico ' + ICON_TONE[i.level]}><i.icon /></span>
+              <span className="al-text">
+                <span className="al-title"><b><bdi>{i.title}</bdi></b><Pill tone={LEVEL_TONE[i.level]}>{t('alerts.l_' + i.level)}</Pill></span>
+                {i.sub && <small className="muted"><bdi>{i.sub}</bdi></small>}
+              </span>
+              <span className="al-meta"><span>{i.at ? ago(i.at) : ''}</span><small className="muted">{i.source}</small></span>
+            </>
+          );
+          return i.to ? <Link key={i.key} to={i.to} className="al-row al-link">{body}</Link> : <div key={i.key} className="al-row">{body}</div>;
+        })}
+      </section>
+      <p className="muted small mt">{t('alerts.foot')}</p>
+    </div>
   );
 }

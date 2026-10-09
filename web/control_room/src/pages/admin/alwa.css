@@ -1,0 +1,7 @@
+/* Alwa market (design 14) */
+.alwa-page > .note { margin-bottom: 14px; }
+.alwa-prices { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.board { padding: 10px 0; border-top: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 8px; }
+.offers { display: flex; flex-direction: column; gap: 8px; }
+.offer { background: var(--bg); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; }
+@media (max-width: 1100px) { .alwa-prices { grid-template-columns: minmax(0, 1fr); } }

@@ -1,0 +1,6 @@
+.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+@media (max-width: 1024px) { .settings-grid { grid-template-columns: minmax(0, 1fr); } }
+.account-head { display: flex; align-items: center; gap: 12px; margin: 10px 0 14px; }
+.account-head .avatar { width: 44px; height: 44px; font-size: 15px; }
+.account-head b { display: block; direction: ltr; unicode-bidi: isolate; text-align: start; }
+.settings-grid .set .ctl select { width: auto; min-width: 140px; }

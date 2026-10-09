@@ -1,9 +1,11 @@
-// Admin sign-in. Forgot password is handled by Supabase once it is connected (a reset link by email).
+// Staff sign-in (design 05) against POST /v1/dashboard/auth/login. There is no self-service reset yet:
+// an Owner resets a password from the Staff page (FRONTEND.md 8).
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, ArrowLeft, Info, MailCheck } from 'lucide-react';
+import { Eye, EyeOff, LogIn, ArrowLeft, Info } from 'lucide-react';
 import { useI18n } from '../i18n';
-import { useAuth, DEMO_PASSWORD } from '../auth/auth';
+import { useAuth } from '../auth/auth';
+import { ApiError } from '../api/client';
 import { GrainSun } from '../motion/GrainSun';
 import { LangSwitch } from '../layouts/LangSwitch';
 import { Field, Modal, Note } from '../components/ui';
@@ -20,16 +22,18 @@ export default function Login() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [forgot, setForgot] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setErr('');
     if (!email.trim() || !pw) { setErr('login.fill_both'); return; }
     setBusy(true);
-    const r = await signIn(email, pw);
-    setBusy(false);
-    if (r === 'ok') nav(loc.state?.from ?? '/admin', { replace: true });
-    else setErr(r === 'inactive' ? 'login.inactive' : 'login.bad');
+    try {
+      await signIn(email, pw);
+      nav(loc.state?.from ?? '/admin', { replace: true });
+    } catch (x) {
+      const code = x instanceof ApiError ? x.code : '';
+      setErr(code === 'bad_credentials' ? 'login.bad' : code === 'offline' ? 'err.offline' : code === 'rate_limited' ? 'err.rate_limited' : 'err.generic');
+    } finally { setBusy(false); }
   };
 
   if (me) return <Navigate to={loc.state?.from ?? '/admin'} replace />;
@@ -49,7 +53,7 @@ export default function Login() {
           <LangSwitch />
         </div>
         <form className="login-form" onSubmit={submit} noValidate>
-          <div className="logo" style={{ marginBottom: 6 }}><span className="mark"><GrainSun size={26} /></span><span>Jutyar</span></div>
+          <div className="logo" style={{ marginBottom: 6 }}><span className="mark"><GrainSun size={26} /></span><span className="word-ku">جوتیار</span><span className="word-en-full">Jutyar</span></div>
           <h1>{t('login.title')}</h1>
           <p className="muted" style={{ marginTop: 0 }}>{t('login.sub')}</p>
           <Field label={t('login.email')}>
@@ -65,20 +69,11 @@ export default function Login() {
           {err && <Note tone="danger">{t(err)}</Note>}
           <button className="btn primary" type="submit" disabled={busy} style={{ width: '100%' }}><LogIn className="flip-rtl" />{t('login.submit')}</button>
           <button type="button" className="btn ghost sm" onClick={() => setForgot(true)} style={{ alignSelf: 'center' }}>{t('login.forgot')}</button>
-          <Note tone="info" icon={<Info />}>{t('login.demo', { email: 'karwan.aziz@jutyar.krd', pw: DEMO_PASSWORD })}</Note>
         </form>
       </div>
       {forgot && (
-        <Modal title={t('login.forgot')} onClose={() => { setForgot(false); setResetSent(false); }}
-          foot={resetSent ? <button className="btn primary" onClick={() => { setForgot(false); setResetSent(false); }}>{t('common.done')}</button>
-            : <><button className="btn" onClick={() => setForgot(false)}>{t('common.cancel')}</button><button className="btn primary" onClick={() => setResetSent(true)}>{t('login.send_link')}</button></>}>
-          {resetSent ? <Note tone="good" icon={<MailCheck />}>{t('login.link_sent')}</Note> : (
-            <>
-              <p className="muted" style={{ marginTop: 0 }}>{t('login.forgot_sub')}</p>
-              <Field label={t('login.email')}><input type="email" defaultValue={email} dir="ltr" /></Field>
-              <div style={{ marginTop: 10 }}><Note tone="warn">{t('login.supabase_note')}</Note></div>
-            </>
-          )}
+        <Modal title={t('login.forgot')} onClose={() => setForgot(false)} foot={<button className="btn primary" onClick={() => setForgot(false)}>{t('common.done')}</button>}>
+          <Note tone="info" icon={<Info />}>{t('login.forgot_owner')}</Note>
         </Modal>
       )}
     </div>

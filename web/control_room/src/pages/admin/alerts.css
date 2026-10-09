@@ -1,4 +1,12 @@
-.al-phone { width: 240px; max-width: 100%; margin: 0 auto 10px; background: linear-gradient(160deg, #2C4A3C, #123A2C); border: 5px solid var(--ink); border-radius: 28px; padding: 18px 10px 70px; color: #fff; }
-.al-clock { text-align: center; font: 700 26px var(--latin); margin-bottom: 14px; direction: ltr; }
-.al-push { background: #FFFFFFEE; color: var(--ink); border-radius: 13px; padding: 9px 11px; font-family: var(--arabic); overflow-wrap: anywhere; }
-.al-push-title { font-weight: 700; margin: 2px 0; }
+/* Alerts feed (design 12): icon at the reading start, title with a level pill, time and source at the end. */
+.al-chips { justify-content: flex-start; }
+.al-n { font: 700 11px var(--latin); opacity: .7; margin-inline-start: 4px; }
+.al-feed { padding: 4px 18px; }
+.al-row { display: flex; align-items: center; gap: 14px; padding: 14px 2px; border-bottom: 1px solid var(--line-soft); color: inherit; }
+.al-row:last-child { border-bottom: 0; }
+.al-link:hover { background: #FAFBF7; }
+.al-row .ico { width: 40px; height: 40px; border-radius: 12px; }
+.al-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.al-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.al-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 12.5px; color: var(--ink-2); text-align: end; flex: none; max-width: 160px; }
+@media (max-width: 640px) { .al-row { flex-wrap: wrap; } .al-meta { flex-direction: row; gap: 8px; max-width: none; width: 100%; padding-inline-start: 54px; align-items: center; } }

@@ -1,145 +1,169 @@
-// Rules: the numbers that decide warnings, map colours and field status. Each change keeps a history.
+// Rules (design 16): every number that decides a warning or a colour, where it is used, its allowed
+// range and its history. GET/PUT /dashboard/rules, /rules/{code}/history, /rules/{code}/reset
+// (FRONTEND.md 9 Rules). Honest limit: the jobs do not read these yet, and the page says so.
 import { useMemo, useState } from 'react';
-import { Info, Pencil, History, RotateCcw, CloudSun, Sprout, Satellite } from 'lucide-react';
-import { db } from '../../data/db';
-import { useRows } from '../../data/store';
-import { seedRules } from '../../data/seed';
-import type { Rule } from '../../data/types';
+import { CloudSun, Sprout, Satellite, Lightbulb, Pencil, History, RotateCcw, TriangleAlert } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
-import { Card, Drawer, Field, Modal, Note, PageHead, Pill, useToast } from '../../components/ui';
+import { api, qs } from '../../api/client';
+import { useApi, invalidate } from '../../api/cache';
+import { PageHead, Note, Modal, Drawer, Field, Pill } from '../../components/ui';
+import { StateBox } from '../../components/domain';
+import { useAction } from './inbox/useAction';
+import './rules.css';
 
-const GROUPS: Rule['group'][] = ['weather', 'dryness', 'field'];
-const GROUP_ICON = { weather: CloudSun, dryness: Sprout, field: Satellite };
+type UsedBy = 'weather_planner' | 'dryness' | 'field_eye';
+interface Rule {
+  code: string; grp: string; name_en: string; name_ku?: string | null; meaning_en: string; meaning_ku?: string | null;
+  value: number; unit: string; min_value: number; max_value: number; default_value: number; used_by: UsedBy;
+  updated_by?: string | null; updated_at: string;
+}
+interface Change { id: string; code: string; old_value: number; new_value: number; reason: string; staff_id: string; at: string }
+/** readable unit: the server sends codes like c, mm, ug_m3, pct */
+function useUnit() { const { t } = useI18n(); return (u: string) => { const k = 'rules.u_' + u; const s = t(k); return s === k ? u : s; }; }
+const ORDER: UsedBy[] = ['weather_planner', 'dryness', 'field_eye'];
+const WHERE_ICON: Record<UsedBy, typeof CloudSun> = { weather_planner: CloudSun, dryness: Sprout, field_eye: Satellite };
 
 export default function Rules() {
-  const { t, b, num, ago, date } = useI18n();
-  const rules = useRows(db.rules);
-  const start = useMemo(() => new Map(seedRules().map(r => [r.id, r.value])), []);
-  const byGroup = useMemo(() => {
-    const m = new Map<string, Rule[]>();
-    for (const r of rules) { const a = m.get(r.group); a ? a.push(r) : m.set(r.group, [r]); }
-    return m;
-  }, [rules]);
+  const { t, num, pick } = useI18n();
+  const { can } = useAuth();
+  const q = useApi<{ rules: Rule[] }>('/dashboard/rules', ['rules'], { auth: true });
   const [edit, setEdit] = useState<Rule | null>(null);
+  const [reset, setReset] = useState<Rule | null>(null);
   const [hist, setHist] = useState<Rule | null>(null);
+  const groups = useMemo(() => {
+    const by = new Map<UsedBy, Rule[]>();
+    for (const r of q.data?.rules ?? []) { const a = by.get(r.used_by) ?? []; a.push(r); by.set(r.used_by, a); }
+    return ORDER.filter(u => by.has(u)).map(u => [u, by.get(u)!] as const);
+  }, [q.data]);
+  const canEdit = can('rules', 'update');
+  const unit = useUnit();
 
   return (
-    <>
+    <div className="rules-page">
       <PageHead eyebrow={t('nav.g_app')} title={t('nav.rules')} sub={t('rules.sub')} />
-      <Card className="mb">
-        <div className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap', gap: 12 }}>
-          <span className="ico brand"><Info /></span>
-          <div style={{ minWidth: 0 }}>
-            <h3>{t('rules.what_title')}</h3>
-            <p className="ink2" style={{ margin: '4px 0 12px' }}>{t('rules.what_text')}</p>
-          </div>
-        </div>
-        <div className="grid g3">
-          {GROUPS.map(g => {
-            const Ic = GROUP_ICON[g];
-            return (
-              <div key={g} className="note" style={{ flexDirection: 'column', gap: 4 }}>
-                <b className="row" style={{ color: 'var(--ink)' }}><Ic size={16} />{t('rules.where_' + g)}</b>
-                <span>{t('rules.where_' + g + '_text')}</span>
+      <Note tone="warn" icon={<TriangleAlert />}>{t('rules.honest')}</Note>
+      <div className="rules-explain card">
+        {ORDER.map(u => { const I = WHERE_ICON[u]; return (
+          <div key={u} className="where"><span className="ico brand"><I /></span><b>{t('rules.w_' + u)}</b><span className="small ink2">{t('rules.w_' + u + '_text')}</span></div>
+        ); })}
+        <div className="where tip"><span className="ico gold"><Lightbulb /></span><b>{t('rules.tip')}</b><span className="small ink2">{t('rules.tip_text')}</span></div>
+      </div>
+      {q.error && !q.data ? <div className="card"><StateBox kind="error" action={<button className="btn sm" onClick={q.reload}><RotateCcw />{t('common.retry')}</button>} /></div>
+        : q.loading ? <div className="card"><div className="sk-rows">{Array.from({ length: 8 }, (_, i) => <i key={i} className="sk" />)}</div></div>
+          : groups.map(([u, rules]) => (
+            <section key={u} className="card pad0 rules-group">
+              <h3 className="group-title">{t('rules.w_' + u)}</h3>
+              <div className="table-wrap">
+                <table className="t cards">
+                  <thead><tr><th>{t('rules.rule')}</th><th>{t('rules.meaning')}</th><th className="num">{t('rules.value')}</th><th>{t('rules.range')}</th><th>{t('rules.last')}</th><th /></tr></thead>
+                  <tbody>
+                    {rules.map(r => {
+                      const changed = r.value !== r.default_value;
+                      return (
+                        <tr key={r.code}>
+                          <td data-label={t('rules.rule')}><b>{pick(r.name_ku, r.name_en)}</b><div className="mono small muted">{r.code}</div></td>
+                          <td data-label={t('rules.meaning')} className="ink2 small meaning">{pick(r.meaning_ku, r.meaning_en)}</td>
+                          <td data-label={t('rules.value')} className="num"><b className="val">{num(r.value, r.value % 1 ? 1 : 0)}</b> <span className="muted small">{unit(r.unit)}</span></td>
+                          <td data-label={t('rules.range')} className="small ink2 nowrap">{t('rules.range_v', { a: num(r.min_value), b: num(r.max_value), d: num(r.default_value) })}</td>
+                          <td data-label={t('rules.last')} className="small">{changed ? <Pill tone="warn">{t('rules.changed')}</Pill> : <span className="muted">{t('rules.start_value')}</span>}</td>
+                          <td className="act">
+                            <button className="btn sm" onClick={() => setHist(r)} aria-label={t('rules.history')}><History /></button>{' '}
+                            {canEdit && <button className="btn sm" onClick={() => setEdit(r)}><Pencil />{t('rules.change')}</button>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            );
-          })}
-        </div>
-        <div className="grid g2 mt">
-          <Note tone="warn" icon={<Info />}>{t('rules.today')}</Note>
-          <Note tone="good" icon={<Info />}>{t('rules.advice')}</Note>
-        </div>
-      </Card>
-
-      {GROUPS.map(g => (
-        <Card key={g} className="mb" title={t('rules.group_' + g)}>
-          <div className="table-wrap">
-            <table className="t cards">
-              <thead><tr><th>{t('rules.rule')}</th><th>{t('rules.meaning')}</th><th className="num">{t('rules.value')}</th><th>{t('rules.used_by')}</th><th>{t('rules.last_change')}</th><th /></tr></thead>
-              <tbody>
-                {(byGroup.get(g) ?? []).map(r => {
-                  const last = r.history[r.history.length - 1];
-                  const changed = start.get(r.id) !== r.value;
-                  return (
-                    <tr key={r.id}>
-                      <td data-label={t('rules.rule')}><b>{b(r.name)}</b></td>
-                      <td data-label={t('rules.meaning')} className="ink2 small" style={{ maxWidth: 380 }}>{b(r.meaning)}</td>
-                      <td data-label={t('rules.value')} className="num nowrap"><b>{num(r.value)}</b> <span className="ltr muted">{r.unit}</span>{changed && <> <Pill tone="warn">{t('rules.changed')}</Pill></>}</td>
-                      <td data-label={t('rules.used_by')}><Pill>{t('rules.by_' + r.usedBy)}</Pill></td>
-                      <td data-label={t('rules.last_change')} className="small">{last ? <>{ago(last.at)} · {last.by}</> : <span className="muted">{t('rules.never')}</span>}</td>
-                      <td data-label="" className="act">
-                        <button className="btn sm" onClick={() => setEdit(r)}><Pencil />{t('common.edit')}</button>{' '}
-                        <button className="btn sm icon" onClick={() => setHist(r)} title={t('rules.history')} aria-label={t('rules.history')}><History /></button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      ))}
-
-      {edit && <EditRule rule={edit} startValue={start.get(edit.id) ?? edit.value} onClose={() => setEdit(null)} />}
-      {hist && (
-        <Drawer title={b(hist.name)} eyebrow={t('rules.history')} onClose={() => setHist(null)}>
-          <p className="ink2" style={{ marginTop: 0 }}>{b(hist.meaning)}</p>
-          <dl className="facts mb">
-            <dt>{t('rules.now')}</dt><dd>{num(hist.value)} <span className="ltr">{hist.unit}</span></dd>
-            <dt>{t('rules.start')}</dt><dd>{num(start.get(hist.id))} <span className="ltr">{hist.unit}</span></dd>
-            <dt>{t('rules.range')}</dt><dd><span className="ltr">{hist.min} … {hist.max}</span></dd>
-          </dl>
-          {hist.history.length === 0 ? <div className="empty">{t('rules.no_history')}</div> : (
-            [...hist.history].reverse().map((h, i) => (
-              <div key={i} className="list-item" style={{ alignItems: 'flex-start' }}>
-                <span className="ico gold"><History /></span>
-                <div style={{ minWidth: 0 }}>
-                  <b>{t('rules.set_to', { v: num(h.value) })} <span className="ltr">{db.rules.get(hist.id)?.unit}</span></b>
-                  <div className="small muted">{h.by} · {date(h.at, 'datetime')}</div>
-                  <div className="small">{h.why}</div>
-                </div>
-              </div>
-            ))
-          )}
-        </Drawer>
-      )}
-    </>
+            </section>
+          ))}
+      {edit && <EditRule rule={edit} onClose={() => setEdit(null)} onReset={() => { setReset(edit); setEdit(null); }} />}
+      {reset && <ResetRule rule={reset} onClose={() => setReset(null)} />}
+      {hist && <HistoryDrawer rule={hist} onClose={() => setHist(null)} />}
+    </div>
   );
 }
 
-function EditRule({ rule, startValue, onClose }: { rule: Rule; startValue: number; onClose: () => void }) {
-  const { t, b, num } = useI18n();
-  const { me } = useAuth();
-  const toast = useToast();
-  const [v, setV] = useState(String(rule.value));
-  const [why, setWhy] = useState('');
-  const [err, setErr] = useState<{ v?: string; why?: string }>({});
-  const save = (value: number, reason: string) => {
-    const e: typeof err = {};
-    if (!Number.isFinite(value) || value < rule.min || value > rule.max) e.v = 'rules.out_of_range';
-    if (!reason.trim()) e.why = 'rules.why_needed';
-    setErr(e);
-    if (e.v || e.why) return;
-    db.rules.patch(rule.id, { value, history: [...rule.history, { value, by: me?.name ?? '', at: new Date().toISOString(), why: reason.trim() }] });
-    toast(t('common.saved'), 'good');
+function EditRule({ rule, onClose, onReset }: { rule: Rule; onClose: () => void; onReset: () => void }) {
+  const { t, num, pick } = useI18n();
+  const unit = useUnit();
+  const [value, setValue] = useState(String(rule.value));
+  const [reason, setReason] = useState('');
+  const { busy, run } = useAction();
+  const v = Number(value);
+  const bad = value.trim() === '' || Number.isNaN(v) || v < rule.min_value || v > rule.max_value;
+  const badReason = reason.trim().length < 3 || reason.trim().length > 500;
+  const save = () => run(async () => {
+    const r = await api.put<{ changed: boolean }>('/dashboard/rules/' + rule.code, { value: v, reason: reason.trim() });
+    invalidate('rules');
     onClose();
-  };
+    return r;
+  }, t('common.saved'));
   return (
-    <Modal title={b(rule.name)} onClose={onClose} foot={<>
-      <button className="btn" onClick={() => save(startValue, why || t('rules.back_reason'))} disabled={rule.value === startValue}><RotateCcw />{t('rules.back_start', { v: num(startValue) })}</button>
+    <Modal title={pick(rule.name_ku, rule.name_en)} onClose={onClose} foot={<>
+      <button className="btn" onClick={onReset} disabled={busy || rule.value === rule.default_value}><RotateCcw />{t('rules.reset')}</button>
       <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
-      <button className="btn primary" onClick={() => save(Number(v), why)}>{t('common.save')}</button>
+      <button className="btn primary" disabled={busy || bad || badReason} onClick={save}>{t('common.save')}</button>
     </>}>
-      <p className="ink2" style={{ marginTop: 0 }}>{b(rule.meaning)}</p>
+      <p className="muted" style={{ marginTop: 0 }}>{pick(rule.meaning_ku, rule.meaning_en)}</p>
       <div className="form-grid">
-        <Field label={t('rules.value') + ' (' + rule.unit + ')'} hint={t('rules.allowed', { min: rule.min, max: rule.max })} error={err.v}>
-          <input type="number" value={v} min={rule.min} max={rule.max} step="any" onChange={e => setV(e.target.value)} className="ltr-input" autoFocus />
+        <Field label={t('rules.new_value') + (rule.unit ? ' (' + unit(rule.unit) + ')' : '')} hint={t('rules.range_v', { a: num(rule.min_value), b: num(rule.max_value), d: num(rule.default_value) })} error={value && bad ? 'err.bad_range' : undefined}>
+          <input type="number" dir="ltr" value={value} min={rule.min_value} max={rule.max_value} step="any" onChange={e => setValue(e.target.value)} />
         </Field>
-        <Field label={t('rules.why')} error={err.why} full>
-          <textarea value={why} onChange={e => setWhy(e.target.value)} placeholder={t('rules.why_ph')} />
+        <Field label={t('rules.now')}><input type="text" readOnly value={num(rule.value) + ' ' + unit(rule.unit)} /></Field>
+        <Field label={t('rules.reason')} hint={t('rules.reason_hint')} full error={reason && badReason ? 'err.bad_reason' : undefined}>
+          <textarea rows={3} value={reason} onChange={e => setReason(e.target.value)} placeholder={t('rules.reason_ph')} maxLength={500} />
         </Field>
       </div>
+      <div style={{ marginTop: 10 }}><Note tone="warn">{t('rules.honest_short')}</Note></div>
     </Modal>
+  );
+}
+
+function ResetRule({ rule, onClose }: { rule: Rule; onClose: () => void }) {
+  const { t, num, pick } = useI18n();
+  const unit = useUnit();
+  const [reason, setReason] = useState('');
+  const { busy, run } = useAction();
+  const ok = reason.trim().length >= 3 && reason.trim().length <= 500;
+  const go = () => run(async () => { await api.post('/dashboard/rules/' + rule.code + '/reset', { reason: reason.trim() }); invalidate('rules'); onClose(); }, t('common.saved'));
+  return (
+    <Modal title={t('rules.reset_title', { name: pick(rule.name_ku, rule.name_en) })} onClose={onClose} foot={<>
+      <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
+      <button className="btn primary" disabled={busy || !ok} onClick={go}><RotateCcw />{t('rules.reset')}</button>
+    </>}>
+      <p className="muted" style={{ marginTop: 0 }}>{t('rules.reset_text', { a: num(rule.value), d: num(rule.default_value), u: unit(rule.unit) })}</p>
+      <Field label={t('rules.reason')} full error={reason && !ok ? 'err.bad_reason' : undefined}>
+        <textarea rows={3} value={reason} onChange={e => setReason(e.target.value)} maxLength={500} />
+      </Field>
+    </Modal>
+  );
+}
+
+function HistoryDrawer({ rule, onClose }: { rule: Rule; onClose: () => void }) {
+  const { t, num, date, pick } = useI18n();
+  const unit = useUnit();
+  const [page, setPage] = useState(1);
+  const q = useApi<{ changes: Change[]; count: number }>('/dashboard/rules/' + rule.code + '/history' + qs({ page, rows_per_page: 20 }), ['rules'], { auth: true });
+  const rows = q.data?.changes ?? [];
+  return (
+    <Drawer eyebrow={t('rules.history')} title={pick(rule.name_ku, rule.name_en)} onClose={onClose}>
+      {q.loading ? <div className="sk-rows">{Array.from({ length: 5 }, (_, i) => <i key={i} className="sk" />)}</div>
+        : !rows.length ? <StateBox kind="empty" title={t('rules.no_history')} text={t('rules.no_history_text')} />
+          : <ul className="rule-history">{rows.map(c => (
+            <li key={c.id}>
+              <div className="spread"><b className="tabular" dir="ltr">{num(c.old_value)} → {num(c.new_value)} {unit(rule.unit)}</b><span className="small muted">{date(c.at, 'datetime')}</span></div>
+              <div className="small" dir="auto">{c.reason}</div>
+              <div className="small muted">{t('rules.by', { id: c.staff_id })}</div>
+            </li>))}</ul>}
+      {(q.data?.count ?? 0) > 20 && (
+        <div className="pager">
+          <button className="btn sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{t('table.prev')}</button>
+          <button className="btn sm" disabled={page * 20 >= (q.data?.count ?? 0)} onClick={() => setPage(p => p + 1)}>{t('table.next')}</button>
+        </div>
+      )}
+    </Drawer>
   );
 }

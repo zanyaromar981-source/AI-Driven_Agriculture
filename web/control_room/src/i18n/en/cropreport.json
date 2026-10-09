@@ -1,19 +1,9 @@
 {
-  "back": "Crop register",
-  "from": "Jutyar Control Room",
-  "generated": "Made on",
-  "title_all": "Crops report",
-  "title_one": "{crop} report",
-  "area": "Area: {area}",
-  "k_farms": "Farm plots",
-  "k_farmers": "Farmers",
-  "k_dunam": "Dunam",
-  "k_harvest": "Expected harvest, tonnes",
-  "chart_dist": "Dunam per district",
-  "chart_crop": "Dunam per crop",
+  "crop": "Crop",
+  "title_all": "Crop report",
+  "title_one": "Crop report: {crop}",
+  "plots": "Farms growing it",
+  "by_area": "Land per area (dunam)",
   "table": "Details",
-  "irrigated": "Irrigated",
-  "harvest_t": "Expected tonnes",
-  "empty": "No registered farm matches this crop and area.",
-  "note": "Counts only farms registered in the Jutyar app, not a census. Expected harvest is an estimate: registered dunam times the typical yield set in the crop list. A farm with two crops counts once for each crop."
+  "none": "No land of this crop is registered in this area."
 }

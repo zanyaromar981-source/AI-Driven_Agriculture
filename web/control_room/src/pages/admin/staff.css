@@ -1,0 +1,7 @@
+.staff-name { display: inline-flex; align-items: center; gap: 10px; }
+.stack-sm { display: inline-flex; flex-direction: column; gap: 1px; align-items: flex-start; }
+.role-picks { display: flex; flex-wrap: wrap; gap: 8px; }
+.role-pick { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-weight: 500; color: var(--ink); background: var(--surface); transition: background .2s, border-color .2s; }
+.role-pick.on { background: var(--brand-soft); border-color: var(--brand); }
+.role-pick.off { opacity: .5; cursor: not-allowed; }
+.role-pick input { width: 16px; height: 16px; min-height: 0; accent-color: var(--brand); }

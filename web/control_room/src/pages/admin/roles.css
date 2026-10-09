@@ -1,0 +1,21 @@
+/* Roles (design 19): the list on the inline-start side (right in Kurdish), the editor beside it. */
+.roles-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 1024px) { .roles-grid { grid-template-columns: minmax(0, 1fr); } }
+.roles-list { display: flex; flex-direction: column; gap: 4px; }
+.roles-list .eyebrow { margin-bottom: 6px; }
+.role-item { position: relative; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; width: 100%; padding: 12px 14px; border: 1px solid transparent; border-radius: 12px; background: none; text-align: start; cursor: pointer; transition: background .2s, border-color .2s; }
+.role-item:hover { background: var(--bg); }
+.role-item.on { background: var(--brand-soft); border-color: var(--brand); }
+.role-item-main { display: flex; align-items: center; gap: 8px; }
+.role-holders { position: absolute; inset-inline-end: 12px; top: 14px; display: inline-flex; align-items: center; gap: 4px; }
+.role-holders svg { width: 14px; height: 14px; }
+.role-editor { display: flex; flex-direction: column; gap: 14px; }
+.perm-wrap { border: 1px solid var(--line-soft); border-radius: 12px; overflow-x: auto; }
+.perm-matrix th { background: var(--bg); }
+.perm-matrix td, .perm-matrix th { padding: 8px 12px; }
+.perm-matrix .center { text-align: center; width: 90px; }
+.perm-head { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+.perm-matrix input[type=checkbox] { width: 18px; height: 18px; min-height: 0; accent-color: var(--brand); cursor: pointer; }
+.perm-matrix input[type=checkbox]:disabled { cursor: not-allowed; opacity: .4; }
+.perm-matrix input[type=checkbox]:disabled:checked { opacity: .75; }
+@media (max-width: 640px) { .perm-matrix .center { width: 46px; } .perm-matrix td, .perm-matrix th { padding: 8px 6px; } .perm-matrix .mono { display: none; } }

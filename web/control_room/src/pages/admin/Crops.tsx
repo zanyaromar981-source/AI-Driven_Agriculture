@@ -1,287 +1,136 @@
-// Crop register: every crop the farms grow, added up per district and governorate, with the expected
-// harvest (area x typical yield, an estimate), and the crop list itself (add, change, switch off, delete).
-// Cost: one pass over the farms builds every total on this page; it reruns only when farms change.
+// Crop register (design psYq3): land, farms and expected harvest per crop from GET /dashboard/stats/farms,
+// a district map for one crop, a crop-by-governorate table, and the crop list. Adding or editing crops
+// waits for the server's crops table (FRONTEND.md 14), so that part says "coming soon".
 import { useMemo, useState } from 'react';
-import { Plus, FileText, Wheat, Map as MapIcon, Sprout, Scale, Trash2, Info } from 'lucide-react';
-import { db, PLACES } from '../../data/db';
-import { useRows, useVersion } from '../../data/store';
-import { cropInUse, downloadCsv } from '../../data/api';
-import type { Crop, CropCategory, CropSeason } from '../../data/types';
+import { Wheat, Ruler, Scale, Sprout, FileText } from 'lucide-react';
 import { useI18n } from '../../i18n';
-import { PageHead, Card, Kpi, Pill, Note, Switch, Tabs, Field, Select, Modal, Confirm, useToast } from '../../components/ui';
-import { DataTable, type Col } from '../../components/DataTable';
+import { useAuth } from '../../auth/auth';
+import { qs } from '../../api/client';
+import { useApi } from '../../api/cache';
+import type { FarmStats } from '../../api/types';
+import { PageHead, Kpi, Tabs, Card, Modal, Select, Field } from '../../components/ui';
 import { HBars } from '../../components/charts';
-import { DistrictMap, GOLD_RAMP, ramp } from '../../components/DistrictMap';
-import { CropTag, usePlaceNames, usePlaceOptions } from '../../components/domain';
+import { DistrictMap, ramp, GOLD_RAMP } from '../../components/DistrictMap';
+import { StateBox, cropColor, cropName, useErrorText } from '../../components/domain';
+import { CROPS } from '../../data/crops';
+import { GOVERNORATES, DISTRICTS, DISTRICT_BY_EN } from '../../data/places';
+import { YIELD_KG_PER_DUNAM, expectedTonnes } from './farms/common';
+import './crops.css';
 
-const CATS: CropCategory[] = ['cereal', 'vegetable', 'fruit', 'legume', 'oil', 'fodder', 'other'];
-const SEASONS: CropSeason[] = ['winter', 'summer', 'perennial'];
-
-interface CropStat { dunam: number; farms: number }
-/** One pass: per crop, per district per crop, per governorate per crop. */
-function useCropStats() {
-  const v = useVersion(db.farms);
-  return useMemo(() => {
-    const byCrop = new Map<string, CropStat>();
-    const byDist = new Map<string, Map<string, number>>();
-    const byGov = new Map<string, Map<string, number>>();
-    let area = 0, farms = 0;
-    const add = (m: Map<string, Map<string, number>>, k: string, crop: string, d: number) => {
-      let x = m.get(k); if (!x) { x = new Map(); m.set(k, x); }
-      x.set(crop, (x.get(crop) ?? 0) + d);
-    };
-    for (const f of db.farms.all()) {
-      farms++; area += f.area;
-      for (const c of f.crops) {
-        let s = byCrop.get(c.crop); if (!s) { s = { dunam: 0, farms: 0 }; byCrop.set(c.crop, s); }
-        s.dunam += c.dunam; s.farms++;
-        add(byDist, f.dist, c.crop, c.dunam);
-        add(byGov, f.gov, c.crop, c.dunam);
-      }
-    }
-    return { byCrop, byDist, byGov, area, farms };
-    // v: rebuild when farms change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [v]);
-}
-
-const sumMap = (m?: Map<string, number>) => { let s = 0; m?.forEach(v => { s += v; }); return s; };
+type Tab = 'overview' | 'list';
 
 export default function Crops() {
-  const { t } = useI18n();
-  const [tab, setTab] = useState<'overview' | 'list'>('overview');
+  const { t, num, lang } = useI18n();
+  const { can } = useAuth();
+  const errText = useErrorText();
+  const [tab, setTab] = useState<Tab>('overview');
+  const [pick, setPick] = useState('');
   const [report, setReport] = useState(false);
-  return (
-    <>
-      <PageHead eyebrow={t('nav.g_fields')} title={t('crops.title')} sub={t('crops.sub')}
-        actions={<button className="btn" onClick={() => setReport(true)}><FileText />{t('crops.report')}</button>} />
-      <Tabs value={tab} onChange={setTab} items={[['overview', t('crops.tab_overview')], ['list', t('crops.tab_list')]]} />
-      {tab === 'overview' ? <CropOverview /> : <CropList />}
-      {report && <ReportModal onClose={() => setReport(false)} />}
-    </>
-  );
-}
-
-function CropOverview() {
-  const { t, num, b } = useI18n();
-  const crops = useRows(db.crops);
-  const st = useCropStats();
-  const place = usePlaceNames();
-  const [sel, setSel] = useState('');
-  const byId = useMemo(() => new Map(crops.map(c => [c.id, c])), [crops]);
-
-  const rows = useMemo(() => [...st.byCrop].map(([id, s]) => {
-    const c = byId.get(id);
-    return { id, ...s, crop: c, harvest: c ? s.dunam * c.yieldKgPerDunam / 1000 : 0 };
-  }).sort((a, z) => z.dunam - a.dunam), [st, byId]);
-  const totalHarvest = rows.reduce((a, r) => a + r.harvest, 0);
-  const cropDunam = (m?: Map<string, number>) => (sel ? m?.get(sel) ?? 0 : sumMap(m));
-
-  const distVals = useMemo(() => {
+  const [rp, setRp] = useState({ crop: '', governorate: '', zone: '' });
+  const q = useApi<FarmStats>(can('farms') ? '/dashboard/stats/farms' : null, ['farms'], { auth: true });
+  const s = q.data;
+  const crops = useMemo(() => (s ? s.by_crop.filter(c => c.crop !== 'empty').sort((a, b) => b.dunam - a.dunam) : []), [s]);
+  const planted = crops.reduce((a, c) => a + c.dunam, 0);
+  const harvest = crops.reduce((a, c) => a + expectedTonnes(c.crop, c.dunam), 0);
+  const top = crops[0];
+  // land of the picked crop (or all planted land) per district, read in one pass over by_zone
+  const perZone = useMemo(() => {
     const m = new Map<string, number>();
-    for (const d of PLACES.districts) m.set(d.en, cropDunam(st.byDist.get(d.en)));
+    for (const z of s?.by_zone ?? []) m.set(z.slug, pick ? z.crops.find(c => c.crop === pick)?.dunam ?? 0 : z.crops.filter(c => c.crop !== 'empty').reduce((a, c) => a + c.dunam, 0));
     return m;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [st, sel]);
-  const maxD = Math.max(1, ...distVals.values());
-  const topDists = useMemo(() => [...distVals].filter(([, v]) => v > 0).sort((a, z) => z[1] - a[1]).slice(0, 10), [distVals]);
-  const selCrop = sel ? byId.get(sel) : undefined;
-  const regionTotal = useMemo(() => { let s = 0; distVals.forEach(v => { s += v; }); return s; }, [distVals]);
+  }, [s, pick]);
+  const maxZone = Math.max(1e-9, ...perZone.values());
+  const topZones = useMemo(() => [...(s?.by_zone ?? [])].map(z => ({ z, v: perZone.get(z.slug) ?? 0 })).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 8), [s, perZone]);
+  const nm = (p: { en: string; ku: string }) => (lang === 'ku' ? p.ku : p.en);
+
+  if (!can('farms')) return <><PageHead eyebrow={t('nav.g_fields')} title={t('nav.crops')} /><StateBox kind="locked" /></>;
 
   return (
-    <>
+    <div>
+      <PageHead eyebrow={t('nav.g_fields')} title={t('nav.crops')} sub={t('crops.sub')} actions={<>
+        <button className="btn" onClick={() => setReport(true)}><FileText />{t('crops.report')}</button>
+      </>} />
       <div className="grid g4 mb">
-        <Kpi label={t('crops.k_crops')} value={num(crops.filter(c => c.active).length)} note={t('crops.k_crops_n', { n: num(crops.length) })} icon={<Wheat />} />
-        <Kpi label={t('crops.k_area')} value={num(st.area)} note={t('common.dunam')} icon={<MapIcon />} />
-        <Kpi label={t('crops.k_farms')} value={num(st.farms)} note={t('crops.k_farms_n')} icon={<Sprout />} />
-        <Kpi label={t('crops.k_harvest')} value={num(totalHarvest)} note={t('crops.k_harvest_n')} tone="gold" icon={<Scale />} />
+        <Kpi label={t('crops.k_active')} icon={<Sprout />} value={s ? num(crops.length) : '-'} note={t('crops.k_active_note', { n: num(CROPS.length - 1) })} />
+        <Kpi label={t('crops.k_planted')} icon={<Ruler />} value={s ? num(planted, 1) : '-'} note={s ? t('crops.k_planted_note', { n: num(s.totals.farms) }) : ' '} />
+        <Kpi label={t('crops.k_top')} icon={<Wheat />} value={top ? cropName(top.crop, lang) : '-'} note={top && planted ? t('crops.k_top_note', { p: num(top.dunam / planted * 100) }) : ' '} />
+        <Kpi label={t('crops.k_harvest')} icon={<Scale />} value={s ? num(harvest, 1) + ' ' + t('common.tonnes') : '-'} note={t('crops.k_harvest_note')} />
       </div>
-
-      <div className="chips mb" role="group" aria-label={t('crops.pick')}>
-        <button className={'chip' + (sel === '' ? ' on' : '')} onClick={() => setSel('')}>{t('common.all_crops')}</button>
-        {rows.map(r => (
-          <button key={r.id} className={'chip' + (sel === r.id ? ' on' : '')} onClick={() => setSel(r.id)}>
-            <span className="dotc" style={{ background: r.crop?.color ?? '#ccc', margin: 0 }} />{r.crop ? b(r.crop.name) : r.id}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid g-main mb">
-        <Card title={selCrop ? t('crops.map_one', { crop: b(selCrop.name) }) : t('crops.map_all')}>
-          <DistrictMap styleKey={sel + ':' + st.area} fill={d => { const v = distVals.get(d) ?? 0; return v ? ramp(v / maxD, [0.05, 0.15, 0.35, 0.6], GOLD_RAMP) : undefined; }} />
-          <div className="legend">{GOLD_RAMP.map((c, i) => <span key={c}><i className="dotc" style={{ background: c }} />{['< 5%', '5 to 15%', '15 to 35%', '35 to 60%', '60%+'][i]}</span>)}<span className="muted">{t('crops.legend_of_max')}</span></div>
-        </Card>
-        <div className="stack">
-          <Card title={t('crops.top_dists')}>
-            {topDists.length ? (
-              <table className="t">
-                <thead><tr><th>{t('common.district')}</th><th className="num">{t('common.dunam')}</th><th className="num">{t('crops.share_region')}</th></tr></thead>
-                <tbody>{topDists.map(([d, v]) => (
-                  <tr key={d}><td><b>{place.dist(d)}</b></td><td className="num">{num(v)}</td><td className="num muted">{num(regionTotal ? v / regionTotal * 100 : 0, 1)}%</td></tr>
-                ))}</tbody>
-              </table>
-            ) : <div className="empty">{t('crops.none_here')}</div>}
-          </Card>
-          {selCrop && (
-            <Card title={t('crops.this_crop')}>
-              <dl className="facts">
-                <dt>{t('crops.f_area')}</dt><dd>{num(st.byCrop.get(sel)?.dunam ?? 0)} {t('common.du')}</dd>
-                <dt>{t('crops.f_farms')}</dt><dd>{num(st.byCrop.get(sel)?.farms ?? 0)}</dd>
-                <dt>{t('crops.f_yield')}</dt><dd>{num(selCrop.yieldKgPerDunam)} {t('crops.kg_du')}</dd>
-                <dt>{t('crops.f_harvest')}</dt><dd>{num((st.byCrop.get(sel)?.dunam ?? 0) * selCrop.yieldKgPerDunam / 1000)} {t('common.tonnes')}</dd>
-                <dt>{t('crops.f_season')}</dt><dd>{t('crops.season_' + selCrop.season)}</dd>
-              </dl>
+      <Tabs<Tab> value={tab} onChange={setTab} items={[['overview', t('crops.tab_overview')], ['list', t('crops.tab_list')]]} />
+      {q.error && !s ? <StateBox kind="error" text={errText(q.error)} action={<button className="btn" onClick={q.reload}>{t('common.retry')}</button>} /> : !s ? <div className="card"><div className="sk-rows">{[0, 1, 2, 3, 4].map(i => <i key={i} className="sk" />)}</div></div> : tab === 'overview' ? (
+        !crops.length ? <Card><StateBox kind="empty" title={t('crops.none_title')} text={t('crops.none_text')} /></Card> : <>
+          <div className="chips mb">
+            <button className={'chip' + (!pick ? ' on' : '')} onClick={() => setPick('')}>{t('common.all_crops')}</button>
+            {crops.map(c => <button key={c.crop} className={'chip' + (pick === c.crop ? ' on' : '')} onClick={() => setPick(c.crop)}><span className="dotc" style={{ background: cropColor(c.crop) }} />{cropName(c.crop, lang)}</button>)}
+          </div>
+          <div className="grid g-main mb">
+            <Card title={pick ? t('crops.map_one', { crop: cropName(pick, lang) }) : t('crops.map_all')}>
+              <DistrictMap styleKey={pick + ':' + q.data?.as_of} size="sm" fill={en => { const d = DISTRICT_BY_EN.get(en); const v = d ? perZone.get(d.slug) ?? 0 : 0; return v > 0 ? ramp(v / maxZone, [0.15, 0.35, 0.6, 0.85], GOLD_RAMP) : undefined; }} />
+              <div className="legend">{GOLD_RAMP.map((c, i) => <span key={c}><i className="dotc" style={{ background: c }} />{[t('crops.l1'), t('crops.l2'), t('crops.l3'), t('crops.l4'), t('crops.l5')][i]}</span>)}</div>
             </Card>
-          )}
-        </div>
-      </div>
-
-      <div className="grid g2 mb">
-        <Card title={t('crops.dunam_per_crop')}>
-          <HBars showShare unit={t('common.du')} items={rows.map(r => ({ key: r.id, label: r.crop ? b(r.crop.name) : r.id, value: r.dunam, color: r.crop?.color }))} />
-        </Card>
-        <Card title={t('crops.harvest_title')} extra={<Pill tone="gold">{t('crops.estimate')}</Pill>}>
-          <div className="table-wrap">
-            <table className="t cards">
-              <thead><tr><th>{t('crops.crop')}</th><th className="num">{t('common.farms')}</th><th className="num">{t('common.dunam')}</th><th className="num">{t('crops.kg_du')}</th><th className="num">{t('crops.tonnes_est')}</th></tr></thead>
-              <tbody>{rows.map(r => (
-                <tr key={r.id}>
-                  <td data-label={t('crops.crop')}><CropTag id={r.id} /></td>
-                  <td data-label={t('common.farms')} className="num">{num(r.farms)}</td>
-                  <td data-label={t('common.dunam')} className="num">{num(r.dunam)}</td>
-                  <td data-label={t('crops.kg_du')} className="num">{num(r.crop?.yieldKgPerDunam ?? 0)}</td>
-                  <td data-label={t('crops.tonnes_est')} className="num"><b>{num(r.harvest)}</b></td>
-                </tr>))}</tbody>
-            </table>
+            <div className="stack">
+              <Card title={t('crops.top_districts')}>
+                {topZones.length ? <HBars items={topZones.map(({ z, v }) => ({ key: z.slug, label: lang === 'ku' ? z.name_ku || z.name_en : z.name_en, value: v, color: pick ? cropColor(pick) : 'var(--gold)' }))} digits={1} unit={t('common.dunam')} /> : <div className="muted small">{t('crops.no_land')}</div>}
+              </Card>
+            </div>
           </div>
-          <p className="muted small">{t('crops.harvest_note')}</p>
-        </Card>
-      </div>
-
-      <Card title={t('crops.by_gov')}>
-        <div className="table-wrap">
-          <table className="t">
-            <thead><tr><th>{t('crops.crop')}</th>{PLACES.governorates.map(g => <th key={g.en} className="num">{place.gov(g.en)}</th>)}<th className="num">{t('crops.total')}</th></tr></thead>
-            <tbody>{rows.map(r => (
-              <tr key={r.id}>
-                <td><CropTag id={r.id} /></td>
-                {PLACES.governorates.map(g => <td key={g.en} className="num">{num(st.byGov.get(g.en)?.get(r.id) ?? 0)}</td>)}
-                <td className="num"><b>{num(r.dunam)}</b></td>
-              </tr>))}</tbody>
-          </table>
-        </div>
-      </Card>
-    </>
-  );
-}
-
-function CropList() {
-  const { t, num, b } = useI18n();
-  const toast = useToast();
-  const crops = useRows(db.crops);
-  const st = useCropStats();
-  const [edit, setEdit] = useState<Crop | 'new' | null>(null);
-
-  const cols: Col<Crop>[] = [
-    { key: 'name', label: t('crops.crop'), cell: c => <span className="row" style={{ flexWrap: 'nowrap' }}><span className="dotc" style={{ background: c.color }} /><b><bdi>{b(c.name)}</bdi></b></span>, sort: c => b(c.name) },
-    { key: 'code', label: t('crops.code'), cell: c => <span className="mono ltr">{c.id}</span>, sort: c => c.id },
-    { key: 'cat', label: t('crops.category'), cell: c => t('crops.cat_' + c.category), sort: c => c.category },
-    { key: 'season', label: t('crops.season'), cell: c => t('crops.season_' + c.season), sort: c => c.season },
-    { key: 'yield', label: t('crops.kg_du'), num: true, cell: c => num(c.yieldKgPerDunam), sort: c => c.yieldKgPerDunam },
-    { key: 'farms', label: t('common.farms'), num: true, cell: c => num(st.byCrop.get(c.id)?.farms ?? 0), sort: c => st.byCrop.get(c.id)?.farms ?? 0 },
-    { key: 'dunam', label: t('common.dunam'), num: true, cell: c => num(st.byCrop.get(c.id)?.dunam ?? 0), sort: c => st.byCrop.get(c.id)?.dunam ?? 0 },
-    { key: 'ku', label: t('crops.ku_name'), optional: true, cell: c => c.name.ku ? <bdi className="ku-text">{c.name.ku}</bdi> : <Pill tone="warn">{t('common.ku_missing')}</Pill> },
-    { key: 'active', label: t('common.status'), cell: c => c.active ? <Pill tone="good">{t('crops.in_app')}</Pill> : <Pill>{t('crops.off')}</Pill>, sort: c => (c.active ? 0 : 1) },
-  ];
-  const exportCsv = () => downloadCsv('crops', ['code', 'name_en', 'name_ku', 'category', 'season', 'yield_kg_per_dunam', 'farms', 'dunam', 'active'],
-    crops.map(c => [c.id, c.name.en, c.name.ku, c.category, c.season, c.yieldKgPerDunam, st.byCrop.get(c.id)?.farms ?? 0, Math.round(st.byCrop.get(c.id)?.dunam ?? 0), c.active ? 'yes' : 'no']));
-
-  return (
-    <Card>
-      <DataTable id="crops" rows={crops} cols={cols} onRow={c => setEdit(c)} defaultSort={['dunam', -1]}
-        head={<><button className="btn primary sm" onClick={() => setEdit('new')}><Plus />{t('crops.add')}</button>
-          <button className="btn sm" onClick={exportCsv}>{t('common.export_csv')}</button></>} />
-      {edit && <CropForm crop={edit === 'new' ? null : edit} onClose={() => setEdit(null)} onSaved={msg => { toast(msg, 'good'); setEdit(null); }} />}
-    </Card>
-  );
-}
-
-function CropForm({ crop, onClose, onSaved }: { crop: Crop | null; onClose: () => void; onSaved: (msg: string) => void }) {
-  const { t, b } = useI18n();
-  const [f, setF] = useState<Crop>(() => crop ?? { id: '', name: { en: '', ku: '' }, color: '#7FBC93', category: 'vegetable', season: 'summer', yieldKgPerDunam: 1000, active: true, notes: '' });
-  const [err, setErr] = useState<Record<string, string>>({});
-  const [ask, setAsk] = useState<'delete' | 'off' | null>(null);
-  const set = (p: Partial<Crop>) => setF(x => ({ ...x, ...p }));
-
-  const save = () => {
-    const e: Record<string, string> = {};
-    if (!crop) {
-      if (!/^[a-z_]{2,24}$/.test(f.id)) e.id = 'crops.v_code';
-      else if (db.crops.has(f.id)) e.id = 'crops.v_code_taken';
-    }
-    if (!f.name.en.trim() && !f.name.ku.trim()) e.name = 'v.name_needed';
-    if (!(f.yieldKgPerDunam > 0)) e.yield = 'v.positive';
-    setErr(e);
-    if (Object.keys(e).length) return;
-    db.crops.put({ ...f, name: { en: f.name.en.trim(), ku: f.name.ku.trim() } });
-    onSaved(t('common.saved'));
-  };
-  const inUse = crop ? cropInUse(crop.id) : false;
-
-  return (
-    <Modal title={crop ? b(crop.name) : t('crops.add')} onClose={onClose} wide foot={<>
-      {crop && <button className="btn danger" style={{ marginInlineEnd: 'auto' }} onClick={() => setAsk(inUse ? 'off' : 'delete')}><Trash2 />{t('common.delete')}</button>}
-      <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
-      <button className="btn primary" onClick={save}>{t('common.save')}</button>
-    </>}>
-      <div className="form-grid">
-        <Field label={t('crops.code')} hint={crop ? t('crops.code_fixed') : t('crops.code_hint')} error={err.id}>
-          <input type="text" className="ltr-input mono" value={f.id} disabled={!!crop} onChange={e => set({ id: e.target.value.toLowerCase() })} />
-        </Field>
-        <Field label={t('crops.colour')}>
-          <div className="row" style={{ flexWrap: 'nowrap' }}>
-            <input type="color" value={f.color} onChange={e => set({ color: e.target.value })} style={{ width: 52, height: 38, padding: 2, border: '1px solid var(--line)', borderRadius: 9, background: 'var(--surface)' }} />
-            <input type="text" className="ltr-input mono" value={f.color} onChange={e => set({ color: e.target.value })} />
+          <div className="grid g2 mb">
+            <Card title={t('crops.land_per_crop')}>
+              <HBars items={crops.map(c => ({ key: c.crop, label: cropName(c.crop, lang), value: c.dunam, color: cropColor(c.crop) }))} digits={1} unit={t('common.dunam')} showShare />
+            </Card>
+            <Card title={t('crops.table_title')}>
+              <div className="table-wrap"><table className="t cards">
+                <thead><tr><th>{t('crops.crop')}</th><th className="num">{t('common.farms')}</th><th className="num">{t('common.farmers')}</th><th className="num">{t('common.dunam')}</th><th className="num">{t('crops.harvest_t')}</th></tr></thead>
+                <tbody>{crops.map(c => <tr key={c.crop}>
+                  <td data-label={t('crops.crop')}><span className="dotc" style={{ background: cropColor(c.crop) }} />{cropName(c.crop, lang)}</td>
+                  <td className="num" data-label={t('common.farms')}>{num(c.farms)}</td><td className="num" data-label={t('common.farmers')}>{num(c.farmers)}</td>
+                  <td className="num" data-label={t('common.dunam')}><b>{num(c.dunam, 1)}</b></td><td className="num" data-label={t('crops.harvest_t')}>{num(expectedTonnes(c.crop, c.dunam), 1)}</td>
+                </tr>)}</tbody>
+              </table></div>
+              <p className="muted small">{t('crops.estimate_note')}</p>
+            </Card>
           </div>
-        </Field>
-        <Field label={t('crops.name_en')} error={err.name}><input type="text" dir="ltr" value={f.name.en} onChange={e => set({ name: { ...f.name, en: e.target.value } })} /></Field>
-        <Field label={t('crops.ku_name')}><input type="text" dir="rtl" className="ku-text" value={f.name.ku} onChange={e => set({ name: { ...f.name, ku: e.target.value } })} /></Field>
-        <Field label={t('crops.category')}><Select value={f.category} onChange={v => set({ category: v as CropCategory })} options={CATS.map(c => [c, t('crops.cat_' + c)])} /></Field>
-        <Field label={t('crops.season')}><Select value={f.season} onChange={v => set({ season: v as CropSeason })} options={SEASONS.map(s => [s, t('crops.season_' + s)])} /></Field>
-        <Field label={t('crops.yield')} hint={t('crops.yield_hint')} error={err.yield}>
-          <input type="number" min={1} value={f.yieldKgPerDunam} onChange={e => set({ yieldKgPerDunam: +e.target.value })} />
-        </Field>
-        <Field label={t('crops.in_app_q')}>
-          <div className="row" style={{ minHeight: 38 }}><Switch on={f.active} onChange={v => set({ active: v })} label={t('crops.in_app_q')} /><span className="small muted">{f.active ? t('crops.in_app') : t('crops.off')}</span></div>
-        </Field>
-        <Field label={t('common.notes')} full><textarea value={f.notes} onChange={e => set({ notes: e.target.value })} rows={2} /></Field>
-      </div>
-      {ask === 'delete' && <Confirm title={t('crops.delete_q')} text={t('crops.delete_text')} okLabel={t('common.delete')} onClose={() => setAsk(null)}
-        onOk={() => { db.crops.remove(crop!.id); onSaved(t('common.deleted')); }} />}
-      {ask === 'off' && <Confirm danger={false} title={t('crops.in_use_q')} text={t('crops.in_use_text')} okLabel={t('crops.switch_off')} onClose={() => setAsk(null)}
-        onOk={() => { db.crops.patch(crop!.id, { active: false }); onSaved(t('crops.switched_off')); }} />}
-    </Modal>
-  );
-}
-
-function ReportModal({ onClose }: { onClose: () => void }) {
-  const { t, b } = useI18n();
-  const crops = useRows(db.crops);
-  const [gov, setGov] = useState(''), [dist, setDist] = useState(''), [crop, setCrop] = useState('');
-  const o = usePlaceOptions(gov, dist);
-  const url = `#/print/crops?gov=${encodeURIComponent(gov)}&dist=${encodeURIComponent(dist)}&crop=${encodeURIComponent(crop)}`;
-  return (
-    <Modal title={t('crops.report')} onClose={onClose} foot={<>
-      <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
-      <a className="btn primary" href={url} target="_blank" rel="noopener" onClick={onClose}><FileText />{t('crops.open_report')}</a>
-    </>}>
-      <p className="muted" style={{ marginTop: 0 }}>{t('crops.report_sub')}</p>
-      <div className="form-grid">
-        <Field label={t('crops.crop')} full><Select value={crop} onChange={setCrop} options={[['', t('common.all_crops')], ...crops.map(c => [c.id, b(c.name)] as [string, string])]} /></Field>
-        <Field label={t('common.governorate')}><Select value={gov} onChange={v => { setGov(v); setDist(''); }} options={[['', t('common.all_govs')], ...o.govs]} /></Field>
-        <Field label={t('common.district')}><Select value={dist} onChange={setDist} options={[['', t('common.all_dists')], ...o.dists]} /></Field>
-      </div>
-      <div style={{ marginTop: 12 }}><Note tone="info" icon={<Info />}>{t('crops.report_note')}</Note></div>
-    </Modal>
+          <Card title={t('crops.by_gov')}>
+            <div className="table-wrap"><table className="t">
+              <thead><tr><th>{t('crops.crop')}</th>{s.by_governorate.map(g => <th key={g.slug} className="num">{lang === 'ku' ? g.name_ku || g.name_en : g.name_en}</th>)}</tr></thead>
+              <tbody>{crops.map(c => <tr key={c.crop}><td><span className="dotc" style={{ background: cropColor(c.crop) }} />{cropName(c.crop, lang)}</td>
+                {s.by_governorate.map(g => <td key={g.slug} className="num">{num(g.crops.find(x => x.crop === c.crop)?.dunam ?? 0, 1)}</td>)}</tr>)}</tbody>
+            </table></div>
+          </Card>
+        </>
+      ) : (
+        <div className="stack">
+          <Card>
+            <StateBox kind="soon" title={t('crops.soon_title')} text={t('crops.soon_text')} />
+          </Card>
+          <Card title={t('crops.list_title')}>
+            <div className="table-wrap"><table className="t cards">
+              <thead><tr><th>{t('crops.crop')}</th><th>{t('crops.code')}</th><th>{t('crops.name_other')}</th><th className="num">{t('crops.yield')}</th><th className="num">{t('common.dunam')}</th><th>{t('common.status')}</th></tr></thead>
+              <tbody>{CROPS.filter(c => c.code !== 'empty').map(c => {
+                const used = s.by_crop.find(x => x.crop === c.code);
+                return <tr key={c.code}>
+                  <td data-label={t('crops.crop')}><span className="dotc" style={{ background: c.color }} /><b>{lang === 'ku' ? c.ku : c.en}</b></td>
+                  <td data-label={t('crops.code')} className="mono">{c.code}</td>
+                  <td data-label={t('crops.name_other')}>{lang === 'ku' ? c.en : <span className="ku-text">{c.ku}</span>}</td>
+                  <td data-label={t('crops.yield')} className="num">{YIELD_KG_PER_DUNAM[c.code] ? num(YIELD_KG_PER_DUNAM[c.code]) + ' ' + t('common.kg') : '-'}</td>
+                  <td data-label={t('common.dunam')} className="num">{used ? num(used.dunam, 1) : '0'}</td>
+                  <td data-label={t('common.status')}>{used ? <span className="pill good">{t('crops.in_use')}</span> : <span className="pill">{t('crops.not_used')}</span>}</td>
+                </tr>;
+              })}</tbody>
+            </table></div>
+          </Card>
+        </div>
+      )}
+      {report && <Modal title={t('crops.report')} onClose={() => setReport(false)} foot={<>
+        <button className="btn" onClick={() => setReport(false)}>{t('common.cancel')}</button>
+        <a className="btn primary" href={'#/print/crops' + qs(rp)} target="_blank" rel="noopener" onClick={() => setReport(false)}><FileText />{t('crops.open_report')}</a>
+      </>}>
+        <div className="form-grid">
+          <Field label={t('crops.crop')} full><Select value={rp.crop} onChange={v => setRp(p => ({ ...p, crop: v }))} options={[['', t('common.all_crops')], ...CROPS.filter(c => c.code !== 'empty').map(c => [c.code, lang === 'ku' ? c.ku : c.en] as [string, string])]} /></Field>
+          <Field label={t('common.governorate')}><Select value={rp.governorate} onChange={v => setRp(p => ({ ...p, governorate: v, zone: '' }))} options={[['', t('common.all_govs')], ...GOVERNORATES.map(g => [g.en, nm(g)] as [string, string])]} /></Field>
+          <Field label={t('common.district')}><Select value={rp.zone} onChange={v => setRp(p => ({ ...p, zone: v }))} options={[['', t('common.all_dists')], ...DISTRICTS.filter(d => !rp.governorate || d.gov === rp.governorate).map(d => [d.slug, nm(d)] as [string, string])]} /></Field>
+        </div>
+      </Modal>}
+    </div>
   );
 }

@@ -14,3 +14,9 @@
 @media (max-width: 640px) { .crop-row { grid-template-columns: minmax(0, 1fr) 96px auto; } }
 .owner-hits { margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; max-height: 220px; overflow-y: auto; background: var(--surface); }
 .owner-hit { width: 100%; border: 0; background: none; font: inherit; color: inherit; text-align: start; }
+.search-field { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink-3); }
+.search-field svg { width: 16px; height: 16px; flex: none; }
+.search-field input { border: 0; background: transparent; min-height: 0; height: 100%; padding: 0; box-shadow: none !important; }
+.farm-card { width: 100%; padding: 12px 14px; }
+.farm-card:hover { border-color: var(--line); background: #FAFBF7; }
+.row-acts { display: flex; gap: 4px; justify-content: flex-end; }

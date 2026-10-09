@@ -1,227 +1,212 @@
-// Inbox: messages from farmers (read, answer, close) and the news bar that moves across the top of the site.
-// Cost: one filter pass per change of filters or messages; the list shows 30 at a time.
-import { useEffect, useMemo, useState } from 'react';
+// Inbox (design 13): farmers' messages from the app, newest first, with a reply that reaches the farmer
+// in the app. Routes: /dashboard/messages (FRONTEND.md 9 Inbox). Topic: messages.
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { MessageSquare, Send, Eye, CheckCheck, RotateCcw, ArrowLeft, Image, MapPin, Plus, ArrowUp, ArrowDown, Pencil, Trash2, User } from 'lucide-react';
+import { Send, CheckCheck, Eye, User, Trash2, ArrowRight, RotateCcw, ImageOff } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
-import { db } from '../../data/db';
-import { useRows } from '../../data/store';
-import { newId, nowIso } from '../../data/api';
-import type { Message, MessageKind, MessageState, News } from '../../data/types';
-import { Card, Confirm, Field, Modal, Note, PageHead, Pill, Select, Switch, Tabs, useDebounced, useToast, type Tone } from '../../components/ui';
-import { Phone, usePlaceNames } from '../../components/domain';
+import { api, qs, authedBlobUrl } from '../../api/client';
+import { useApi, invalidate } from '../../api/cache';
+import type { Paged } from '../../api/types';
+import { PageHead, Pill, Select, Confirm, useDebounced, type Tone } from '../../components/ui';
+import { Phone, StateBox, usePlace, usePlaceOptions, useErrorText } from '../../components/domain';
+import { useAction } from './inbox/useAction';
 import './inbox.css';
 
-const STATES: MessageState[] = ['new', 'read', 'replied', 'closed'];
-const KINDS: MessageKind[] = ['question', 'report', 'complaint', 'request', 'other'];
-const TONE: Record<MessageState, Tone> = { new: 'danger', read: '', replied: 'good', closed: 'dark' };
+type State = 'new' | 'read' | 'replied' | 'closed';
+type Kind = 'question' | 'report' | 'complaint' | 'request' | 'other';
+interface Photo { id: string; content_type: string; size: number; url: string }
+interface Msg {
+  id: string; created_at: string; updated_at: string; kind: Kind; state: State; text: string; photos: Photo[];
+  farmer_id: string; farmer_name?: string | null; farmer_phone?: string | null;
+  farm_id?: string | null; farm_name?: string | null; governorate?: string | null; zone_slug?: string | null;
+  reply?: { text_ku: string; text_en?: string | null; replied_at: string; replied_by: string } | null;
+}
+const STATE_TONE: Record<State, Tone> = { new: 'warn', read: '', replied: 'good', closed: 'water' };
+const KIND_TONE: Record<Kind, Tone> = { question: 'brand', report: 'danger', complaint: 'warn', request: 'water', other: '' };
 const PER = 30;
 
 export default function Inbox() {
-  const { t } = useI18n();
-  const [tab, setTab] = useState<'messages' | 'news'>('messages');
-  return (
-    <>
-      <PageHead eyebrow={t('nav.g_act')} title={t('nav.inbox')} sub={t('inbox.sub')} />
-      <Tabs value={tab} onChange={setTab} items={[['messages', t('inbox.tab_messages')], ['news', t('inbox.tab_news')]]} />
-      {tab === 'messages' ? <Messages /> : <NewsBar />}
-    </>
-  );
-}
-
-function Messages() {
-  const { t, b, ago, num } = useI18n();
-  const messages = useRows(db.messages);
+  const { t, num } = useI18n();
+  const { can } = useAuth();
   const [params, setParams] = useSearchParams();
-  const sel = params.get('m');
-  const [state, setState] = useState<string>('open');
+  const [state, setState] = useState<State | ''>('new');
   const [kind, setKind] = useState('');
+  const [gov, setGov] = useState('');
   const [q, setQ] = useState('');
-  const dq = useDebounced(q.trim().toLowerCase());
-  const [shown, setShown] = useState(PER);
+  const [page, setPage] = useState(1);
+  const dq = useDebounced(q.trim(), 300);
+  const sel = params.get('m');
+  const opts = usePlaceOptions(gov);
 
-  const list = useMemo(() => {
-    const out = messages.filter(m => {
-      if (state === 'open' ? m.state === 'closed' : state && m.state !== state) return false;
-      if (kind && m.kind !== kind) return false;
-      if (!dq) return true;
-      const f = db.farmers.get(m.farmerId);
-      return m.subject.toLowerCase().includes(dq) || m.text.includes(dq) || (!!f && (f.name.en.toLowerCase().includes(dq) || f.name.ku.includes(dq) || f.phone.includes(dq)));
-    });
-    return out.sort((a, z) => z.at.localeCompare(a.at));
-  }, [messages, state, kind, dq]);
-  const counts = useMemo(() => { const c: Record<string, number> = {}; for (const m of messages) c[m.state] = (c[m.state] ?? 0) + 1; return c; }, [messages]);
+  useEffect(() => { setPage(1); }, [state, kind, gov, dq]);
+  const counts = useApi<Record<State, number>>('/dashboard/messages/counts', ['messages'], { auth: true });
+  const list = useApi<Paged & { messages: Msg[] }>('/dashboard/messages' + qs({ state, kind, governorate: gov, q: dq, page, rows_per_page: PER }), ['messages'], { auth: true });
+  const rows = list.data?.messages ?? [];
+  const pages = Math.max(1, Math.ceil((list.data?.count ?? 0) / PER));
+  const open = (id: string | null) => setParams(id ? { m: id } : {}, { replace: false });
+  const c = counts.data;
 
-  const cur = sel ? db.messages.get(sel) : undefined;
-  // opening a new message marks it read
-  useEffect(() => { if (cur?.state === 'new') db.messages.patch(cur.id, { state: 'read' }); }, [cur?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const open = (id: string | null) => { const p = new URLSearchParams(params); if (id) p.set('m', id); else p.delete('m'); setParams(p, { replace: true }); };
-
+  const chips: [State | '', string][] = [['new', t('inbox.s_new')], ['read', t('inbox.s_read')], ['replied', t('inbox.s_replied')], ['closed', t('inbox.s_closed')], ['', t('inbox.s_all')]];
   return (
-    <div className={'ib-grid' + (cur ? ' has-sel' : '')}>
-      <Card className="ib-list pad0">
-        <div className="ib-filters">
-          <input type="search" value={q} onChange={e => { setQ(e.target.value); setShown(PER); }} placeholder={t('inbox.search')} />
-          <div className="row" style={{ flexWrap: 'nowrap' }}>
-            <Select value={state} onChange={v => { setState(v); setShown(PER); }} options={[['open', t('inbox.f_open')], ['', t('inbox.f_all')], ...STATES.map(s => [s, t('inbox.s_' + s) + ' (' + num(counts[s] ?? 0) + ')'] as [string, string])]} />
-            <Select value={kind} onChange={v => { setKind(v); setShown(PER); }} options={[['', t('inbox.f_kinds')], ...KINDS.map(k => [k, t('inbox.k_' + k)] as [string, string])]} />
+    <div className="inbox-page">
+      <PageHead eyebrow={t('nav.g_act')} title={t('nav.inbox')} sub={t('inbox.sub')} />
+      <div className="inbox-chips" role="tablist">
+        {chips.map(([k, label]) => (
+          <button key={k || 'all'} className={'chip' + (state === k ? ' on' : '')} onClick={() => setState(k)} role="tab" aria-selected={state === k}>
+            {label}{k && c ? <b className="tabular"> ({num(c[k as State])})</b> : null}
+          </button>
+        ))}
+      </div>
+      <div className={'inbox-panes' + (sel ? ' has-sel' : '')}>
+        <section className="card inbox-list" aria-label={t('inbox.list')}>
+          <div className="inbox-filters">
+            <input type="search" value={q} onChange={e => setQ(e.target.value)} placeholder={t('inbox.search')} />
+            <div className="row" style={{ flexWrap: 'nowrap' }}>
+              <Select value={kind} onChange={setKind} options={[['', t('inbox.k_all')], ...(['question', 'report', 'complaint', 'request', 'other'] as Kind[]).map(k => [k, t('inbox.k_' + k)] as [string, string])]} />
+              <Select value={gov} onChange={setGov} options={[['', t('common.all_govs')], ...opts.govs]} />
+            </div>
           </div>
-        </div>
-        <div className="ib-items">
-          {list.slice(0, shown).map(m => {
-            const f = db.farmers.get(m.farmerId);
-            return (
-              <div key={m.id} className={'list-item click' + (cur?.id === m.id ? ' sel' : '')} onClick={() => open(m.id)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && open(m.id)}>
-                <span className={'ico ' + (m.state === 'new' ? 'danger' : m.state === 'replied' ? 'good' : '')}><MessageSquare /></span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <b className={'ib-ellipsis' + (m.state === 'new' ? '' : ' ib-read')}><bdi>{m.subject}</bdi></b>
-                  <div className="muted small ib-ellipsis">{f ? b(f.name) : '-'} · {t('inbox.k_' + m.kind)}</div>
-                </div>
-                <div className="end" style={{ flex: 'none' }}><div className="muted tiny">{ago(m.at)}</div>{m.state === 'new' && <Pill tone="danger">{t('inbox.s_new')}</Pill>}</div>
+          {list.error && !list.data ? <StateBox kind="error" action={<button className="btn sm" onClick={list.reload}><RotateCcw />{t('common.retry')}</button>} />
+            : list.loading ? <div className="sk-rows">{Array.from({ length: 6 }, (_, i) => <i key={i} className="sk" />)}</div>
+              : !rows.length ? <StateBox kind="empty" title={t('inbox.empty_title')} text={t('inbox.empty_text')} />
+                : rows.map(m => <ListItem key={m.id} m={m} on={m.id === sel} onClick={() => open(m.id)} />)}
+          {pages > 1 && (
+            <div className="pager">
+              <span className="muted small">{t('table.page', { a: num(page), b: num(pages), n: num(list.data?.count ?? 0) })}</span>
+              <div className="row">
+                <button className="btn sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{t('table.prev')}</button>
+                <button className="btn sm" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>{t('table.next')}</button>
               </div>
-            );
-          })}
-          {!list.length && <div className="empty">{t('inbox.empty')}</div>}
-          {list.length > shown && <div className="center" style={{ padding: 10 }}><button className="btn sm" onClick={() => setShown(s => s + PER)}>{t('inbox.more', { n: num(list.length - shown) })}</button></div>}
-        </div>
-      </Card>
-      <div className="ib-detail">
-        {cur ? <Detail key={cur.id} m={cur} onBack={() => open(null)} /> : <Card><div className="empty">{t('inbox.pick')}</div></Card>}
+            </div>
+          )}
+        </section>
+        <section className="inbox-detail">
+          {sel ? <Detail id={sel} canWrite={can('messages', 'update')} canDelete={can('messages', 'delete')} onClose={() => open(null)} />
+            : <div className="card"><StateBox kind="empty" title={t('inbox.pick_title')} text={t('inbox.pick_text')} /></div>}
+        </section>
       </div>
     </div>
   );
 }
 
-function Detail({ m, onBack }: { m: Message; onBack: () => void }) {
-  const { t, b, date } = useI18n();
-  const { me } = useAuth();
-  const toast = useToast();
-  const pn = usePlaceNames();
-  const [reply, setReply] = useState(m.reply);
-  const f = db.farmers.get(m.farmerId);
-  const farm = m.farmId ? db.farms.get(m.farmId) : undefined;
-  const set = (p: Partial<Message>, msg: string) => { db.messages.patch(m.id, p); toast(t(msg), 'good'); };
-  const send = () => {
-    if (!reply.trim()) { toast(t('inbox.reply_empty'), 'warn'); return; }
-    set({ reply: reply.trim(), state: 'replied', repliedBy: me?.name ?? '', repliedAt: nowIso() }, 'inbox.replied_toast');
-  };
+function ListItem({ m, on, onClick }: { m: Msg; on: boolean; onClick: () => void }) {
+  const { t, ago } = useI18n();
+  const place = usePlace();
+  const where = [m.farmer_name || t('inbox.no_name'), place.dist(m.zone_slug) || place.gov(m.governorate)].filter(Boolean).join(' · ');
   return (
-    <Card>
-      <button className="btn ghost sm ib-back" onClick={onBack}><ArrowLeft className="flip-rtl" />{t('inbox.back')}</button>
-      <div className="row mb"><Pill tone={TONE[m.state]}>{t('inbox.s_' + m.state)}</Pill><Pill>{t('inbox.k_' + m.kind)}</Pill>
-        {m.photos > 0 && <Pill tone="water" icon={<Image />}>{t('inbox.photos', { n: m.photos })}</Pill>}<span className="muted small">{date(m.at, 'datetime')}</span></div>
-      <h2 style={{ marginBottom: 10 }}><bdi>{m.subject}</bdi></h2>
-      <div className="ib-text" dir="auto">{m.text}</div>
-
-      <div className="ib-who">
-        <span className="ico brand"><User /></span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {f ? <>
-            <b>{b(f.name)}</b>
-            <div className="small muted"><Phone value={f.phone} /> · {pn.dist(f.dist)}, {pn.gov(f.gov)}</div>
-            {farm && <div className="small"><MapPin size={12} /> {t('inbox.farm')} #{farm.id} · <span className="ku-text">{farm.name}</span> · {pn.sub(farm.dist, farm.sub)}</div>}
-          </> : <span className="muted">{t('inbox.no_farmer')}</span>}
-        </div>
-        {f && <Link className="btn sm" to={'/admin/farms?farmer=' + f.id}>{t('inbox.open_farmer')}</Link>}
-      </div>
-
-      {m.state === 'replied' || m.state === 'closed' ? (m.reply && (
-        <div className="mt"><div className="eyebrow">{t('inbox.your_reply')}</div>
-          <div className="ib-reply" dir="auto">{m.reply}</div>
-          <div className="muted small">{t('inbox.replied_by', { by: m.repliedBy, when: date(m.repliedAt, 'datetime') })}</div></div>
-      )) : (
-        <div className="mt">
-          <Field label={t('inbox.reply')} hint={t('inbox.reply_hint')}>
-            <textarea rows={4} dir="auto" value={reply} onChange={e => setReply(e.target.value)} />
-          </Field>
-        </div>
-      )}
-      <div className="row mt">
-        {(m.state === 'new' || m.state === 'read') && <button className="btn primary" onClick={send}><Send className="flip-rtl" />{t('inbox.send_reply')}</button>}
-        {m.state === 'new' && <button className="btn" onClick={() => set({ state: 'read' }, 'inbox.read_toast')}><Eye />{t('inbox.mark_read')}</button>}
-        {m.state !== 'closed' && <button className="btn" onClick={() => set({ state: 'closed' }, 'inbox.closed_toast')}><CheckCheck />{t('inbox.close')}</button>}
-        {m.state === 'closed' && <button className="btn" onClick={() => set({ state: m.reply ? 'replied' : 'read' }, 'inbox.reopened_toast')}><RotateCcw />{t('inbox.reopen')}</button>}
-      </div>
-      <p className="muted small">{t('inbox.app_note')}</p>
-    </Card>
+    <button className={'list-item click inbox-item' + (on ? ' sel' : '')} onClick={onClick} aria-current={on}>
+      <span className="inbox-meta">
+        <span className="small muted nowrap">{ago(m.created_at)}</span>
+        {m.state === 'new' && <i className="new-dot" aria-label={t('inbox.s_new')} />}
+      </span>
+      <span className="inbox-text">
+        <b className={m.state === 'new' ? '' : 'read'} dir="auto">{m.text.length > 70 ? m.text.slice(0, 70) + '…' : m.text}</b>
+        <span className="small muted">{where} · {t('inbox.k_' + m.kind)}</span>
+      </span>
+    </button>
   );
 }
 
-// ---------- the news bar ----------
-const blankNews = (order: number): News => ({ id: '', text: { en: '', ku: '' }, where: 'both', active: true, order });
+function Detail({ id, canWrite, canDelete, onClose }: { id: string; canWrite: boolean; canDelete: boolean; onClose: () => void }) {
+  const { t, date, pick } = useI18n();
+  const place = usePlace();
+  const errText = useErrorText();
+  const one = useApi<{ message: Msg }>('/dashboard/messages/' + id, ['messages'], { auth: true });
+  const m = one.data?.message;
+  const { busy, run } = useAction();
+  const [ku, setKu] = useState('');
+  const [en, setEn] = useState('');
+  const [confirmDel, setConfirmDel] = useState(false);
+  const marked = useRef(new Set<string>());
 
-function NewsBar() {
-  const { t, b } = useI18n();
-  const toast = useToast();
-  const news = useRows(db.news);
-  const sorted = useMemo(() => [...news].sort((a, z) => a.order - z.order), [news]);
-  const [edit, setEdit] = useState<News | null>(null);
-  const [del, setDel] = useState<News | null>(null);
-  const [err, setErr] = useState('');
-  const live = sorted.filter(n => n.active);
+  // a new message is marked read once when it is opened (guarded against repeats and re-renders)
+  useEffect(() => {
+    if (!m || m.state !== 'new' || !canWrite || marked.current.has(m.id)) return;
+    marked.current.add(m.id);
+    api.put('/dashboard/messages/' + m.id, { state: 'read' }).then(() => invalidate('messages'), () => marked.current.delete(m.id));
+  }, [m, canWrite]);
+  useEffect(() => { setKu(m?.reply?.text_ku ?? ''); setEn(m?.reply?.text_en ?? ''); }, [m?.id, m?.reply?.replied_at]);
 
-  const move = (i: number, d: -1 | 1) => {
-    const j = i + d; if (j < 0 || j >= sorted.length) return;
-    const arr = [...sorted]; [arr[i], arr[j]] = [arr[j], arr[i]];
-    db.news.putMany(arr.map((n, k) => ({ ...n, order: k })));
+  if (one.error && !m) return <div className="card"><StateBox kind={one.error.status === 404 ? 'empty' : 'error'} text={errText(one.error)} /></div>;
+  if (!m) return <div className="card"><div className="sk-rows">{Array.from({ length: 8 }, (_, i) => <i key={i} className="sk" />)}</div></div>;
+
+  const setStateTo = (s: State) => run(() => api.put('/dashboard/messages/' + m.id, { state: s }).then(() => invalidate('messages')), t('common.saved'));
+  const reply = () => {
+    if (!ku.trim()) return;
+    run(() => api.post('/dashboard/messages/' + m.id + '/reply', { text_ku: ku.trim(), text_en: en.trim() || null }).then(() => invalidate('messages')), t('inbox.sent'));
   };
-  const save = () => {
-    if (!edit) return;
-    if (!edit.text.ku.trim() && !edit.text.en.trim()) { setErr('inbox.news_need'); return; }
-    db.news.put({ ...edit, id: edit.id || newId('n') });
-    setEdit(null); setErr(''); toast(t('common.saved'), 'good');
-  };
-  const whereOpts: [string, string][] = [['both', t('inbox.w_both')], ['public', t('inbox.w_public')], ['admin', t('inbox.w_admin')]];
+  const del = () => run(() => api.del('/dashboard/messages/' + m.id).then(() => { invalidate('messages'); onClose(); }), t('common.deleted'));
+  const where = [m.farm_name, place.dist(m.zone_slug), place.gov(m.governorate)].filter(Boolean).join('، ');
 
   return (
-    <div className="stack">
-      <Card title={t('inbox.preview')}>
-        <div className="ticker ib-ticker">
-          <span className="ticker-tag"><i className="live" />{t('common.news')}</span>
-          <div className="ticker-win">
-            {live.length ? <div className="mq-track mq-run" style={{ ['--mq-dur' as string]: Math.max(24, live.length * 9) + 's' }}>
-              {[0, 1].map(k => <span key={k} aria-hidden={k === 1}>{live.map(n => <span className="mq-item" key={n.id}><span className="sep">●</span><bdi>{b(n.text)}</bdi></span>)}</span>)}
-            </div> : <span className="mq-item">{t('inbox.news_none')}</span>}
+    <article className="card inbox-msg">
+      <div className="msg-head">
+        <button className="btn sm back-btn" onClick={onClose}><ArrowRight className="flip-rtl" />{t('common.back')}</button>
+        <div className="msg-title">
+          <div className="row">
+            <Pill tone={KIND_TONE[m.kind]}>{t('inbox.k_' + m.kind)}</Pill>
+            <Pill tone={STATE_TONE[m.state]}>{t('inbox.s_' + m.state)}</Pill>
           </div>
+          <h2 dir="auto">{m.farmer_name || t('inbox.no_name')}</h2>
+          <div className="muted small"><Phone value={m.farmer_phone} />{where && <> · {where}</>} · {date(m.created_at, 'datetime')}</div>
         </div>
-        <p className="muted small">{t('inbox.preview_note')}</p>
-      </Card>
-      <Card title={t('inbox.news_lines', { n: sorted.length })} extra={<button className="btn primary sm" onClick={() => setEdit(blankNews(sorted.length))}><Plus />{t('inbox.news_add')}</button>}>
-        {sorted.map((n, i) => (
-          <div className="list-item ib-news" key={n.id}>
-            <div className="ib-order">
-              <button className="btn ghost sm icon" disabled={i === 0} onClick={() => move(i, -1)} aria-label={t('inbox.up')}><ArrowUp /></button>
-              <button className="btn ghost sm icon" disabled={i === sorted.length - 1} onClick={() => move(i, 1)} aria-label={t('inbox.down')}><ArrowDown /></button>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              {n.text.ku ? <div dir="rtl" lang="ckb" className="ku-text">{n.text.ku}</div> : <div className="muted small">{t('common.ku_missing')}</div>}
-              <div dir="ltr" className="small ink2">{n.text.en}</div>
-              <div className="row" style={{ marginTop: 4 }}><Pill tone="brand">{t('inbox.w_' + n.where)}</Pill></div>
-            </div>
-            <div className="row" style={{ flexWrap: 'nowrap', flex: 'none' }}>
-              <Switch on={n.active} onChange={v => db.news.patch(n.id, { active: v })} label={t('common.active')} />
-              <button className="btn sm icon" onClick={() => setEdit({ ...n })} aria-label={t('common.edit')}><Pencil /></button>
-              <button className="btn sm icon danger" onClick={() => setDel(n)} aria-label={t('common.delete')}><Trash2 /></button>
-            </div>
-          </div>
-        ))}
-        {!sorted.length && <div className="empty">{t('inbox.news_none')}</div>}
-      </Card>
-      {edit && (
-        <Modal title={t(edit.id ? 'inbox.news_edit' : 'inbox.news_add')} onClose={() => { setEdit(null); setErr(''); }}
-          foot={<><button className="btn" onClick={() => { setEdit(null); setErr(''); }}>{t('common.cancel')}</button><button className="btn primary" onClick={save}>{t('common.save')}</button></>}>
-          <div className="form-grid">
-            <Field label={t('inbox.news_ku')} full><input type="text" dir="rtl" lang="ckb" className="ku-text" value={edit.text.ku} onChange={e => setEdit({ ...edit, text: { ...edit.text, ku: e.target.value } })} /></Field>
-            <Field label={t('inbox.news_en')} full><input type="text" dir="ltr" value={edit.text.en} onChange={e => setEdit({ ...edit, text: { ...edit.text, en: e.target.value } })} /></Field>
-            <Field label={t('inbox.news_where')}><Select value={edit.where} onChange={v => setEdit({ ...edit, where: v as News['where'] })} options={whereOpts} /></Field>
-            <Field label={t('common.active')}><Switch on={edit.active} onChange={v => setEdit({ ...edit, active: v })} /></Field>
-          </div>
-          {err && <div className="mt"><Note tone="danger">{t(err)}</Note></div>}
-        </Modal>
+        <div className="row msg-actions">
+          <Link className="btn sm" to={'/admin/farms?farmer=' + m.farmer_id}><User />{t('inbox.open_farmer')}</Link>
+          {canWrite && m.state !== 'closed' && <button className="btn sm" disabled={busy} onClick={() => setStateTo('closed')}><CheckCheck />{t('inbox.close')}</button>}
+          {canWrite && m.state === 'closed' && <button className="btn sm" disabled={busy} onClick={() => setStateTo(m.reply ? 'replied' : 'read')}><RotateCcw />{t('inbox.reopen')}</button>}
+          {canDelete && <button className="btn sm danger" disabled={busy} onClick={() => setConfirmDel(true)} aria-label={t('common.delete')}><Trash2 /></button>}
+        </div>
+      </div>
+      <div className="farmer-wrote">
+        <span className="eyebrow">{t('inbox.farmer_wrote')}</span>
+        <p dir="auto">{m.text}</p>
+      </div>
+      {m.photos.length > 0 && <Photos msgId={m.id} photos={m.photos} />}
+      {m.reply && (
+        <div className="note good">
+          <span><b>{t('inbox.your_reply')}</b> · <span className="small">{date(m.reply.replied_at, 'datetime')}</span><br /><span dir="auto">{pick(m.reply.text_ku, m.reply.text_en)}</span></span>
+        </div>
       )}
-      {del && <Confirm title={t('inbox.news_delete')} text={<bdi>{b(del.text)}</bdi>} okLabel={t('common.delete')} onClose={() => setDel(null)}
-        onOk={() => { db.news.remove(del.id); toast(t('common.deleted')); }} />}
+      {canWrite ? (
+        <div className="reply-box">
+          <label className="field"><span>{t('inbox.reply_ku')}</span>
+            <textarea dir="rtl" rows={3} value={ku} onChange={e => setKu(e.target.value)} placeholder={t('inbox.reply_ph')} maxLength={2000} />
+          </label>
+          <label className="field"><span>{t('inbox.reply_en')} <small>{t('inbox.optional')}</small></span>
+            <textarea dir="ltr" rows={2} value={en} onChange={e => setEn(e.target.value)} maxLength={2000} />
+          </label>
+          <div className="row">
+            <button className="btn primary" disabled={busy || !ku.trim()} onClick={reply}><Send className="flip-rtl" />{m.reply ? t('inbox.replace_reply') : t('inbox.send')}</button>
+            {m.state === 'new' && <button className="btn" disabled={busy} onClick={() => setStateTo('read')}><Eye />{t('inbox.mark_read')}</button>}
+          </div>
+          <span className="muted small">{t('inbox.reply_note')}</span>
+        </div>
+      ) : <div className="note">{t('inbox.read_only')}</div>}
+      {confirmDel && <Confirm title={t('inbox.del_title')} text={t('inbox.del_text')} okLabel={t('common.delete')} onOk={del} onClose={() => setConfirmDel(false)} />}
+    </article>
+  );
+}
+
+/** Photos sit behind the token: fetch the bytes, show them, free them when the message closes. */
+function Photos({ msgId, photos }: { msgId: string; photos: Photo[] }) {
+  const { t } = useI18n();
+  const [urls, setUrls] = useState<Record<string, string | null>>({});
+  useEffect(() => {
+    let dead = false;
+    const made: string[] = [];
+    for (const p of photos) {
+      authedBlobUrl(`/dashboard/messages/${msgId}/photos/${p.id}`).then(u => { if (dead) { URL.revokeObjectURL(u); return; } made.push(u); setUrls(x => ({ ...x, [p.id]: u })); }, () => !dead && setUrls(x => ({ ...x, [p.id]: null })));
+    }
+    return () => { dead = true; made.forEach(u => URL.revokeObjectURL(u)); setUrls({}); };
+  }, [msgId, photos]);
+  return (
+    <div className="msg-photos">
+      {photos.map(p => {
+        const u = urls[p.id];
+        return u ? <a key={p.id} href={u} target="_blank" rel="noreferrer"><img src={u} alt={t('inbox.photo')} /></a>
+          : <span key={p.id} className={u === null ? 'photo-fail' : 'sk photo-sk'}>{u === null && <ImageOff />}</span>;
+      })}
     </div>
   );
 }

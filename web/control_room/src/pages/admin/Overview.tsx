@@ -1,164 +1,151 @@
-// Overview: only numbers the data really holds, and a list of things that need an admin today.
-// Cost: totals come from the cached one-pass api.totals(); the other counts are single passes, memoized
-// per collection version.
+// Admin overview (design 06 HEWv1, tablet CSRsU, phone S7v3l). Only numbers the server really holds:
+// farm totals, new messages, fire detections, data jobs, dams, the brief. Each "needs attention" line
+// links to its page. Parts the staff member cannot read are left out.
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Users, Map as MapIcon, Inbox, Store, BellRing, AlertTriangle, Activity, Ban, ChevronRight, MessageSquare, UserPlus, Send } from 'lucide-react';
+import { Users, Map as MapIcon, Inbox, Flame, Waves, CloudRain, Activity, ChevronLeft, ChevronRight, FileText, UserPlus, CheckCircle2, Newspaper } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
-import { db } from '../../data/db';
-import { useRows, useVersion } from '../../data/store';
-import { totals } from '../../data/api';
-import { Card, Kpi, Pill } from '../../components/ui';
+import { useApi } from '../../api/cache';
+import { useBrief, useDams, useFires } from '../../api/public';
+import type { FarmStats } from '../../api/types';
+import { Kpi, Pill, type Tone } from '../../components/ui';
 import { HBars } from '../../components/charts';
-import { CropTag, usePlaceNames } from '../../components/domain';
 import { DistrictMap, GREEN_RAMP, ramp } from '../../components/DistrictMap';
+import { cropColor, cropName } from '../../components/domain';
+import { DISTRICT_BY_SLUG } from '../../data/places';
+import type { JobStatus } from './region/types';
 import './overview.css';
 
-// Esri World Imagery tiles around Dukan lake, zoom 12 (6 x 3 tiles)
-const Z = 12, LAT = 35.93, LON = 44.96;
-const tileXY = (lat: number, lon: number, z: number) => {
-  const n = 2 ** z, r = lat * Math.PI / 180;
-  return [Math.floor((lon + 180) / 360 * n), Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n)];
-};
-const [CX, CY] = tileXY(LAT, LON, Z);
-const TILES: string[] = [];
-for (let y = CY - 1; y <= CY + 1; y++) for (let x = CX - 3; x <= CX + 2; x++) TILES.push(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${Z}/${y}/${x}`);
-
-function Sat({ cls }: { cls: string }) {
-  return <div className={'sat ' + cls}><div className="sat-grid">{TILES.map(u => <img key={u} src={u} alt="" loading="lazy" draggable={false} />)}</div></div>;
-}
+interface Need { key: string; icon: typeof Inbox; tone: Tone; title: string; sub: string; to: string }
 
 export default function Overview() {
-  const { t, num, b, date, ago, lang } = useI18n();
-  const { me } = useAuth();
+  const { t, num, date, lang, pick, dir } = useI18n();
+  const { me, can } = useAuth();
   const nav = useNavigate();
-  const pn = usePlaceNames();
-  const vFarms = useVersion(db.farms), vFarmers = useVersion(db.farmers);
-  const messages = useRows(db.messages);
-  const listings = useRows(db.listings);
-  const alerts = useRows(db.alerts);
-  const jobs = useRows(db.jobs);
-  const farmers = useRows(db.farmers);
-  const farms = useRows(db.farms);
-  useRows(db.crops);
+  const stats = useApi<FarmStats>(can('farms') ? '/dashboard/stats/farms' : null, ['farms'], { auth: true });
+  const counts = useApi<{ new: number; read: number; replied: number; closed: number }>(can('messages') ? '/dashboard/messages/counts' : null, ['messages'], { auth: true });
+  const jobs = useApi<{ jobs: JobStatus[] }>(can('jobs') ? '/dashboard/jobs' : null, ['jobs'], { auth: true, everyMs: 120000 });
+  const fires = useFires();
+  const dams = useDams();
+  const brief = useBrief();
+  const outlook = useApi<unknown>('/outlooks', ['outlooks']);
+  const water = useApi<unknown>('/water/plan', ['water']);
 
-  const T = useMemo(() => totals(), [vFarms, vFarmers]);
-  const counts = useMemo(() => {
-    let alarm = 0; for (const f of farms) if (f.level === 'alarm') alarm++;
-    let blocked = 0; for (const f of farmers) if (f.status === 'blocked') blocked++;
-    return { alarm, blocked };
-  }, [farms, farmers]);
-  const newMsgs = useMemo(() => messages.filter(m => m.state === 'new').length, [messages]);
-  const openListings = useMemo(() => { let n = 0, kg = 0; for (const l of listings) if (l.state === 'open') { n++; kg += l.kg; } return { n, kg }; }, [listings]);
-  const drafts = useMemo(() => alerts.filter(a => a.status === 'draft').length, [alerts]);
-  const badJobs = useMemo(() => jobs.filter(j => j.state === 'late' || j.state === 'failed'), [jobs]);
-  const lastSent = useMemo(() => alerts.filter(a => a.status === 'sent').sort((a, z) => (z.sent ?? '').localeCompare(a.sent ?? ''))[0], [alerts]);
-  const latestMsgs = useMemo(() => [...messages].sort((a, z) => z.at.localeCompare(a.at)).slice(0, 5), [messages]);
-  const newestFarmers = useMemo(() => [...farmers].sort((a, z) => z.joined.localeCompare(a.joined)).slice(0, 5), [farmers]);
-  const cropBars = useMemo(() => [...T.all.crops].sort((a, z) => z[1] - a[1]).slice(0, 8)
-    .map(([c, v]) => ({ key: c, label: <CropTag id={c} />, value: v, color: db.crops.get(c)?.color })), [T]);
-
-  const needs = [
-    newMsgs > 0 && { icon: <Inbox />, tone: 'danger', text: t('overview.need_msgs', { n: num(newMsgs) }), sub: t('overview.need_msgs_sub'), to: '/admin/inbox' },
-    drafts > 0 && { icon: <BellRing />, tone: 'warn', text: t('overview.need_drafts', { n: num(drafts) }), sub: t('overview.need_drafts_sub'), to: '/admin/alerts' },
-    ...badJobs.map(j => ({ icon: <Activity />, tone: 'danger', text: t('overview.need_job', { name: b(j.name) }), sub: j.result, to: '/admin/jobs' })),
-    counts.alarm > 0 && { icon: <AlertTriangle />, tone: 'warn', text: t('overview.need_alarm', { n: num(counts.alarm) }), sub: t('overview.need_alarm_sub'), to: '/admin/farms' },
-    counts.blocked > 0 && { icon: <Ban />, tone: '', text: t('overview.need_blocked', { n: num(counts.blocked) }), sub: t('overview.need_blocked_sub'), to: '/admin/farms' },
-  ].filter(Boolean) as { icon: JSX.Element; tone: string; text: string; sub: string; to: string }[];
-
-  const byDist = T.byDist;
-  const first = me?.name.split(' ')[0] ?? '';
   const hour = new Date().getHours();
-  const greet = t(hour < 12 ? 'overview.morning' : hour < 18 ? 'overview.afternoon' : 'overview.evening', { name: first });
+  const greet = t(hour < 12 ? 'overview.morning' : hour < 18 ? 'overview.afternoon' : 'overview.evening', { name: (me?.name ?? '').split(/\s+/)[0] });
+
+  const firesByZone = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const f of fires.data?.fires ?? []) if (f.zone_slug) m.set(f.zone_slug, (m.get(f.zone_slug) ?? 0) + 1);
+    return m;
+  }, [fires.data]);
+
+  const needs = useMemo<Need[]>(() => {
+    const out: Need[] = [];
+    const n = counts.data?.new ?? 0;
+    if (n > 0) out.push({ key: 'msg', icon: Inbox, tone: 'warn', title: t('overview.need_msgs', { n: num(n) }), sub: t('overview.need_msgs_sub'), to: '/admin/inbox' });
+    const fc = fires.data?.fires.length ?? 0;
+    if (fc > 0) out.push({ key: 'fire', icon: Flame, tone: 'danger', title: t('overview.need_fires', { n: num(fc), z: num(firesByZone.size) }), sub: t('overview.need_fires_sub'), to: '/admin/alerts' });
+    const never: string[] = [];
+    for (const j of jobs.data?.jobs ?? []) {
+      if (j.state === 'ok') continue;
+      if (j.state === 'never') { never.push(pick(j.name_ku, j.name_en)); continue; }
+      out.push({ key: 'job-' + j.job, icon: Activity, tone: 'danger', title: t('overview.need_job_' + j.state, { name: pick(j.name_ku, j.name_en) }), sub: j.message ?? t('overview.need_job_sub'), to: '/admin/jobs' });
+    }
+    if (never.length) out.push({ key: 'job-never', icon: Activity, tone: '', title: t('overview.need_jobs_never', { n: num(never.length) }), sub: never.join(lang === 'ku' ? '، ' : ', '), to: '/admin/jobs' });
+    for (const d of dams.data?.dams ?? []) if (!d.latest) out.push({ key: 'dam-' + d.slug, icon: Waves, tone: 'water', title: t('overview.need_dam', { name: pick(d.name_ku, d.name_en) }), sub: t('overview.need_dam_sub'), to: '/admin/region?tab=dams' });
+    const noOutlook = outlook.error?.status === 404, noWater = water.error?.status === 404;
+    if (noOutlook || noWater) out.push({ key: 'plans', icon: CloudRain, tone: '', title: t(noOutlook && noWater ? 'overview.need_plans' : noOutlook ? 'overview.need_outlook' : 'overview.need_water'), sub: t('overview.need_plans_sub'), to: '/admin/region?tab=' + (noOutlook ? 'outlooks' : 'water') });
+    return out;
+  }, [counts.data, fires.data, firesByZone, jobs.data, dams.data, outlook.error, water.error, t, num, pick, lang]);
+
+  const byZone = useMemo(() => new Map((stats.data?.by_zone ?? []).map(z => [DISTRICT_BY_SLUG.get(z.slug)?.en ?? z.name_en, z.farms])), [stats.data]);
+  const maxFarms = Math.max(1, ...byZone.values());
+  const stops = [0.2, 0.4, 0.6, 0.8].map(x => x * maxFarms);
+  const crops = (stats.data?.by_crop ?? []).filter(c => c.crop !== 'empty').sort((a, b) => b.dunam - a.dunam).slice(0, 8);
+  const Chevron = dir === 'rtl' ? ChevronLeft : ChevronRight;
+  const b = brief.data?.brief;
+  const tot = stats.data?.totals;
 
   return (
-    <>
-      <div className="hero ov-hero">
-        <Sat cls="soft" /><Sat cls="sharp" />
-        <div className="shade" />
-        <div className="txt">
+    <div className="ov">
+      <div className="page-head">
+        <div className="t">
           <div className="eyebrow">{date(new Date().toISOString(), 'date')}</div>
           <h1>{greet}</h1>
-          <div className="sub">{t('overview.hero_sub')}</div>
+          <div className="sub">{t('overview.sub')}</div>
         </div>
         <div className="actions">
-          <Link className="btn primary" to="/admin/alerts"><BellRing />{t('overview.new_alert')}</Link>
-          <Link className="btn" to="/admin/farms"><Users />{t('overview.farmers_btn')}</Link>
+          {can('farms') && <Link className="btn" to="/print/government" target="_blank"><FileText />{t('overview.gov_report')}</Link>}
+          {can('farmers', 'create') && <Link className="btn primary" to="/admin/farms?new=farmer"><UserPlus />{t('overview.new_farmer')}</Link>}
         </div>
       </div>
 
       <div className="grid g4 mb">
-        <Kpi label={t('overview.k_farmers')} value={num(T.all.farmers)} note={t('overview.k_farmers_n', { n: num(T.all.female) })} icon={<Users />} />
-        <Kpi label={t('overview.k_farms')} value={num(T.all.farms)} note={t('overview.k_farms_n', { n: num(T.all.area) })} icon={<MapIcon />} />
-        <Kpi label={t('overview.k_msgs')} value={num(newMsgs)} note={t('overview.k_msgs_n', { n: num(messages.length) })} tone={newMsgs ? 'danger' : ''} icon={<Inbox />} />
-        <Kpi label={t('overview.k_listings')} value={num(openListings.n)} note={t('overview.k_listings_n', { n: num(openListings.kg / 1000, 1) })} icon={<Store />} />
+        {can('farms') && <Kpi icon={<Users />} label={t('overview.k_farmers')} value={tot ? num(tot.farmers) : '-'} note={t('overview.k_farmers_n')} />}
+        {can('farms') && <Kpi icon={<MapIcon />} label={t('overview.k_farms')} value={tot ? num(tot.farms) : '-'} note={tot ? t('overview.k_farms_n', { du: num(tot.dunam, 1) }) : ''} />}
+        {can('messages') && <Kpi icon={<Inbox />} tone={(counts.data?.new ?? 0) > 0 ? 'warn' : ''} label={t('overview.k_msgs')} value={counts.data ? num(counts.data.new) : '-'} note={counts.data ? t('overview.k_msgs_n', { n: num(counts.data.new + counts.data.read + counts.data.replied + counts.data.closed) }) : ''} />}
+        <Kpi icon={<Flame />} tone={(fires.data?.fires.length ?? 0) > 0 ? 'danger' : ''} label={t('overview.k_fires')} value={fires.data ? num(fires.data.fires.length) : '-'} note={fires.data ? t('overview.k_fires_n', { z: num(firesByZone.size) }) : ''} />
       </div>
 
-      <div className="grid g-main-l">
-        <div className="stack">
-          <Card title={t('overview.needs')}>
-            {needs.length ? needs.map((n, i) => (
-              <Link key={i} to={n.to} className="list-item">
-                <span className={'ico ' + n.tone}>{n.icon}</span>
-                <div style={{ flex: 1, minWidth: 0 }}><b>{n.text}</b><div className="muted small"><bdi>{n.sub}</bdi></div></div>
-                <ChevronRight className="flip-rtl muted" />
-              </Link>
-            )) : <div className="empty">{t('overview.all_good')}</div>}
-          </Card>
-          <Card title={t('overview.land_per_crop')} extra={<Link className="small" to="/admin/crops">{t('overview.crop_register')}</Link>}>
-            <HBars items={cropBars} unit={t('common.du')} showShare />
-          </Card>
-          <div className="grid g2">
-            <Card title={t('overview.latest_msgs')} extra={<Link className="small" to="/admin/inbox">{t('overview.all')}</Link>}>
-              {latestMsgs.map(m => {
-                const f = db.farmers.get(m.farmerId);
-                return (
-                  <Link key={m.id} to={'/admin/inbox?m=' + m.id} className="list-item">
-                    <span className={'ico ' + (m.state === 'new' ? 'danger' : '')}><MessageSquare /></span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <b className="ov-ellipsis"><bdi>{m.subject}</bdi></b>
-                      <div className="muted small ov-ellipsis">{f ? b(f.name) : '-'} · {ago(m.at)}</div>
-                    </div>
-                    {m.state === 'new' && <Pill tone="danger">{t('overview.new')}</Pill>}
-                  </Link>
-                );
-              })}
-            </Card>
-            <Card title={t('overview.newest_farmers')} extra={<Link className="small" to="/admin/farms">{t('overview.all')}</Link>}>
-              {newestFarmers.map(f => (
-                <Link key={f.id} to={'/admin/farms?farmer=' + f.id} className="list-item">
-                  <span className="ico brand"><UserPlus /></span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <b className="ov-ellipsis">{b(f.name)}</b>
-                    <div className="muted small ov-ellipsis">{pn.dist(f.dist)} · {ago(f.joined)}</div>
-                  </div>
-                </Link>
-              ))}
-            </Card>
-          </div>
-        </div>
-        <div className="stack">
-          <Card title={t('overview.farms_map')} extra={<span className="muted small">{t('overview.click_district')}</span>}>
-            <DistrictMap size="sm" styleKey={vFarms + lang}
-              fill={d => ramp(byDist.get(d)?.farms ?? 0, [20, 50, 100, 200], GREEN_RAMP)}
-              onDistrict={d => nav('/admin/farms?dist=' + encodeURIComponent(d))} />
-            <div className="legend">{GREEN_RAMP.map((c, i) => <span key={c}><i className="dotc" style={{ background: c }} />{t('overview.band_' + i)}</span>)}</div>
-          </Card>
-          <Card title={t('overview.last_alert')} extra={<Link className="small" to="/admin/alerts">{t('overview.all')}</Link>}>
-            {lastSent ? (
-              <div className="row" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
-                <span className="ico gold"><Send /></span>
-                <div style={{ minWidth: 0 }}>
-                  <b><bdi>{b(lastSent.title)}</bdi></b>
-                  <div className="small ink2" dir="auto">{b(lastSent.body)}</div>
-                  <div className="muted small">{t('overview.sent_by', { by: lastSent.by, when: ago(lastSent.sent) })}</div>
+      <div className="ov-row mb">
+        <section className="card ov-needs">
+          <div className="card-head"><span className="eyebrow">{t('overview.needs')}</span></div>
+          {!needs.length && <div className="ov-clear"><CheckCircle2 />{t('overview.all_clear')}</div>}
+          {needs.map(n => (
+            <Link key={n.key} to={n.to} className="list-item ov-need">
+              <span className={'ico ' + n.tone}><n.icon /></span>
+              <span className="ov-need-text"><b>{n.title}</b><small className="muted">{n.sub}</small></span>
+              <Chevron className="muted" />
+            </Link>
+          ))}
+        </section>
+        {can('farms') && (
+          <section className="card ov-map">
+            <div className="card-head"><span className="eyebrow">{t('overview.map_title')}</span><span className="muted small">{t('overview.map_hint')}</span></div>
+            {stats.data && stats.data.totals.farms === 0 ? <div className="empty">{t('overview.no_farms')}</div> : (
+              <>
+                <DistrictMap size="sm" styleKey={String(stats.data?.as_of) + lang} fill={en => { const v = byZone.get(en); return v ? ramp(v, stops, GREEN_RAMP) : undefined; }}
+                  onDistrict={en => { const d = [...DISTRICT_BY_SLUG.values()].find(x => x.en === en); if (d) nav('/admin/farms?zone=' + d.slug); }} />
+                <div className="legend">
+                  {GREEN_RAMP.map((c, i) => <span key={c}><span className="dotc" style={{ background: c }} />{i === 0 ? t('overview.fewer') : i === GREEN_RAMP.length - 1 ? t('overview.more') : ''}</span>)}
                 </div>
-              </div>
-            ) : <div className="empty">{t('overview.no_alert')}</div>}
-          </Card>
-        </div>
+              </>
+            )}
+          </section>
+        )}
       </div>
-    </>
+
+      <div className="ov-row">
+        <div className="stack ov-side">
+          {b && (
+            <section className="card ov-brief">
+              <div className="card-head"><span className="eyebrow"><Newspaper size={14} /> {t('overview.brief', { day: date(b.day, 'short') })}</span><Pill tone="water">{t('overview.ai_draft')}</Pill></div>
+              <b className="ov-brief-h">{pick(b.headline_ku, b.headline_en)}</b>
+            </section>
+          )}
+          {can('jobs') && (
+            <section className="card">
+              <div className="card-head"><span className="eyebrow">{t('overview.jobs')}</span><Link className="small" to="/admin/jobs">{t('overview.all')}</Link></div>
+              {(jobs.data?.jobs ?? []).map(j => (
+                <div key={j.job} className="ov-job">
+                  <span>{pick(j.name_ku, j.name_en)}</span>
+                  <Pill tone={j.state === 'ok' ? 'good' : j.state === 'never' ? '' : 'danger'}>{t('overview.job_' + j.state)}</Pill>
+                </div>
+              ))}
+              {jobs.loading && <i className="sk" />}
+            </section>
+          )}
+        </div>
+        {can('farms') && (
+          <section className="card ov-crops">
+            <div className="card-head"><span className="eyebrow">{t('overview.crops_title')}</span><Link className="small" to="/admin/crops">{t('overview.all')}</Link></div>
+            {crops.length ? <HBars digits={1} unit={t('common.dunam')} items={crops.map(c => ({ key: c.crop, label: cropName(c.crop, lang), value: c.dunam, color: cropColor(c.crop) }))} />
+              : <div className="empty">{stats.loading ? t('common.loading') : t('overview.no_farms')}</div>}
+          </section>
+        )}
+      </div>
+    </div>
   );
 }

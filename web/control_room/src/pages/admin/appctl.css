@@ -1,0 +1,11 @@
+/* App control (design 15): two columns of cards, one column on phones */
+.appctl-page > .note { margin-bottom: 14px; }
+.appctl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.appctl-grid .form-grid { margin-top: 12px; }
+.ver-usage { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+.ver-row { display: grid; grid-template-columns: 60px minmax(0, 1fr) auto auto; gap: 10px; align-items: center; }
+.ver-row .bar { height: 8px; }
+.num-input { width: 110px; }
+.phone-input { width: 190px; }
+@media (max-width: 1100px) { .appctl-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .ver-row { grid-template-columns: 50px minmax(0, 1fr); } .num-input, .phone-input { width: 100%; } }

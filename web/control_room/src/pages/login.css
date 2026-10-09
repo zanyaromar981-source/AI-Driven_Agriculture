@@ -1,4 +1,4 @@
-.login { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(360px, 1fr); }
+.login { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 640px) minmax(360px, 1fr); }
 .login-art { position: relative; overflow: hidden; color: #F6EDD9; display: grid; place-items: center; padding: 40px;
   background: radial-gradient(900px 600px at 40% 40%, #1B5A43 0%, var(--deep) 60%, #0C2A1F 100%); }
 .login-art::before { content: ''; position: absolute; inset: 0; opacity: .18;

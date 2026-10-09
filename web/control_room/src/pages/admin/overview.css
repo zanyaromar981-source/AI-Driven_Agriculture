@@ -1,4 +1,14 @@
-.ov-hero .sat { overflow: hidden; }
-.ov-hero .sat-grid { position: absolute; left: 50%; top: 50%; width: max(100%, 1100px); transform: translate(-50%, -50%); display: grid; grid-template-columns: repeat(6, 1fr); }
-.ov-hero .sat-grid img { width: 100%; aspect-ratio: 1; display: block; }
-.ov-ellipsis { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Overview (design 06): two rows, attention list beside the map, then brief and jobs beside crops. */
+.ov-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 14px; align-items: start; }
+.ov-needs { padding-bottom: 8px; }
+.ov-need { border-bottom: 1px solid var(--line-soft); }
+.ov-need:last-child { border-bottom: 0; }
+.ov-need .ico svg { width: 18px; height: 18px; }
+.ov-need-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ov-need-text small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-clear { display: flex; align-items: center; gap: 8px; color: var(--good); font-weight: 600; padding: 12px 4px; }
+.ov-job { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 13.5px; }
+.ov-job:last-child { border-bottom: 0; }
+.ov-brief-h { display: block; font-size: 15px; line-height: 1.6; }
+.ov-side { min-width: 0; }
+@media (max-width: 1100px) { .ov-row { grid-template-columns: minmax(0, 1fr); } }

@@ -1,105 +1,97 @@
-// The public View page: the region map by district, water, fires, two years side by side and Alwa
-// prices. No sign-in. What is shown is switched in Settings > Public site (settings.publicView).
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { LogIn, LayoutDashboard, Droplets, Flame, Map as MapIcon, BarChart3, Store, BellRing, Tractor } from 'lucide-react';
+// The public View page (design v2: tIFJP desktop, rjX3Q phone, Dha2F English). No login.
+// Order on screen: top bar, news bar, today's three numbers, big tabs, then the tab. On the map tab the
+// district panel sits on the physical right in both languages (approved design).
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { CloudRain, Flame, Waves, Map as MapIcon, ChartColumn, Store, LogIn, LayoutDashboard } from 'lucide-react';
 import { useI18n } from '../../i18n';
 import { useAuth } from '../../auth/auth';
-import { db } from '../../data/db';
-import { useDoc, useRows, useVersion } from '../../data/store';
-import { totals } from '../../data/api';
+import { useApi } from '../../api/cache';
+import { useDams, useFires, useOverview } from '../../api/public';
+import type { FarmStats } from '../../api/types';
 import { GrainSun } from '../../motion/GrainSun';
 import { Ticker } from '../../motion/Ticker';
 import { LangSwitch } from '../../layouts/LangSwitch';
-import { Tabs } from '../../components/ui';
-import { MapTab, WaterTab, FiresTab, CompareTab, MarketTab } from './tabs';
+import { prefs } from '../../data/store';
+import { MapTab } from './MapTab';
+import { WaterTab, FiresTab, CompareTab, MarketTab } from './OtherTabs';
+import { TABS, type ViewTab } from './viewUtil';
 import './view.css';
 
-type TabKey = 'map' | 'water' | 'fires' | 'compare' | 'market';
+const TAB_ICON = { map: MapIcon, water: Waves, fires: Flame, compare: ChartColumn, market: Store };
+const BAND_SHORT = (avg: number) => (avg < 25 ? 'much_greener' : avg < 45 ? 'greener' : avg < 60 ? 'normal' : avg < 80 ? 'dry' : 'very_dry');
 
 export default function ViewPage() {
-  const { t, num, b, date } = useI18n();
+  const { t, num, lang } = useI18n();
   const { me } = useAuth();
-  const settings = useDoc(db.settings);
-  const pv = settings.publicView;
-  const dams = useRows(db.dams);
-  const fires = useRows(db.fires);
-  const alerts = useRows(db.alerts);
-  const fv = useVersion(db.farms), pfv = useVersion(db.farmers);
-  const all = useMemo(() => totals().all, [fv, pfv]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [params, setParams] = useSearchParams();
+  const [tab, setTabState] = useState<ViewTab>(() => (params.get('tab') as ViewTab) || prefs.get<ViewTab>('view.tab', 'map'));
+  const slug = params.get('d');
+  const setSlug = (s: string | null) => { const p = new URLSearchParams(params); if (s) p.set('d', s); else p.delete('d'); setParams(p, { replace: true }); };
+  const setTab = (k: ViewTab) => { setTabState(k); prefs.set('view.tab', k); };
+  const ov = useOverview(), fires = useFires(), dams = useDams();
+  const stats = useApi<FarmStats>('/stats/farms', []);
 
-  const tabs = useMemo(() => {
-    const list: [TabKey, string][] = [];
-    if (pv.map) list.push(['map', t('view.tab_map')]);
-    if (pv.water) list.push(['water', t('view.tab_water')]);
-    if (pv.fires) list.push(['fires', t('view.tab_fires')]);
-    if (pv.compare) list.push(['compare', t('view.tab_compare')]);
-    if (pv.market) list.push(['market', t('view.tab_market')]);
-    return list;
-  }, [pv, t]);
-  const [tab, setTab] = useState<TabKey>('map');
-  const cur = tabs.some(x => x[0] === tab) ? tab : tabs[0]?.[0];
+  useEffect(() => { document.title = lang === 'ku' ? 'جوتیار · کێڵگە و ئاوی هەرێمی کوردستان' : 'Jutyar · Farms and water of the Kurdistan Region'; }, [lang]);
 
-  const fires24 = useMemo(() => { const lim = Date.now() - 864e5; return fires.reduce((n, f) => n + (+new Date(f.at) >= lim ? 1 : 0), 0); }, [fires]);
-  const lastAlert = useMemo(() => {
-    let best: (typeof alerts)[number] | undefined;
-    for (const a of alerts) if (a.status === 'sent' && a.sent && (!best || a.sent > best.sent!)) best = a;
-    return best;
-  }, [alerts]);
-
+  const avg = ov.data?.summary.average_dryness;
+  const damWith = dams.data?.dams.filter(d => d.latest) ?? [];
   return (
-    <div className="pub">
-      <header className="pub-top">
-        <Link to="/" className="logo"><span className="mark"><GrainSun size={26} /></span><span>Jutyar</span><span className="word-ku">جوتیار</span></Link>
-        <div className="top-end">
+    <div className="pub view">
+      <header className="pub-top view-top">
+        <Link to="/" className="logo view-logo" aria-label="Jutyar">
+          <span className="mark"><GrainSun size={30} /></span>
+          <span className="view-logo-words">
+            <b>{lang === 'ku' ? 'جوتیار' : 'Jutyar'}</b>
+            <small>{t('view.tagline')}</small>
+          </span>
+        </Link>
+        <div className="view-top-actions">
           <LangSwitch />
           {me
-            ? <Link to="/admin" className="btn primary sm"><LayoutDashboard />{t('view.control_room')}</Link>
-            : <Link to="/login" className="btn primary sm"><LogIn className="flip-rtl" />{t('view.sign_in')}</Link>}
+            ? <Link to="/admin" className="btn primary view-signin"><LayoutDashboard /><span>{t('view.to_admin')}</span></Link>
+            : <Link to="/login" className="btn primary view-signin" aria-label={t('common.staff_sign_in')}><LogIn className="flip-rtl" /><span>{t('common.staff_sign_in')}</span></Link>}
         </div>
       </header>
-      <Ticker where="public" />
-
-      <main className="pub-main">
-        <div className="pub-chips">
-          {pv.water && dams.map(d => (
-            <span className="pub-chip" key={d.id}><i style={{ background: 'var(--water)' }} /><span className="lab">{b(d.name)}</span><b><bdi>{t('view.full', { n: num(d.pct) })}</bdi></b></span>
-          ))}
-          {pv.farmTotals && <span className="pub-chip"><Tractor size={14} /><b><bdi>{t('view.farms_chip', { farms: num(all.farms), dunam: num(all.area) })}</bdi></b></span>}
-          {pv.fires && <span className="pub-chip"><Flame size={14} style={{ color: fires24 ? 'var(--danger)' : undefined }} /><b><bdi>{t('view.fires_chip', { n: num(fires24) })}</bdi></b></span>}
+      <Ticker />
+      <main className="view-main">
+        <div className="view-today" role="list" aria-label={t('view.today')}>
+          <Stat icon={<CloudRain />} tone="good" title={t('view.rain')} loading={!ov.data}
+            value={avg == null ? t('common.no_data') : t('view.band_short_' + BAND_SHORT(avg))} line={ov.data ? t('view.rain_line', { n: num(ov.data.summary.zones_with_data) }) : ''} small />
+          <Stat icon={<Flame />} tone="danger" title={t('view.fires')} loading={!fires.data}
+            value={fires.data ? num(fires.data.fires.length) : ''} unit={t('view.detections')} line={fires.data ? t('view.fires_line', { z: num(fires.data.summary.zones.length) }) : ''} />
+          <Stat icon={<Waves />} tone="water" title={t('view.dams')} loading={!dams.data} small={!damWith.length}
+            value={damWith.length ? '' : t('common.no_data')} line={damWith.length ? '' : t('view.dams_line_none')}
+            extra={damWith.length ? <span className="view-dams">{damWith.map(d => <span key={d.slug}><b className="ltr">{num(d.latest!.pct_full, 0)}%</b><small>{lang === 'ku' ? d.name_ku : d.name_en}</small></span>)}</span> : undefined} />
         </div>
-
-        {lastAlert && (
-          <div className="pub-alert">
-            <span className="ico warn"><BellRing /></span>
-            <div style={{ minWidth: 0 }}>
-              <div className="eyebrow">{t('view.latest_alert')} · {date(lastAlert.sent, 'short')}</div>
-              <b><bdi>{b(lastAlert.title)}</bdi></b>
-              <div className="small ink2"><bdi>{b(lastAlert.body)}</bdi></div>
-            </div>
-          </div>
-        )}
-
-        {cur ? (
-          <>
-            <div className="pub-tabs">
-              <Tabs value={cur} onChange={setTab} items={tabs} />
-              <span className="pub-tab-ico" aria-hidden="true">{cur === 'map' ? <MapIcon /> : cur === 'water' ? <Droplets /> : cur === 'fires' ? <Flame /> : cur === 'compare' ? <BarChart3 /> : <Store />}</span>
-            </div>
-            {cur === 'map' && <MapTab farmTotals={pv.farmTotals} />}
-            {cur === 'water' && <WaterTab />}
-            {cur === 'fires' && <FiresTab />}
-            {cur === 'compare' && <CompareTab />}
-            {cur === 'market' && <MarketTab />}
-          </>
-        ) : <div className="card empty">{t('view.nothing_public')}</div>}
+        <nav className="view-tabs" role="tablist" aria-label={t('view.tabs')}>
+          {TABS.map(x => { const I = TAB_ICON[x.key]; return (
+            <button key={x.key} role="tab" aria-selected={tab === x.key} className={'view-tab' + (tab === x.key ? ' on' : '')} onClick={() => setTab(x.key)}><I /><span>{t('view.tab_' + x.key)}</span></button>
+          ); })}
+        </nav>
+        {tab === 'map' && <MapTab ov={ov.data} stats={stats.data} slug={slug} setSlug={setSlug} />}
+        {tab === 'water' && <WaterTab dams={dams.data?.dams} />}
+        {tab === 'fires' && <FiresTab fires={fires.data} />}
+        {tab === 'compare' && <CompareTab />}
+        {tab === 'market' && <MarketTab />}
       </main>
-
       <footer className="pub-foot">
-        <b><bdi>{b(settings.orgName)}</bdi></b>
-        <span>{t('view.footer_sources')}</span>
-        {settings.sampleBanner && <span className="pill warn">{t('view.footer_sample')}</span>}
+        <span>{t('view.org')}</span>
+        <span className="muted">{t('view.sources')}</span>
       </footer>
+    </div>
+  );
+}
+
+function Stat({ icon, tone, title, value, unit, line, loading, small, extra }: { icon: React.ReactNode; tone: string; title: string; value: string; unit?: string; line: string; loading: boolean; small?: boolean; extra?: React.ReactNode }) {
+  return (
+    <div className="card view-stat" role="listitem">
+      <span className={'ico ' + tone}>{icon}</span>
+      <div className="view-stat-txt">
+        <span className="view-stat-title">{title}</span>
+        {loading ? <i className="sk h28 w60" /> : extra ?? <span className={'view-stat-v ' + tone + (small ? ' small' : '')}><b>{value}</b>{unit && <small>{unit}</small>}</span>}
+        {loading ? <i className="sk w80" /> : line && <span className="muted view-stat-line">{line}</span>}
+      </div>
     </div>
   );
 }

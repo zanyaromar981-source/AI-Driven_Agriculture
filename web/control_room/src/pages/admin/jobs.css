@@ -1,0 +1,7 @@
+/* Data jobs (design 17) */
+.jobs-table td { vertical-align: middle; }
+.job-name { display: flex; gap: 10px; align-items: center; }
+.job-name > span:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.job-msg { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.jobs-table .strip i.ok { background: var(--good); } .jobs-table .strip i.late { background: var(--warn); } .jobs-table .strip i.failed { background: var(--danger); }
+@media (max-width: 640px) { .job-msg { max-width: 200px; } }
