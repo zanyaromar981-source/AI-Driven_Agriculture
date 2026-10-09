@@ -7,16 +7,25 @@ import 'header.dart';
 /// Page frame used by every sign-in screen: header, progress, content, footer.
 /// Scrolls when the keyboard takes the space; otherwise the footer sits at the bottom.
 class JutyarPage extends StatelessWidget {
-  const JutyarPage({super.key, required this.step, required this.children});
+  const JutyarPage({
+    super.key,
+    required this.step,
+    required this.children,
+    this.bottom,
+  });
 
   /// 1 to 3, lights up the progress bars.
   final int step;
   final List<Widget> children;
 
+  /// The tab bar on My farms.
+  final Widget? bottom;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: JColors.bg,
+      bottomNavigationBar: bottom,
       body: SafeArea(
         child: Column(
           children: [

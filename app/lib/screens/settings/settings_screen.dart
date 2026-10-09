@@ -15,8 +15,7 @@ import '../tabs.dart';
 /// are not on the server yet (FRONTEND.md 14): the switches are kept on the
 /// phone and delete says so instead of pretending.
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required this.farm});
-  final FarmSummary farm;
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -292,10 +291,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             color: JColors.muted,
                           ),
                         ),
-                        // Back past the farm screen to My farms.
-                        onTap: () => Navigator.of(context)
-                          ..pop()
-                          ..maybePop(),
+                        // My farms is always the first page after sign-in.
+                        onTap: () =>
+                            Navigator.of(context).popUntil((r) => r.isFirst),
                       ),
                       const _Row(
                         icon: Icons.notifications_none_rounded,

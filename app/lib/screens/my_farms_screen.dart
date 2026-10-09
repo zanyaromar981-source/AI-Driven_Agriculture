@@ -11,6 +11,7 @@ import '../widgets/farm_card.dart';
 import 'add_farm/corners_screen.dart';
 import 'add_farm/farm_actions.dart';
 import 'home/home_screen.dart';
+import 'tabs.dart';
 
 /// What the list shows: from the server, or the last copy saved on the phone.
 class _FarmList {
@@ -166,6 +167,8 @@ class _MyFarmsScreenState extends State<MyFarmsScreen> {
     final pending = Outbox.instance.items;
     return JutyarPage(
       step: 3,
+      // The tab bar on every main page (user, 2026-10-09).
+      bottom: englishScope(context, const JutyarTabBar(current: JTab.home)),
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 4),
