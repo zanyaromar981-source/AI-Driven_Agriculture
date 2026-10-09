@@ -645,6 +645,26 @@ class FarmInsights {
 
 // ---- Ask the Doctor: BACKEND.md 2.5 ----
 
+/// The photo's real type from its first bytes: `image/jpeg`, `image/png`,
+/// or null for anything else. The server refuses a part whose bytes are not
+/// its declared type (FRONTEND.md 6), and the file name can lie: Android's
+/// picker saves a resized PNG without transparency as JPEG under its .png name.
+String? photoMime(List<int> bytes) {
+  bool starts(List<int> sig) {
+    if (bytes.length < sig.length) return false;
+    for (var i = 0; i < sig.length; i++) {
+      if (bytes[i] != sig[i]) return false;
+    }
+    return true;
+  }
+
+  if (starts(const [0xFF, 0xD8, 0xFF])) return 'image/jpeg';
+  if (starts(const [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
+    return 'image/png';
+  }
+  return null;
+}
+
 /// One photo for the Doctor, already made small on the phone.
 class DoctorPhoto {
   const DoctorPhoto({required this.bytes, this.mime = 'image/jpeg'});

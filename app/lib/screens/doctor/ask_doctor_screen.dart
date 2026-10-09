@@ -99,7 +99,10 @@ class _AskDoctorScreenState extends State<AskDoctorScreen> {
       }
       final png = f.name.toLowerCase().endsWith('.png');
       added.add(
-        DoctorPhoto(bytes: bytes, mime: png ? 'image/png' : 'image/jpeg'),
+        DoctorPhoto(
+          bytes: bytes,
+          mime: photoMime(bytes) ?? (png ? 'image/png' : 'image/jpeg'),
+        ),
       );
     }
     if (!mounted) return;
