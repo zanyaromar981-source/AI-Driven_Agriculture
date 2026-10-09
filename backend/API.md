@@ -2,7 +2,7 @@
 
 Written by `tools/api_reference.py` from the server's own description of itself. Do not edit by hand; run the tool again after a route changes. `FRONTEND.md` at the repo root explains how to use all this; the live, clickable version is at `/api-docs` on any running server.
 
-127 operations. A `?` after a field name means it may be left out. Query parameters are listed with the route in `/api-docs`.
+155 operations. A `?` after a field name means it may be left out. Query parameters are listed with the route in `/api-docs`.
 
 Access: **none** = no login; **farmer token** = `Authorization: Bearer <token>` from `POST /v1/auth/otp/verify`; **staff** = a token from `POST /v1/dashboard/auth/login` whose roles hold the named permission; **service key** = the `X-Service-Key` header, for our data jobs only.
 
@@ -24,7 +24,7 @@ Exchange a sign-in code for a token.
 - Access: none
 - Body: `code`: text, `phone`: text
 - Answers: **200** `farms_count`: number, `token`: text
-- Can fail with: 400, 401, 422, 500
+- Can fail with: 400, 401, 403, 422, 500
 
 ### `GET /v1/me`
 
@@ -32,7 +32,7 @@ Get the authenticated farmer's profile.
 
 - Access: farmer token
 - Answers: **200** `created_at`: timestamp, `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `phone`: text
-- Can fail with: 401, 404, 500
+- Can fail with: 401, 403, 404, 500
 
 ### `PUT /v1/me`
 
@@ -352,12 +352,80 @@ Get the signed-in staff member and what they may do.
 - Answers: **200** `permissions`: list of StaffPermission, `staff`: StaffResponse
 - Can fail with: 401, 500
 
+### `PUT /v1/dashboard/me`
+
+Change the signed-in staff member's own name, phone and password.
+
+- Access: any staff
+- Body: `current_password?`: text or null, `name`: text, `new_password?`: text or null, `phone?`: text or null
+- Answers: **200** `permissions`: list of StaffPermission, `staff`: StaffResponse
+- Can fail with: 400, 401, 403, 422, 500
+
+### `GET /v1/dashboard/messages`
+
+List every farmer's messages, newest first.
+
+- Access: staff
+- Query: `state?`, `kind?`, `governorate?`, `zone?`, `q?`, `page?`, `rows_per_page?`
+- Answers: **200** `count`: number, `messages`: list of DashboardMessageResponse, `page`: number, `rows_per_page`: number
+- Can fail with: 401, 403, 422, 500
+
+### `GET /v1/dashboard/messages/counts`
+
+Count the messages in each state, for the inbox badge.
+
+- Access: staff
+- Answers: **200** `closed`: number, `new`: number, `read`: number, `replied`: number
+- Can fail with: 401, 403, 500
+
+### `GET /v1/dashboard/messages/{id}`
+
+Get one message with its photo links.
+
+- Access: staff
+- Answers: **200** `message`: DashboardMessageResponse
+- Can fail with: 401, 403, 404, 500
+
+### `PUT /v1/dashboard/messages/{id}`
+
+Move a message to another state.
+
+- Access: staff
+- Body: `state`: `new` \| `read` \| `replied` \| `closed`
+- Answers: **200** `message`: DashboardMessageResponse
+- Can fail with: 400, 401, 403, 404, 422, 500
+
+### `DELETE /v1/dashboard/messages/{id}`
+
+Delete a message with its photos.
+
+- Access: staff
+- Answers: **204**
+- Can fail with: 401, 403, 500
+
+### `GET /v1/dashboard/messages/{id}/photos/{photo_id}`
+
+Get one photo of any farmer's message.
+
+- Access: staff
+- Answers: **200**
+- Can fail with: 401, 403, 404, 500
+
+### `POST /v1/dashboard/messages/{id}/reply`
+
+Reply to a message.
+
+- Access: staff
+- Body: `text_en?`: text or null, `text_ku`: text
+- Answers: **200** `message`: DashboardMessageResponse
+- Can fail with: 400, 401, 403, 404, 422, 500
+
 ### `GET /v1/dashboard/permissions`
 
 List the resources and actions a role can be built from.
 
 - Access: any staff
-- Answers: **200** `actions`: list of `create` \| `read` \| `update` \| `delete`, `resources`: list of `zones` \| `dams` \| `outlooks` \| `water` \| `fires` \| `alwa` \| `farmers` \| `farms` \| `insights` \| `staff` \| `roles` \| `briefs`
+- Answers: **200** `actions`: list of `create` \| `read` \| `update` \| `delete`, `resources`: list of `zones` \| `dams` \| `outlooks` \| `water` \| `fires` \| `alwa` \| `farmers` \| `farms` \| `insights` \| `staff` \| `roles` \| `briefs` \| `crops` \| `rules` \| `messages` \| `app` \| `jobs`
 - Can fail with: 401
 
 ### `GET /v1/dashboard/roles`
@@ -415,7 +483,7 @@ List all staff members.
 Add a staff member.
 
 - Access: staff `staff:create`
-- Body: `email`: text, `name`: text, `password`: text, `role_ids?`: list of text
+- Body: `email`: text, `job_title?`: text or null, `name`: text, `password`: text, `phone?`: text or null, `role_ids?`: list of text
 - Answers: **201** `staff`: StaffResponse
 - Can fail with: 400, 401, 403, 409, 422, 500
 
@@ -432,7 +500,7 @@ Get one staff member.
 Change a staff member's name, state, roles and, optionally, password.
 
 - Access: staff `staff:update`
-- Body: `active`: true/false, `name`: text, `password?`: text or null, `role_ids`: list of text
+- Body: `active`: true/false, `job_title?`: text or null, `name`: text, `password?`: text or null, `phone?`: text or null, `role_ids`: list of text
 - Answers: **200** `staff`: StaffResponse
 - Can fail with: 400, 401, 403, 404, 409, 422, 500
 
@@ -549,6 +617,31 @@ Remove the price of one crop at one market on one day.
 - Answers: **204**
 - Can fail with: 401, 403, 422, 500
 
+### `GET /v1/dashboard/app/config`
+
+Get the app config, with who saved it last.
+
+- Access: staff
+- Answers: **200** AppConfigResponse or object
+- Can fail with: 401, 403, 500
+
+### `PUT /v1/dashboard/app/config`
+
+Replace the whole app config.
+
+- Access: staff
+- Body: `announcement_en?`: text or null, `announcement_ku?`: text or null, `announcement_on`: true/false, `features`: AppFeaturesDto, `help_phone?`: text or null, `latest_version`: text, `limits`: AppLimitsDto, `maintenance`: true/false, `maintenance_from?`: timestamp or null, `maintenance_message_en?`: text or null, `maintenance_message_ku?`: text or null, `maintenance_until?`: timestamp or null, `min_version`: text, `public_farm_totals`: true/false, `update_message_en?`: text or null, `update_message_ku?`: text or null
+- Answers: **200** AppConfigResponse or object
+- Can fail with: 400, 401, 403, 422, 500
+
+### `GET /v1/dashboard/app/versions`
+
+Which versions of the app farmers used in the last 30 days.
+
+- Access: staff
+- Answers: **200** `versions`: list of AppVersionUsageResponse
+- Can fail with: 401, 403, 500
+
 ### `GET /v1/dashboard/briefs`
 
 List the stored briefs of every scope, newest day first.
@@ -620,10 +713,10 @@ Remove the stored reading of one dam and day.
 
 ### `GET /v1/dashboard/farmers`
 
-List farmers, newest first.
+List farmers, filtered and sorted.
 
 - Access: staff `farmers:read`
-- Query: `phone?`, `page?`, `rows_per_page?`
+- Query: `phone?`, `q?`, `governorate?`, `zone?`, `blocked?`, `sort?`, `order?`, `page?`, `rows_per_page?`
 - Answers: **200** `count`: number, `farmers`: list of DashboardFarmerResponse, `page`: number, `rows_per_page`: number
 - Can fail with: 401, 403, 422, 500
 
@@ -646,10 +739,10 @@ Get one farmer.
 
 ### `PUT /v1/dashboard/farmers/{id}`
 
-Change a farmer's name and language.
+Change a farmer's name, language and details, or block them.
 
 - Access: staff `farmers:update`
-- Body: `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null
+- Body: `birth_year?`: number or null, `blocked?`: true/false or null, `gender?`: `male` \| `female` or null, `governorate?`: text or null, `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `notes?`: text or null, `sub_zone_slug?`: text or null, `village?`: text or null, `zone_slug?`: text or null
 - Answers: **200** `farmer`: DashboardFarmerResponse
 - Can fail with: 400, 401, 403, 404, 422, 500
 
@@ -661,12 +754,21 @@ Delete a farmer with their open sign-in code and all their farms.
 - Answers: **204**
 - Can fail with: 401, 403, 500
 
+### `POST /v1/dashboard/farmers/{id}/letters`
+
+Issue a support letter for a farmer.
+
+- Access: staff `farmers:create`
+- Body: `lang`: `ku` \| `en`, `purpose`: text
+- Answers: **201** `letter`: DashboardIssuedLetterResponse
+- Can fail with: 400, 401, 403, 404, 422, 500
+
 ### `GET /v1/dashboard/farms`
 
-List every farmer's farms, newest first.
+List every farmer's farms, filtered and sorted.
 
 - Access: staff `farms:read`
-- Query: `owner_phone?`, `page?`, `rows_per_page?`
+- Query: `owner_phone?`, `governorate?`, `zone?`, `sub_zone?`, `crop?`, `q?`, `sort?`, `order?`, `page?`, `rows_per_page?`
 - Answers: **200** `count`: number, `farms`: list of DashboardFarmSummaryResponse, `page`: number, `rows_per_page`: number
 - Can fail with: 401, 403, 422, 500
 
@@ -781,6 +883,22 @@ Remove a stored fire.
 - Answers: **204**
 - Can fail with: 401, 403, 404, 500
 
+### `GET /v1/dashboard/jobs`
+
+List the data jobs with how each stands now and how its last 14 days went.
+
+- Access: staff
+- Answers: **200** `jobs`: list of JobStatusResponse
+- Can fail with: 401, 403, 500
+
+### `GET /v1/dashboard/letters/{number}`
+
+Check a support letter by the number printed on it.
+
+- Access: staff
+- Answers: **200** `letter`: DashboardLetterRecordResponse
+- Can fail with: 401, 403, 404, 500
+
 ### `GET /v1/dashboard/outlook-runs`
 
 List every stored track record, newest issue first.
@@ -849,6 +967,58 @@ Remove the stored outlook of one zone, season and issue.
 - Access: staff `outlooks:delete`
 - Answers: **204**
 - Can fail with: 401, 403, 422, 500
+
+### `GET /v1/dashboard/rules`
+
+List every rule as stored, for the dashboard's editing screen.
+
+- Access: staff
+- Answers: **200** `rules`: list of RuleResponse
+- Can fail with: 401, 403, 500
+
+### `PUT /v1/dashboard/rules/{code}`
+
+Change one rule's value, with the reason, and log the change.
+
+- Access: staff
+- Body: `reason`: text, `value`: number
+- Answers: **200** `changed`: true/false, `rule`: RuleResponse
+- Can fail with: 400, 401, 403, 404, 422, 500
+
+### `GET /v1/dashboard/rules/{code}/history`
+
+List one rule's changes, newest first.
+
+- Access: staff
+- Query: `page?`, `rows_per_page?`
+- Answers: **200** `changes`: list of RuleChangeResponse, `count`: number, `page`: number, `rows_per_page`: number
+- Can fail with: 401, 403, 404, 500
+
+### `POST /v1/dashboard/rules/{code}/reset`
+
+Put one rule back to its default value, with the reason, and log it.
+
+- Access: staff
+- Body: `reason`: text
+- Answers: **200** `changed`: true/false, `rule`: RuleResponse
+- Can fail with: 400, 401, 403, 404, 422, 500
+
+### `GET /v1/dashboard/stats/farms`
+
+Farms, farmers and land added up, for reports and charts.
+
+- Access: staff
+- Query: `governorate?`, `zone?`, `crop?`
+- Answers: **200** `as_of`: timestamp, `by_crop`: list of FarmStatsCropResponse, `by_governorate`: list of FarmStatsAreaResponse, `by_sub_zone`: list of FarmStatsAreaResponse, `by_zone`: list of FarmStatsAreaResponse, `totals`: FarmStatsTotalsResponse
+- Can fail with: 401, 403, 422, 500
+
+### `GET /v1/dashboard/versions`
+
+Versions of every kind of data, for signed-in staff.
+
+- Access: staff
+- Answers: **200** `api`: text, `server_time`: timestamp, `versions`: object
+- Can fail with: 401, 500
 
 ### `GET /v1/dashboard/water/plan/{season}/entries`
 
@@ -1042,6 +1212,15 @@ Store one fire under the job's own id, replacing an earlier push of it.
 - Answers: **200** `area_ha?`: number or null, `detected_at`: timestamp, `farmers_alerted?`: number or null, `farms_within_5km?`: number or null, `id`: text, `lat`: number, `lon`: number, `place_en?`: text or null, `place_ku?`: text or null, `source`: text, `status`: `active` \| `spreading` \| `under_control` \| `out`, `wind_direction?`: `n` \| `ne` \| `e` \| `se` \| `s` \| `sw` \| `w` \| `nw` or null, `wind_kmh?`: number or null, `zone_slug?`: text or null
 - Can fail with: 400, 401, 422, 500
 
+### `PUT /v1/ingest/jobs/{job}/runs/{started_at}`
+
+Store what a job reports about one of its runs, replacing its earlier report of that run.
+
+- Access: service key
+- Body: `finished_at?`: timestamp or null, `message?`: text or null, `ok?`: true/false or null, `rows?`: number or null
+- Answers: **200** `job`: text, `run`: JobRunResponse
+- Can fail with: 400, 401, 404, 422, 500
+
 ### `PUT /v1/ingest/outlooks/{season}/{issued}/run`
 
 Store the track record of the method behind one issue.
@@ -1059,6 +1238,15 @@ Store one zone's outlook for one issue, replacing an earlier one.
 - Body: `confidence_pct`: number, `outlook`: `good` \| `normal` \| `bad`, `reason_en?`: text or null, `reason_ku?`: text or null
 - Answers: **200** `outlook`: StoredZoneOutlookResponse
 - Can fail with: 400, 401, 422, 500
+
+### `GET /v1/ingest/rules`
+
+The values the data jobs read once per run.
+
+- Access: service key
+- Query: `used_by?`
+- Answers: **200** `rules`: list of RuleValueResponse
+- Can fail with: 401, 422, 500
 
 ### `PUT /v1/ingest/water/plan/{season}/zones/{zone_slug}`
 
@@ -1108,6 +1296,56 @@ Store a sub-zone's dryness for a month, replacing the one already there.
 - Access: none
 - Answers: **200**
 
+### `GET /v1/app/config`
+
+What the farmer app reads at start.
+
+- Access: none
+- Answers: **200** `announcement_en?`: text or null, `announcement_ku?`: text or null, `announcement_on`: true/false, `features`: AppFeaturesDto, `help_phone?`: text or null, `latest_version`: text, `limits`: AppLimitsDto, `maintenance`: true/false, `maintenance_from?`: timestamp or null, `maintenance_message_en?`: text or null, `maintenance_message_ku?`: text or null, `maintenance_until?`: timestamp or null, `min_version`: text, `public_farm_totals`: true/false, `update_message_en?`: text or null, `update_message_ku?`: text or null
+- Can fail with: 500
+
+### `POST /v1/messages`
+
+Send a message to the Ministry.
+
+- Access: farmer token
+- Body: (multipart/form-data) `farm_id?`: text or null, `kind?`: text or null, `photos?`: list of text, `text?`: text or null
+- Answers: **201** `message`: MessageResponse
+- Can fail with: 400, 401, 404, 422, 426, 429, 500
+
+### `GET /v1/messages/mine`
+
+List the farmer's own messages, newest first, with the replies.
+
+- Access: farmer token
+- Query: `page?`, `rows_per_page?`
+- Answers: **200** `count`: number, `messages`: list of MessageResponse, `page`: number, `rows_per_page`: number
+- Can fail with: 401, 426, 500
+
+### `GET /v1/messages/{id}/photos/{photo_id}`
+
+Get one photo of one of the farmer's own messages.
+
+- Access: farmer token
+- Answers: **200**
+- Can fail with: 401, 404, 426, 500
+
+### `GET /v1/stats/farms`
+
+Farm totals anyone may read.
+
+- Access: none
+- Answers: **200** `as_of`: timestamp, `by_crop`: list of FarmStatsCropResponse, `by_governorate`: list of FarmStatsAreaResponse, `by_zone`: list of FarmStatsAreaResponse, `totals`: FarmStatsTotalsResponse
+- Can fail with: 404, 500
+
+### `GET /v1/versions`
+
+Versions of the public kinds of data.
+
+- Access: none
+- Answers: **200** `api`: text, `server_time`: timestamp, `versions`: object
+- Can fail with: 500
+
 ## Shapes
 
 Objects that the routes above refer to by name.
@@ -1140,6 +1378,11 @@ Objects that the routes above refer to by name.
 - **AlwaPriceResponse**: `change_pct_7d?`: number or null, `crop`: `wheat` \| `barley` \| `tomato` \| `cucumber` \| `potato` \| `onion` \| `watermelon` \| `grape` \| `olive` \| `sunflower` \| `chickpea` \| `pomegranate` \| `okra` \| `eggplant` \| `pepper` \| `apple`, `fixed`: true/false, `price_iqd_per_kg`: number
 - **AlwaRecordedPriceResponse**: `crop`: `wheat` \| `barley` \| `tomato` \| `cucumber` \| `potato` \| `onion` \| `watermelon` \| `grape` \| `olive` \| `sunflower` \| `chickpea` \| `pomegranate` \| `okra` \| `eggplant` \| `pepper` \| `apple`, `day`: day, `fixed`: true/false, `market`: text, `price_iqd_per_kg`: number, `source`: text, `updated_at`: timestamp
 - **AlwaStoredPricesResponse**: `count`: number, `page`: number, `prices`: list of AlwaRecordedPriceResponse, `rows_per_page`: number
+- **AppConfigResponse**: `announcement_en?`: text or null, `announcement_ku?`: text or null, `announcement_on`: true/false, `features`: AppFeaturesDto, `help_phone?`: text or null, `latest_version`: text, `limits`: AppLimitsDto, `maintenance`: true/false, `maintenance_from?`: timestamp or null, `maintenance_message_en?`: text or null, `maintenance_message_ku?`: text or null, `maintenance_until?`: timestamp or null, `min_version`: text, `public_farm_totals`: true/false, `update_message_en?`: text or null, `update_message_ku?`: text or null
+- **AppFeaturesDto**: `add_farm`: true/false, `alwa`: true/false, `doctor`: true/false, `plan`: true/false, `push`: true/false, `reports`: true/false, `satellite`: true/false, `walk_mode`: true/false
+- **AppLimitsDto**: `farms_per_phone`: number, `gps_meters`: number, `max_corners`: number, `max_farm_dunam`: number, `min_corners`: number
+- **AppVersionUsageResponse**: `farmers`: number, `share`: number, `version`: text
+- **AppVersionsResponse**: `versions`: list of AppVersionUsageResponse
 - **BriefFarmZoneParams**: `farm_id`: text, `zone_slug`: text
 - **BriefFarmZonesRecordedResponse**: `recorded`: number
 - **BriefPointParams**: `level`: `info` \| `watch` \| `alarm`, `text_en`: text, `text_ku`: text
@@ -1153,13 +1396,14 @@ Objects that the routes above refer to by name.
 - **CellResponse**: `crop`: `wheat` \| `barley` \| `tomato` \| `cucumber` \| `potato` \| `onion` \| `watermelon` \| `grape` \| `olive` \| `sunflower` \| `chickpea` \| `empty`, `e`: number, `inside_pct`: number, `n`: number
 - **CellStatusResponse**: `e`: number, `greenness_pct?`: number or null, `level`: `normal` \| `watch` \| `alarm` \| `none`, `n`: number, `since?`: day or null
 - **CentroidResponse**: `lat`: number, `lon`: number
+- **ChangeRuleParams**: `reason`: text, `value`: number
 - **CreateAlwaMarketParams**: `name_en`: text, `name_ku`: text, `slug`: text
 - **CreateAlwaPriceParams**: `crop`: text, `day`: text, `fixed?`: true/false, `price_iqd_per_kg`: number, `source`: text
 - **CreateDamDashboardReadingParams**: `day`: text, `farm_supply_bn_m3?`: number or null, `lake_area_km2?`: number or null, `pct_full`: number, `source`: text, `volume_bn_m3?`: number or null
 - **CreateFarmParams**: `cells?`: list of CellParams, `created_offline_at?`: timestamp or null, `name`: text, `points`: list of PointParams
 - **CreateOutlookDashboardParams**: `confidence_pct`: number, `issued`: text, `outlook`: `good` \| `normal` \| `bad`, `reason_en?`: text or null, `reason_ku?`: text or null, `season`: text, `zone_slug`: text
 - **CreateOutlookRunDashboardParams**: `issued`: text, `method`: text, `season`: text, `seasons_right`: number, `seasons_tested`: number
-- **CreateStaffParams**: `email`: text, `name`: text, `password`: text, `role_ids?`: list of text
+- **CreateStaffParams**: `email`: text, `job_title?`: text or null, `name`: text, `password`: text, `phone?`: text or null, `role_ids?`: list of text
 - **CreateWaterPlanEntryDashboardParams**: `dam_slug?`: text or null, `need`: number, `note_en?`: text or null, `note_ku?`: text or null, `send_million_m3?`: number or null, `urgent?`: true/false, `zone_slug`: text
 - **CreateZoneDashboardReadingParams**: ZoneReadingParams or object
 - **CreateZoneDashboardSubZoneReadingParams**: `dryness`: number, `month`: text
@@ -1173,18 +1417,33 @@ Objects that the routes above refer to by name.
 - **DamReferencesResponse**: `dams`: list of DamReferenceResponse
 - **DamResponse**: `capacity_bn_m3`: number, `latest?`: LatestReadingResponse or null, `name_en`: text, `name_ku`: text, `slug`: text, `year_ago?`: YearAgoReadingResponse or null
 - **DamsResponse**: `dams`: list of DamResponse
+- **DashboardAppConfigResponse**: AppConfigResponse or object
 - **DashboardCreateFarmParams**: CreateFarmParams or object
 - **DashboardCreateFarmerParams**: `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `phone`: text
 - **DashboardFarmResponse**: FarmResponse or object
 - **DashboardFarmSummaryResponse**: FarmSummaryResponse or object
-- **DashboardFarmerResponse**: `created_at`: timestamp, `farms_count`: number, `id`: text, `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `phone`: text, `updated_at`: timestamp
+- **DashboardFarmerResponse**: `birth_year?`: number or null, `blocked`: true/false, `created_at`: timestamp, `farms_count`: number, `gender?`: `male` \| `female` or null, `governorate?`: text or null, `id`: text, `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `notes?`: text or null, `phone`: text, `sub_zone_slug?`: text or null, `updated_at`: timestamp, `village?`: text or null, `zone_slug?`: text or null
 - **DashboardFarmersResponse**: `count`: number, `farmers`: list of DashboardFarmerResponse, `page`: number, `rows_per_page`: number
 - **DashboardFarmsResponse**: `count`: number, `farms`: list of DashboardFarmSummaryResponse, `page`: number, `rows_per_page`: number
+- **DashboardIssueLetterParams**: `lang`: `ku` \| `en`, `purpose`: text
+- **DashboardIssuedLetterResponse**: `created_at`: timestamp, `farmer`: DashboardLetterFarmerResponse, `farms`: list of DashboardLetterFarmResponse, `issued_by`: DashboardLetterIssuerResponse, `lang`: `ku` \| `en`, `number`: text, `purpose`: text, `totals`: DashboardLetterTotalsResponse
+- **DashboardLetterCropResponse**: `crop`: text, `dunam`: number
+- **DashboardLetterFarmResponse**: `area_dunam`: number, `crops`: list of DashboardLetterCropResponse, `governorate?`: text or null, `id`: text, `name`: text, `sub_zone_slug?`: text or null, `zone_slug?`: text or null
+- **DashboardLetterFarmerResponse**: `birth_year?`: number or null, `gender?`: `male` \| `female` or null, `governorate?`: text or null, `id`: text, `name?`: text or null, `phone`: text, `sub_zone_slug?`: text or null, `village?`: text or null, `zone_slug?`: text or null
+- **DashboardLetterIssuerResponse**: `id`: text, `name`: text
+- **DashboardLetterRecordResponse**: `created_at`: timestamp, `farmer_id`: text, `farmer_name?`: text or null, `lang`: `ku` \| `en`, `number`: text, `purpose`: text, `staff_id`: text
+- **DashboardLetterTotalsResponse**: `crops`: list of DashboardLetterCropResponse, `dunam`: number, `farms`: number
+- **DashboardMessageReplyResponse**: `replied_at`: timestamp, `replied_by`: text, `text_en?`: text or null, `text_ku`: text
+- **DashboardMessageResponse**: `created_at`: timestamp, `farm_id?`: text or null, `farm_name?`: text or null, `farmer_id`: text, `farmer_name?`: text or null, `farmer_phone?`: text or null, `governorate?`: text or null, `id`: text, `kind`: `question` \| `report` \| `complaint` \| `request` \| `other`, `photos`: list of MessagePhotoResponse, `reply?`: DashboardMessageReplyResponse or null, `state`: `new` \| `read` \| `replied` \| `closed`, `text`: text, `updated_at`: timestamp, `zone_slug?`: text or null
+- **DashboardMessagesResponse**: `count`: number, `messages`: list of DashboardMessageResponse, `page`: number, `rows_per_page`: number
 - **DashboardOneFarmResponse**: `farm`: DashboardFarmResponse
 - **DashboardOneFarmerResponse**: `farmer`: DashboardFarmerResponse
+- **DashboardOneIssuedLetterResponse**: `letter`: DashboardIssuedLetterResponse
+- **DashboardOneLetterRecordResponse**: `letter`: DashboardLetterRecordResponse
+- **DashboardOneMessageResponse**: `message`: DashboardMessageResponse
 - **DashboardRenameFarmParams**: `name`: text
 - **DashboardSavedFarmResponse**: `dropped_cells`: list of GridCellResponse, `farm`: DashboardFarmResponse
-- **DashboardUpdateFarmerParams**: `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null
+- **DashboardUpdateFarmerParams**: `birth_year?`: number or null, `blocked?`: true/false or null, `gender?`: `male` \| `female` or null, `governorate?`: text or null, `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `notes?`: text or null, `sub_zone_slug?`: text or null, `village?`: text or null, `zone_slug?`: text or null
 - **DoctorAnswerResponse**: `actions_this_week`: list of text, `cannot_tell`: list of text, `confidence`: `sure` \| `likely` \| `unsure`, `en`: text, `inputs_used`: list of text, `ku`: text, `likely`: text, `refer_to_officer`: true/false, `why`: list of text
 - **DoctorAskForm**: `cell?`: text or null, `lang?`: text or null, `photos?`: list of text, `question?`: text or null
 - **EditProfileParams**: `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null
@@ -1192,9 +1451,14 @@ Objects that the routes above refer to by name.
 - **FarmBriefResponse**: `brief?`: BriefResponse or null, `farm_id`: text, `zone_slug?`: text or null
 - **FarmCoverageResponse**: `area_dunam`: number, `id`: text, `lat`: number, `lon`: number, `topics`: list of TopicStampResponse
 - **FarmInsightsResponse**: `farm_id`: text, `topics`: list of TopicInsightResponse
-- **FarmResponse**: `area_dunam`: number, `cells`: list of CellResponse, `centroid`: CentroidResponse, `created_at`: timestamp, `created_offline_at?`: timestamp or null, `crops`: list of CropAreaResponse, `id`: text, `name`: text, `outline`: list of OutlinePointResponse, `updated_at`: timestamp
+- **FarmResponse**: `area_dunam`: number, `cells`: list of CellResponse, `centroid`: CentroidResponse, `created_at`: timestamp, `created_offline_at?`: timestamp or null, `crops`: list of CropAreaResponse, `governorate?`: text or null, `id`: text, `name`: text, `outline`: list of OutlinePointResponse, `sub_zone_slug?`: text or null, `updated_at`: timestamp, `zone_slug?`: text or null
+- **FarmStatsAreaCropResponse**: `crop`: `wheat` \| `barley` \| `tomato` \| `cucumber` \| `potato` \| `onion` \| `watermelon` \| `grape` \| `olive` \| `sunflower` \| `chickpea` \| `empty`, `dunam`: number, `farms`: number
+- **FarmStatsAreaResponse**: `crops`: list of FarmStatsAreaCropResponse, `dunam`: number, `farmers`: number, `farms`: number, `governorate?`: text or null, `name_en`: text, `name_ku`: text, `slug`: text, `zone_slug?`: text or null
+- **FarmStatsCropResponse**: `crop`: `wheat` \| `barley` \| `tomato` \| `cucumber` \| `potato` \| `onion` \| `watermelon` \| `grape` \| `olive` \| `sunflower` \| `chickpea` \| `empty`, `dunam`: number, `farmers`: number, `farms`: number
+- **FarmStatsResponse**: `as_of`: timestamp, `by_crop`: list of FarmStatsCropResponse, `by_governorate`: list of FarmStatsAreaResponse, `by_sub_zone`: list of FarmStatsAreaResponse, `by_zone`: list of FarmStatsAreaResponse, `totals`: FarmStatsTotalsResponse
+- **FarmStatsTotalsResponse**: `dunam`: number, `farmers`: number, `farms`: number
 - **FarmStatusResponse**: `cells`: list of CellStatusResponse, `crops`: list of CropStatusResponse, `greenness_pct_of_normal?`: number or null, `next_picture_expected?`: day or null, `picture_date?`: day or null, `weak_where?`: text or null
-- **FarmSummaryResponse**: `area_dunam`: number, `centroid`: CentroidResponse, `created_at`: timestamp, `crops`: list of CropAreaResponse, `id`: text, `name`: text
+- **FarmSummaryResponse**: `area_dunam`: number, `centroid`: CentroidResponse, `created_at`: timestamp, `crops`: list of CropAreaResponse, `governorate?`: text or null, `id`: text, `name`: text, `sub_zone_slug?`: text or null, `zone_slug?`: text or null
 - **FarmsCoverageResponse**: `farms`: list of FarmCoverageResponse
 - **FarmsResponse**: `farms`: list of FarmSummaryResponse
 - **FireDashboardCreateParams**: RecordFireParams or object
@@ -1210,13 +1474,24 @@ Objects that the routes above refer to by name.
 - **InsightDashboardListResponse**: `farm_id`: text, `insights`: list of InsightDashboardResponse
 - **InsightDashboardOneResponse**: `farm_id`: text, `insight`: InsightDashboardResponse
 - **InsightDashboardResponse**: `as_of`: day, `confidence`: `sure` \| `likely` \| `unsure`, `measures`: list of MeasureResponse, `source`: text, `summary_en?`: text or null, `summary_ku?`: text or null, `topic`: `surface_water` \| `groundwater` \| `soil` \| `rain` \| `dryness` \| `greenness` \| `weather`, `updated_at`: timestamp
+- **JobRunResponse**: `finished_at?`: timestamp or null, `message?`: text or null, `ok?`: true/false or null, `rows?`: number or null, `started_at`: timestamp
+- **JobStatusResponse**: `every_hours?`: number or null, `job`: text, `last_14_days`: list of `ok` \| `late` \| `failed` or null, `last_ok?`: timestamp or null, `last_run?`: JobRunResponse or null, `message?`: text or null, `name_en`: text, `name_ku?`: text or null, `next_due?`: timestamp or null, `state`: `ok` \| `late` \| `failed` \| `never`
+- **JobsResponse**: `jobs`: list of JobStatusResponse
 - **LatestReadingResponse**: `day`: day, `farm_supply_bn_m3?`: number or null, `lake_area_km2?`: number or null, `pct_full`: number, `source`: text, `volume_bn_m3?`: number or null
 - **MakeAlwaOfferParams**: `buyer_kind`: `shop` \| `restaurant` \| `trader` \| `other`, `buyer_name`: text, `price_iqd_per_kg`: number, `quantity_kg`: number
 - **MeasureParams**: `code`: text, `label_en`: text, `label_ku?`: text or null, `unit?`: text, `value`: number
 - **MeasureResponse**: `code`: text, `label_en`: text, `label_ku?`: text or null, `unit`: text, `value`: number
+- **MessageCountsResponse**: `closed`: number, `new`: number, `read`: number, `replied`: number
+- **MessagePhotoResponse**: `content_type`: text, `id`: text, `size`: number, `url`: text
+- **MessageReplyResponse**: `replied_at`: timestamp, `text_en?`: text or null, `text_ku`: text
+- **MessageResponse**: `created_at`: timestamp, `farm_id?`: text or null, `id`: text, `kind`: `question` \| `report` \| `complaint` \| `request` \| `other`, `photos`: list of MessagePhotoResponse, `reply?`: MessageReplyResponse or null, `state`: `new` \| `read` \| `replied` \| `closed`, `text`: text
+- **MessageSendForm**: `farm_id?`: text or null, `kind?`: text or null, `photos?`: list of text, `text?`: text or null
 - **ModerateAlwaListingParams**: `note?`: text or null, `status`: `open` \| `sold` \| `closed` \| `cancelled`
+- **MyMessagesResponse**: `count`: number, `messages`: list of MessageResponse, `page`: number, `rows_per_page`: number
 - **OneBriefResponse**: `brief`: BriefResponse
 - **OneFarmResponse**: `farm`: FarmResponse
+- **OneMessageResponse**: `message`: MessageResponse
+- **OneRuleResponse**: `changed`: true/false, `rule`: RuleResponse
 - **OutlinePointResponse**: `lat`: number, `lon`: number
 - **OutlookCountsResponse**: `bad`: number, `good`: number, `normal`: number
 - **OutlookRunResponse**: `issued`: text, `method`: text, `season`: text, `seasons_right`: number, `seasons_tested`: number, `updated_at`: timestamp
@@ -1226,6 +1501,7 @@ Objects that the routes above refer to by name.
 - **PointParams**: `acc_m?`: number or null, `lat`: number, `lon`: number, `t?`: timestamp or null
 - **PostAlwaListingParams**: `asking_price_iqd_per_kg`: number, `closes_at`: timestamp, `crop`: `wheat` \| `barley` \| `tomato` \| `cucumber` \| `potato` \| `onion` \| `watermelon` \| `grape` \| `olive` \| `sunflower` \| `chickpea` \| `pomegranate` \| `okra` \| `eggplant` \| `pepper` \| `apple`, `grade?`: `a` \| `b` \| `c` or null, `market`: text, `note?`: text or null, `pickup`: `farm` \| `alwa`, `quantity_kg`: number, `seller_name?`: text or null, `zone_slug?`: text or null
 - **ProfileResponse**: `created_at`: timestamp, `lang`: `ku` \| `kmr` \| `ar` \| `en`, `name?`: text or null, `phone`: text
+- **PublicFarmStatsResponse**: `as_of`: timestamp, `by_crop`: list of FarmStatsCropResponse, `by_governorate`: list of FarmStatsAreaResponse, `by_zone`: list of FarmStatsAreaResponse, `totals`: FarmStatsTotalsResponse
 - **RankedEntryResponse**: `dam_slug?`: text or null, `need`: number, `note_en?`: text or null, `note_ku?`: text or null, `rank`: number, `send_million_m3?`: number or null, `urgent`: true/false, `zone_slug`: text
 - **RecordAlwaPriceParams**: `fixed?`: true/false, `price_iqd_per_kg`: number, `source`: text
 - **RecordBriefFarmZonesParams**: `farms`: list of BriefFarmZoneParams
@@ -1233,20 +1509,31 @@ Objects that the routes above refer to by name.
 - **RecordDamReadingParams**: `farm_supply_bn_m3?`: number or null, `lake_area_km2?`: number or null, `pct_full`: number, `source`: text, `volume_bn_m3?`: number or null
 - **RecordFarmInsightParams**: `as_of`: day, `confidence`: `sure` \| `likely` \| `unsure`, `measures`: list of MeasureParams, `source`: text, `summary_en?`: text or null, `summary_ku?`: text or null
 - **RecordFireParams**: `area_ha?`: number or null, `detected_at`: timestamp, `farmers_alerted?`: number or null, `farms_within_5km?`: number or null, `lat`: number, `lon`: number, `place_en?`: text or null, `place_ku?`: text or null, `source`: text, `status`: `active` \| `spreading` \| `under_control` \| `out`, `wind_direction?`: `n` \| `ne` \| `e` \| `se` \| `s` \| `sw` \| `w` \| `nw` or null, `wind_kmh?`: number or null, `zone_slug?`: text or null
+- **RecordJobRunParams**: `finished_at?`: timestamp or null, `message?`: text or null, `ok?`: true/false or null, `rows?`: number or null
 - **RecordOutlookRunParams**: `method`: text, `seasons_right`: number, `seasons_tested`: number
 - **RecordZoneOutlookParams**: `confidence_pct`: number, `outlook`: `good` \| `normal` \| `bad`, `reason_en?`: text or null, `reason_ku?`: text or null
 - **RegionComparisonResponse**: `month`: number, `region`: list of YearAverageResponse, `with`: number, `year`: number, `zones`: list of ZoneComparisonResponse
 - **RegionOverviewResponse**: `month`: text, `summary`: RegionSummaryResponse, `zones`: list of ZoneOverviewResponse
 - **RegionSummaryResponse**: `average_dryness?`: number or null, `change_vs_last_year?`: number or null, `driest`: list of text, `nitrogen_hold`: list of text, `zones_with_data`: number
 - **RepaintFarmCellsParams**: `cells`: list of CellParams
+- **ReplyToMessageParams**: `text_en?`: text or null, `text_ku`: text
+- **ResetRuleParams**: `reason`: text
+- **RuleChangeResponse**: `at`: timestamp, `code`: text, `id`: text, `new_value`: number, `old_value`: number, `reason`: text, `staff_id`: text
+- **RuleHistoryResponse**: `changes`: list of RuleChangeResponse, `count`: number, `page`: number, `rows_per_page`: number
+- **RuleResponse**: `code`: text, `default_value`: number, `grp`: text, `max_value`: number, `meaning_en`: text, `meaning_ku?`: text or null, `min_value`: number, `name_en`: text, `name_ku?`: text or null, `unit`: text, `updated_at`: timestamp, `updated_by?`: text or null, `used_by`: `weather_planner` \| `dryness` \| `field_eye`, `value`: number
+- **RuleValueResponse**: `code`: text, `unit`: text, `value`: number
+- **RuleValuesResponse**: `rules`: list of RuleValueResponse
+- **RulesResponse**: `rules`: list of RuleResponse
 - **SaveStaffRoleParams**: `description?`: text or null, `name`: text, `permissions`: list of StaffPermission
 - **SavedDamReadingResponse**: `reading`: DamReadingResponse, `slug`: text
 - **SavedFarmResponse**: `dropped_cells`: list of GridCellResponse, `farm`: FarmResponse
+- **SavedJobRunResponse**: `job`: text, `run`: JobRunResponse
 - **SavedOutlookRunResponse**: `run`: OutlookRunResponse
 - **SavedWaterPlanEntryResponse**: `entry`: StoredWaterPlanEntryResponse
 - **SavedZoneOutlookResponse**: `outlook`: StoredZoneOutlookResponse
 - **SeasonOutlookResponse**: `counts`: OutlookCountsResponse, `issued`: text, `issues`: list of text, `season`: text, `track_record?`: TrackRecordResponse or null, `zones`: list of ZoneOutlookResponse
 - **SendSignInCodeParams**: `lang?`: `ku` \| `kmr` \| `ar` \| `en`, `phone`: text
+- **SetMessageStateParams**: `state`: `new` \| `read` \| `replied` \| `closed`
 - **SetWaterPlanEntryParams**: `dam_slug?`: text or null, `need`: number, `note_en?`: text or null, `note_ku?`: text or null, `send_million_m3?`: number or null, `urgent?`: true/false
 - **SignInCodeSentResponse**: `retry_after_s`: number, `sent`: true/false
 - **SignedInResponse**: `farms_count`: number, `token`: text
@@ -1255,9 +1542,9 @@ Objects that the routes above refer to by name.
 - **StaffMeResponse**: `permissions`: list of StaffPermission, `staff`: StaffResponse
 - **StaffOneResponse**: `staff`: StaffResponse
 - **StaffOneRoleResponse**: `role`: StaffRoleResponse
-- **StaffPermission**: `action`: `create` \| `read` \| `update` \| `delete`, `resource`: `zones` \| `dams` \| `outlooks` \| `water` \| `fires` \| `alwa` \| `farmers` \| `farms` \| `insights` \| `staff` \| `roles` \| `briefs`
-- **StaffPermissionCatalogueResponse**: `actions`: list of `create` \| `read` \| `update` \| `delete`, `resources`: list of `zones` \| `dams` \| `outlooks` \| `water` \| `fires` \| `alwa` \| `farmers` \| `farms` \| `insights` \| `staff` \| `roles` \| `briefs`
-- **StaffResponse**: `active`: true/false, `created_at`: timestamp, `email`: text, `id`: text, `name`: text, `roles`: list of StaffRoleRefResponse, `updated_at`: timestamp
+- **StaffPermission**: `action`: `create` \| `read` \| `update` \| `delete`, `resource`: `zones` \| `dams` \| `outlooks` \| `water` \| `fires` \| `alwa` \| `farmers` \| `farms` \| `insights` \| `staff` \| `roles` \| `briefs` \| `crops` \| `rules` \| `messages` \| `app` \| `jobs`
+- **StaffPermissionCatalogueResponse**: `actions`: list of `create` \| `read` \| `update` \| `delete`, `resources`: list of `zones` \| `dams` \| `outlooks` \| `water` \| `fires` \| `alwa` \| `farmers` \| `farms` \| `insights` \| `staff` \| `roles` \| `briefs` \| `crops` \| `rules` \| `messages` \| `app` \| `jobs`
+- **StaffResponse**: `active`: true/false, `created_at`: timestamp, `email`: text, `id`: text, `job_title?`: text or null, `name`: text, `phone?`: text or null, `roles`: list of StaffRoleRefResponse, `updated_at`: timestamp
 - **StaffRoleRefResponse**: `id`: text, `name`: text
 - **StaffRoleResponse**: `created_at`: timestamp, `description?`: text or null, `id`: text, `name`: text, `permissions`: list of StaffPermission, `staff_count`: number, `system`: true/false, `updated_at`: timestamp
 - **StaffRolesResponse**: `roles`: list of StaffRoleResponse
@@ -1271,8 +1558,11 @@ Objects that the routes above refer to by name.
 - **TopicStampResponse**: `as_of`: day, `topic`: `surface_water` \| `groundwater` \| `soil` \| `rain` \| `dryness` \| `greenness` \| `weather`
 - **TrackRecordResponse**: `method`: text, `seasons_right`: number, `seasons_tested`: number
 - **UpdateAlwaMarketParams**: `name_en`: text, `name_ku`: text
-- **UpdateStaffParams**: `active`: true/false, `name`: text, `password?`: text or null, `role_ids`: list of text
+- **UpdateAppConfigParams**: `announcement_en?`: text or null, `announcement_ku?`: text or null, `announcement_on`: true/false, `features`: AppFeaturesDto, `help_phone?`: text or null, `latest_version`: text, `limits`: AppLimitsDto, `maintenance`: true/false, `maintenance_from?`: timestamp or null, `maintenance_message_en?`: text or null, `maintenance_message_ku?`: text or null, `maintenance_until?`: timestamp or null, `min_version`: text, `public_farm_totals`: true/false, `update_message_en?`: text or null, `update_message_ku?`: text or null
+- **UpdateOwnStaffProfileParams**: `current_password?`: text or null, `name`: text, `new_password?`: text or null, `phone?`: text or null
+- **UpdateStaffParams**: `active`: true/false, `job_title?`: text or null, `name`: text, `password?`: text or null, `phone?`: text or null, `role_ids`: list of text
 - **VerifySignInCodeParams**: `code`: text, `phone`: text
+- **VersionsResponse**: `api`: text, `server_time`: timestamp, `versions`: object
 - **WaterPlanEntriesResponse**: `entries`: list of StoredWaterPlanEntryResponse
 - **WaterPlanResponse**: `entries`: list of RankedEntryResponse, `season`: text, `totals`: PlanTotalsResponse
 - **WaterSeasonsResponse**: `seasons`: list of text
