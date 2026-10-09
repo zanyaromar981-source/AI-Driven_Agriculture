@@ -1,0 +1,14 @@
+{
+  "needed": "This is needed.",
+  "name_needed": "Write the name in Kurdish or English.",
+  "phone_bad": "Write an Iraqi mobile number, for example 0750 123 4567.",
+  "phone_taken": "Another farmer has this phone number.",
+  "year_bad": "This year does not look right.",
+  "positive": "Must be more than 0.",
+  "crop_rows": "Every crop row needs a crop and an area.",
+  "crops_over_area": "The crops add up to more than the farm area.",
+  "point_bad": "The point is outside the Kurdistan Region.",
+  "email_bad": "This email does not look right.",
+  "email_taken": "Another admin has this email.",
+  "fix_first": "Fix the marked fields first."
+}
