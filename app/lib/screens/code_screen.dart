@@ -14,10 +14,13 @@ import 'my_farms_screen.dart';
 
 /// Step 2 of 3: the 6-digit SMS code.
 class CodeScreen extends StatefulWidget {
-  const CodeScreen({super.key, required this.digits});
+  const CodeScreen({super.key, required this.digits, this.wait = 60});
 
   /// The number as typed, e.g. 07501234567.
   final String digits;
+
+  /// Seconds before another code may be asked for (the server's retry_after_s).
+  final int wait;
 
   @override
   State<CodeScreen> createState() => _CodeScreenState();
@@ -27,7 +30,7 @@ class _CodeScreenState extends State<CodeScreen> {
   final _ctrl = TextEditingController();
   final _focus = FocusNode();
   Timer? _timer;
-  int _left = 59;
+  int _left = 0;
   bool _busy = false;
 
   @override
@@ -55,9 +58,9 @@ class _CodeScreenState extends State<CodeScreen> {
     setState(() {});
   }
 
-  void _startTimer() {
+  void _startTimer([int? seconds]) {
     _timer?.cancel();
-    _left = 59;
+    _left = seconds ?? widget.wait;
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (!mounted) return;
       setState(() {
@@ -70,13 +73,20 @@ class _CodeScreenState extends State<CodeScreen> {
   Future<void> _resend() async {
     final scope = AppScope.read(context);
     try {
-      await scope.api.sendOtp(phone: toE164(widget.digits), lang: scope.s.code);
+      final res = await scope.api.sendOtp(
+        phone: toE164(widget.digits),
+        lang: scope.s.code,
+      );
       if (!mounted) return;
       showToast(context, scope.s.sent);
-      setState(_startTimer);
+      setState(() => _startTimer(res.retryAfterS));
     } on ApiException catch (e) {
       if (!mounted) return;
-      showToast(context, '${scope.s.error} (${e.code})');
+      if (e.code == 'rate_limited') {
+        setState(() => _startTimer(e.retryAfterS));
+      } else {
+        showToast(context, scope.s.sendError(e.code));
+      }
     }
   }
 
@@ -178,7 +188,7 @@ class _CodeScreenState extends State<CodeScreen> {
                   ),
                   if (_left > 0)
                     Text(
-                      '0:${_left.toString().padLeft(2, '0')}',
+                      mmss(_left),
                       textDirection: TextDirection.ltr,
                       style: latText(
                         size: 14,

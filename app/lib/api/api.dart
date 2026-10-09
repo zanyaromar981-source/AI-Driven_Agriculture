@@ -253,6 +253,9 @@ class ApiException implements Exception {
   /// No internet or server unreachable: keep the data and try again later.
   bool get isOffline => status == 0;
 
+  /// Seconds to wait before asking again (429 rate_limited), when given.
+  int? get retryAfterS => (extra?['retry_after_s'] as num?)?.toInt();
+
   @override
   String toString() => 'ApiException($status $code)';
 }

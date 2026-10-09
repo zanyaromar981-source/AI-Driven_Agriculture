@@ -48,6 +48,24 @@ class S {
   String get opening => t('دەچیتە', 'Opening');
   String get error => t('هەڵەیەک ڕوویدا', 'Something went wrong');
 
+  // Sign-in answers from the server (FRONTEND.md section 4).
+  String get checkNumber => t('ژمارەکە بپشکنە', 'Check the number');
+  String get sendFailed => t(
+    'نەتوانرا کۆدەکە بنێردرێت. دووبارە هەوڵ بدەرەوە',
+    'Could not send the code. Try again.',
+  );
+  String askAgainIn(String time) => t(
+    'دەتوانیت دوای \u2066$time\u2069 داوای کۆدێکی نوێ بکەیت',
+    'You can ask for a new code in $time',
+  );
+
+  /// Why a code was not sent. 429 rate_limited is shown as a countdown.
+  String sendError(String code) => switch (code) {
+    'invalid' => checkNumber,
+    'offline' => noInternet,
+    _ => sendFailed,
+  };
+
   // Add farm: walk the corners
   String get cornersTitle =>
       t('سنووری کێڵگەکەت دیاری بکە', 'Mark your field edge');
