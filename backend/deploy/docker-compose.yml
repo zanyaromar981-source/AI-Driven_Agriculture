@@ -36,6 +36,7 @@ services:
       AUTH__JWT_SECRET: ${AUTH__JWT_SECRET:?set AUTH__JWT_SECRET in .env}
       AUTH__FIXED_SIGN_IN_CODE: ${AUTH__FIXED_SIGN_IN_CODE:-}
       INGEST__SERVICE_KEY: ${INGEST__SERVICE_KEY:?set INGEST__SERVICE_KEY in .env}
+      DOCTOR_URL: ${DOCTOR_URL:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       PORT: "3000"
     ports:

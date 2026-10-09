@@ -44,6 +44,10 @@ use crate::{
             },
             infra::DamPostgresRepository,
         },
+        doctor::{
+            app::{Doctor, FarmBriefs, FarmHistory, use_cases::AskDoctorUseCase},
+            infra::{FarmsFeatureFarmBriefs, HttpDoctor, InsightsFeatureFarmHistory},
+        },
         farmers::{
             app::{
                 FarmCounter, FarmRemover, FarmerRepository, SignInChallengeRepository,
@@ -154,8 +158,8 @@ use crate::{
     },
     infra::{Config, DBConnector},
     shared::{
-        AlwaFeature, BriefFeature, DamFeature, FarmFeature, FarmerFeature, Features, FireFeature,
-        InsightFeature, OutlookFeature, StaffFeature, WaterFeature, ZoneFeature,
+        AlwaFeature, BriefFeature, DamFeature, DoctorFeature, FarmFeature, FarmerFeature, Features,
+        FireFeature, InsightFeature, OutlookFeature, StaffFeature, WaterFeature, ZoneFeature,
     },
 };
 
@@ -213,6 +217,10 @@ pub async fn di_init(
         Arc::new(FarmsFeatureFarmOwnership::new(farm_repository.clone()));
     let farm_directory: Arc<dyn FarmDirectory> =
         Arc::new(FarmsFeatureFarmDirectory::new(farm_repository.clone()));
+    let farm_briefs: Arc<dyn FarmBriefs> =
+        Arc::new(FarmsFeatureFarmBriefs::new(farm_repository.clone()));
+    let farm_history: Arc<dyn FarmHistory> =
+        Arc::new(InsightsFeatureFarmHistory::new(insight_repository.clone()));
 
     let insight = InsightFeature {
         view_farm_insights_use_case: Arc::new(ViewFarmInsightsUseCase::new(
@@ -500,6 +508,16 @@ pub async fn di_init(
         delete_listing_use_case: Arc::new(DeleteListingUseCase::new(alwa_repository)),
     };
 
+    let doctor_service: Arc<dyn Doctor> = Arc::new(HttpDoctor::new(&config.doctor.url)?);
+
+    let doctor = DoctorFeature {
+        ask_doctor_use_case: Arc::new(AskDoctorUseCase::new(
+            farm_briefs,
+            farm_history,
+            doctor_service,
+        )),
+    };
+
     let role_repository: Arc<dyn RoleRepository> =
         Arc::new(RolePostgresRepository::new(db_context.conn_clone()));
     let staff_repository: Arc<dyn StaffRepository> =
@@ -544,6 +562,7 @@ pub async fn di_init(
         outlook,
         water,
         alwa,
+        doctor,
         staff,
         brief,
     })

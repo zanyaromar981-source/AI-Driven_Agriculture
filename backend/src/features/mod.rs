@@ -1,6 +1,7 @@
 pub mod alwa;
 pub mod briefs;
 pub mod dams;
+pub mod doctor;
 pub mod farmers;
 pub mod farms;
 pub mod fires;

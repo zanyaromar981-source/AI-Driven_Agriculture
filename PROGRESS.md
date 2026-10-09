@@ -27,6 +27,7 @@ Last update: 2026-10-09 12:12
 - Scope file corrected to the Flutter app; BACKEND.md carries the alert rules and the screen decisions
 - `BACKEND.md` v1: the frontend-to-backend contract (phone account, 10 m UTM cell grid, crop codes, endpoints for OTP, farms, status, plan, doctor, reports, push, region; section 7 = data flow and tables)
 - Backend in Rust + axum, `backend/` (clean architecture + vertical slices): slices `farmers` (sign in with phone and code, profile) and `farms` (list, create from walked corners and painted cells, get, repaint, delete, repeat-safe upload); answers in the BACKEND.md shapes so the app's `HttpApi` works unchanged; 138 tests, checked against a real Postgres; `FRONTEND.md` v3 says what is built. Also slices for the dashboard (`zones` with 33 districts, `dams`, `outlooks`, `water`, `fires`), the Alwa market, per-farm insights and farm status: 43 routes, 625 tests, critic pass done
+- Backend: Ask the Doctor `POST /v1/farms/{id}/ask` (slice `doctor`): question, up to 6 photos, tapped cell, language; checks the farm is the farmer's, passes the farm, its insights and the question to the local Doctor service (`DOCTOR_URL`) and returns its checked answer; proven end to end with a fake Doctor (`FRONTEND.md` section 13)
 
 ## In progress
 - Backend: hosted on a test server with a 12-hourly rain-against-normal job for the 33 districts; next are role-based dashboard routes, more data jobs (dams, fires, soil), touched cells with `inside_pct`, weekly plan
@@ -50,6 +51,8 @@ Last update: 2026-10-09 12:12
 - Wire the dashboard to `now.json`
 - Map demo: Sorani names for 5 sub-districts, Bamo sub-district shape, Erbil's Khabat / Bnaslawa / Barhka / Ainkawa district shapes
 - Gemini API key (`GEMINI_API_KEY`) in `farm_doctor/.env` so the Doctor can answer
+- Doctor service answering `POST /ask` on 127.0.0.1:8090 in the shape of `backend/README.md` (Ask the Doctor); until then the app gets `502 doctor_failed`
+- Backend: store Doctor cases (`cases` table, `case_id` in the answer), needed by the Control Room inbox
 
 ## Waiting on the backend (BACKEND.md section 0)
 - Control Room (BACKEND.md 2.11): officer sign-in with roles and 2-step, `/v1/admin` routes for farms (protected mode), crop register, alerts with second-officer approval, inbox, rules, Alwa prices, jobs, officers, and an insert-only audit log

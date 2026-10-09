@@ -12,7 +12,7 @@ src/
   features/
     farmers/  sign in with a code, the farmer's profile
     farms/    a farmer's farms
-    insights/ zones/ dams/ outlooks/ water/ fires/ alwa/
+    insights/ zones/ dams/ outlooks/ water/ fires/ alwa/ doctor/
       domain/   (every slice has these four) entities, value objects, rules. No database, no HTTP
       app/      use cases and the repository port
       infra/    the Postgres repository behind that port
@@ -67,13 +67,14 @@ cargo test
 
 ## What is here today
 
-75 paths in the API docs (`/status` and `/health` included), with 71 operations under `/v1/dashboard`; the full list with shapes is at `/api-docs`. By slice:
+76 paths in the API docs (`/status` and `/health` included), with 71 operations under `/v1/dashboard`; the full list with shapes is at `/api-docs`. By slice:
 
 | Slice | Routes | For |
 |---|---|---|
 | `farmers` | `/v1/auth/otp/send`, `/v1/auth/otp/verify`, `/v1/me` | sign in, profile |
 | `farms` | `/v1/farms`, `/v1/farms/{id}`, `/{id}/cells`, `/{id}/status` | a farmer's farms |
 | `insights` | `/v1/farms/{id}/insights` | water, groundwater, soil, rain per farm |
+| `doctor` | `/v1/farms/{id}/ask` | Ask the Doctor: passes the farmer's question to the local Doctor service |
 | `zones` | `/v1/region/overview`, `/v1/zones/{slug}`, `/v1/region/compare` | dashboard: 33 districts |
 | `dams` | `/v1/dams`, `/v1/dams/{slug}/history` | dashboard: dam levels |
 | `outlooks` | `/v1/outlooks`, `/v1/outlooks/zones/{zone_slug}` | dashboard: next-season outlook |
@@ -93,6 +94,20 @@ curl -X PUT localhost:3000/v1/ingest/dams/dukan/readings/2026-09-21 \
   -H "X-Service-Key: $INGEST__SERVICE_KEY" -H 'content-type: application/json' \
   -d '{"pct_full": 88, "volume_bn_m3": 6.14, "source": "Sentinel-2 lake area"}'
 ```
+
+## Ask the Doctor
+
+`POST /v1/farms/{id}/ask` (shapes in the root `FRONTEND.md` section 12) calls no AI itself. It passes the question to the Farm Doctor service at `DOCTOR_URL` (default `http://127.0.0.1:8090`) and waits up to 90 s:
+
+```
+POST {DOCTOR_URL}/ask
+{"farm": {"id": "5", "name": "...", "lat": 36.01, "lon": 44.62, "area_m2": 19451.0, "crops": ["wheat"]},
+ "history": {"topics": [...]} or null,
+ "question": "..." or null, "cell": {"e": 1, "n": 2} or null, "lang": "ku",
+ "photos": [{"mime": "image/jpeg", "data": "<base64>"}]}
+```
+
+`lat` and `lon` are the mean of the outline's corners, `area_m2` the exact area inside it, `crops` the painted crop codes (largest first). `history` is what `GET /v1/farms/{id}/insights` answers, without `farm_id`; `null` when nothing is known yet. The service answers `200` with `likely`, `confidence`, `why`, `actions_this_week`, `cannot_tell`, `refer_to_officer`, `ku`, `en`, `inputs_used`; `503 {"error": "doctor_not_ready"}` when it has no AI key yet; anything else counts as failed. The app then gets `503 doctor_not_ready` or `502 doctor_failed`, and the real cause is in the server log.
 
 ## Hosting it
 

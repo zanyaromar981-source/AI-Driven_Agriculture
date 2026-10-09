@@ -20,7 +20,7 @@ Checked 2026-10-08 20:48 against `backend/` at commit a0ade90 and `FRONTEND.md` 
 | 6 | This week: `GET /v1/farms/{id}/plan` (2.4) | not built | Home still opens without it ("Weather forecast not available right now"). Then serve the stored plan (2.4). |
 | 7 | Edit a farm: `PUT /v1/farms/{id}` (2.2, added 21:10) | not built (only `PUT /v1/farms/{id}/cells`) | Needed to change a farm's border, crops and name (the app's edit screen is being built). Changing the border needs the outline, which `PUT .../cells` cannot take. |
 | 8 | Delete a farm: `DELETE /v1/farms/{id}` (2.2) | built | Nothing. The app calls it from the farm's menu (since 21:33); `404` counts as already deleted. |
-| 9 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5, added 2026-10-09) | being built | The app's Ask and Answer screens call it (Ask tab on a farm, and "Ask about this spot" on a tapped square). Until it exists the app shows "The Doctor could not answer this time". |
+| 9 | Ask the Doctor: `POST /v1/farms/{id}/ask` (2.5, added 2026-10-09) | built (`FRONTEND.md` section 13) | Nothing for the route. Real answers need the Doctor service running next to the server with `GEMINI_API_KEY`; without the key the app shows "not switched on yet". |
 
 Not needed yet, because their screens are not built: reports (2.6), alerts and devices (2.7), `DELETE /v1/account`.
 
@@ -182,6 +182,7 @@ All paths start with `/v1` (FRONTEND.md). `Authorization: Bearer <token>` on eve
   → `200 {"likely": "...", "confidence": "sure|likely|unsure", "why": ["field_eye -> ...", "weather -> ..."], "actions_this_week": ["..."] (max 3), "cannot_tell": ["..."], "refer_to_officer": true|false, "ku": "...", "en": "...", "transcript": "..." (if voice), "case_id": "c_..."}`
   Rules (hard): no pesticide or fertilizer doses, no product names; only numbers from the AIs; `unsure` + `refer_to_officer: true` when inputs conflict. Response time target ≤ 25 s; the app shows "reading the field" meanwhile.
 - What the app does (2026-10-09): sends `question` (trimmed, max 1000 characters), `lang`, `cell` as JSON text when the farmer asked from a tapped square, and each photo as a repeated `photos` part (JPEG, made 1600 px and 80% quality on the phone, so well under 4 MB; PNG only if the gallery gives one). It waits up to 120 s. It reads `likely`, `confidence`, `why` (shown as "Input: conclusion", with an icon chosen from the input's name), `actions_this_week` (first 3), `cannot_tell`, `refer_to_officer` (shows "show this to the office"), `ku` and `en` (a Sorani / English switch). It does not use `case_id` or `transcript` yet. Error codes it words for the farmer: `doctor_not_ready` ("not switched on yet"), `bad_photo`, `empty_question`, `404`, offline; anything else is "could not answer this time".
+- Backend, 2026-10-09 12:11: built as `POST /v1/farms/{id}/ask`, exactly as in `FRONTEND.md` section 13. Differences from the line above: photos may be JPEG or PNG (set each part's Content-Type), 0 to 6; the answer adds `inputs_used`; no `case_id` yet (nothing is stored; needed later for the Control Room inbox) and no `transcript` (voice deferred); `502 doctor_failed` or `503 doctor_not_ready` when the Doctor service cannot answer. The backend waits up to 90 s for the Doctor, so this call needs a longer answer timeout than the 20 s of 2.0.
 
 ### 2.6 Reports (Neighbour Watch)
 - `POST /reports` body `{"farm_id": "f_...", "cell": {"e","n"}|null, "type": "yellow_stripes|insects|wilting|flood|hail|fire|animal_disease|other", "note": "...", "photo_id": "..."|null, "lat", "lon", "t"}` → `201 {"report_id": "r_..."}`
@@ -265,7 +266,7 @@ The only code the app branches on today is `bad_code`; the others are shown as t
 | 2.3 status | `farm_doctor/field_eye.py` `measure(lon, lat, date)` | Python only: one 1 km square around a point, about 16 s; needs the per-cell version and a stored daily job. Decided 2026-10-08 (user, Arya): the Python AIs push results into `backend/` through `/v1/ingest` (guarded by `X-Service-Key`) and `backend/` serves them. The app-facing `GET /v1/farms/{id}/status` is not built yet. |
 | 2.4 plan | `farm_doctor/weather_planner.py` `plan(lon, lat)` | Python only; decisions are English sentences, need the codes, `ku` and the alert list. Same route in through `/v1/ingest`; `GET /v1/farms/{id}/plan` not built yet. |
 | season label | `farm_doctor/season_check.py` | Python only, 16 zones |
-| 2.5 doctor | `farm_doctor/doctor.py` | Python only; needs `GEMINI_API_KEY` |
+| 2.5 doctor | `backend/` route, `farm_doctor/` service | `POST /v1/farms/{id}/ask` built 2026-10-09: the backend passes the question, the farm and its insights to the local Doctor service at `DOCTOR_URL` and returns its checked answer. The service needs `GEMINI_API_KEY`. No cases stored yet. |
 | 2.6 nearby reports | `farm_doctor/neighbour_watch.py` | test data only |
 | 2.8 region | `farm_doctor/build_now.py` → `web/now.json` | works, 61 s for 16 zones |
 | 2.7 push, `DELETE /v1/account` | nothing yet | later |

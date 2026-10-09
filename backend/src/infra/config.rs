@@ -6,6 +6,7 @@ pub struct Config {
     pub server: Server,
     pub farm: Farm,
     pub ingest: Ingest,
+    pub doctor: Doctor,
 }
 
 #[derive(Clone, Debug)]
@@ -52,6 +53,13 @@ pub struct SignInCode {
 #[derive(Clone, Debug)]
 pub struct Ingest {
     pub service_key: Option<String>,
+}
+
+/// The local Farm Doctor service that `POST /v1/farms/{id}/ask` passes
+/// questions to. The backend calls no AI itself.
+#[derive(Clone, Debug)]
+pub struct Doctor {
+    pub url: String,
 }
 
 #[derive(Clone, Debug)]
@@ -169,6 +177,12 @@ impl Config {
                 service_key: dotenvy::var("INGEST__SERVICE_KEY")
                     .ok()
                     .filter(|key| !key.trim().is_empty()),
+            },
+            doctor: Doctor {
+                url: dotenvy::var("DOCTOR_URL")
+                    .ok()
+                    .filter(|url| !url.trim().is_empty())
+                    .unwrap_or_else(|| "http://127.0.0.1:8090".to_string()),
             },
         }
     }

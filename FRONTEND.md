@@ -2,7 +2,7 @@
 
 This is the backend's side of the contract. `BACKEND.md` says what the app needs; this file says what the backend in `backend/` really does today. The app follows this file. Disagreements are settled here and in `BACKEND.md`, not in code.
 
-Status: v3, 2026-10-08. The backend now answers with the body shapes of `BACKEND.md` section 2, so the app's `HttpApi` works against it unchanged. (v1 of this file described `{data}` and `{errors}` wrappers; those are gone.)
+Status: v3, 2026-10-08. The backend now answers with the body shapes of `BACKEND.md` section 2, so the app's `HttpApi` works against it unchanged. (v1 of this file described `{data}` and `{errors}` wrappers; those are gone.) Added 2026-10-09 12:11: section 13, Ask the Doctor.
 
 ## 1. How to point the app at it
 
@@ -22,7 +22,8 @@ Exact request and answer shapes for every route are in the live docs at `http://
 | new | `GET /v1/farms/{id}/insights` | built: what is known about the farm, topic by topic (section 8) |
 | new | `GET /v1/me`, `PUT /v1/me` | built: the farmer's profile (`phone`, `name`, `lang`) |
 | new | Alwa market, 6 routes under `/v1/alwa` | built (section 9) |
-| 2.4 to 2.7 | plan, ask, reports, alerts, devices, `DELETE /v1/account` | not built yet |
+| 2.5 | `POST /v1/farms/{id}/ask` | built: Ask the Doctor (section 13). It needs the local Doctor service running; without it the answer is `502 doctor_failed` |
+| 2.4, 2.6, 2.7 | plan, reports, alerts, devices, `DELETE /v1/account` | not built yet |
 
 **Ministry dashboard (no login)**
 
@@ -75,9 +76,11 @@ Always `{"error": "<code>", "detail": "<English text>"}`, plus `field` or `retry
 | 400 | `bad_request` (body or parameter cannot be read, including an unknown crop code) |
 | 401 | `unauthorized`, `bad_code` |
 | 404 | `not_found` |
-| 422 | `invalid`, `bad_polygon` (outline crosses itself, has fewer than 3 or more than 50 corners, or holds no cell), `farm_too_large` (over 50,000 cells), `too_many_farms` (over 20 per phone) |
+| 422 | `invalid`, `bad_polygon` (outline crosses itself, has fewer than 3 or more than 50 corners, or holds no cell), `farm_too_large` (over 50,000 cells), `too_many_farms` (over 20 per phone), `empty_question` and `bad_photo` (Ask the Doctor, section 13) |
 | 429 | `rate_limited` |
 | 500 | `server_error` (the detail is always `An unexpected error occurred`) |
+| 502 | `doctor_failed` (Ask the Doctor: the Doctor service is down or failed; same detail) |
+| 503 | `doctor_not_ready` (Ask the Doctor: the Doctor service cannot answer yet; same detail) |
 
 ## 6. One number in BACKEND.md looks wrong
 
@@ -144,3 +147,43 @@ A job writes a short brief each night (Sorani and English): one for the region a
 - `GET /v1/briefs/latest?scope=` and `GET /v1/briefs?scope=&from=&to=` (no login): `scope` is `region` (default) or a district slug.
 - A brief is `{"day", "scope", "headline_en", "headline_ku", "summary_en", "summary_ku", "points": [{"level": "info|watch|alarm", "text_en", "text_ku"}], "sources": [{"title", "url"}], "author", "generated_at", "updated_at"}`.
 - The text is written by an AI agent from our stored numbers plus a web search. Show `sources` and `author`, and treat it as a draft that staff can correct (`/v1/dashboard/briefs`, permission `briefs:*`).
+
+## 13. Ask the Doctor
+
+`POST /v1/farms/{id}/ask` with the farmer's token. The body is `multipart/form-data`:
+
+| Field | Required | What the backend does with it |
+|---|---|---|
+| `question` | no | Text, up to 1000 characters (counted as characters, so Sorani is fine). Spaces around it are trimmed; a blank question counts as none. |
+| `photos` (or `photos[]`) | no | One part per photo, 0 to 6, each JPEG or PNG and at most 4 MB. Set each part's Content-Type to `image/jpeg` or `image/png`: Flutter's `MultipartFile` sends `application/octet-stream` unless `contentType` is given, and that is refused. The bytes must really be that type. |
+| `cell` | no | The cell the farmer tapped, as JSON text: `{"e": 46415, "n": 398748}`. |
+| `lang` | no | `ku` (the default) or `en`. |
+
+At least a question or one photo. `voice` and any other field are not read. The whole form may be up to about 26 MB on this route; every other route keeps 2 MB.
+
+Answer `200`, no outer wrapper:
+
+```json
+{"likely": "...", "confidence": "sure|likely|unsure", "why": ["weather -> ..."],
+ "actions_this_week": ["..."], "cannot_tell": ["..."], "refer_to_officer": true,
+ "ku": "...", "en": "...", "inputs_used": ["weather", "field_eye"]}
+```
+
+- The backend calls no AI. It checks the farm is the farmer's, sends the farm (centre of the outline, exact area, crops), what `GET /v1/farms/{id}/insights` knows about it, the question, photos, cell and `lang` to the local Doctor service, and passes its answer on after these checks: `confidence` is one of the three; `actions_this_week` holds 3 at most (extra ones are cut); a list the Doctor left out comes back empty. An answer without `likely`, `confidence`, `refer_to_officer`, `ku` or `en` is refused as `502 doctor_failed`, never filled in.
+- `inputs_used` is extra to `BACKEND.md` 2.5: which sources the Doctor read.
+- Not in this version: `case_id` (nothing is stored yet, there is no cases table; it is needed later for the Control Room inbox) and `transcript` (voice is deferred).
+- The Doctor takes 10 to 25 s and the backend waits up to 90 s for it. Give this call its own answer timeout of at least 90 s: the app's usual 20 s would drop answers that are on their way.
+
+Errors, in the order they are checked:
+
+| Status | Code | When |
+|---|---|---|
+| 404 | `not_found` | The id is not a number. |
+| 400 | `bad_request` | The body is not a multipart form, `cell` is not the JSON above, or a text field is not UTF-8. |
+| 422 | `bad_photo` | A seventh photo, a photo over 4 MB, a type other than JPEG or PNG, or bytes that are not the declared type. The form is read part by part and refused at the first bad photo. |
+| 422 | `empty_question` | No question and no photo. |
+| 422 | `invalid` | A question over 1000 characters, or `lang` other than `ku` or `en`. |
+| 404 | `not_found` | The farm is another phone's or does not exist (the same answer; the Doctor is not asked). |
+| 502 | `doctor_failed` | The Doctor service is down, took over 90 s, failed, or answered something that cannot be used. |
+| 503 | `doctor_not_ready` | The Doctor service is up but cannot answer yet (it has no AI key). Try later. |
+

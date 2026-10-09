@@ -12,6 +12,9 @@ use crate::features::alwa::web::{
     dashboard_handlers as alwa_dashboard_handlers,
 };
 use crate::features::{
+    doctor::web::{
+        DoctorAnswerResponse, DoctorAskForm, DoctorConfidence, handlers as doctor_handlers,
+    },
     farmers::web::{
         DashboardCreateFarmerParams, DashboardFarmerResponse, DashboardFarmersResponse,
         DashboardOneFarmerResponse, DashboardUpdateFarmerParams,
@@ -136,6 +139,7 @@ impl Modify for BearerAuth {
         fire_handlers::get_fires,
         fire_handlers::put_fire,
         insight_handlers::get_farm_insights,
+        doctor_handlers::ask_doctor,
         insight_handlers::get_farm_coverage,
         insight_handlers::put_farm_insight,
         zone_handlers::get_region_overview,
@@ -448,6 +452,9 @@ impl Modify for BearerAuth {
         FarmBriefResponse,
         BriefFarmZonesRecordedResponse,
         BriefsPageResponse,
+        DoctorAskForm,
+        DoctorAnswerResponse,
+        DoctorConfidence,
         ErrorBody
     )),
     modifiers(&BearerAuth),
@@ -457,6 +464,7 @@ impl Modify for BearerAuth {
         (name = "farms", description = "A farmer's farms: outline, cell grid and crops"),
         (name = "fires", description = "Satellite fire detections for the Ministry dashboard"),
         (name = "insights", description = "What the data jobs know about a farm, topic by topic"),
+        (name = "doctor", description = "Ask the Doctor: a farmer's question about one farm, answered by the local Doctor service"),
         (name = "zones", description = "The region's districts: dryness, rain, greenness and advice per month"),
         (name = "dams", description = "The large dams: how full they are now, a year ago and over time"),
         (name = "outlooks", description = "The Doctor: the outlook for the next growing season, zone by zone"),

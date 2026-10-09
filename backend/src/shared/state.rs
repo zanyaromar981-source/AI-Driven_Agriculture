@@ -25,6 +25,7 @@ use crate::{
             ListDamsUseCase, ListReferenceDamsUseCase, RecordDamReadingUseCase,
             UpdateDamReadingUseCase, ViewDamHistoryUseCase,
         },
+        doctor::app::use_cases::AskDoctorUseCase,
         farmers::app::use_cases::{
             EditFarmerUseCase, EditProfileUseCase, ListFarmersUseCase, RegisterFarmerUseCase,
             RemoveFarmerUseCase, RequestSignInCodeUseCase, VerifySignInCodeUseCase,
@@ -206,6 +207,11 @@ pub struct AlwaFeature {
 }
 
 #[derive(Clone)]
+pub struct DoctorFeature {
+    pub ask_doctor_use_case: Arc<AskDoctorUseCase>,
+}
+
+#[derive(Clone)]
 pub struct StaffFeature {
     pub sign_in_use_case: Arc<SignInUseCase>,
     pub identify_staff_use_case: Arc<IdentifyStaffUseCase>,
@@ -246,6 +252,7 @@ pub struct Features {
     pub outlook: OutlookFeature,
     pub water: WaterFeature,
     pub alwa: AlwaFeature,
+    pub doctor: DoctorFeature,
     pub staff: StaffFeature,
     pub brief: BriefFeature,
 }

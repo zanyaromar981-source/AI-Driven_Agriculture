@@ -20,6 +20,7 @@ use farm_doctor_api::{
             dashboard_routes as dam_dashboard_routes, ingest_routes as dam_ingest_routes,
             public_routes as dam_public_routes,
         },
+        doctor::web::routes as doctor_routes,
         farmers::web::{
             dashboard_routes as farmer_dashboard_routes, public_routes as farmer_public_routes,
             routes as farmer_routes,
@@ -114,6 +115,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 .merge(insight_routes())
                 .merge(alwa_routes())
                 .merge(brief_routes())
+                .merge(doctor_routes())
                 .layer(middleware::from_fn_with_state(state.clone(), auth))
                 .merge(farmer_public_routes())
                 .merge(fire_public_routes())

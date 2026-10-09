@@ -115,9 +115,9 @@ fn status_for_error_kind(kind: ErrorKind) -> StatusCode {
         // operation for its own business rules; this is not client input
         // validation in our API.
         ErrorKind::UpstreamRejected => StatusCode::FAILED_DEPENDENCY,
-        ErrorKind::UpstreamInvalidResponse | ErrorKind::UpstreamFailure => {
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
+        // We are the gateway in front of a service that failed or answered
+        // something unusable: that is a bad gateway, not our own fault.
+        ErrorKind::UpstreamInvalidResponse | ErrorKind::UpstreamFailure => StatusCode::BAD_GATEWAY,
         ErrorKind::Internal => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
@@ -158,7 +158,11 @@ mod tests {
         );
         assert_eq!(
             status_for_error_kind(ErrorKind::UpstreamFailure),
-            StatusCode::INTERNAL_SERVER_ERROR
+            StatusCode::BAD_GATEWAY
+        );
+        assert_eq!(
+            status_for_error_kind(ErrorKind::UpstreamInvalidResponse),
+            StatusCode::BAD_GATEWAY
         );
         assert_eq!(
             status_for_error_kind(ErrorKind::UpstreamUnavailable),
