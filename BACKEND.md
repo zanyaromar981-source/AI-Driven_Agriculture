@@ -21,6 +21,7 @@ Checked 2026-10-09 16:20 against `FRONTEND.md` v4 with its section 14 (commit 13
 | 7 | Daily brief: `GET /v1/farms/{id}/brief` | built | Nothing. The app card is next. |
 | 8 | Profile: `GET`/`PUT /v1/me` | built | Nothing. The Settings screen is next. |
 | 9 | Alwa market, farmer routes (FRONTEND.md 5) | built, with offers, grade, pickup, market and hidden phones | **Simpler Alwa (user decision 2026-10-09): see 2.14.** GPS point on each listing, phones shown, nearest first, mark as sold, markets with a point. |
+| 10 | **Marketplace (was Alwa): more than crops** (2.16, user decision 2026-10-09 18:30) | crops only, priced per kg | **New.** Fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit, each with its own unit (kg, tray of 30, litre, head). A `products` list with group and unit, and listings that carry `product`, `quantity` and a price per unit. |
 
 Needed next, because their screens are being built now:
 - `DELETE /v1/account` for Settings ("Delete my account and farms").
@@ -379,6 +380,45 @@ The fastest way, already tested on a Mac: run `farm_doctor/doctor_service.py` ne
    - Then ask from the app (Ask the Doctor, a question and a photo): a `200` answer within 90 s. `doctor.log` shows one line per question (`farm N: likely, 1 photos, 34 s, used ...`), and each case is saved in `farm_doctor/cases/` (git-ignored).
    - If the answer is `502`, the reason is in `doctor.log`. Most often Codex took longer than 75 s or answered outside the JSON.
 5. **Two farmers at once:** the service is threaded, so each question runs its own `codex exec`; both fit in 90 s.
+
+### 2.16 Marketplace: the Alwa grows into a market for farm products (user decision, 2026-10-09 18:30)
+
+The farmer app's Alwa becomes the **Marketplace** (Sorani: بازاڕ). It works the same way as 2.14: a seller posts what they have, where it is (GPS), the price, and buyers call the seller. What changes is **what can be sold**: not only the 16 crops, but also fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit. Some of these are not sold by the kg, so **every product has a unit**.
+
+**Keep as built:** the `/v1/alwa/...` routes and their paths (no rename needed; "Marketplace" is only the name people see), GPS point, `seller_phone`, nearest first, mark as sold, cancel, 20 open listings per phone, at most 14 days, the price board staff type in.
+
+**1. A products list** (no login): `GET /v1/products` answers `{"products": [{"code", "group", "unit", "name_en", "name_ku"}]}`. Staff can add and rename products like crops (the crops table may simply become this table with `group` and `unit` added). The 16 crops stay with group `crops` and unit `kg`; painting a farm still uses only group `crops`.
+
+| group | code | unit | name_en | name_ku |
+|---|---|---|---|---|
+| `crops` | the 16 crop codes of today | `kg` | as today | as today |
+| `fish_meat_eggs` | `fish` | `kg` | Fish | ماسی |
+| `fish_meat_eggs` | `chicken` | `kg` | Chicken | مریشک |
+| `fish_meat_eggs` | `eggs` | `tray_30` | Eggs (tray of 30) | هێلکە (تەبەقەی ٣٠) |
+| `honey_dairy` | `honey` | `kg` | Honey | هەنگوین |
+| `honey_dairy` | `milk` | `litre` | Milk | شیر |
+| `honey_dairy` | `yogurt` | `kg` | Yogurt | ماست |
+| `honey_dairy` | `cheese` | `kg` | Cheese | پەنیر |
+| `animals` | `sheep` | `head` | Sheep | مەڕ |
+| `animals` | `goat` | `head` | Goat | بزن |
+| `animals` | `cow` | `head` | Cow | مانگا |
+| `nuts_dried` | `walnut` | `kg` | Walnuts | گوێز |
+| `nuts_dried` | `almond` | `kg` | Almonds | بادەم |
+| `nuts_dried` | `raisin` | `kg` | Raisins | مێوژ |
+| `nuts_dried` | `dried_fig` | `kg` | Dried figs | هەنجیری وشک |
+
+Units: `kg`, `tray_30` (a tray of 30 eggs), `litre`, `head` (one animal). The Sorani names wait for the native speaker check like the rest of the app.
+
+**2. Listings carry a product and a unit.**
+- `POST /v1/alwa/listings` takes `product` (a code from the list), `quantity` (a whole number, in the product's unit) and `asking_price_iqd` (per one unit), with `lat`, `lon`, `closes_at` as today. The server fills `unit` from the product; the app never sends it.
+- Old bodies keep working: `crop`, `quantity_kg` and `asking_price_iqd_per_kg` are still accepted for kg products, so nothing breaks while the app moves over.
+- Limits per unit: `kg` 1 to 1,000,000; `tray_30` 1 to 10,000; `litre` 1 to 100,000; `head` 1 to 1,000. Outside them: `422 invalid` with `field`.
+- **Every listing answer** adds `product`, `group`, `unit`, `quantity` and `asking_price_iqd` (and keeps `crop`, `quantity_kg`, `asking_price_iqd_per_kg` filled for kg products until the app has moved).
+- `GET /v1/alwa/listings` takes `group=` and `product=` filters next to today's ones (`crop=` stays as an alias of `product=`).
+
+**3. The price board** (`/v1/alwa/markets/{slug}/prices`) works per product and per unit: each row adds `product` and `unit`, and staff can type a price for any product, not only crops. `fair_price` compares like for like (same product, same unit).
+
+**4. What the app will do** (next, after this section is built): the tab and screens are renamed Marketplace; "For sale near you" gets group chips (Crops, Fish, meat and eggs, Honey and dairy, Animals, Nuts and dried fruit); Sell asks for the group, then the product, and shows the unit everywhere ("12 trays", "3 head", "40 litres", "IQD per head"). Until the backend has 1 and 2, the app keeps selling crops by the kg as today.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
