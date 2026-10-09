@@ -1,4 +1,4 @@
-/* Intro, logo, cursor, loading line and skeletons. All of it stops for visitors who ask for reduced motion. */
+/* Intro, logo, loading line and skeletons. All of it stops for visitors who ask for reduced motion. */
 
 /* ---------- Grain Sun ---------- */
 .sun .ray { fill: var(--ray); }
@@ -38,6 +38,14 @@
 .pre-marquee .mq-track { animation: marquee 18s linear infinite; }
 .pre-skip { position: absolute; inset-inline-start: 48px; bottom: 64px; font: 600 12px var(--ui); color: #ffffff66; }
 @keyframes fadeIn { to { opacity: 1; } }
+.pre-bar { width: 360px; max-width: 80vw; height: 4px; border-radius: 4px; background: #FFFFFF22; overflow: hidden; direction: rtl; }
+.pre-bar i { display: block; height: 100%; background: #E8C77A; border-radius: 4px; transition: width .2s linear; }
+.pre-steps { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; align-items: center; font: 500 13px var(--ui); color: #8FB5A3; }
+.pre-steps li { display: flex; gap: 8px; align-items: center; }
+.pre-steps li.ok { color: #DCE8E1; }
+.pre-steps svg { width: 14px; height: 14px; }
+.pre-steps li.ok svg { color: #7FD1A8; }
+.spin { animation: spin 1s linear infinite; }
 @keyframes wght { from { font-variation-settings: 'wght' 200; letter-spacing: .06em; } to { font-variation-settings: 'wght' 800; letter-spacing: -.02em; } }
 @media (max-width: 640px) {
   .pre-word .en { font-size: 46px; } .pre-word .ku { font-size: 26px; }
@@ -47,20 +55,7 @@
 }
 body.pre-on { overflow: hidden; }
 
-/* ---------- cursor: a gold dot and a ring that grows over things you can click ---------- */
-.cursor-dot, .cursor-ring { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 2000; border-radius: 50%; will-change: transform; }
-.cursor-dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--gold); }
-.cursor-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1.5px solid #B98A2B99;
-  transition: width .25s var(--ease), height .25s var(--ease), margin .25s var(--ease), background-color .25s, border-color .25s, opacity .25s; }
-.cursor-ring.big { width: 54px; height: 54px; margin: -27px 0 0 -27px; background: #B98A2B14; border-color: var(--gold); }
-.cursor-ring.text { opacity: 0; }
-.cursor-ring.hidden, .cursor-dot.hidden { opacity: 0; }
-html.has-cursor, html.has-cursor a, html.has-cursor button, html.has-cursor label, html.has-cursor .click { cursor: none; }
-html.has-cursor input, html.has-cursor textarea, html.has-cursor select, html.has-cursor .leaflet-container, html.has-cursor [contenteditable] { cursor: auto; }
-/* cards glow softly under the cursor */
-.card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .3s;
-  background: radial-gradient(300px circle at var(--mx, 50%) var(--my, 50%), #B98A2B10, transparent 65%); }
-.card:hover::after { opacity: 1; }
+/* The custom cursor was removed (user, 2026-10-09): the system pointer is used. */
 
 /* ---------- skeleton ---------- */
 .sk { display: block; height: 10px; border-radius: 6px; margin: 9px 0; background: linear-gradient(90deg, #E6EAE2 25%, #F6F8F3 37%, #E6EAE2 63%); background-size: 400% 100%; animation: shimmer 1.25s ease infinite; }
@@ -84,5 +79,4 @@ html.has-cursor input, html.has-cursor textarea, html.has-cursor select, html.ha
 
 @media (prefers-reduced-motion: reduce) {
   .pre { display: none !important; }
-  .cursor-dot, .cursor-ring { display: none !important; }
 }

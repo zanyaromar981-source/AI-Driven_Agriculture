@@ -8,7 +8,6 @@
   "view_site": "Open the public site",
   "sign_out": "Sign out",
   "sign_in": "Admin sign in",
-  "sample_banner": "Sample data: the site is not connected to a database yet. Changes are kept in this browser only.",
   "cancel": "Cancel",
   "save": "Save",
   "saved": "Saved",
@@ -62,6 +61,12 @@
   "required": "required",
   "edited_by_hand": "Edited by hand",
   "from_job": "From the job",
-  "ku_missing": "Kurdish not written yet",
-  "sample": "Sample data"
+  "no_data": "No data yet",
+  "staff_sign_in": "Staff sign in",
+  "loading": "Loading",
+  "retry": "Try again",
+  "refresh": "Refresh",
+  "from_server": "From the server",
+  "updated_at": "Updated {when}",
+  "coming_soon": "Coming soon"
 }

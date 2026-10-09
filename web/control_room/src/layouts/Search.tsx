@@ -1,42 +1,34 @@
-// Search pages, farmers (name or phone) and farms (number or name). Press "/" anywhere in the admin.
-// Cost: one pass over farmers and farms per settled query (typing is debounced), at most 8 hits each.
+// Search pages and farmers (name or phone, on the server). Press "/" anywhere in the admin.
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Map as MapIcon, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useI18n } from '../i18n';
-import { db } from '../data/db';
+import { useAuth } from '../auth/auth';
+import { useApi } from '../api/cache';
+import { qs } from '../api/client';
 import { Modal, useDebounced } from '../components/ui';
+import { Phone } from '../components/domain';
 import { NAV_FLAT } from './nav';
 
+interface FarmerRow { id: string; name?: string | null; phone: string }
+
 export function SearchBox({ onClose }: { onClose: () => void }) {
-  const { t, b } = useI18n();
+  const { t } = useI18n();
+  const { can } = useAuth();
   const nav = useNavigate();
   const [q, setQ] = useState('');
-  const dq = useDebounced(q.trim().toLowerCase(), 150);
-  const hits = useMemo(() => {
-    if (!dq) return null;
-    const digits = dq.replace(/\D/g, '');
-    const pages = NAV_FLAT.filter(n => t('nav.' + n.key).toLowerCase().includes(dq));
-    const farmers = [], farms = [];
-    for (const f of db.farmers.all()) {
-      if (farmers.length >= 8) break;
-      if (f.name.en.toLowerCase().includes(dq) || f.name.ku.includes(dq) || (digits.length >= 3 && f.phone.includes(digits))) farmers.push(f);
-    }
-    for (const f of db.farms.all()) {
-      if (farms.length >= 8) break;
-      if (f.id === dq || f.name.includes(dq)) farms.push(f);
-    }
-    return { pages, farmers, farms };
-  }, [dq, t]);
+  const dq = useDebounced(q.trim(), 250);
+  const pages = useMemo(() => (dq ? NAV_FLAT.filter(n => (!n.needs || can(n.needs)) && t('nav.' + n.key).toLowerCase().includes(dq.toLowerCase())) : []), [dq, t, can]);
+  const farmers = useApi<{ farmers: FarmerRow[] }>(dq.length >= 2 && can('farmers') ? '/dashboard/farmers' + qs({ q: dq, rows_per_page: 8 }) : null, ['farmers'], { auth: true });
   const go = (path: string) => { onClose(); nav(path); };
+  const list = farmers.data?.farmers ?? [];
   return (
     <Modal title={t('search.open')} onClose={onClose}>
-      <input type="search" autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder={t('search.placeholder')} style={{ minHeight: 44, fontSize: 15 }} />
+      <input type="search" autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder={t('search.placeholder')} style={{ minHeight: 46, fontSize: 16 }} />
       <div style={{ maxHeight: 380, overflowY: 'auto', marginTop: 8 }}>
-        {hits && !hits.pages.length && !hits.farmers.length && !hits.farms.length && <div className="empty">{t('search.none')}</div>}
-        {hits?.pages.map(p => <a key={p.key} className="list-item" onClick={() => go(p.path)} href={'#' + p.path}><p.icon /><b>{t('nav.' + p.key)}</b></a>)}
-        {hits?.farmers.map(f => <a key={f.id} className="list-item" onClick={() => go('/admin/farms?farmer=' + f.id)} href={'#/admin/farms?farmer=' + f.id}><User /><span>{b(f.name)} <span className="muted small ltr">{f.phone}</span></span></a>)}
-        {hits?.farms.map(f => <a key={f.id} className="list-item" onClick={() => go('/admin/farms?farm=' + f.id)} href={'#/admin/farms?farm=' + f.id}><MapIcon /><span>{t('search.farm')} #{f.id} · <span className="ku-text">{f.name}</span></span></a>)}
+        {dq && !pages.length && !list.length && !farmers.loading && <div className="empty">{t('search.none')}</div>}
+        {pages.map(p => <button key={p.key} className="list-item click" style={{ width: '100%', border: 0, background: 'none' }} onClick={() => go(p.path)}><p.icon /><b>{t('nav.' + p.key)}</b></button>)}
+        {list.map(f => <button key={f.id} className="list-item click" style={{ width: '100%', border: 0, background: 'none' }} onClick={() => go('/admin/farms?farmer=' + f.id)}><User /><span>{f.name || t('farms.no_name')} · <Phone value={f.phone} /></span></button>)}
       </div>
     </Modal>
   );

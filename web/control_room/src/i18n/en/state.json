@@ -1,0 +1,10 @@
+{
+  "empty_title": "Nothing here yet",
+  "empty_text": "When there is data, it shows here.",
+  "error_title": "The server could not be reached",
+  "error_text": "The last saved copy is shown. Try again.",
+  "locked_title": "This part is not open for your role",
+  "locked_text": "You need the right permission. Ask an Owner or admin.",
+  "soon_title": "Coming soon",
+  "soon_text": "The server does not have this yet."
+}

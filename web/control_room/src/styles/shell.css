@@ -113,3 +113,11 @@ main.content { flex: 1; min-width: 0; padding: 22px 28px 64px; }
 /* ---------- public view top ---------- */
 .pub-top { position: sticky; top: 0; z-index: 60; display: flex; align-items: center; gap: 14px; padding: 0 20px; height: var(--top-h); background: var(--surface); border-bottom: 1px solid var(--line); }
 @media (max-width: 640px) { .pub-top { padding: 0 12px; gap: 8px; } }
+
+/* ---------- top-bar search (design 06: a field on the inline-end side) ---------- */
+.search-btn { display: flex; align-items: center; gap: 8px; width: 320px; height: 40px; padding: 0 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; color: var(--ink-3); cursor: pointer; font: inherit; }
+.search-btn span { flex: 1; text-align: start; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; }
+.search-btn kbd { font: 700 11px var(--latin); color: var(--ink-3); }
+.search-btn svg { width: 16px; height: 16px; }
+.logo .word-en-full { font: 800 19px var(--latin); }
+@media (max-width: 1024px) { .search-btn { width: 40px; padding: 0; justify-content: center; } .search-btn span, .search-btn kbd { display: none; } }

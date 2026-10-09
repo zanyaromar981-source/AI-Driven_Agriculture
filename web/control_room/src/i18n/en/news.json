@@ -1,0 +1,8 @@
+{
+  "brief": "Today's brief: {text}",
+  "fires": "Fire detections in 72 hours: {n}, in {z} districts",
+  "no_fires": "No fire detections in 72 hours",
+  "driest": "Driest against normal: {list}",
+  "dam": "{name} dam: {pct}% full",
+  "dam_none": "{name} dam: no reading yet"
+}

@@ -1,10 +1,12 @@
 {
-  "w1": "Waking up",
-  "w2": "Reading the fields from space",
-  "w3": "Counting the farms",
-  "w4": "Checking Dukan and Darbandikhan",
-  "w5": "Asking the weather for 10 days",
-  "w6": "Opening Jutyar",
   "ready": "Ready",
-  "skip": "Press any key to skip"
+  "skip": "Press any key to skip",
+  "s_zones": "Districts and rain",
+  "s_fires": "Fire detections",
+  "s_dams": "Dams",
+  "s_brief": "Today's brief",
+  "s_zones_doing": "Reading rain in 33 districts…",
+  "s_fires_doing": "Reading satellite fire detections…",
+  "s_dams_doing": "Reading the dams…",
+  "s_brief_doing": "Reading today's brief…"
 }

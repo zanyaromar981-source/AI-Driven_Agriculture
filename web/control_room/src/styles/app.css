@@ -69,7 +69,7 @@ h3 { font: 700 15px/1.35 var(--ui); margin: 0; }
 .kpi .l { display: flex; align-items: center; gap: 6px; color: var(--ink-2); font-weight: 600; font-size: 12.5px; }
 .kpi .v { font: 800 28px/1.15 var(--display); font-variant-numeric: tabular-nums; margin: 6px 0 2px; }
 .kpi .n { color: var(--ink-3); font-size: 12px; }
-.kpi.warn .v { color: var(--warn); } .kpi.danger .v { color: var(--danger); } .kpi.good .v { color: var(--good); } .kpi.water .v { color: var(--water); }
+.kpi.warn .v { color: var(--warn); } .kpi.brand .v { color: var(--brand); } .kpi.danger .v { color: var(--danger); } .kpi.good .v { color: var(--good); } .kpi.water .v { color: var(--water); }
 @media (max-width: 640px) { .kpi .v { font-size: 22px; } .card { padding: 14px; } }
 
 /* ---------- pills, notes, icons ---------- */
@@ -233,3 +233,13 @@ a.list-item:hover, .list-item.click:hover { background: #FAFBF7; cursor: pointer
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- states (design frame 21) ---------- */
+.state-box { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 36px 16px; min-height: 220px; }
+.state-box b { font: 800 17px var(--display); }
+.state-box .muted { max-width: 420px; line-height: 1.6; }
+.ico.big { width: 56px; height: 56px; border-radius: 16px; }
+.ico.big svg { width: 26px; height: 26px; }
+.sk-rows { padding: 6px 0; }
+.sk-rows .sk { height: 14px; margin: 14px 0; }
+.refreshing { opacity: .75; transition: opacity .2s; }

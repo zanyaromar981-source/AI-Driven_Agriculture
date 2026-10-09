@@ -15,12 +15,20 @@ export interface Col<T> {
   num?: boolean;
   /** hidden until the admin turns it on */
   optional?: boolean;
+  /** server mode: this column can be sorted by the server */
+  serverSort?: boolean;
   className?: string;
 }
 
-export function DataTable<T extends { id: string }>({ id, rows, cols, onRow, per = 25, empty, selected, head, defaultSort }: {
+/**
+ * Client mode: give all rows, the table sorts and pages them.
+ * Server mode: give `server` (the current page of rows, total count, page, and callbacks); sorting and
+ * paging then ask the server (columns with `serverSort` name the server's sort field).
+ */
+export function DataTable<T extends { id: string }>({ id, rows, cols, onRow, per = 25, empty, selected, head, defaultSort, server, loading }: {
   id: string; rows: T[]; cols: Col<T>[]; onRow?: (r: T) => void; per?: number; empty?: string; selected?: string | null;
-  head?: ReactNode; defaultSort?: [string, 1 | -1];
+  head?: ReactNode; defaultSort?: [string, 1 | -1]; loading?: boolean;
+  server?: { total: number; page: number; onPage: (p: number) => void; sort?: [string, 1 | -1] | null; onSort?: (s: [string, 1 | -1] | null) => void };
 }) {
   const { t, num } = useI18n();
   const [sort, setSort] = useState<[string, 1 | -1] | null>(defaultSort ?? null);
@@ -29,19 +37,26 @@ export function DataTable<T extends { id: string }>({ id, rows, cols, onRow, per
   const [chooser, setChooser] = useState(false);
 
   const sorted = useMemo(() => {
-    if (!sort) return rows;
+    if (server || !sort) return rows;
     const c = cols.find(x => x.key === sort[0]);
     if (!c?.sort) return rows;
     const key = c.sort, dir = sort[1];
     // decorate, sort, undecorate: the key is computed once per row, not once per comparison
     return rows.map(r => [key(r), r] as const).sort((a, b) => (a[0] < b[0] ? -dir : a[0] > b[0] ? dir : 0)).map(x => x[1]);
-  }, [rows, sort, cols]);
+  }, [rows, sort, cols, server]);
 
-  const pages = Math.max(1, Math.ceil(sorted.length / per));
-  const pg = Math.min(page, pages - 1);
-  const view = sorted.slice(pg * per, pg * per + per);
+  const total = server ? server.total : sorted.length;
+  const pages = Math.max(1, Math.ceil(total / per));
+  const pg = server ? server.page - 1 : Math.min(page, pages - 1);
+  const view = server ? rows : sorted.slice(pg * per, pg * per + per);
   const shown = cols.filter(c => !hidden.includes(c.key));
-  const toggleSort = (c: Col<T>) => c.sort && setSort(s => (s?.[0] === c.key ? (s[1] === 1 ? [c.key, -1] : null) : [c.key, 1]));
+  const curSort = server ? server.sort ?? null : sort;
+  const toggleSort = (c: Col<T>) => {
+    if (!(c.sort || c.serverSort)) return;
+    const next: [string, 1 | -1] | null = curSort?.[0] === c.key ? (curSort[1] === 1 ? [c.key, -1] : null) : [c.key, 1];
+    if (server) server.onSort?.(next); else setSort(next);
+  };
+  const goPage = (p: number) => (server ? server.onPage(p + 1) : setPage(p));
   const setHid = (h: string[]) => { setHidden(h); prefs.set('cols.' + id, h); };
 
   return (
@@ -53,9 +68,9 @@ export function DataTable<T extends { id: string }>({ id, rows, cols, onRow, per
       <div className="table-wrap">
         <table className="t cards">
           <thead><tr>{shown.map(c => (
-            <th key={c.key} className={(c.num ? 'num ' : '') + (c.sort ? 'sortable' : '')} onClick={() => toggleSort(c)} aria-sort={sort?.[0] === c.key ? (sort[1] === 1 ? 'ascending' : 'descending') : undefined}>
+            <th key={c.key} className={(c.num ? 'num ' : '') + (c.sort || c.serverSort ? 'sortable' : '')} onClick={() => toggleSort(c)} aria-sort={curSort?.[0] === c.key ? (curSort[1] === 1 ? 'ascending' : 'descending') : undefined}>
               <span className="row" style={{ gap: 4, flexWrap: 'nowrap', justifyContent: c.num ? 'flex-end' : undefined }}>{c.label}
-                {c.sort && (sort?.[0] === c.key ? (sort[1] === 1 ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} style={{ opacity: .35 }} />)}</span>
+                {(c.sort || c.serverSort) && (curSort?.[0] === c.key ? (curSort[1] === 1 ? <ArrowUp size={12} /> : <ArrowDown size={12} />) : <ArrowUpDown size={12} style={{ opacity: .35 }} />)}</span>
             </th>))}</tr></thead>
           <tbody>
             {view.map(r => (
@@ -66,13 +81,14 @@ export function DataTable<T extends { id: string }>({ id, rows, cols, onRow, per
           </tbody>
         </table>
       </div>
-      {!rows.length && <div className="empty">{empty ?? t('table.empty')}</div>}
-      {rows.length > per && (
+      {loading && !rows.length && <div className="sk-rows">{Array.from({ length: 6 }, (_, i) => <i key={i} className="sk" />)}</div>}
+      {!loading && !rows.length && <div className="empty">{empty ?? t('table.empty')}</div>}
+      {total > per && (
         <div className="pager">
-          <span className="muted small">{t('table.page', { a: num(pg + 1), b: num(pages), n: num(rows.length) })}</span>
+          <span className="muted small">{t('table.page', { a: num(pg + 1), b: num(pages), n: num(total) })}</span>
           <div className="row">
-            <button className="btn sm" disabled={pg === 0} onClick={() => setPage(pg - 1)}><ChevronLeft className="flip-rtl" />{t('table.prev')}</button>
-            <button className="btn sm" disabled={pg >= pages - 1} onClick={() => setPage(pg + 1)}>{t('table.next')}<ChevronRight className="flip-rtl" /></button>
+            <button className="btn sm" disabled={pg === 0} onClick={() => goPage(pg - 1)}><ChevronLeft className="flip-rtl" />{t('table.prev')}</button>
+            <button className="btn sm" disabled={pg >= pages - 1} onClick={() => goPage(pg + 1)}>{t('table.next')}<ChevronRight className="flip-rtl" /></button>
           </div>
         </div>
       )}
