@@ -9,6 +9,6 @@ WorkingDirectory=/opt/farm-doctor/backend/jobs
 EnvironmentFile=/opt/farm-doctor/backend/deploy/.env
 Environment=FARM_DOCTOR_API=http://127.0.0.1:8790/v1
 Environment=REGION_RUNNER_CACHE=/opt/farm-doctor/cache
-ExecStart=/usr/bin/python3 /opt/farm-doctor/backend/jobs/region_runner.py
+ExecStart=/usr/bin/python3 /opt/farm-doctor/backend/jobs/report_run.py dryness /usr/bin/python3 /opt/farm-doctor/backend/jobs/region_runner.py
 Nice=10
 TimeoutStartSec=3600

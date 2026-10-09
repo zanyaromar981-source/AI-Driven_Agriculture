@@ -70,3 +70,13 @@ It needs one package that the other jobs do not:
 python3 -m venv /opt/farm-doctor/venv && /opt/farm-doctor/venv/bin/pip install rasterio
 /opt/farm-doctor/venv/bin/python groundwater_runner.py --dry-run
 ```
+
+## Reporting runs: `report_run.py`
+
+The dashboard's job status page (`GET /v1/dashboard/jobs`) shows what each job reported. A job does not report itself: the timer starts it through `report_run.py`, which tells the backend when the run started, runs the job, and tells the backend how it ended (ok when the job exited 0, the count from the job's `done: N ...` line, and its last line as the message).
+
+```sh
+python3 report_run.py dryness /usr/bin/python3 region_runner.py
+```
+
+Job names: `dryness` (region runner), `fires`, `groundwater`, `briefs`, `dams`, `farm_analysis`. If the backend cannot be reached the job still runs and keeps its own exit code. A job run by hand without the wrapper is not shown on the status page.
