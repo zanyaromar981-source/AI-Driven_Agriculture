@@ -3,6 +3,7 @@
 ## Deadlines
 - [ ] **Apply before 2026-09-28** at foundation.krd/smartsuli
 - Build: 2026-10-08 → 10-09, Culture Factory, Slemani
+- [ ] **Final submission of source code and files: about 20:00 on 2026-10-09** (organizer email, relayed by the manager session; not 22:00). Everything pushed before then
 - Pitch + judging: 2026-10-10
 
 ## Done
