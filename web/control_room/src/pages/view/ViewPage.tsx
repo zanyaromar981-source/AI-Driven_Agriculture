@@ -12,6 +12,7 @@ import { GrainSun } from '../../motion/GrainSun';
 import { Ticker } from '../../motion/Ticker';
 import { LangSwitch } from '../../layouts/LangSwitch';
 import { Tabs } from '../../components/ui';
+import { SeasonOutlook } from '../../components/SeasonOutlook';
 import { MapTab, WaterTab, FiresTab, CompareTab, MarketTab } from './tabs';
 import './view.css';
 
@@ -79,6 +80,8 @@ export default function ViewPage() {
             </div>
           </div>
         )}
+
+        <SeasonOutlook className="mb" />
 
         {cur ? (
           <>

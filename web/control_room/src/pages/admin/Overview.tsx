@@ -11,6 +11,7 @@ import { useRows, useVersion } from '../../data/store';
 import { totals } from '../../data/api';
 import { Card, Kpi, Pill } from '../../components/ui';
 import { HBars } from '../../components/charts';
+import { SeasonOutlook } from '../../components/SeasonOutlook';
 import { CropTag, usePlaceNames } from '../../components/domain';
 import { DistrictMap, GREEN_RAMP, ramp } from '../../components/DistrictMap';
 import './overview.css';
@@ -94,6 +95,8 @@ export default function Overview() {
         <Kpi label={t('overview.k_msgs')} value={num(newMsgs)} note={t('overview.k_msgs_n', { n: num(messages.length) })} tone={newMsgs ? 'danger' : ''} icon={<Inbox />} />
         <Kpi label={t('overview.k_listings')} value={num(openListings.n)} note={t('overview.k_listings_n', { n: num(openListings.kg / 1000, 1) })} icon={<Store />} />
       </div>
+
+      <SeasonOutlook className="mb" />
 
       <div className="grid g-main-l">
         <div className="stack">

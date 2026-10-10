@@ -1,0 +1,13 @@
+{
+  "title": "Season outlook",
+  "season": "Winter {season}",
+  "head_good": "Wet or normal winter expected",
+  "head_normal": "Normal winter expected",
+  "head_bad": "Dry winter likely",
+  "confidence": "Confidence {n}%",
+  "districts": "Districts",
+  "good": "Wet or normal",
+  "normal": "Normal",
+  "bad": "Dry",
+  "track": "Called right in {right} of {tested} past winters; no call in neutral years"
+}
