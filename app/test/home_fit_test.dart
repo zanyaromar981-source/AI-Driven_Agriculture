@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jutyar/crops.dart';
 import 'package:jutyar/api/api.dart';
 import 'package:jutyar/api/fake_api.dart';
 import 'package:jutyar/app_scope.dart';
@@ -105,5 +106,13 @@ void main() {
       'rice',
       'tomato',
     ]);
+  });
+
+  test('crop groups the app does not know read as plain words', () {
+    expect(knownCrop('rice'), isTrue);
+    expect(knownCrop('other_vegetables'), isFalse);
+    expect(knownCrop('empty'), isFalse);
+    expect(plainCropName('other_vegetables'), 'Other vegetables');
+    expect(plainCropName('spam_xyz'), 'Xyz');
   });
 }

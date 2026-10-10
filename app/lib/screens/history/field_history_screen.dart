@@ -784,10 +784,15 @@ class FitCard extends StatelessWidget {
         Row(
           spacing: 8,
           children: [
-            Text(cropOf(c.code).emoji, style: const TextStyle(fontSize: 16)),
+            Text(
+              knownCrop(c.code) ? cropOf(c.code).emoji : '🌱',
+              style: const TextStyle(fontSize: 16),
+            ),
             Expanded(
               child: Text(
-                s.crop(c.code),
+                // MapSPAM groups (other_vegetables, temperate_fruit) and
+                // crops the app has no name for read as plain words.
+                knownCrop(c.code) ? s.crop(c.code) : plainCropName(c.code),
                 style: latText(size: 13.5, weight: FontWeight.w600),
               ),
             ),

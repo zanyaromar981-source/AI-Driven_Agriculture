@@ -32,6 +32,16 @@ const kAreaCrops = <Crop>[
   Crop('pistachio', '🥜', Color(0xFF93C572)),
 ];
 
+/// True for a code the app has a name, emoji and colour for.
+bool knownCrop(String code) =>
+    code != 'empty' && [...kCrops, ...kAreaCrops].any((c) => c.code == code);
+
+/// "other_vegetables" -> "Other vegetables", for codes the app does not know.
+String plainCropName(String code) {
+  final w = code.replaceFirst(RegExp(r'^spam_'), '').replaceAll('_', ' ');
+  return w.isEmpty ? code : '${w[0].toUpperCase()}${w.substring(1)}';
+}
+
 Crop cropOf(String code) => [
   ...kCrops,
   ...kAreaCrops,
