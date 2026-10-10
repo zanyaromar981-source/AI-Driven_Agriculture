@@ -75,14 +75,18 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
                           ).copyWith(letterSpacing: -0.4),
                         ),
                       ),
-                      Text(
-                        crop.ku,
-                        textDirection: TextDirection.rtl,
-                        style: jText(
-                          true,
-                          size: 15,
-                          weight: FontWeight.w600,
-                          color: JColors.muted,
+                      Flexible(
+                        child: Text(
+                          crop.ku,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textDirection: TextDirection.rtl,
+                          style: jText(
+                            true,
+                            size: 15,
+                            weight: FontWeight.w600,
+                            color: JColors.muted,
+                          ),
                         ),
                       ),
                     ],
@@ -122,14 +126,14 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
                 spacing: 6,
                 children: [
                   Text(
-                    fmtInt(l.priceIqdPerKg),
+                    fmtInt(l.priceIqd),
                     style: latText(
                       size: 32,
                       weight: FontWeight.w800,
                     ).copyWith(letterSpacing: -0.6),
                   ),
                   Text(
-                    'IQD/kg asking',
+                    '${iqdPer(l.unit)} asking',
                     style: latText(
                       size: 13,
                       weight: FontWeight.w600,
@@ -139,8 +143,8 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
                 ],
               ),
               Text(
-                '${fmtInt(l.quantityKg)} kg · '
-                '${fmtInt(l.quantityKg * l.priceIqdPerKg)} IQD for all of it',
+                '${fmtQty(l.quantity, l.unit)} · '
+                '${fmtInt(l.quantity * l.priceIqd)} IQD for all of it',
                 style: latText(size: 14, weight: FontWeight.w500),
               ),
             ],
@@ -204,7 +208,7 @@ class _AlwaListingScreenState extends State<AlwaListingScreen> {
               _Fact(
                 icon: Icons.inventory_2_outlined,
                 label: 'Quantity',
-                value: '${fmtInt(l.quantityKg)} kg',
+                value: fmtQty(l.quantity, l.unit),
               ),
               _Fact(
                 icon: Icons.calendar_today_outlined,

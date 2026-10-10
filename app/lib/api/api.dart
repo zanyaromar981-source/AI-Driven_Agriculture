@@ -343,7 +343,39 @@ abstract class Api {
 
   /// GET /alwa/listings?status=open: crops on sale, nearest to ([lat], [lon])
   /// first when the server can sort by distance (BACKEND.md 2.14 #3).
-  Future<List<AlwaListing>> alwaListings({double? lat, double? lon});
+  /// [group] keeps one product group (`group=`).
+  Future<List<AlwaListing>> alwaListings({
+    double? lat,
+    double? lon,
+    String? group,
+  });
+
+  /// GET /products (no login): everything the Marketplace sells.
+  Future<List<Product>> products();
+
+  // ---- Workers for hire: FRONTEND.md 5B ----
+
+  /// GET /workers: cards of people who do farm work, nearest to
+  /// ([lat], [lon]) first when a point is given.
+  Future<List<Worker>> workers({double? lat, double? lon});
+
+  /// GET /workers/me: the caller's own card, null when there is none.
+  Future<Worker?> myWorkerCard();
+
+  /// PUT /workers/me: make or replace the caller's card. The phone is the
+  /// sign-in phone; it is never sent.
+  Future<Worker> saveWorkerCard({
+    required String name,
+    required int costIqd,
+    String costPer = 'day',
+    String? note,
+    double? lat,
+    double? lon,
+    bool available = true,
+  });
+
+  /// DELETE /workers/me.
+  Future<void> deleteWorkerCard();
 
   /// GET /alwa/listings/{id}: one listing.
   Future<AlwaListing> alwaListing(String id);
