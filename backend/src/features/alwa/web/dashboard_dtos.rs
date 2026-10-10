@@ -9,8 +9,8 @@ use validator::Validate;
 
 use super::dtos::{
     AlwaBuyerKind, AlwaFairPrice, AlwaGrade, AlwaListingStatus, AlwaMarketResponse,
-    AlwaOfferStatus, AlwaOnePriceResponse, AlwaPickup, AlwaRecordedPriceResponse,
-    RecordAlwaPriceParams, given, listing_id, missing_id, parse_day,
+    AlwaOfferStatus, AlwaOnePriceResponse, AlwaPickup, AlwaProductGroup, AlwaRecordedPriceResponse,
+    AlwaUnit, KgFields, RecordAlwaPriceParams, given, listing_id, missing_id, parse_day,
 };
 
 use crate::{
@@ -218,9 +218,22 @@ pub struct AlwaModeratedListingResponse {
     pub id: String,
     pub seller_phone: String,
     pub seller_name: Option<String>,
-    pub crop: String,
-    pub quantity_kg: i32,
-    pub asking_price_iqd_per_kg: i32,
+    /// The product code, from `GET /v1/products`.
+    pub product: String,
+    pub group: AlwaProductGroup,
+    /// What `quantity` counts and what `asking_price_iqd` is for one of,
+    /// as the product had it when the listing was posted.
+    pub unit: AlwaUnit,
+    /// A whole number of `unit`.
+    pub quantity: i32,
+    /// For one `unit`.
+    pub asking_price_iqd: i32,
+    /// The same as `product`, `quantity` and `asking_price_iqd` when the
+    /// unit is `kg`, for apps from before products had units; `null` for
+    /// every other unit.
+    pub crop: Option<String>,
+    pub quantity_kg: Option<i32>,
+    pub asking_price_iqd_per_kg: Option<i32>,
     pub grade: Option<AlwaGrade>,
     /// `null` when the seller did not say.
     pub pickup: Option<AlwaPickup>,
@@ -254,14 +267,20 @@ impl TryFrom<&ListingCard> for AlwaModeratedListingResponse {
     fn try_from(card: &ListingCard) -> Result<Self, Self::Error> {
         let listing = card.listing();
         let moderation = listing.moderation().as_ref();
+        let kg = KgFields::from(listing);
 
         Ok(Self {
             id: listing_id(listing)?,
             seller_phone: listing.seller_phone().into(),
             seller_name: listing.seller_name().as_ref().map(Into::into),
-            crop: (*listing.crop()).into(),
-            quantity_kg: listing.quantity().value(),
-            asking_price_iqd_per_kg: listing.asking_price().value(),
+            product: (*listing.crop()).into(),
+            group: (*listing.group()).into(),
+            unit: (*listing.unit()).into(),
+            quantity: listing.quantity().value(),
+            asking_price_iqd: listing.asking_price().value(),
+            crop: kg.crop,
+            quantity_kg: kg.quantity_kg,
+            asking_price_iqd_per_kg: kg.asking_price_iqd_per_kg,
             grade: listing.grade().map(Into::into),
             pickup: listing.pickup().map(Into::into),
             market: listing.market().as_ref().map(Into::into),

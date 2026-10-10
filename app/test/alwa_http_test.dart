@@ -133,9 +133,9 @@ void main() {
     () async {
       await api.createAlwaListing(
         const NewAlwaListing(
-          crop: 'tomato',
-          quantityKg: 200,
-          priceIqdPerKg: 500,
+          product: 'tomato',
+          quantity: 200,
+          priceIqd: 500,
           lat: 35.56,
           lon: 45.43,
           sellerPhone: '+9647501234567',
@@ -190,13 +190,13 @@ void main() {
   );
 
   test(
-    'create sends the point, the key, and what the server still needs',
+    'create sends the product, the point and the key, and no workaround',
     () async {
       await api.createAlwaListing(
         const NewAlwaListing(
-          crop: 'tomato',
-          quantityKg: 4000,
-          priceIqdPerKg: 700,
+          product: 'tomato',
+          quantity: 4000,
+          priceIqd: 700,
           lat: 35.56,
           lon: 45.43,
           days: 14,
@@ -206,16 +206,20 @@ void main() {
       final post = server.seen.firstWhere((r) => r.method == 'POST');
       expect(post.headers.value('Idempotency-Key'), 'k-1');
       final body = jsonDecode(post.body) as Map<String, dynamic>;
-      expect(body['crop'], 'tomato');
-      expect(body['quantity_kg'], 4000);
-      expect(body['asking_price_iqd_per_kg'], 700);
+      expect(body['product'], 'tomato');
+      expect(body['quantity'], 4000);
+      expect(body['asking_price_iqd'], 700);
       // The server's fields are integers: 4000.0 would be refused.
-      expect(body['quantity_kg'], isA<int>());
-      expect(body['asking_price_iqd_per_kg'], isA<int>());
+      expect(body['quantity'], isA<int>());
+      expect(body['asking_price_iqd'], isA<int>());
+      expect(body.containsKey('crop'), isFalse);
+      expect(body.containsKey('quantity_kg'), isFalse);
       expect(body['lat'], 35.56);
       expect(body['lon'], 45.43);
-      expect(body['market'], 'sulaymaniyah');
-      expect(body['pickup'], 'farm');
+      // FRONTEND.md 5: the server fills the market; no markets are fetched.
+      expect(body.containsKey('market'), isFalse);
+      expect(body.containsKey('pickup'), isFalse);
+      expect(server.seen.where((r) => r.path == '/alwa/markets'), isEmpty);
       final closes = DateTime.parse(body['closes_at'] as String);
       expect(
         closes.difference(DateTime.now()).inDays,

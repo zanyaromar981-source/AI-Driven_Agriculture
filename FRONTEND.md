@@ -5,7 +5,7 @@ For everyone building the farmer app and the website (public View page and staff
 Status: v7, 2026-10-10, API version 1.7.0. Three places describe the API, from short to complete:
 
 1. **This file**: how things work, which screen calls what, the rules, what is empty today.
-2. **`backend/API.md`**: every route (189 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
+2. **`backend/API.md`**: every route (190 operations) with its body, its answer and who may call it. It is generated from the server, so it is always what the code does.
 3. **`/api-docs` on the server**: the same, clickable, with a "try it" button.
 
 `BACKEND.md` is where the frontend writes what it needs. Where the two files disagree, say so in the files and we fix one of them.
@@ -16,6 +16,7 @@ Newest first. Each line says what to change on your side. Details are in the sec
 
 | What is new | App team | Website team |
 |---|---|---|
+| **Season outlook from El Niño** (live now, `GET /v1/outlooks`) | Show a card on Home: `outlook` (`good`), `confidence_pct` (85), `reason_en`, and the track record from `run` ("right 14 of 14"). This winter: strong El Niño, so a wet or normal winter with no drought is expected. | The same on the region page; staff can edit it under `/v1/dashboard/outlooks`. |
 | **Workers for hire** (section 5B) | New screens: "Find workers" (`GET /v1/workers`, nearest first, tap to call) and "Offer my work" (`PUT /v1/workers/me` with name and cost; the phone is the signed-in one). | A staff list with remove: `GET /v1/dashboard/workers`, `DELETE /v1/dashboard/workers/{id}` (uses `farmers:read` and `farmers:delete`). |
 | **Simpler Alwa** (section 5) | Drop the workaround: stop fetching markets to pick one and stop sending `pickup: "farm"`; send only crop, kg, price, `lat`, `lon`, `closes_at`. Send the token on the listing reads to get `seller_phone`. Pass `lat` and `lon` to `GET /v1/alwa/listings` for nearest first and `distance_km`. Use `POST /v1/alwa/listings/{id}/sold`. | Listings may have `market`, `pickup` and `grade` null. Markets have `lat` and `lon` to edit. |
 | **Alerts and push** (section 4) | Alerts screen: `GET /v1/alerts`, `POST /v1/alerts/{id}/done`. Add Firebase messaging and call `POST /v1/devices` at every start. Settings: `DELETE /v1/account`. | Alerts of a farm: `GET /v1/dashboard/farms/{id}/alerts`. |
@@ -27,7 +28,7 @@ Newest first. Each line says what to change on your side. Details are in the sec
 | **Messages to the Ministry** (section 4) | `POST /v1/messages`, `GET /v1/messages/mine`. | Inbox: `/v1/dashboard/messages...`. |
 | **A place on every farm** | Farm answers carry `governorate`, `zone_slug`, `sub_zone_slug`: show them, nothing to send. | Farm filters and the totals routes (section 9). |
 | **Dams, district history, fire wind** (sections 7, 11) | Region screens now have data: dams since 2008, change against last year, wind at fires. | The same. Label dam `pct_full` as "lake area, % of full". |
-| **Being built:** the Marketplace of `BACKEND.md` 2.16 (products with units) | Keep selling crops by the kg until this table says it is in. | Nothing yet. |
+| **Marketplace: products with units** (section 5, `BACKEND.md` 2.16) | It is in. Read `GET /v1/products` for the groups, products and units. Post with `product`, `quantity`, `asking_price_iqd`; read `product`, `group`, `unit`, `quantity`, `asking_price_iqd` on every listing; filter with `group=` and `product=`. **Move over soon:** an app that still reads only `crop` and `quantity_kg` shows a listing of eggs as an empty crop with 0 kg. | Crops page now edits all products (`group`, `unit`). Listing and price rows carry `product` and `unit`; the kg fields are null for non-kg products. |
 
 Contents: 0 what changed and what to do, 1 where it is, 2 who calls what, 3 rules for every route, 4 the farmer app, 5 Alwa market, 5B workers for hire, 6 Ask the Doctor, 7 public data, 8 website sign-in and roles, 9 website data routes, 10 caching, 11 what has real data today, 12 things that trip you up, 13 error codes, 14 not built yet, 15 open questions.
 
@@ -136,7 +137,7 @@ What to know:
 | `GET /v1/farms/{id}/brief` | the nightly brief for the farm's district | filled each night; `brief` is `null` for a district with none yet |
 | `POST /v1/farms/{id}/ask` | Ask the Doctor | section 6 |
 
-**Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
+**Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, `crops_grown` (crops grown within 15 km, from MapSPAM 2020, measures `<crop>_ha_15km` and `<crop>_irrigated_pct`), with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
 
 The topics `rain`, `weather`, `soil`, `greenness` and `dryness` carry the measure codes of the app's fixture (`app/test/fixtures/insights_farm2_measures.json`), with three differences: fires are `fire_detections_7d` (the server keeps 7 days of detections, so a long count would be wrong), and `summer_surface_c_normal` and `trend_peak_ndvi_per_decade` are not produced. Greenness is measured on a square of the farm's area at its centre, from Sentinel-2 (2016 on) and Landsat (1984 to 2015).
 
@@ -182,6 +183,14 @@ Sellers set their own price on each listing and buyers call them. There is no au
 - **Rules:** at most 20 open listings per phone (`too_many_listings`); a listing closes at `closes_at`, at most 14 days ahead (`bad_closes_at`).
 - **`fair_price`** on a listing is `fair`, `high`, `low` or `unknown`. It is `unknown` unless staff have entered a price for that crop at that market in the last 7 days.
 - Crop codes: the crops table, `GET /v1/crops` (16 seeded: wheat, barley, tomato, cucumber, potato, onion, watermelon, grape, olive, sunflower, chickpea, pomegranate, okra, eggplant, pepper, apple).
+- **Marketplace: more than crops.** `GET /v1/products` (no login) answers `{"products": [{"code", "group", "unit", "name_en", "name_ku"}]}`: 30 products in the groups `crops`, `fish_meat_eggs`, `honey_dairy`, `animals`, `nuts_dried`, with the units `kg`, `tray_30` (a tray of 30 eggs), `litre`, `head` (one animal). `GET /v1/crops` still lists only the 16 crops, for painting farms.
+  - Post with `{"product", "quantity", "asking_price_iqd", "lat", "lon", "closes_at"}`: `quantity` is a whole number in the product's unit, the price is for one unit, and the server fills `unit` and `group`. The old `crop`, `quantity_kg`, `asking_price_iqd_per_kg` still work for kg products only; a kg field on a non-kg product, or the two forms disagreeing, is `422 invalid` with `field`.
+  - Limits: `kg` 1 to 1,000,000; `tray_30` 1 to 10,000; `litre` 1 to 100,000; `head` 1 to 1,000.
+  - Every listing answer carries `product`, `group`, `unit`, `quantity`, `asking_price_iqd`. The old `crop`, `quantity_kg`, `asking_price_iqd_per_kg` stay filled for kg products and are `null` for the others.
+  - Filters: `group=`, `product=` (`crop=` is the same as `product=`).
+  - Price board rows carry `product` and `unit`; for a non-kg product the field still named `price_iqd_per_kg` holds the price per unit (per tray, per head). `fair_price` compares the same product and unit.
+  - Offers work on kg listings only; an offer on another unit is `422 offers_kg_only`.
+  - Farms can be painted only with products of group `crops`.
 - **Still there for the website, not used by the app:** `POST /v1/alwa/listings/{id}/offers`, `.../offers/{offer_id}/accept`, `GET /v1/alwa/offers/mine`, `GET /v1/alwa/deals`. Their rules: no offer on your own listing (`own_listing`), one open offer per buyer per listing, accepting sells the whole listing; codes `offer_not_open`, `offer_too_large`.
 - Known rough edge: staff cannot delete a listing that was marked sold (`listing_has_deal`).
 
@@ -388,7 +397,8 @@ Be honest on screen about this.
 | Groundwater per farm | **live**, daily | section 4; the wider area, not a well |
 | Farmers and farms | the few test accounts people have made | the app |
 | Dams | **live**: 116 readings from 2008 to now, refreshed daily | lake area measured from Sentinel-2 and Landsat with the team's tested method. **`pct_full` is the lake's AREA as a share of its full area (Dukan 270 km2, Darbandikhan 113 km2), not stored volume**: a lake loses volume faster than area, so label it "lake area, % of full". `volume_bn_m3` and `farm_supply_bn_m3` are null: no trustworthy area-to-volume curve exists for these dams. |
-| Season outlook, water plan | **empty** (`404`) | no job; they can be typed in through the Admin part |
+| Season outlook | **live** for winter 2026-27, all 33 districts: `good`, 85% | El Niño and La Niña. In all 7 El Niño winters since 1991 the region had normal or above-normal rain and no drought; this year's index is +2.16, a strong El Niño. It is one region-wide signal, the same for every district. In a neutral year (21 of 35 winters) there is no call. |
+| Water plan | **empty** (`404`) | no job; it can be typed in through the Admin part |
 | Alwa prices | **empty** until staff type them in | by hand |
 | Rules | 15 seeded rules | section 9; changing them has no effect yet |
 | App settings | the starting values | section 4 |

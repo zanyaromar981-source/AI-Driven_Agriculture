@@ -30,11 +30,7 @@ impl MigrationTrait for Migration {
 
         let mut markets = Query::insert()
             .into_table(AlwaMarkets::Table)
-            .columns([
-                AlwaMarkets::Slug,
-                AlwaMarkets::NameEn,
-                AlwaMarkets::NameKu,
-            ])
+            .columns([AlwaMarkets::Slug, AlwaMarkets::NameEn, AlwaMarkets::NameKu])
             .to_owned();
 
         for (slug, name_en, name_ku) in MARKETS {

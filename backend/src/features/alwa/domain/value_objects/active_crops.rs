@@ -1,40 +1,63 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
-use crate::features::alwa::domain::{AlwaError, Crop};
+use crate::features::alwa::domain::{AlwaError, Crop, Product};
 
-/// The crops staff have switched on, as they were when a request began. A
-/// new listing and a new or changed price may only name one of these; what
-/// is already stored with a crop that was switched off since is left alone.
+/// The products staff have switched on, crops and all the rest: the only
+/// ones a new listing or a new price may name. What is already stored keeps
+/// its product when staff switch that product off.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct ActiveCrops(HashSet<Crop>);
+pub struct ActiveCrops(HashMap<Crop, Product>);
 
 impl ActiveCrops {
-    pub fn new(crops: impl IntoIterator<Item = Crop>) -> Self {
-        Self(crops.into_iter().collect())
+    pub fn new(products: impl IntoIterator<Item = Product>) -> Self {
+        Self(
+            products
+                .into_iter()
+                .map(|product| (product.code(), product))
+                .collect(),
+        )
     }
 
-    /// Refuses a crop that is not switched on, by name.
-    pub fn allow(&self, crop: Crop) -> Result<(), AlwaError> {
-        if !self.0.contains(&crop) {
-            return Err(AlwaError::UnknownCrop(String::from(crop)));
-        }
-
-        Ok(())
+    /// The product a new listing or price names, with its group and unit,
+    /// or the refusal that names the code.
+    pub fn allow(&self, crop: Crop) -> Result<Product, AlwaError> {
+        self.0
+            .get(&crop)
+            .copied()
+            .ok_or_else(|| AlwaError::UnknownCrop(String::from(crop)))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::features::alwa::domain::{ProductGroup, Unit};
 
     fn active() -> ActiveCrops {
-        ActiveCrops::new([Crop::of("wheat"), Crop::of("tomato")])
+        ActiveCrops::new([
+            Product::crop("wheat"),
+            Product::crop("tomato"),
+            Product::of("eggs", ProductGroup::FishMeatEggs, Unit::Tray30),
+        ])
     }
 
     #[test]
     fn a_crop_that_is_switched_on_is_allowed() {
         assert!(active().allow(Crop::of("wheat")).is_ok());
         assert!(active().allow(Crop::of("tomato")).is_ok());
+    }
+
+    #[test]
+    fn an_allowed_product_comes_with_its_group_and_unit() {
+        let eggs = active().allow(Crop::of("eggs")).expect("eggs");
+
+        assert_eq!(eggs.group(), ProductGroup::FishMeatEggs);
+        assert_eq!(eggs.unit(), Unit::Tray30);
+
+        let wheat = active().allow(Crop::of("wheat")).expect("wheat");
+
+        assert_eq!(wheat.group(), ProductGroup::Crops);
+        assert_eq!(wheat.unit(), Unit::Kg);
     }
 
     #[test]

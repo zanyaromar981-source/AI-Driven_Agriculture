@@ -2,7 +2,8 @@ use chrono::{DateTime, Utc};
 use getset::Getters;
 
 use crate::features::crops::domain::{
-    CropCategory, CropCode, CropColor, CropName, CropSeason, SortOrder, YieldKgPerDunam,
+    CropCategory, CropCode, CropColor, CropName, CropSeason, ProductGroup, ProductUnit, SortOrder,
+    YieldKgPerDunam,
 };
 
 /// Everything about a crop that staff may change. The code is not here: it
@@ -13,6 +14,10 @@ pub struct CropDetails {
     /// None until the Sorani name has been written.
     pub name_ku: Option<CropName>,
     pub color: CropColor,
+    /// Only a product of the group `Crops` can be painted on a farm.
+    pub group: ProductGroup,
+    /// What listings and prices of the product count in.
+    pub unit: ProductUnit,
     pub category: CropCategory,
     pub season: CropSeason,
     /// None = not known.
@@ -44,6 +49,21 @@ impl Crop {
             created_at: now,
             updated_at: now,
         }
+    }
+
+    /// Whether it grows in a field, and so can be painted on a farm.
+    pub fn is_field_crop(&self) -> bool {
+        self.details.group == ProductGroup::Crops
+    }
+
+    /// Where it stands among all products: crops first, then the other
+    /// groups in their order, and inside a group by sort order and code.
+    pub fn display_key(&self) -> (ProductGroup, SortOrder, &str) {
+        (
+            self.details.group,
+            self.details.sort_order,
+            self.code.as_str(),
+        )
     }
 
     /// Reconstruct from persisted state.
@@ -78,6 +98,8 @@ mod tests {
                 name_en: CropName::new("Rice".to_string()).expect("name"),
                 name_ku: None,
                 color: CropColor::new("#aabbcc".to_string()).expect("colour"),
+                group: ProductGroup::Crops,
+                unit: ProductUnit::Kg,
                 category: CropCategory::Cereal,
                 season: CropSeason::Summer,
                 yield_kg_per_dunam: None,

@@ -9,6 +9,7 @@ mod market_slug;
 mod note;
 mod price_per_kg;
 mod price_source;
+mod product;
 mod quantity_kg;
 mod zone_slug;
 
@@ -23,6 +24,7 @@ pub use market_slug::MarketSlug;
 pub use note::Note;
 pub use price_per_kg::PricePerKg;
 pub use price_source::PriceSource;
+pub use product::Product;
 pub use quantity_kg::QuantityKg;
 pub use zone_slug::ZoneSlug;
 

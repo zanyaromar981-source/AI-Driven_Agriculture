@@ -30,6 +30,8 @@ pub struct Model {
     pub lat: Option<f64>,
     #[sea_orm(column_type = "Double", nullable)]
     pub lon: Option<f64>,
+    pub grp: String,
+    pub unit: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

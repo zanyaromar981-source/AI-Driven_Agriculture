@@ -65,6 +65,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import zlib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -75,6 +76,10 @@ CACHE = Path(os.environ.get("FARM_ANALYSIS_CACHE", HERE / "cache" / "farm_analys
 ARCHIVE = "https://archive-api.open-meteo.com/v1/archive"
 ELEVATION = "https://api.open-meteo.com/v1/elevation"
 SOILGRIDS = "https://rest.isric.org/soilgrids/v2.0/properties/query"
+# The same SoilGrids 2.0 maps through ISRIC's map service (WCS). On 2026-10-10 the query
+# service above answered every point with empty values, even outside Iraq, while this
+# one gave real pixels (Akre 39% clay, pH 7.2).
+SOILGRIDS_MAPS = "https://maps.isric.org/mapserv"
 STAC = "https://planetarycomputer.microsoft.com/api/stac/v1/search"
 DATA = "https://planetarycomputer.microsoft.com/api/data/v1"
 UA = (
@@ -451,16 +456,32 @@ def weather_topic(rows):
 def soilgrids(lat, lon, patient):
     """Topsoil (0-30 cm) clay %, sand %, organic carbon g/kg and pH, or None each.
 
-    Raises OutsideError when the service is down, which it often is.
+    Asks the query service first, then the map service when the first is down or
+    answers without values. An answer without any value is never cached, so the
+    field is asked again on the next run. Raises OutsideError when both fail.
     """
     lat, lon = round(lat, 3), round(lon, 3)
     path = CACHE / "soilgrids" / f"{lat:.3f}_{lon:.3f}.json"
     cached = read_json(path)
-    if cached is not None:
+    if cached is not None and any(value is not None for value in cached.values()):
         return cached
+    try:
+        result = soilgrids_query(lat, lon, patient)
+    except OutsideError as error:
+        log(f"  soil: {error}; trying the SoilGrids map service")
+        result = None
+    if result is None or all(value is None for value in result.values()):
+        result = soilgrids_maps(lat, lon)
+    if all(value is None for value in result.values()):
+        raise OutsideError("SoilGrids has no soil values for this point")
+    write_json(path, result)
+    return result
+
+
+def soilgrids_query(lat, lon, patient):
     query = [("lon", lon), ("lat", lat), ("value", "mean")]
-    query += [("property", name) for name in ("clay", "sand", "soc", "phh2o")]
-    query += [("depth", depth) for depth in ("0-5cm", "5-15cm", "15-30cm")]
+    query += [("property", name) for name in SOIL_PROPERTIES]
+    query += [("depth", depth) for depth in SOIL_DEPTHS]
     # The quick try keeps a slow SoilGrids from holding up a new farm's other topics.
     raw = fetch(f"{SOILGRIDS}?{urllib.parse.urlencode(query)}", what="soilgrids", timeout=60 if patient else 25, tries=2 if patient else 1, wait=10)
     try:
@@ -478,8 +499,103 @@ def soilgrids(lat, lon, patient):
             result[layer["name"]] = total / weight / layer["unit_measure"]["d_factor"] if weight == 30 else None
     except (KeyError, TypeError, ValueError) as error:
         raise OutsideError(f"soilgrids answered with an unexpected shape: {error}") from error
-    write_json(path, result)
     return result
+
+
+SOIL_PROPERTIES = ("clay", "sand", "soc", "phh2o")
+SOIL_DEPTHS = ("0-5cm", "5-15cm", "15-30cm")
+# Stored as whole numbers 10 times the unit: g/kg for clay and sand (so /10 = %),
+# dg/kg for organic carbon (/10 = g/kg), pH x 10.
+SOIL_D_FACTOR = 10
+
+
+def soilgrids_maps(lat, lon):
+    """The 0-30 cm means from the SoilGrids map service: the median of the 250 m
+    pixels within about 300 m of the point, per depth, weighted by depth like the
+    query service. A property with any depth missing (towns, water) is None."""
+    half = 0.003
+    result = {}
+    for name in SOIL_PROPERTIES:
+        total = weight = 0.0
+        for depth in SOIL_DEPTHS:
+            query = [
+                ("map", f"/map/{name}.map"), ("SERVICE", "WCS"), ("VERSION", "2.0.1"), ("REQUEST", "GetCoverage"),
+                ("COVERAGEID", f"{name}_{depth}_mean"), ("FORMAT", "image/tiff"),
+                ("SUBSET", f"long({lon - half:.5f},{lon + half:.5f})"), ("SUBSET", f"lat({lat - half:.5f},{lat + half:.5f})"),
+                ("SUBSETTINGCRS", "http://www.opengis.net/def/crs/EPSG/0/4326"),
+                ("OUTPUTCRS", "http://www.opengis.net/def/crs/EPSG/0/4326"),
+            ]
+            try:
+                raw = fetch(f"{SOILGRIDS_MAPS}?{urllib.parse.urlencode(query)}", what="soilgrids_maps", timeout=30, tries=2, wait=5)
+                pixels, nodata = tiff_int16(raw)
+            except (OutsideError, ValueError, struct.error, zlib.error) as error:
+                log(f"  soil map {name} {depth}: {error}")
+                pixels, nodata = [], None
+            # 0 is what the maps hold where there is no soil (towns, water).
+            good = [value for value in pixels if value != nodata and value > 0]
+            if good:
+                top, bottom = (int(part) for part in depth[:-2].split("-"))
+                total += st.median(good) * (bottom - top)
+                weight += bottom - top
+        result[name] = total / weight / SOIL_D_FACTOR if weight == 30 else None
+    return result
+
+
+def tiff_int16(raw):
+    """Pixel values and the no-data value of a small single-band int16 GeoTIFF,
+    as the map service sends it (strips or tiles, deflate or none, predictor 1 or 2)."""
+    if raw[:2] != b"II":
+        raise ValueError("not a little-endian TIFF")
+    start = struct.unpack("<I", raw[4:8])[0]
+    count = struct.unpack("<H", raw[start:start + 2])[0]
+    tags = {}
+    for i in range(count):
+        tag, kind, n, value = struct.unpack("<HHII", raw[start + 2 + 12 * i:start + 14 + 12 * i])
+        tags[tag] = (kind, n, value)
+
+    def ints(tag, default=None):
+        if tag not in tags:
+            return default
+        kind, n, value = tags[tag]
+        size = {3: 2, 4: 4}[kind]
+        data = struct.pack("<I", value)[:n * size] if n * size <= 4 else raw[value:value + n * size]
+        return list(struct.unpack("<" + ("H" if size == 2 else "I") * n, data))
+
+    width, height = ints(256)[0], ints(257)[0]
+    compression, predictor = ints(259, [1])[0], ints(317, [1])[0]
+    if compression not in (1, 8):
+        raise ValueError(f"TIFF compression {compression}")
+    tiled = 324 in tags
+    offsets, sizes = (ints(324), ints(325)) if tiled else (ints(273), ints(279))
+    block_w = ints(322)[0] if tiled else width
+    block_h = ints(323)[0] if tiled else ints(278, [height])[0]
+    nodata = None
+    if 42113 in tags:
+        kind, n, value = tags[42113]
+        text = raw[value:value + n] if n > 4 else struct.pack("<I", value)[:n]
+        try:
+            nodata = int(float(text.rstrip(b"\x00").decode()))
+        except ValueError:
+            nodata = None
+    grid = {}
+    across = (width + block_w - 1) // block_w
+    for block, (offset, size) in enumerate(zip(offsets, sizes)):
+        data = raw[offset:offset + size]
+        if compression == 8:
+            data = zlib.decompress(data)
+        rows = len(data) // (2 * block_w)
+        values = list(struct.unpack("<" + "h" * (rows * block_w), data[:rows * block_w * 2]))
+        for r in range(rows):
+            row = values[r * block_w:(r + 1) * block_w]
+            if predictor == 2:
+                for x in range(1, block_w):
+                    row[x] = (row[x] + row[x - 1] + 32768) % 65536 - 32768
+            for x in range(block_w):
+                gx = (block % across) * block_w + x if tiled else x
+                gy = (block // across) * block_h + r if tiled else block * block_h + r
+                if gx < width and gy < height:
+                    grid[(gx, gy)] = row[x]
+    return [grid[(x, y)] for y in range(height) for x in range(width) if (x, y) in grid], nodata
 
 
 def land(lat, lon):

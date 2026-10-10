@@ -270,13 +270,13 @@ class _MyCard extends StatelessWidget {
                     spacing: 2,
                     children: [
                       Text(
-                        '${crop.en} · ${fmtInt(l.quantityKg)} kg',
+                        '${crop.en} · ${fmtQty(l.quantity, l.unit)}',
                         style: latText(size: 15, weight: FontWeight.w700),
                       ),
                       Text(
                         posted == null
-                            ? '${fmtInt(l.priceIqdPerKg)} IQD/kg'
-                            : '${fmtInt(l.priceIqdPerKg)} IQD/kg · posted ${fmtDay(posted)}',
+                            ? '${fmtInt(l.priceIqd)} ${iqdPer(l.unit)}'
+                            : '${fmtInt(l.priceIqd)} ${iqdPer(l.unit)} · posted ${fmtDay(posted)}',
                         style: latText(
                           size: 12,
                           weight: FontWeight.w500,

@@ -13,10 +13,12 @@ pub enum Topic {
     Dryness,
     Greenness,
     Weather,
+    /// The crops grown around the farm, from MapSPAM 2020.
+    CropsGrown,
 }
 
 impl Topic {
-    pub const ALL: [Topic; 7] = [
+    pub const ALL: [Topic; 8] = [
         Topic::SurfaceWater,
         Topic::Groundwater,
         Topic::Soil,
@@ -24,6 +26,7 @@ impl Topic {
         Topic::Dryness,
         Topic::Greenness,
         Topic::Weather,
+        Topic::CropsGrown,
     ];
 }
 
@@ -37,6 +40,7 @@ impl From<Topic> for String {
             Topic::Dryness => "dryness".to_string(),
             Topic::Greenness => "greenness".to_string(),
             Topic::Weather => "weather".to_string(),
+            Topic::CropsGrown => "crops_grown".to_string(),
         }
     }
 }
@@ -53,6 +57,7 @@ impl TryFrom<&str> for Topic {
             "dryness" => Ok(Topic::Dryness),
             "greenness" => Ok(Topic::Greenness),
             "weather" => Ok(Topic::Weather),
+            "crops_grown" => Ok(Topic::CropsGrown),
             _ => Err(DomainError::InvalidValue(format!("Invalid topic: {value}")).into()),
         }
     }
@@ -146,6 +151,7 @@ mod tests {
             Topic::Rain,
             Topic::Groundwater,
             Topic::Dryness,
+            Topic::CropsGrown,
         ];
         shuffled.sort();
 

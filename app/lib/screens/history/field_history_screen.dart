@@ -159,7 +159,11 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
     final views = {
       for (final v in d == null ? const <TopicView>[] : topicViews(d)) v.key: v,
     };
-    final fit = d == null ? const <CropGroup>[] : cropFit(d);
+    final fit = [
+      ...districtCrops(widget.farm.zoneSlug),
+      if (d != null) ...cropFit(d),
+    ];
+    final grown = d == null ? const <GrownCrop>[] : grownInArea(d);
     final tips = d == null ? const <String>[] : suggestions(d);
     final none = d == null || d.ready == 0;
     return Directionality(
@@ -243,8 +247,13 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
                           ],
                           const _HowToUse(),
                           const SizedBox(height: 14),
-                          if (fit.isNotEmpty) ...[
-                            _FitCard(groups: fit, tips: tips),
+                          if (fit.isNotEmpty || grown.isNotEmpty) ...[
+                            FitCard(
+                              groups: fit,
+                              tips: tips,
+                              grown: grown,
+                              grownSource: d.topic('crops_grown')?.source,
+                            ),
                             const SizedBox(height: 14),
                           ],
                           for (final (key, title, icon) in _order) ...[
@@ -688,10 +697,22 @@ class _HowToUse extends StatelessWidget {
   );
 }
 
-class _FitCard extends StatelessWidget {
-  const _FitCard({required this.groups, required this.tips});
+/// "What fits this field": the crop advice from the field's history. On the
+/// Field history screen and, since 2026-10-10, on the farm's Home (user).
+class FitCard extends StatelessWidget {
+  const FitCard({
+    super.key,
+    required this.groups,
+    required this.tips,
+    this.grown = const [],
+    this.grownSource,
+  });
   final List<CropGroup> groups;
   final List<String> tips;
+
+  /// Top crops grown around the farm (topic `crops_grown`), may be empty.
+  final List<GrownCrop> grown;
+  final String? grownSource;
 
   @override
   Widget build(BuildContext context) {
@@ -703,6 +724,16 @@ class _FitCard extends StatelessWidget {
           icon: Icons.grass_rounded,
           pill: _evidence(Evidence.ruleOfThumb),
         ),
+        if (grown.isNotEmpty) ...[
+          _grownGroup(s),
+          if (grownSource != null && grownSource!.isNotEmpty)
+            _Source(grownSource!),
+          if (groups.isNotEmpty)
+            Text(
+              'Suits your field',
+              style: latText(size: 14, weight: FontWeight.w700),
+            ),
+        ],
         for (final g in groups) _group(g, s),
         const Divider(height: 8, color: JColors.line),
         if (tips.isNotEmpty)
@@ -744,8 +775,46 @@ class _FitCard extends StatelessWidget {
     );
   }
 
+  Widget _grownGroup(S s) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    spacing: 6,
+    children: [
+      Text(
+        'Grown in your area',
+        style: latText(size: 14, weight: FontWeight.w700),
+      ),
+      for (final c in grown)
+        Row(
+          spacing: 8,
+          children: [
+            Text(
+              knownCrop(c.code) ? cropOf(c.code).emoji : '🌱',
+              style: const TextStyle(fontSize: 16),
+            ),
+            Expanded(
+              child: Text(
+                // MapSPAM groups (other_vegetables, temperate_fruit) and
+                // crops the app has no name for read as plain words.
+                knownCrop(c.code) ? s.crop(c.code) : plainCropName(c.code),
+                style: latText(size: 13.5, weight: FontWeight.w600),
+              ),
+            ),
+            Text(
+              '${c.ha.round()} ha${c.irrigated ? ', irrigated' : ''}',
+              style: latText(size: 12.5, color: JColors.muted),
+            ),
+          ],
+        ),
+    ],
+  );
+
   Widget _group(CropGroup g, S s) {
     final (fg, bg, label) = switch (g.kind) {
+      'local' => (
+        JColors.levelNormal,
+        JColors.levelNormalSoft,
+        'Known in your district',
+      ),
       'fits' => (
         JColors.levelNormal,
         JColors.levelNormalSoft,
@@ -866,8 +935,12 @@ class _Notice extends StatelessWidget {
 
 /// The card on the farm screen that opens Field history.
 class FieldHistoryEntry extends StatefulWidget {
-  const FieldHistoryEntry({super.key, required this.farm});
+  const FieldHistoryEntry({super.key, required this.farm, this.onData});
   final FarmSummary farm;
+
+  /// Every time the field's history is read (the copy, then fresh), so Home
+  /// can show the crop advice without asking the server twice.
+  final ValueChanged<FarmInsights>? onData;
 
   @override
   State<FieldHistoryEntry> createState() => _FieldHistoryEntryState();
@@ -893,10 +966,16 @@ class _FieldHistoryEntryState extends State<FieldHistoryEntry> {
   Future<void> _load() async {
     final loader = InsightsLoader(AppScope.read(context).api, widget.farm.id);
     final c = await loader.cached();
-    if (c != null && mounted && _data == null) setState(() => _data = c);
+    if (c != null && mounted && _data == null) {
+      setState(() => _data = c);
+      widget.onData?.call(c);
+    }
     try {
       final f = await loader.fresh();
-      if (mounted) setState(() => _data = f);
+      if (mounted) {
+        setState(() => _data = f);
+        widget.onData?.call(f);
+      }
     } on ApiException {
       // The copy (or nothing) stays; the card still opens the screen.
     }
@@ -1000,6 +1079,81 @@ class _FieldHistoryEntryState extends State<FieldHistoryEntry> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The crop advice on the farm's Home (user, 2026-10-10: "which crops fit my
+/// field" was only inside Field history). Waits calmly until the field's
+/// soil and rain history is in.
+class HomeFitCard extends StatelessWidget {
+  const HomeFitCard({super.key, required this.data, this.zoneSlug});
+  final FarmInsights? data;
+
+  /// The farm's district: some districts add their known crops (Akre: rice).
+  final String? zoneSlug;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = data;
+    final fit = [...districtCrops(zoneSlug), if (d != null) ...cropFit(d)];
+    final grown = d == null ? const <GrownCrop>[] : grownInArea(d);
+    if (fit.isNotEmpty || grown.isNotEmpty) {
+      return FitCard(
+        groups: fit,
+        tips: d == null ? const [] : suggestions(d),
+        grown: grown,
+        grownSource: d?.topic('crops_grown')?.source,
+      );
+    }
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: JColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: JColors.line),
+      ),
+      child: Row(
+        spacing: 12,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: JColors.accentSoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.grass_rounded,
+              size: 22,
+              color: JColors.accent,
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 3,
+              children: [
+                Text(
+                  'What fits this field',
+                  style: latText(size: 15, weight: FontWeight.w700),
+                ),
+                Text(
+                  'Ready when the soil and rain history of this field is in, '
+                  'a few minutes after the farm is added.',
+                  style: latText(
+                    size: 12.5,
+                    weight: FontWeight.w400,
+                    color: JColors.muted,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../api/api.dart';
 import '../../app_scope.dart';
+import '../../l10n/strings.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/header.dart';
@@ -9,6 +10,7 @@ import 'alwa_listing_screen.dart';
 import 'alwa_my_listings_screen.dart';
 import 'alwa_sell_screen.dart';
 import 'alwa_widgets.dart';
+import 'workers_screen.dart';
 
 /// The Alwa tab (Pencil: Screen/Alwa Home): today's prices at the nearest
 /// alwa, then crops for sale near the phone, nearest first. Buyers call the
@@ -32,8 +34,8 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
   List<AlwaListing>? _listings;
   Object? _listingsError;
 
-  /// null = all crops.
-  String? _crop;
+  /// null = every product group.
+  String? _group;
 
   /// How many cards show; "Show 10 more" adds ten.
   int _shown = 10;
@@ -74,7 +76,14 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
     }
   }
 
-  Future<void> _loadAll() => Future.wait([_loadBoard(), _loadListings()]);
+  Future<void> _loadAll() =>
+      Future.wait([_loadBoard(), _loadListings(), _loadProducts()]);
+
+  /// The server's product names, for a product the app was not built with.
+  Future<void> _loadProducts() async {
+    await refreshProducts(AppScope.read(context).api);
+    if (mounted) setState(() {});
+  }
 
   Future<void> _loadBoard() async {
     setState(() {
@@ -95,13 +104,15 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
 
   Future<void> _loadListings() async {
     setState(() => _listingsError = null);
+    final group = _group;
     try {
       final l = await AppScope.read(
         context,
-      ).api.alwaListings(lat: _fix?.lat, lon: _fix?.lon);
-      if (mounted) setState(() => _listings = l);
+      ).api.alwaListings(lat: _fix?.lat, lon: _fix?.lon, group: group);
+      // An answer for a group the farmer has already left is dropped.
+      if (mounted && group == _group) setState(() => _listings = l);
     } catch (e) {
-      if (mounted) setState(() => _listingsError = e);
+      if (mounted && group == _group) setState(() => _listingsError = e);
     }
   }
 
@@ -129,6 +140,10 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
     );
     if (mounted) _loadListings();
   }
+
+  void _open(Widget screen) => Navigator.of(
+    context,
+  ).push<void>(MaterialPageRoute(builder: (_) => screen));
 
   void _openListing(AlwaListing l) => Navigator.of(context).push<void>(
     MaterialPageRoute(builder: (_) => AlwaListingScreen(listing: l)),
@@ -170,6 +185,26 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
                           label: 'My listings',
                           icon: Icons.assignment_outlined,
                           onPressed: _openMine,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Workers for hire (FRONTEND.md 5B).
+                  Row(
+                    spacing: 10,
+                    children: [
+                      Expanded(
+                        child: AlwaGhostButton(
+                          label: 'Find workers',
+                          icon: Icons.groups_outlined,
+                          onPressed: () => _open(const WorkersScreen()),
+                        ),
+                      ),
+                      Expanded(
+                        child: AlwaGhostButton(
+                          label: 'Offer my work',
+                          icon: Icons.handyman_outlined,
+                          onPressed: () => _open(const WorkerOfferScreen()),
                         ),
                       ),
                     ],
@@ -248,7 +283,6 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
     final all = _listings;
     final Widget body;
     var sorted = false;
-    final crops = <String>[];
     if (all == null) {
       body = _listingsError != null
           ? loadProblem(_listingsError!, _loadListings, what: 'crops for sale')
@@ -263,19 +297,18 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
         sorted = true;
         open.sort((a, b) => (a.km ?? 1e9).compareTo(b.km ?? 1e9));
       }
-      for (final e in open) {
-        if (!crops.contains(e.l.crop)) crops.add(e.l.crop);
-      }
+      // The server filters with `group=`; this keeps the list right while
+      // its answer is on the way.
       final picked = [
         for (final e in open)
-          if (_crop == null || e.l.crop == _crop) e,
+          if (_group == null || e.l.group == _group) e,
       ];
       if (picked.isEmpty) {
         body = DashedEmpty(
           icon: Icons.storefront_outlined,
-          text: _crop == null
+          text: _group == null
               ? 'No crops for sale near you yet'
-              : 'No ${alwaCrop(_crop!).en.toLowerCase()} for sale near you yet',
+              : 'Nothing in "${const S(false).groupName(_group!)}" for sale near you yet',
         );
       } else {
         final more = (picked.length - _shown).clamp(0, 10);
@@ -307,34 +340,17 @@ class _AlwaHomeScreenState extends State<AlwaHomeScreen>
           'For sale near you',
           trailing: sorted ? 'nearest first' : null,
         ),
-        if (crops.length > 1)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            child: Row(
-              spacing: 8,
-              children: [
-                _FilterChip(
-                  label: 'All crops',
-                  selected: _crop == null,
-                  onTap: () => setState(() {
-                    _crop = null;
-                    _shown = 10;
-                  }),
-                ),
-                for (final c in crops)
-                  _FilterChip(
-                    emoji: alwaCrop(c).emoji,
-                    label: alwaCrop(c).en,
-                    selected: _crop == c,
-                    onTap: () => setState(() {
-                      _crop = c;
-                      _shown = 10;
-                    }),
-                  ),
-              ],
-            ),
-          ),
+        GroupChips(
+          all: true,
+          selected: _group,
+          onPick: (g) {
+            setState(() {
+              _group = g;
+              _shown = 10;
+            });
+            _loadListings();
+          },
+        ),
         body,
       ],
     );
@@ -441,52 +457,6 @@ class _PriceRow extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.emoji,
-  });
-  final String label;
-  final String? emoji;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(999),
-    child: Container(
-      height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: selected ? JColors.accentSoft : JColors.card,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: selected ? JColors.accent : JColors.line,
-          width: selected ? 1.5 : 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 6,
-        children: [
-          if (emoji != null) Text(emoji!, style: const TextStyle(fontSize: 13)),
-          Text(
-            label,
-            style: latText(
-              size: 13,
-              weight: selected ? FontWeight.w700 : FontWeight.w600,
-              color: selected ? JColors.accent : JColors.ink,
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
 /// One crop for sale (Listing Card): tap to open, round button to call.
 class _ListingCard extends StatelessWidget {
   const _ListingCard({
@@ -535,10 +505,14 @@ class _ListingCard extends StatelessWidget {
                             style: latText(size: 16, weight: FontWeight.w700),
                           ),
                         ),
-                        Text(
-                          crop.ku,
-                          textDirection: TextDirection.rtl,
-                          style: jText(true, size: 13, color: JColors.muted),
+                        Flexible(
+                          child: Text(
+                            crop.ku,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: TextDirection.rtl,
+                            style: jText(true, size: 13, color: JColors.muted),
+                          ),
                         ),
                       ],
                     ),
@@ -546,14 +520,14 @@ class _ListingCard extends StatelessWidget {
                       TextSpan(
                         children: [
                           TextSpan(
-                            text: fmtInt(listing.priceIqdPerKg),
+                            text: fmtInt(listing.priceIqd),
                             style: latText(
                               size: 18,
                               weight: FontWeight.w800,
                             ).copyWith(letterSpacing: -0.3),
                           ),
                           TextSpan(
-                            text: ' IQD/kg',
+                            text: ' ${iqdPer(listing.unit)}',
                             style: latText(
                               size: 12,
                               weight: FontWeight.w600,
@@ -561,7 +535,8 @@ class _ListingCard extends StatelessWidget {
                             ),
                           ),
                           TextSpan(
-                            text: ' · ${fmtInt(listing.quantityKg)} kg',
+                            text:
+                                ' · ${fmtQty(listing.quantity, listing.unit)}',
                             style: latText(size: 13, weight: FontWeight.w600),
                           ),
                         ],

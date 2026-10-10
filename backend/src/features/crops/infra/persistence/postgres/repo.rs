@@ -50,6 +50,15 @@ impl CropRepository for CropPostgresRepository {
         models.into_iter().map(Crop::try_from).collect()
     }
 
+    async fn find_by_code(&self, code: &CropCode) -> Result<Option<Crop>, AppError> {
+        crops::Entity::find_by_id(code.as_str())
+            .one(&self.conn)
+            .await
+            .map_err(database_error)?
+            .map(Crop::try_from)
+            .transpose()
+    }
+
     async fn create(&self, crop: &Crop) -> Result<Option<Crop>, AppError> {
         // The code is the primary key, so of two creates sent at once one
         // inserts and the other does nothing.
@@ -101,6 +110,8 @@ impl CropRepository for CropPostgresRepository {
                 crops::Column::YieldKgPerDunam,
                 Expr::value(details.yield_kg_per_dunam.map(|kg| kg.value())),
             )
+            .col_expr(crops::Column::Grp, Expr::value(String::from(details.group)))
+            .col_expr(crops::Column::Unit, Expr::value(String::from(details.unit)))
             .col_expr(crops::Column::Active, Expr::value(details.active))
             .col_expr(
                 crops::Column::SortOrder,

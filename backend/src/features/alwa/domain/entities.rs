@@ -4,8 +4,8 @@ use getset::Getters;
 use crate::{
     features::alwa::domain::{
         AlwaError, BuyerKind, Crop, DisplayName, FairPrice, GeoPoint, Grade, ListingStatus,
-        MarketName, MarketSlug, Note, OfferStatus, Pickup, PricePerKg, PriceSource, QuantityKg,
-        ZoneSlug,
+        MarketName, MarketSlug, Note, OfferStatus, Pickup, PricePerKg, PriceSource, Product,
+        ProductGroup, QuantityKg, Unit, ZoneSlug,
     },
     shared::Phone,
 };
@@ -91,6 +91,9 @@ pub struct Price {
     crop: Crop,
     day: NaiveDate,
     price: PricePerKg,
+    /// What the price is for one of: the product's unit on the day the
+    /// price was entered.
+    unit: Unit,
     /// Set by the government rather than by the market, as for wheat.
     fixed: bool,
     source: PriceSource,
@@ -100,7 +103,7 @@ pub struct Price {
 impl Price {
     pub fn new(
         market: &Market,
-        crop: Crop,
+        product: Product,
         day: NaiveDate,
         price: PricePerKg,
         fixed: bool,
@@ -109,9 +112,10 @@ impl Price {
         Self {
             id: None,
             market_id: market.id,
-            crop,
+            crop: product.code(),
             day,
             price,
+            unit: product.unit(),
             fixed,
             source,
             updated_at: Utc::now(),
@@ -136,10 +140,17 @@ impl Price {
             crop,
             day,
             price,
+            unit: Unit::Kg,
             fixed,
             source,
             updated_at,
         }
+    }
+
+    /// The unit the stored price is for, where it is not the kilogram.
+    pub fn per(mut self, unit: Unit) -> Self {
+        self.unit = unit;
+        self
     }
 
     /// The whole percent this price moved from an earlier one. A fixed price
@@ -160,6 +171,10 @@ pub struct ListingDraft {
     pub crop: Crop,
     pub quantity: QuantityKg,
     pub asking_price: PricePerKg,
+    /// The seller spoke in kilograms (`quantity_kg`,
+    /// `asking_price_iqd_per_kg`), as every app did before products had
+    /// units. Such a body can only mean a product sold by the kg.
+    pub in_kg: bool,
     pub grade: Option<Grade>,
     /// The app does not ask where the crop is handed over.
     pub pickup: Option<Pickup>,
@@ -189,6 +204,12 @@ pub struct Listing {
     seller_phone: Phone,
     seller_name: Option<DisplayName>,
     crop: Crop,
+    /// The product's group when the listing was posted.
+    group: ProductGroup,
+    /// The product's unit when the listing was posted: what `quantity`
+    /// counts and what `asking_price` is for one of. It stays with the
+    /// listing whatever staff do to the product afterwards.
+    unit: Unit,
     quantity: QuantityKg,
     asking_price: PricePerKg,
     grade: Option<Grade>,
@@ -229,8 +250,38 @@ impl Listing {
         seller: Phone,
         market: Option<&Market>,
         draft: ListingDraft,
+        product: Product,
         now: DateTime<Utc>,
     ) -> Result<Self, AlwaError> {
+        let unit = product.unit();
+
+        if draft.in_kg && unit != Unit::Kg {
+            return Err(AlwaError::InvalidField {
+                field: "quantity_kg",
+                detail: format!(
+                    "`{}` is sold by the {}, not by the kg: send `product`, `quantity` and \
+                     `asking_price_iqd`",
+                    product.code().as_str(),
+                    String::from(unit)
+                ),
+            });
+        }
+
+        if draft.quantity.value() > unit.max_quantity() {
+            return Err(AlwaError::InvalidField {
+                field: if draft.in_kg {
+                    "quantity_kg"
+                } else {
+                    "quantity"
+                },
+                detail: format!(
+                    "Quantity must be 1 to {} {}",
+                    unit.max_quantity(),
+                    String::from(unit)
+                ),
+            });
+        }
+
         if draft.closes_at <= now || draft.closes_at > now + Duration::days(MAX_CLOSING_DAYS) {
             return Err(AlwaError::BadClosingTime(MAX_CLOSING_DAYS));
         }
@@ -239,7 +290,9 @@ impl Listing {
             id: None,
             seller_phone: seller,
             seller_name: draft.seller_name,
-            crop: draft.crop,
+            crop: product.code(),
+            group: product.group(),
+            unit,
             quantity: draft.quantity,
             asking_price: draft.asking_price,
             grade: draft.grade,
@@ -282,6 +335,8 @@ impl Listing {
             seller_phone,
             seller_name,
             crop,
+            group: ProductGroup::Crops,
+            unit: Unit::Kg,
             quantity,
             asking_price,
             grade,
@@ -303,6 +358,20 @@ impl Listing {
     pub fn placed_at(mut self, point: Option<GeoPoint>) -> Self {
         self.point = point;
         self
+    }
+
+    /// The group and unit the stored listing was posted with, where it is
+    /// not a crop by the kg.
+    pub fn sold_as(mut self, group: ProductGroup, unit: Unit) -> Self {
+        self.group = group;
+        self.unit = unit;
+        self
+    }
+
+    /// Whether quantity and price are in kilograms, the only unit the old
+    /// `quantity_kg` and `asking_price_iqd_per_kg` fields can carry.
+    pub fn is_by_kg(&self) -> bool {
+        self.unit == Unit::Kg
     }
 
     /// Completes `rehydrate` for a listing stored as closed by staff.
@@ -447,6 +516,12 @@ impl Listing {
             return Err(AlwaError::ListingNotOpen);
         }
 
+        // Offers, deals and their totals count kilograms. Until they carry
+        // a unit, a tray or an animal is sold over the phone only.
+        if !self.is_by_kg() {
+            return Err(AlwaError::OffersOnlyByKg(String::from(self.unit)));
+        }
+
         if draft.quantity > self.quantity {
             return Err(AlwaError::OfferTooLarge(self.quantity.value()));
         }
@@ -537,7 +612,9 @@ impl Listing {
 
         prices
             .iter()
-            .filter(|price| Some(price.market_id) == self.market_id && price.crop == self.crop)
+            .filter(|price| Some(price.market_id) == self.market_id)
+            // Like for like: a price for a kg says nothing about a tray.
+            .filter(|price| price.crop == self.crop && price.unit == self.unit)
             .filter(|price| price.day <= made_on && price.day >= earliest)
             .max_by_key(|price| price.day)
     }
@@ -787,6 +864,7 @@ mod tests {
             crop: Crop::of("tomato"),
             quantity: QuantityKg::new(500).expect("quantity"),
             asking_price: PricePerKg::new(1_000).expect("price"),
+            in_kg: false,
             grade: Some(Grade::A),
             pickup: Some(Pickup::Farm),
             zone_slug: None,
@@ -803,6 +881,7 @@ mod tests {
             phone(SELLER),
             Some(&market()),
             draft(now + Duration::days(3)),
+            Product::crop("tomato"),
             now,
         )
         .expect("listing");
@@ -843,6 +922,151 @@ mod tests {
         )
     }
 
+    fn eggs() -> Product {
+        Product::of("eggs", ProductGroup::FishMeatEggs, Unit::Tray30)
+    }
+
+    /// A draft of `quantity` of something, said the new way.
+    fn draft_of(quantity: i64, now: DateTime<Utc>) -> ListingDraft {
+        ListingDraft {
+            quantity: QuantityKg::new(quantity).expect("quantity"),
+            ..draft(now + Duration::days(3))
+        }
+    }
+
+    #[test]
+    fn a_listing_takes_its_code_group_and_unit_from_the_product() {
+        let now = Utc::now();
+        let trays =
+            Listing::new(phone(SELLER), None, draft_of(12, now), eggs(), now).expect("listing");
+
+        assert_eq!(trays.crop().as_str(), "eggs");
+        assert_eq!(*trays.group(), ProductGroup::FishMeatEggs);
+        assert_eq!(*trays.unit(), Unit::Tray30);
+        assert_eq!(trays.quantity().value(), 12);
+        assert!(!trays.is_by_kg());
+        assert!(listing(now).is_by_kg());
+    }
+
+    #[test]
+    fn each_unit_allows_one_up_to_its_own_limit_and_names_the_field_beyond_it() {
+        let now = Utc::now();
+
+        for (unit, max) in [
+            (Unit::Kg, 1_000_000),
+            (Unit::Tray30, 10_000),
+            (Unit::Litre, 100_000),
+            (Unit::Head, 1_000),
+        ] {
+            let product = Product::of("thing", ProductGroup::Animals, unit);
+            let post =
+                |quantity| Listing::new(phone(SELLER), None, draft_of(quantity, now), product, now);
+
+            assert!(post(1).is_ok(), "{unit:?}");
+            assert!(post(max).is_ok(), "{unit:?}");
+
+            if unit != Unit::Kg {
+                assert!(
+                    matches!(
+                        post(max + 1),
+                        Err(AlwaError::InvalidField {
+                            field: "quantity",
+                            ..
+                        })
+                    ),
+                    "{unit:?}: one more than {max} is refused"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_product_not_sold_by_the_kg_cannot_be_listed_in_kilograms() {
+        let now = Utc::now();
+        let in_kg = ListingDraft {
+            in_kg: true,
+            ..draft_of(12, now)
+        };
+
+        assert!(matches!(
+            Listing::new(phone(SELLER), None, in_kg.clone(), eggs(), now),
+            Err(AlwaError::InvalidField { field: "quantity_kg", detail }) if detail.contains("tray_30")
+        ));
+        assert!(
+            Listing::new(phone(SELLER), None, in_kg, Product::crop("tomato"), now).is_ok(),
+            "kilograms still mean a product sold by the kg"
+        );
+    }
+
+    #[test]
+    fn a_fair_price_compares_only_the_same_product_in_the_same_unit() {
+        let now = Utc::now();
+        let today = now.date_naive();
+        let mut trays = Listing::new(
+            phone(SELLER),
+            Some(&market()),
+            ListingDraft {
+                asking_price: PricePerKg::new(6_000).expect("price"),
+                ..draft_of(12, now)
+            },
+            eggs(),
+            now,
+        )
+        .expect("listing");
+        trays.id = Some(8);
+
+        let eggs_price = |unit: Unit| {
+            Price::rehydrate(
+                3,
+                1,
+                Crop::of("eggs"),
+                today,
+                PricePerKg::new(6_000).expect("price"),
+                false,
+                PriceSource::new("alwa-board".to_string()).expect("source"),
+                now,
+            )
+            .per(unit)
+        };
+
+        assert_eq!(
+            trays.fair_price(&[eggs_price(Unit::Kg), price_on(today, 6_000, false)]),
+            FairPrice::Unknown,
+            "a price by the kg and a tomato price say nothing about a tray of eggs"
+        );
+        assert_ne!(
+            trays.fair_price(&[eggs_price(Unit::Tray30)]),
+            FairPrice::Unknown
+        );
+    }
+
+    #[test]
+    fn a_price_is_for_one_of_the_unit_its_product_has() {
+        let price = Price::new(
+            &market(),
+            eggs(),
+            Utc::now().date_naive(),
+            PricePerKg::new(6_000).expect("price"),
+            false,
+            PriceSource::new("ministry desk".to_string()).expect("source"),
+        );
+
+        assert_eq!(price.crop().as_str(), "eggs");
+        assert_eq!(*price.unit(), Unit::Tray30);
+    }
+
+    #[test]
+    fn an_offer_is_refused_on_a_listing_not_sold_by_the_kg() {
+        let now = Utc::now();
+        let mut trays =
+            Listing::new(phone(SELLER), None, draft_of(12, now), eggs(), now).expect("listing");
+        trays.id = Some(8);
+
+        let result = trays.place_offer(phone(BUYER), offer_draft(5, 6_000), &mut [], now);
+
+        assert!(matches!(result, Err(AlwaError::OffersOnlyByKg(unit)) if unit == "tray_30"));
+    }
+
     #[test]
     fn a_new_listing_is_open_and_belongs_to_its_market() {
         let now = Utc::now();
@@ -850,6 +1074,7 @@ mod tests {
             phone(SELLER),
             Some(&market()),
             draft(now + Duration::days(3)),
+            Product::crop("tomato"),
             now,
         )
         .expect("listing");
@@ -869,7 +1094,13 @@ mod tests {
 
         for closes_at in [now, now - Duration::hours(1)] {
             assert!(matches!(
-                Listing::new(phone(SELLER), Some(&market()), draft(closes_at), now),
+                Listing::new(
+                    phone(SELLER),
+                    Some(&market()),
+                    draft(closes_at),
+                    Product::crop("tomato"),
+                    now
+                ),
                 Err(AlwaError::BadClosingTime(_))
             ));
         }
@@ -880,12 +1111,22 @@ mod tests {
         let now = Utc::now();
         let last_moment = now + Duration::days(MAX_CLOSING_DAYS);
 
-        assert!(Listing::new(phone(SELLER), Some(&market()), draft(last_moment), now).is_ok());
+        assert!(
+            Listing::new(
+                phone(SELLER),
+                Some(&market()),
+                draft(last_moment),
+                Product::crop("tomato"),
+                now
+            )
+            .is_ok()
+        );
         assert!(matches!(
             Listing::new(
                 phone(SELLER),
                 Some(&market()),
                 draft(last_moment + Duration::seconds(1)),
+                Product::crop("tomato"),
                 now
             ),
             Err(AlwaError::BadClosingTime(MAX_CLOSING_DAYS))
@@ -1312,6 +1553,7 @@ mod tests {
                 point: Some(point(35.5, 45.4)),
                 ..draft(now + Duration::days(14))
             },
+            Product::crop("tomato"),
             now,
         )
         .expect("listing");

@@ -23,5 +23,26 @@ const kCrops = <Crop>[
   Crop('empty', '⬜', Color(0x33FFFFFF)),
 ];
 
-Crop cropOf(String code) =>
-    kCrops.firstWhere((c) => c.code == code, orElse: () => kCrops.last);
+/// Crops grown in the area (BACKEND.md 2.17), shown on the advice card.
+/// Kept out of [kCrops] so the paint picker stays at 12.
+const kAreaCrops = <Crop>[
+  Crop('rice', '🍚', Color(0xFFE8E2C8)),
+  Crop('fig', '🟣', Color(0xFF8E5A8C)),
+  Crop('sumac', '🍂', Color(0xFFB0413E)),
+  Crop('pistachio', '🥜', Color(0xFF93C572)),
+];
+
+/// True for a code the app has a name, emoji and colour for.
+bool knownCrop(String code) =>
+    code != 'empty' && [...kCrops, ...kAreaCrops].any((c) => c.code == code);
+
+/// "other_vegetables" -> "Other vegetables", for codes the app does not know.
+String plainCropName(String code) {
+  final w = code.replaceFirst(RegExp(r'^spam_'), '').replaceAll('_', ' ');
+  return w.isEmpty ? code : '${w[0].toUpperCase()}${w.substring(1)}';
+}
+
+Crop cropOf(String code) => [
+  ...kCrops,
+  ...kAreaCrops,
+].firstWhere((c) => c.code == code, orElse: () => kCrops.last);

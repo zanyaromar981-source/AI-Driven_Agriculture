@@ -15,7 +15,9 @@ impl ToErrorInfo for CropError {
             CropError::AlreadyExists => {
                 ErrorInfo::with_code(ErrorKind::Conflict, "already_exists", self.to_string())
             }
-            CropError::InUse => {
+            // The same code as a refused delete: the site already knows it
+            // means "something stored depends on this".
+            CropError::InUse | CropError::UnitInUse => {
                 ErrorInfo::with_code(ErrorKind::Conflict, "crop_in_use", self.to_string())
             }
             CropError::DomainError(err) => err.to_error_info(),
@@ -55,6 +57,15 @@ mod tests {
 
         assert_eq!(info.kind, ErrorKind::Conflict);
         assert_eq!(info.code, "crop_in_use");
+    }
+
+    #[test]
+    fn a_unit_listings_count_in_answers_like_a_crop_in_use() {
+        let info = CropError::UnitInUse.to_error_info();
+
+        assert_eq!(info.kind, ErrorKind::Conflict);
+        assert_eq!(info.code, "crop_in_use");
+        assert!(info.detail.contains("unit"), "{}", info.detail);
     }
 
     #[test]

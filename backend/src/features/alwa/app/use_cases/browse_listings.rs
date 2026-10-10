@@ -6,13 +6,14 @@ use crate::{
     app::{AppError as GlobalAppError, Pagination},
     features::alwa::{
         app::{AlwaRepository, AppError, ListingFilter, listing_cards::assemble_cards},
-        domain::{Crop, GeoPoint, ListingCard, ListingStatus, MarketSlug},
+        domain::{Crop, GeoPoint, ListingCard, ListingStatus, MarketSlug, ProductGroup},
     },
 };
 
 pub struct BrowseListingsInput {
     pub market: Option<MarketSlug>,
     pub crop: Option<Crop>,
+    pub group: Option<ProductGroup>,
     pub status: ListingStatus,
     /// Where the reader stands. Given, the board is ordered nearest first.
     pub near: Option<GeoPoint>,
@@ -52,6 +53,7 @@ impl BrowseListingsUseCase {
         let filter = ListingFilter {
             market_id,
             crop: input.crop,
+            group: input.group,
             status: input.status,
         };
 
@@ -89,6 +91,7 @@ mod tests {
         BrowseListingsInput {
             market: None,
             crop: None,
+            group: None,
             status,
             near: None,
             pagination: Pagination::new(1, 20),
@@ -151,6 +154,7 @@ mod tests {
             .execute(BrowseListingsInput {
                 market: Some(market_slug(MARKET)),
                 crop: Some(Crop::of("tomato")),
+                group: None,
                 status: ListingStatus::Sold,
                 near: None,
                 pagination: Pagination::new(2, 10),
@@ -162,6 +166,7 @@ mod tests {
             filter: ListingFilter {
                 market_id: Some(MARKET_ID),
                 crop: Some(Crop::of("tomato")),
+                group: None,
                 status: ListingStatus::Sold,
             },
             nearest_first: false,

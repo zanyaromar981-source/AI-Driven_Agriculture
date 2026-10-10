@@ -11,6 +11,7 @@ import '../../store/outbox.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/farm_map.dart';
+import '../../widgets/place_names.dart';
 import 'farm_edit.dart';
 
 /// Add farm, step 3 of 3: check the crops, name the farm, save it.
@@ -44,6 +45,29 @@ class FarmReadyScreen extends StatefulWidget {
 
 class _FarmReadyScreenState extends State<FarmReadyScreen> {
   late String? _name = widget.edit?.name;
+
+  /// The nearest village or town, the default name of a new farm.
+  String? _place;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_name == null) _findPlace();
+  }
+
+  /// Names a new farm after where it is, not "New farm" (user, 2026-10-10).
+  /// Stays "New farm" with no internet; the farmer can still rename it.
+  Future<void> _findPlace() async {
+    final o = widget.outline;
+    final at = LatLng(
+      o.map((p) => p.latitude).reduce((a, b) => a + b) / o.length,
+      o.map((p) => p.longitude).reduce((a, b) => a + b) / o.length,
+    );
+    final place = await PlaceNames.instance.nearest(at);
+    if (place == null || !mounted) return;
+    setState(() => _place = place.label(AppScope.read(context).ku));
+  }
+
   bool _busy = false;
 
   /// crop code -> its cells, biggest first; unpainted cells count as "empty".
@@ -82,7 +106,9 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
 
   Future<void> _rename() async {
     final scope = AppScope.read(context);
-    final ctrl = TextEditingController(text: _name ?? scope.s.newFarmName);
+    final ctrl = TextEditingController(
+      text: _name ?? _place ?? scope.s.newFarmName,
+    );
     final v = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -120,7 +146,7 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
     final scope = AppScope.read(context);
     final s = scope.s;
     setState(() => _busy = true);
-    final name = _name ?? s.newFarmName;
+    final name = _name ?? _place ?? s.newFarmName;
     final request = NewFarmRequest(
       name: name,
       points: widget.points,
@@ -207,7 +233,7 @@ class _FarmReadyScreenState extends State<FarmReadyScreen> {
       step: 3,
       heading: MapHeading(
         ku: ku,
-        title: _name ?? s.newFarmName,
+        title: _name ?? _place ?? s.newFarmName,
         trailing: Material(
           color: JColors.accentSoft,
           shape: const CircleBorder(),

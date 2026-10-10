@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -125,6 +126,44 @@ class PlaceNames extends ChangeNotifier {
     } finally {
       client.close();
     }
+  }
+
+  /// The nearest village, town or city to [at] within [maxKm], for a new
+  /// farm's name (user, 2026-10-10: "the farm names should be the
+  /// locations"). Null with no internet or nothing named nearby.
+  Future<Place?> nearest(LatLng at, {double maxKm = 15}) async {
+    const pad = 0.12;
+    await load(
+      LatLngBounds(
+        LatLng(at.latitude - pad, at.longitude - pad),
+        LatLng(at.latitude + pad, at.longitude + pad),
+      ),
+      12,
+    );
+    const kinds = {'city', 'town', 'village', 'hamlet', 'suburb'};
+    Place? best;
+    var bestKm = maxKm;
+    for (final p in _places.values) {
+      if (!kinds.contains(p.kind)) continue;
+      final km = _km(at, p.at);
+      if (km <= bestKm) {
+        best = p;
+        bestKm = km;
+      }
+    }
+    return best;
+  }
+
+  static double _km(LatLng a, LatLng b) {
+    const r = 6371.0;
+    final dLat = (b.latitude - a.latitude) * math.pi / 180;
+    final dLon = (b.longitude - a.longitude) * math.pi / 180;
+    final h =
+        math.pow(math.sin(dLat / 2), 2) +
+        math.cos(a.latitude * math.pi / 180) *
+            math.cos(b.latitude * math.pi / 180) *
+            math.pow(math.sin(dLon / 2), 2);
+    return 2 * r * math.asin(math.sqrt(h));
   }
 
   List<Place> visible(LatLngBounds b, double zoom) => [

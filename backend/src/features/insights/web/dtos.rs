@@ -18,6 +18,7 @@ pub enum Topic {
     Dryness,
     Greenness,
     Weather,
+    CropsGrown,
 }
 
 impl Topic {
@@ -37,6 +38,7 @@ impl From<Topic> for domain::Topic {
             Topic::Dryness => domain::Topic::Dryness,
             Topic::Greenness => domain::Topic::Greenness,
             Topic::Weather => domain::Topic::Weather,
+            Topic::CropsGrown => domain::Topic::CropsGrown,
         }
     }
 }
@@ -51,6 +53,7 @@ impl From<domain::Topic> for Topic {
             domain::Topic::Dryness => Topic::Dryness,
             domain::Topic::Greenness => Topic::Greenness,
             domain::Topic::Weather => Topic::Weather,
+            domain::Topic::CropsGrown => Topic::CropsGrown,
         }
     }
 }

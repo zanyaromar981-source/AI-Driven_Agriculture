@@ -69,7 +69,8 @@ impl PostListingUseCase {
         // A new listing must name a crop staff have switched on. A repeat of
         // an earlier post never gets here: that listing was checked when it
         // was made.
-        self.crops
+        let product = self
+            .crops
             .active()
             .await?
             .allow(input.draft.crop)
@@ -106,7 +107,8 @@ impl PostListingUseCase {
             draft.zone_slug = self.zones.zone_of(point).await?;
         }
 
-        let listing = Listing::new(seller.clone(), market.as_ref(), draft, now)?;
+        // The unit is the product's own, read now and kept on the listing.
+        let listing = Listing::new(seller.clone(), market.as_ref(), draft, product, now)?;
         let posted = match self
             .repository
             .create_listing(&listing, input.idempotency_key.as_ref())
@@ -134,7 +136,8 @@ impl PostListingUseCase {
             market = market.as_ref().map(|market| market.slug().as_str()),
             zone = posted.zone_slug().as_ref().map(|zone| zone.as_str()),
             crop = String::from(*posted.crop()),
-            quantity_kg = posted.quantity().value(),
+            unit = String::from(*posted.unit()),
+            quantity = posted.quantity().value(),
             open_after = open + 1,
             "listing posted"
         );
@@ -189,7 +192,10 @@ mod tests {
             ERBIL, FakeAlwaRepository, FakeCropDirectory, FakeZoneLocator, MARKET, RepositoryCall,
             SELLER, a_listing, a_listing_draft, an_open_listing, auth_context, market_slug, point,
         },
-        domain::{AlwaError, ListingStatus, ZoneSlug},
+        domain::{
+            AlwaError, Crop, ListingDraft, ListingStatus, Product, ProductGroup, QuantityKg, Unit,
+            ZoneSlug,
+        },
     };
 
     const MAX: u64 = 3;
@@ -228,6 +234,74 @@ mod tests {
         assert!(card.listing().id().is_some());
         assert!(card.offers().is_empty());
         assert!(repository.calls().contains(&RepositoryCall::CreateListing));
+    }
+
+    fn eggs() -> Product {
+        Product::of("eggs", ProductGroup::FishMeatEggs, Unit::Tray30)
+    }
+
+    fn trays(quantity: i64, in_kg: bool) -> PostListingInput {
+        PostListingInput {
+            market: None,
+            draft: ListingDraft {
+                crop: Crop::of("eggs"),
+                quantity: QuantityKg::new(quantity).expect("quantity"),
+                in_kg,
+                ..a_listing_draft(Utc::now() + Duration::days(2))
+            },
+            idempotency_key: None,
+        }
+    }
+
+    fn selling_eggs(repository: &FakeAlwaRepository) -> PostListingUseCase {
+        PostListingUseCase::new(
+            Arc::new(repository.clone()),
+            Arc::new(FakeCropDirectory::seeded().and(eggs())),
+            Arc::new(FakeZoneLocator::nowhere()),
+            MAX,
+        )
+    }
+
+    #[tokio::test]
+    async fn a_listing_is_stored_with_the_group_and_unit_its_product_has_today() {
+        let repository = FakeAlwaRepository::new();
+
+        let card = selling_eggs(&repository)
+            .execute(&auth_context(SELLER), trays(12, false))
+            .await
+            .expect("card");
+
+        let stored = repository
+            .stored_listing(card.listing().id().expect("id"))
+            .expect("stored");
+
+        assert_eq!(stored.crop().as_str(), "eggs");
+        assert_eq!(*stored.group(), ProductGroup::FishMeatEggs);
+        assert_eq!(*stored.unit(), Unit::Tray30);
+        assert_eq!(stored.quantity().value(), 12);
+    }
+
+    #[tokio::test]
+    async fn trays_beyond_the_limit_or_said_in_kilograms_are_refused_and_nothing_is_stored() {
+        let repository = FakeAlwaRepository::new();
+        let use_case = selling_eggs(&repository);
+
+        for (input, field) in [
+            (trays(10_001, false), "quantity"),
+            (trays(12, true), "quantity_kg"),
+        ] {
+            let result = use_case.execute(&auth_context(SELLER), input).await;
+
+            assert!(
+                matches!(
+                    result,
+                    Err(AppError::Alwa(AlwaError::InvalidField { field: named, .. })) if named == field
+                ),
+                "{field}"
+            );
+        }
+
+        assert!(!repository.calls().contains(&RepositoryCall::CreateListing));
     }
 
     #[tokio::test]

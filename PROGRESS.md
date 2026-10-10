@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-10 01:49
+Last update: 2026-10-10 11:41
 
 ## Done
 - Website design in pen.dev, `design/web/jutyar_website.pen`: 30 frames (flow, intro, public View, login, 15 admin pages, states, phone, tablet, English), Kurdish first, real server data where it exists
@@ -53,6 +53,7 @@ Last update: 2026-10-10 01:49
 - Map source: user dislikes the current map (asked for Google, then Leaflet). Leaflet map demo built in `web/map_demo/` for review
 
 ## Next
+- Website (`web/control_room`, real server version): rebuild what Arya and ranjhamakarim added to the old sample data site on 2026-10-10 and was dropped in the merge: Workers page (list, search, availability, remove), products with units on Alwa and Crops, season outlook panel on View and Overview, rice, fig, sumac and pistachio in the crop list (their code is in commits eb687e0, 159b11c, aaa1a90)
 - Flutter: Alwa market screens from `design/jutyar_app.pen` (simple listings, design done 2026-10-09; backend changes in BACKEND.md 2.14)
 - Write the Kurdish in `Desktop/Jutyar_Translation/jutyar_texts.xlsx`, then `npm run texts:import` in `web/control_room`
 - Flutter: Home labels to Sorani after a native speaker check
@@ -65,6 +66,7 @@ Last update: 2026-10-10 01:49
 - Backend: store Doctor cases (`cases` table, `case_id` in the answer), needed by the Control Room inbox
 
 ## Waiting on the backend (BACKEND.md section 0)
+- What is grown in this area: insight topic `crops_grown` from MapSPAM 2020 per farm, crop codes rice, fig, sumac, pistachio (BACKEND.md 2.17)
 - Marketplace (was Alwa): products list with group and unit, listings with product, quantity and price per unit (BACKEND.md 2.16); then the app renames Alwa to Marketplace and adds the groups
 - Website (BACKEND.md 2.12, 2.13): CORS, farm place, totals route, farmer details and letters, staff phone, crops, rules, inbox, app control, job status, cache versions
 - Control Room (BACKEND.md 2.11): officer sign-in with roles and 2-step, `/v1/admin` routes for farms (protected mode), crop register, alerts with second-officer approval, inbox, rules, Alwa prices, jobs, officers, and an insert-only audit log

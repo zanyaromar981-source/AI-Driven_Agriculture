@@ -25,22 +25,32 @@ List<CropGroup> cropFit(FarmInsights f) {
   final ph = soil?.m('ph_topsoil');
   final normal = rain?.m('normal_mm_oct_may');
   final heat = weather?.m('spring_heat_days_normal');
-  if (soil == null || rain == null || clay == null || normal == null) {
-    return const [];
-  }
-  final cls = soilClass(clay, sand);
+  if (clay == null && normal == null) return const [];
+  final cls = clay == null ? null : soilClass(clay, sand);
   final groups = <CropGroup>[];
 
-  final rainfed = <String>[];
-  if (normal >= 300) rainfed.add('wheat');
-  if (normal >= 200) rainfed.add('barley');
-  if (normal >= 300) rainfed.add(cls == 'heavy' ? 'chickpea?' : 'chickpea');
-  if (rainfed.isNotEmpty) {
+  if (normal != null) {
+    final rainfed = <String>[];
+    if (normal >= 300) rainfed.add('wheat');
+    if (normal >= 200) rainfed.add('barley');
+    if (normal >= 300) rainfed.add(cls == 'heavy' ? 'chickpea?' : 'chickpea');
+    if (rainfed.isNotEmpty) {
+      final soilWords = switch (cls) {
+        null =>
+          'about ${normal.round()} mm of rain. Your soil is not read yet, so this may change',
+        'heavy' => 'heavy clay and about ${normal.round()} mm of rain',
+        _ => '$cls soil and about ${normal.round()} mm of rain',
+      };
+      groups.add(
+        CropGroup('fits', rainfed, 'Winter crops that handle $soilWords.'),
+      );
+    }
+  } else if (cls != null) {
     groups.add(
       CropGroup(
         'fits',
-        rainfed,
-        'Winter crops that handle ${cls == 'heavy' ? 'heavy clay' : '$cls soil'} and about ${normal.round()} mm of rain.',
+        ['wheat', 'barley', if (cls != 'heavy') 'chickpea'],
+        'From the soil only: winter crops that handle ${cls == 'heavy' ? 'heavy clay' : '$cls soil'}. The rain here is not read yet, so this may change.',
       ),
     );
   }
@@ -77,6 +87,47 @@ List<CropGroup> cropFit(FarmInsights f) {
     );
   }
   return groups;
+}
+
+/// Crops a whole district is known for, recommended to every farm in it
+/// (user, 2026-10-10: "for all Akre district recommend rice"). Facts from
+/// local reporting (Kurdistan24, Rudaw): about 13,000 dunams of rice a year.
+List<CropGroup> districtCrops(String? zoneSlug) => switch (zoneSlug) {
+  'akre' => const [
+    CropGroup(
+      'local',
+      ['rice'],
+      "Akre district is the Kurdistan Region's best-known rice area (Sadri rice). "
+          'It is planted in flooded fields in April and May and harvested from '
+          'mid-October, so it needs a summer stream or canal.',
+    ),
+  ],
+  _ => const [],
+};
+
+/// One crop grown around the farm (BACKEND.md 2.17, topic `crops_grown`).
+class GrownCrop {
+  const GrownCrop(this.code, this.ha, this.irrigatedPct);
+  final String code;
+  final double ha;
+  final double? irrigatedPct;
+  bool get irrigated => (irrigatedPct ?? 0) >= 50;
+}
+
+/// The top crops grown within about 15 km, biggest first. Empty when the
+/// topic is not in yet.
+List<GrownCrop> grownInArea(FarmInsights f, {int top = 5}) {
+  final t = f.topic('crops_grown');
+  if (t == null) return const [];
+  final out = <GrownCrop>[];
+  for (final x in t.measures) {
+    final ha = x.value;
+    if (!x.code.endsWith('_ha_15km') || ha == null) continue;
+    final code = x.code.substring(0, x.code.length - '_ha_15km'.length);
+    out.add(GrownCrop(code, ha, t.m('${code}_irrigated_pct')));
+  }
+  out.sort((a, b) => b.ha.compareTo(a.ha));
+  return out.take(top).toList();
 }
 
 /// Short suggestions from this field's own history. No doses, no promises.

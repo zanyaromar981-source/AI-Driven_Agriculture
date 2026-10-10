@@ -50,6 +50,80 @@ impl From<domain::CropCategory> for CropCategory {
 }
 
 /// When the crop is in the ground.
+/// The shelf of the Marketplace a product stands on. Only `crops` can be
+/// painted on a farm.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ProductGroup {
+    #[default]
+    Crops,
+    FishMeatEggs,
+    HoneyDairy,
+    Animals,
+    NutsDried,
+}
+
+impl From<ProductGroup> for domain::ProductGroup {
+    fn from(value: ProductGroup) -> Self {
+        match value {
+            ProductGroup::Crops => domain::ProductGroup::Crops,
+            ProductGroup::FishMeatEggs => domain::ProductGroup::FishMeatEggs,
+            ProductGroup::HoneyDairy => domain::ProductGroup::HoneyDairy,
+            ProductGroup::Animals => domain::ProductGroup::Animals,
+            ProductGroup::NutsDried => domain::ProductGroup::NutsDried,
+        }
+    }
+}
+
+impl From<domain::ProductGroup> for ProductGroup {
+    fn from(value: domain::ProductGroup) -> Self {
+        match value {
+            domain::ProductGroup::Crops => ProductGroup::Crops,
+            domain::ProductGroup::FishMeatEggs => ProductGroup::FishMeatEggs,
+            domain::ProductGroup::HoneyDairy => ProductGroup::HoneyDairy,
+            domain::ProductGroup::Animals => ProductGroup::Animals,
+            domain::ProductGroup::NutsDried => ProductGroup::NutsDried,
+        }
+    }
+}
+
+/// What one of a product is: a kilogram, a tray of 30 eggs, a litre, one
+/// animal.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default, ToSchema)]
+pub enum ProductUnit {
+    #[default]
+    #[serde(rename = "kg")]
+    Kg,
+    #[serde(rename = "tray_30")]
+    Tray30,
+    #[serde(rename = "litre")]
+    Litre,
+    #[serde(rename = "head")]
+    Head,
+}
+
+impl From<ProductUnit> for domain::ProductUnit {
+    fn from(value: ProductUnit) -> Self {
+        match value {
+            ProductUnit::Kg => domain::ProductUnit::Kg,
+            ProductUnit::Tray30 => domain::ProductUnit::Tray30,
+            ProductUnit::Litre => domain::ProductUnit::Litre,
+            ProductUnit::Head => domain::ProductUnit::Head,
+        }
+    }
+}
+
+impl From<domain::ProductUnit> for ProductUnit {
+    fn from(value: domain::ProductUnit) -> Self {
+        match value {
+            domain::ProductUnit::Kg => ProductUnit::Kg,
+            domain::ProductUnit::Tray30 => ProductUnit::Tray30,
+            domain::ProductUnit::Litre => ProductUnit::Litre,
+            domain::ProductUnit::Head => ProductUnit::Head,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CropSeason {
@@ -88,6 +162,10 @@ pub struct CropResponse {
     pub name_ku: Option<String>,
     /// `#rrggbb`
     pub color: String,
+    /// `crops` for everything that can be painted on a farm.
+    pub group: ProductGroup,
+    /// What listings and prices of it count in.
+    pub unit: ProductUnit,
     pub category: CropCategory,
     pub season: CropSeason,
     /// Null = not known.
@@ -109,6 +187,8 @@ impl From<&Crop> for CropResponse {
             name_en: (&details.name_en).into(),
             name_ku: details.name_ku.as_ref().map(String::from),
             color: (&details.color).into(),
+            group: details.group.into(),
+            unit: details.unit.into(),
             category: details.category.into(),
             season: details.season.into(),
             yield_kg_per_dunam: details.yield_kg_per_dunam.map(|kg| kg.value()),
@@ -137,6 +217,37 @@ impl From<&Crop> for OneCropResponse {
     }
 }
 
+/// One thing that can be sold at the Marketplace.
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct ProductResponse {
+    pub code: String,
+    pub group: ProductGroup,
+    /// Quantities are whole numbers of this, prices are for one of it.
+    pub unit: ProductUnit,
+    pub name_en: String,
+    /// `null` until the Sorani name has been written.
+    pub name_ku: Option<String>,
+}
+
+impl From<&Crop> for ProductResponse {
+    fn from(crop: &Crop) -> Self {
+        let details = crop.details();
+
+        Self {
+            code: crop.code().into(),
+            group: details.group.into(),
+            unit: details.unit.into(),
+            name_en: (&details.name_en).into(),
+            name_ku: details.name_ku.as_ref().map(String::from),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+pub struct ProductsResponse {
+    pub products: Vec<ProductResponse>,
+}
+
 fn default_active() -> bool {
     true
 }
@@ -146,6 +257,8 @@ fn details(
     name_en: String,
     name_ku: Option<String>,
     color: String,
+    group: ProductGroup,
+    unit: ProductUnit,
     category: CropCategory,
     season: CropSeason,
     yield_kg_per_dunam: Option<f64>,
@@ -156,6 +269,8 @@ fn details(
         name_en: CropName::new(name_en)?,
         name_ku: name_ku.map(CropName::new).transpose()?,
         color: CropColor::new(color)?,
+        group: group.into(),
+        unit: unit.into(),
         category: category.into(),
         season: season.into(),
         yield_kg_per_dunam: yield_kg_per_dunam.map(YieldKgPerDunam::new).transpose()?,
@@ -175,6 +290,12 @@ pub struct CreateCropParams {
     pub name_ku: Option<String>,
     /// `#rrggbb`
     pub color: String,
+    /// Left out: `crops`.
+    #[serde(default)]
+    pub group: ProductGroup,
+    /// Left out: `kg`.
+    #[serde(default)]
+    pub unit: ProductUnit,
     pub category: CropCategory,
     pub season: CropSeason,
     /// Above 0, in kg per dunam. Leave out or send `null` when not known.
@@ -194,6 +315,8 @@ impl CreateCropParams {
                 self.name_en,
                 self.name_ku,
                 self.color,
+                self.group,
+                self.unit,
                 self.category,
                 self.season,
                 self.yield_kg_per_dunam,
@@ -214,6 +337,13 @@ pub struct UpdateCropParams {
     pub name_ku: Option<String>,
     /// `#rrggbb`
     pub color: String,
+    /// Left out: `crops`.
+    #[serde(default)]
+    pub group: ProductGroup,
+    /// Left out: `kg`. It cannot change once a listing or a price names
+    /// the product (`409 crop_in_use`).
+    #[serde(default)]
+    pub unit: ProductUnit,
     pub category: CropCategory,
     pub season: CropSeason,
     /// Above 0, in kg per dunam, or `null` when not known.
@@ -229,6 +359,8 @@ impl UpdateCropParams {
             self.name_en,
             self.name_ku,
             self.color,
+            self.group,
+            self.unit,
             self.category,
             self.season,
             self.yield_kg_per_dunam,
@@ -261,6 +393,78 @@ mod tests {
     }
 
     #[test]
+    fn a_create_or_update_without_group_and_unit_is_a_crop_by_the_kg() {
+        let created = create(create_body("rice")).expect("input");
+
+        assert_eq!(created.details.group, domain::ProductGroup::Crops);
+        assert_eq!(created.details.unit, domain::ProductUnit::Kg);
+
+        let mut body = create_body("rice");
+        body["active"] = serde_json::json!(true);
+        let updated = serde_json::from_value::<UpdateCropParams>(body)
+            .expect("params")
+            .into_input()
+            .expect("details");
+
+        assert_eq!(updated.group, domain::ProductGroup::Crops);
+        assert_eq!(updated.unit, domain::ProductUnit::Kg);
+    }
+
+    #[test]
+    fn a_product_is_created_with_the_group_and_unit_sent() {
+        let mut body = create_body("duck");
+        body["group"] = serde_json::json!("fish_meat_eggs");
+        body["unit"] = serde_json::json!("head");
+
+        let created = create(body).expect("input");
+
+        assert_eq!(created.details.group, domain::ProductGroup::FishMeatEggs);
+        assert_eq!(created.details.unit, domain::ProductUnit::Head);
+
+        let mut body = create_body("duck");
+        body["unit"] = serde_json::json!("dozen");
+        assert!(
+            serde_json::from_value::<CreateCropParams>(body).is_err(),
+            "a unit that does not exist is refused"
+        );
+    }
+
+    #[test]
+    fn a_product_serializes_with_exactly_the_five_fields_of_the_contract() {
+        use crate::features::crops::app::testing::a_product;
+
+        let eggs = a_product(
+            "eggs",
+            230,
+            domain::ProductGroup::FishMeatEggs,
+            domain::ProductUnit::Tray30,
+        );
+        let json = serde_json::to_value(ProductResponse::from(&eggs)).expect("json");
+
+        assert_eq!(
+            json,
+            serde_json::json!({
+                "code": "eggs",
+                "group": "fish_meat_eggs",
+                "unit": "tray_30",
+                "name_en": "eggs",
+                "name_ku": null
+            })
+        );
+
+        for (unit, word) in [
+            (domain::ProductUnit::Kg, "kg"),
+            (domain::ProductUnit::Litre, "litre"),
+            (domain::ProductUnit::Head, "head"),
+        ] {
+            assert_eq!(
+                serde_json::to_value(ProductUnit::from(unit)).expect("json"),
+                word
+            );
+        }
+    }
+
+    #[test]
     fn a_crop_serializes_with_the_fields_the_site_reads() {
         let json =
             serde_json::to_value(CropResponse::from(&a_crop("wheat", 10, true))).expect("json");
@@ -269,6 +473,8 @@ mod tests {
         assert_eq!(json["color"], "#e0b13a");
         assert_eq!(json["category"], "cereal");
         assert_eq!(json["season"], "winter");
+        assert_eq!(json["group"], "crops");
+        assert_eq!(json["unit"], "kg");
         assert_eq!(json["active"], true);
         assert_eq!(json["sort_order"], 10);
         assert!(

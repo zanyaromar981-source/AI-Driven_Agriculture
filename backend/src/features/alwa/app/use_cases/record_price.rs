@@ -34,11 +34,10 @@ impl RecordPriceUseCase {
     pub async fn execute(&self, input: RecordPriceInput) -> Result<(Market, Price), AppError> {
         // A price a job sends is new data, also when it replaces an earlier
         // one, so its crop must be one staff have switched on.
-        self.crops
-            .active()
-            .await?
-            .allow(input.crop)
-            .inspect_err(|error| tracing::info!(%error, "price refused: the crop is not in use"))?;
+        let product =
+            self.crops.active().await?.allow(input.crop).inspect_err(
+                |error| tracing::info!(%error, "price refused: the crop is not in use"),
+            )?;
 
         let Some(market) = self.repository.find_market_by_slug(&input.market).await? else {
             tracing::info!(
@@ -49,9 +48,10 @@ impl RecordPriceUseCase {
             return Err(GlobalAppError::NotFound.into());
         };
 
+        // The price is for one of the product's unit as it is today.
         let price = Price::new(
             &market,
-            input.crop,
+            product,
             input.day,
             input.price,
             input.fixed,
