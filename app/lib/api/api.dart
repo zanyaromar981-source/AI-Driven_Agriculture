@@ -309,6 +309,11 @@ abstract class Api {
   /// GET /farms/{id}/plan: the next 10 days of weather turned into farm work.
   Future<FarmPlan> getPlan(String id);
 
+  /// GET /outlooks (no login): the winter outlook for the farm's zone, or the
+  /// first zone when [zoneSlug] is null or unknown (the signal is region-wide).
+  /// Null when no outlook has been issued (404).
+  Future<SeasonOutlook?> seasonOutlook({String? zoneSlug});
+
   /// GET /farms/{id}/insights: the 20+ year history of this field, as topics.
   Future<FarmInsights> getInsights(String id);
 
@@ -592,6 +597,52 @@ class FarmPlan {
     source: j['source'] as String? ?? '',
     issued: DateTime.parse(j['issued'] as String),
   );
+}
+
+/// One zone of `GET /outlooks`, with the answer's season and track record.
+class SeasonOutlook {
+  const SeasonOutlook({
+    required this.season,
+    required this.outlook,
+    this.confidencePct,
+    this.reasonEn,
+    this.reasonKu,
+    this.seasonsTested,
+    this.seasonsRight,
+  });
+  final String season;
+
+  /// `good`, `normal` or `bad`.
+  final String outlook;
+  final double? confidencePct;
+  final String? reasonEn;
+  final String? reasonKu;
+  final int? seasonsTested;
+  final int? seasonsRight;
+
+  /// [j] is the whole answer; null when it has no zones.
+  static SeasonOutlook? fromJson(Map<String, dynamic> j, {String? zoneSlug}) {
+    final zones = [
+      for (final z in j['zones'] as List? ?? const [])
+        if (z is Map<String, dynamic>) z,
+    ];
+    if (zones.isEmpty) return null;
+    final z = zones.firstWhere(
+      (z) => zoneSlug != null && z['zone_slug'] == zoneSlug,
+      orElse: () => zones.first,
+    );
+    final track = j['track_record'];
+    final t = track is Map<String, dynamic> ? track : const <String, dynamic>{};
+    return SeasonOutlook(
+      season: j['season'] as String? ?? '',
+      outlook: z['outlook'] as String? ?? '',
+      confidencePct: (z['confidence_pct'] as num?)?.toDouble(),
+      reasonEn: z['reason_en'] as String?,
+      reasonKu: z['reason_ku'] as String?,
+      seasonsTested: (t['seasons_tested'] as num?)?.toInt(),
+      seasonsRight: (t['seasons_right'] as num?)?.toInt(),
+    );
+  }
 }
 
 // ---- Field history: GET /farms/{id}/insights (topics from the Mac analysis) ----

@@ -219,6 +219,19 @@ class HttpApi implements Api {
   Future<FarmPlan> getPlan(String id) async =>
       FarmPlan.fromJson(await _call('GET', '${_farm(id)}/plan'));
 
+  @override
+  Future<SeasonOutlook?> seasonOutlook({String? zoneSlug}) async {
+    try {
+      return SeasonOutlook.fromJson(
+        await _call('GET', 'outlooks'),
+        zoneSlug: zoneSlug,
+      );
+    } on ApiException catch (e) {
+      if (e.status == 404) return null;
+      rethrow;
+    }
+  }
+
   /// Multipart by hand (no extra package): question, lang, cell, photos.
   /// The Doctor reads the field and the weather first, so it waits longer.
   @override

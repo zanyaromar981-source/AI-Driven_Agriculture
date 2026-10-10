@@ -299,6 +299,23 @@ class S {
 
   /// GET /farms/{id}/plan is not built on the server yet (404).
   String get planSoon => '10-day plan coming soon';
+  // Season outlook card (GET /outlooks). English in both languages until a
+  // native speaker writes the Sorani.
+  String seasonOutlookTitle(String season) =>
+      t('Season outlook $season', 'Season outlook $season');
+  String outlookHeadline(String outlook) => switch (outlook) {
+    'good' => t(
+      'Wet or normal winter expected',
+      'Wet or normal winter expected',
+    ),
+    'bad' => t('Dry winter likely', 'Dry winter likely'),
+    _ => t('Normal winter expected', 'Normal winter expected'),
+  };
+  String pctSure(int p) => t('$p% sure', '$p% sure');
+  String calledRight(int right, int tested) => t(
+    'Called right in $right of $tested past winters',
+    'Called right in $right of $tested past winters',
+  );
   String forecastSource(String src, String when) =>
       'Forecast: $src · issued $when';
   String get nothingToDo => 'Nothing to act on in the next 10 days';

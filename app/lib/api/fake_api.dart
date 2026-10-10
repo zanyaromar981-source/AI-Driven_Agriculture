@@ -514,6 +514,25 @@ class FakeApi implements Api {
   }
 
   @override
+  Future<SeasonOutlook?> seasonOutlook({String? zoneSlug}) async =>
+      SeasonOutlook.fromJson(const {
+        'season': '2026-27',
+        'zones': [
+          {
+            'zone_slug': 'sulaymaniyah',
+            'outlook': 'good',
+            'confidence_pct': 85.0,
+            'reason_en':
+                'El Niño (ONI +2.16). All 7 El Niño winters since 1991 had '
+                'normal or above-normal rain here; none was a drought. A '
+                'region-wide signal, the same for every district.',
+            'reason_ku': null,
+          },
+        ],
+        'track_record': {'seasons_tested': 14, 'seasons_right': 14},
+      }, zoneSlug: zoneSlug);
+
+  @override
   Future<FarmPlan> getPlan(String id) async {
     await _online();
     await _load();

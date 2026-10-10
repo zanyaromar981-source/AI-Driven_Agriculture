@@ -95,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           key: ValueKey('${farm.id}#$_version'),
                           summary: farm,
                         ),
+                        const _SeasonOutlookCard(),
                         // The field's 20+ year history (Field history screen).
                         FieldHistoryEntry(
                           key: ValueKey('history-${farm.id}#$_version'),
@@ -176,6 +177,92 @@ class _BackBar extends StatelessWidget {
             ),
           ),
           trailing,
+        ],
+      ),
+    );
+  }
+}
+
+/// The winter outlook for the region (GET /outlooks). Shows nothing while it
+/// loads, when none has been issued, or when the call fails.
+class _SeasonOutlookCard extends StatefulWidget {
+  const _SeasonOutlookCard();
+
+  @override
+  State<_SeasonOutlookCard> createState() => _SeasonOutlookCardState();
+}
+
+class _SeasonOutlookCardState extends State<_SeasonOutlookCard> {
+  SeasonOutlook? _outlook;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      // The Farm model carries no zone; the signal is the same for every zone.
+      final o = await AppScope.read(context).api.seasonOutlook();
+      if (mounted && o != null) setState(() => _outlook = o);
+    } catch (_) {
+      // No card: the outlook is extra, never an error on Home.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final o = _outlook;
+    if (o == null) return const SizedBox.shrink();
+    final scope = AppScope.of(context);
+    final s = scope.s;
+    final ku = o.reasonKu?.trim() ?? '';
+    final reason = scope.ku && ku.isNotEmpty ? ku : (o.reasonEn ?? ku);
+    final colour = switch (o.outlook) {
+      'good' => JColors.levelNormal,
+      'bad' => JColors.levelAlarm,
+      _ => JColors.ink,
+    };
+    final pct = o.confidencePct;
+    final tested = o.seasonsTested;
+    final right = o.seasonsRight;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+      decoration: BoxDecoration(
+        color: JColors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: JColors.cardLine),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 6,
+        children: [
+          Text(
+            s.seasonOutlookTitle(o.season).toUpperCase(),
+            style: latText(
+              size: 11,
+              weight: FontWeight.w800,
+              color: JColors.faint,
+            ),
+          ),
+          Text(
+            s.outlookHeadline(o.outlook),
+            style: jText(false, size: 20, weight: FontWeight.w800, color: colour),
+          ),
+          if (pct != null)
+            Text(
+              s.pctSure(pct.round()),
+              style: jText(false, size: 13.5, weight: FontWeight.w600),
+            ),
+          if (reason.isNotEmpty)
+            Text(reason, style: jText(false, size: 13.5, color: JColors.muted)),
+          if (tested != null && right != null && tested > 0)
+            Text(
+              s.calledRight(right, tested),
+              style: jText(false, size: 12.5, color: JColors.muted),
+            ),
         ],
       ),
     );
