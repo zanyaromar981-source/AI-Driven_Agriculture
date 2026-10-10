@@ -168,7 +168,7 @@
       "id": "c6ptt",
       "x": 2040,
       "y": 0,
-      "name": "02 Public value",
+      "name": "02 Problem",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -318,10 +318,79 @@
     },
     {
       "type": "frame",
-      "id": "mNvdi",
+      "id": "Bl3me",
       "x": 4080,
       "y": 0,
-      "name": "03 Built and working",
+      "name": "03 Demo",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$deep",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "wevct",
+          "x": 0,
+          "y": 0,
+          "name": "Topo Texture",
+          "opacity": 0.5,
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-6.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "frame",
+          "id": "NL9Zp",
+          "x": 750,
+          "y": 330,
+          "name": "Grain Sun",
+          "width": 420,
+          "height": 420,
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "oOYt7",
+              "x": 0,
+              "y": 0,
+              "name": "Rays",
+              "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
+              "viewBox": [
+                0,
+                0,
+                100,
+                100
+              ],
+              "fill": "$gold",
+              "width": 420,
+              "height": 420
+            },
+            {
+              "type": "ellipse",
+              "id": "c9wXF",
+              "x": 151.2,
+              "y": 151.2,
+              "name": "Core",
+              "fill": "$gold",
+              "width": 117.60000000000001,
+              "height": 117.60000000000001
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "mNvdi",
+      "x": 6120,
+      "y": 0,
+      "name": "04 Built in two days",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -882,9 +951,9 @@
     {
       "type": "frame",
       "id": "JAKFz",
-      "x": 6120,
+      "x": 8160,
       "y": 0,
-      "name": "04 Innovation",
+      "name": "05 Innovation",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -1175,9 +1244,9 @@
     {
       "type": "frame",
       "id": "QiOBy",
-      "x": 8160,
-      "y": 0,
-      "name": "05 AI",
+      "x": 0,
+      "y": 1200,
+      "name": "06 AI",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -2246,7 +2315,7 @@
       "id": "HIPSy",
       "x": 2040,
       "y": 1200,
-      "name": "07 Scalability · Alwa",
+      "name": "07 Alwa",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -2600,10 +2669,194 @@
     },
     {
       "type": "frame",
-      "id": "XxvPB",
-      "x": 8160,
+      "id": "iERfM",
+      "x": 4080,
       "y": 1200,
-      "name": "10 Close",
+      "name": "08 Who pays",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$deep",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "OZkqE",
+          "x": 0,
+          "y": 0,
+          "name": "Topo Texture",
+          "opacity": 0.5,
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-6.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "text",
+          "id": "w4ZmsV",
+          "x": 120,
+          "y": 110,
+          "name": "Brand",
+          "fill": "$gold",
+          "content": "BUSINESS MODEL",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "IEioE",
+          "x": 120,
+          "y": 180,
+          "name": "Title Row",
+          "gap": 36,
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "text",
+              "id": "ds4hR",
+              "name": "Headline",
+              "fill": "#FFFFFF",
+              "content": "Who pays?",
+              "lineHeight": 1,
+              "fontFamily": "$font-lat",
+              "fontSize": 112,
+              "fontWeight": "800",
+              "letterSpacing": -3
+            },
+            {
+              "type": "text",
+              "id": "ilVkZ",
+              "name": "Secondary",
+              "fill": "$gold",
+              "content": "The people who use it.",
+              "fontFamily": "$font-lat",
+              "fontSize": 42,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "O64qP",
+          "x": 120,
+          "y": 380,
+          "name": "Payers",
+          "width": 1680,
+          "height": 560,
+          "gap": 36,
+          "children": [
+            {
+              "type": "frame",
+              "id": "goQYS",
+              "name": "Payer Farmers",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 28,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 24,
+              "padding": 56,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "O6MhI",
+                  "name": "Icon",
+                  "width": 96,
+                  "height": 96,
+                  "icon": "tractor",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "UbRG0",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Farmers",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 120,
+                  "fontWeight": "800",
+                  "letterSpacing": -3
+                },
+                {
+                  "type": "text",
+                  "id": "H6Y1Q",
+                  "name": "Payer Label",
+                  "fill": "#FFFFFF",
+                  "content": "pay to use the app",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 40,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "j23qHl",
+              "name": "Payer Buyers",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 28,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 24,
+              "padding": 56,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "VpEo6",
+                  "name": "Icon",
+                  "width": 96,
+                  "height": 96,
+                  "icon": "shopping-basket",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "S07zA3",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Buyers",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 120,
+                  "fontWeight": "800",
+                  "letterSpacing": -3
+                },
+                {
+                  "type": "text",
+                  "id": "iAGz9",
+                  "name": "Payer Label",
+                  "fill": "#FFFFFF",
+                  "content": "pay to use the app",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 40,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "XxvPB",
+      "x": 6120,
+      "y": 1200,
+      "name": "09 Close",
       "clip": true,
       "width": 1920,
       "height": 1080,

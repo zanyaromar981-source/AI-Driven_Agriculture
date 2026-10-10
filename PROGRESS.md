@@ -2,7 +2,7 @@
 
 Short tracker of what is done, in progress and next. Updated with every change and committed. The detailed log with reasons and numbers is `STATUS.md`.
 
-Last update: 2026-10-10 08:16
+Last update: 2026-10-10 08:20
 
 ## Done
 - Website design in pen.dev, `design/web/jutyar_website.pen`: 30 frames (flow, intro, public View, login, 15 admin pages, states, phone, tablet, English), Kurdish first, real server data where it exists
