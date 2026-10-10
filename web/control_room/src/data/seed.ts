@@ -40,6 +40,10 @@ export const seedCrops = (): Crop[] => ([
   ['pomegranate', 'Pomegranate', 'هەنار', '#C2185B', 'fruit', 'perennial', 2500],
   ['olive', 'Olive', 'زەیتوون', '#7D8B3A', 'oil', 'perennial', 600],
   ['sunflower', 'Sunflower', 'گوڵەبەڕۆژە', '#F5C518', 'oil', 'summer', 250],
+  ['rice', 'Rice', 'برنج', '#CFC59A', 'cereal', 'summer', 750],
+  ['fig', 'Fig', 'هەنجیر', '#7B4B6A', 'fruit', 'perennial', 1500],
+  ['sumac', 'Sumac', 'سماق', '#9E2A2B', 'other', 'perennial', 100],
+  ['pistachio', 'Pistachio', 'فستق', '#93C572', 'other', 'perennial', 250],
 ] as const).map<Crop>(([id, en, ku, color, category, season, y]) => ({ id, name: bi(en, ku), color, category, season, yieldKgPerDunam: y, active: true, notes: '', group: 'crops', unit: 'kg' })).concat(seedProducts());
 
 /** The marketplace products that are not crops: the codes, groups, units and names of the backend's GET /v1/products. */
