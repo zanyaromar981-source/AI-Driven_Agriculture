@@ -535,7 +535,8 @@ class _ListingCard extends StatelessWidget {
                             ),
                           ),
                           TextSpan(
-                            text: ' · ${fmtQty(listing.quantity, listing.unit)}',
+                            text:
+                                ' · ${fmtQty(listing.quantity, listing.unit)}',
                             style: latText(size: 13, weight: FontWeight.w600),
                           ),
                         ],

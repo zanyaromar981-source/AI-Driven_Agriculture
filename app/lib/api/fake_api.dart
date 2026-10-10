@@ -1829,6 +1829,51 @@ const _demoInsights = r'''
           "label_ku": null
         }
       ]
+    },
+    {
+      "topic": "crops_grown",
+      "as_of": "2026-10-03",
+      "source": "MapSPAM 2020 (IFPRI), crop areas around 2019 to 2021",
+      "confidence": "likely",
+      "summary_en": "Around this farm the main crops are wheat, barley and rice; rice is all irrigated.",
+      "summary_ku": null,
+      "measures": [
+        {
+          "code": "wheat_ha_15km",
+          "value": 5200,
+          "unit": "ha",
+          "label_en": "Wheat grown within 15 km",
+          "label_ku": null
+        },
+        {
+          "code": "barley_ha_15km",
+          "value": 2100,
+          "unit": "ha",
+          "label_en": "Barley grown within 15 km",
+          "label_ku": null
+        },
+        {
+          "code": "rice_ha_15km",
+          "value": 1300,
+          "unit": "ha",
+          "label_en": "Rice grown within 15 km",
+          "label_ku": null
+        },
+        {
+          "code": "rice_irrigated_pct",
+          "value": 100,
+          "unit": "%",
+          "label_en": "Rice that is irrigated",
+          "label_ku": null
+        },
+        {
+          "code": "tomato_ha_15km",
+          "value": 300,
+          "unit": "ha",
+          "label_en": "Tomato grown within 15 km",
+          "label_ku": null
+        }
+      ]
     }
   ]
 }

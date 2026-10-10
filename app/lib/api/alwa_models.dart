@@ -271,8 +271,7 @@ class AlwaListing {
     id: '${j['id']}',
     // The new fields; the old kg ones when the server has not sent them.
     product: _code(j),
-    group:
-        j['group'] as String? ?? alwaProduct(_code(j))?.group ?? 'crops',
+    group: j['group'] as String? ?? alwaProduct(_code(j))?.group ?? 'crops',
     unit: j['unit'] as String? ?? alwaProduct(_code(j))?.unit ?? 'kg',
     quantity: _d(j['quantity']) ?? _d(j['quantity_kg']) ?? 0,
     priceIqd:

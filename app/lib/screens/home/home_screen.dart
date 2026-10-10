@@ -29,6 +29,10 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Bumped after an edit, so the farm section loads the farm again.
   int _version = 0;
 
+  /// The field's history as last read by the Field history card; feeds the
+  /// crop advice card.
+  FarmInsights? _insights;
+
   /// After the editor closes: fresh name and size from the server, or the
   /// waiting change on the phone when there is no internet.
   Future<void> _afterEdit() async {
@@ -91,6 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           key: ValueKey('now-${farm.id}#$_version'),
                           farm: farm,
                         ),
+                        // Which crops fit this field (user, 2026-10-10).
+                        HomeFitCard(data: _insights),
                         FarmSection(
                           key: ValueKey('${farm.id}#$_version'),
                           summary: farm,
@@ -100,6 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         FieldHistoryEntry(
                           key: ValueKey('history-${farm.id}#$_version'),
                           farm: farm,
+                          onData: (d) {
+                            if (mounted) setState(() => _insights = d);
+                          },
                         ),
                         Text(
                           '${s.farmingAssistant} · Jutyar',
@@ -249,7 +258,12 @@ class _SeasonOutlookCardState extends State<_SeasonOutlookCard> {
           ),
           Text(
             s.outlookHeadline(o.outlook),
-            style: jText(false, size: 20, weight: FontWeight.w800, color: colour),
+            style: jText(
+              false,
+              size: 20,
+              weight: FontWeight.w800,
+              color: colour,
+            ),
           ),
           if (pct != null)
             Text(

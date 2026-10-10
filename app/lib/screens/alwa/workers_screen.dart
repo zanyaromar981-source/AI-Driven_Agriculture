@@ -67,8 +67,7 @@ class _WorkersScreenState extends State<WorkersScreen> {
         AlwaTitle(
           en: s.findWorkers,
           ku: 'کرێکار',
-          sub:
-              'People who do farm work, with their cost. Call them directly.',
+          sub: 'People who do farm work, with their cost. Call them directly.',
         ),
         if (all == null)
           _error != null
