@@ -38,6 +38,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20261009_270000_simple_alwa::Migration),
             Box::new(m20261010_010000_marketplace_products::Migration),
             Box::new(m20261010_020000_create_workers::Migration),
+            Box::new(m20261010_030000_add_area_crops::Migration),
         ]
     }
 }
@@ -75,3 +76,4 @@ mod m20261009_260000_create_alerts;
 mod m20261009_270000_simple_alwa;
 mod m20261010_010000_marketplace_products;
 mod m20261010_020000_create_workers;
+mod m20261010_030000_add_area_crops;

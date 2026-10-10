@@ -137,7 +137,7 @@ What to know:
 | `GET /v1/farms/{id}/brief` | the nightly brief for the farm's district | filled each night; `brief` is `null` for a district with none yet |
 | `POST /v1/farms/{id}/ask` | Ask the Doctor | section 6 |
 
-**Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
+**Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, `crops_grown` (crops grown within 15 km, from MapSPAM 2020, measures `<crop>_ha_15km` and `<crop>_irrigated_pct`), with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
 
 The topics `rain`, `weather`, `soil`, `greenness` and `dryness` carry the measure codes of the app's fixture (`app/test/fixtures/insights_farm2_measures.json`), with three differences: fires are `fire_detections_7d` (the server keeps 7 days of detections, so a long count would be wrong), and `summer_surface_c_normal` and `trend_peak_ndvi_per_decade` are not produced. Greenness is measured on a square of the farm's area at its centre, from Sentinel-2 (2016 on) and Landsat (1984 to 2015).
 
