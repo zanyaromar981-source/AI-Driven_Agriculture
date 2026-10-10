@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           farm: farm,
                         ),
                         // Which crops fit this field (user, 2026-10-10).
-                        HomeFitCard(data: _insights),
+                        HomeFitCard(data: _insights, zoneSlug: farm.zoneSlug),
                         FarmSection(
                           key: ValueKey('${farm.id}#$_version'),
                           summary: farm,

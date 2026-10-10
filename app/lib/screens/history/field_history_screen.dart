@@ -159,7 +159,10 @@ class _FieldHistoryScreenState extends State<FieldHistoryScreen> {
     final views = {
       for (final v in d == null ? const <TopicView>[] : topicViews(d)) v.key: v,
     };
-    final fit = d == null ? const <CropGroup>[] : cropFit(d);
+    final fit = [
+      ...districtCrops(widget.farm.zoneSlug),
+      if (d != null) ...cropFit(d),
+    ];
     final grown = d == null ? const <GrownCrop>[] : grownInArea(d);
     final tips = d == null ? const <String>[] : suggestions(d);
     final none = d == null || d.ready == 0;
@@ -807,6 +810,11 @@ class FitCard extends StatelessWidget {
 
   Widget _group(CropGroup g, S s) {
     final (fg, bg, label) = switch (g.kind) {
+      'local' => (
+        JColors.levelNormal,
+        JColors.levelNormalSoft,
+        'Known in your district',
+      ),
       'fits' => (
         JColors.levelNormal,
         JColors.levelNormalSoft,
@@ -1080,20 +1088,23 @@ class _FieldHistoryEntryState extends State<FieldHistoryEntry> {
 /// field" was only inside Field history). Waits calmly until the field's
 /// soil and rain history is in.
 class HomeFitCard extends StatelessWidget {
-  const HomeFitCard({super.key, required this.data});
+  const HomeFitCard({super.key, required this.data, this.zoneSlug});
   final FarmInsights? data;
+
+  /// The farm's district: some districts add their known crops (Akre: rice).
+  final String? zoneSlug;
 
   @override
   Widget build(BuildContext context) {
     final d = data;
-    final fit = d == null ? const <CropGroup>[] : cropFit(d);
+    final fit = [...districtCrops(zoneSlug), if (d != null) ...cropFit(d)];
     final grown = d == null ? const <GrownCrop>[] : grownInArea(d);
     if (fit.isNotEmpty || grown.isNotEmpty) {
       return FitCard(
         groups: fit,
-        tips: suggestions(d!),
+        tips: d == null ? const [] : suggestions(d),
         grown: grown,
-        grownSource: d.topic('crops_grown')?.source,
+        grownSource: d?.topic('crops_grown')?.source,
       );
     }
     return Container(

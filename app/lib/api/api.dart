@@ -41,6 +41,7 @@ class FarmSummary {
     this.lastPicture,
     this.lat,
     this.lon,
+    this.zoneSlug,
   });
 
   final String id;
@@ -51,6 +52,9 @@ class FarmSummary {
   final String? lastPicture;
   final double? lat;
   final double? lon;
+
+  /// The district the server placed the farm in (e.g. `akre`), from its point.
+  final String? zoneSlug;
 
   factory FarmSummary.fromJson(Map<String, dynamic> j) {
     final centroid = j['centroid'] as Map<String, dynamic>?;
@@ -66,6 +70,7 @@ class FarmSummary {
       lastPicture: j['last_picture'] as String?,
       lat: (centroid?['lat'] as num?)?.toDouble(),
       lon: (centroid?['lon'] as num?)?.toDouble(),
+      zoneSlug: j['zone_slug'] as String?,
     );
   }
 
@@ -79,6 +84,7 @@ class FarmSummary {
     'status': status.name,
     'last_picture': lastPicture,
     if (lat != null && lon != null) 'centroid': {'lat': lat, 'lon': lon},
+    if (zoneSlug != null) 'zone_slug': zoneSlug,
   };
 
   /// The crop with the most dunams, shown on the farm card.

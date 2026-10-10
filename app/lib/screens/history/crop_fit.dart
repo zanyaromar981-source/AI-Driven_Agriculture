@@ -89,6 +89,22 @@ List<CropGroup> cropFit(FarmInsights f) {
   return groups;
 }
 
+/// Crops a whole district is known for, recommended to every farm in it
+/// (user, 2026-10-10: "for all Akre district recommend rice"). Facts from
+/// local reporting (Kurdistan24, Rudaw): about 13,000 dunams of rice a year.
+List<CropGroup> districtCrops(String? zoneSlug) => switch (zoneSlug) {
+  'akre' => const [
+    CropGroup(
+      'local',
+      ['rice'],
+      "Akre district is the Kurdistan Region's best-known rice area (Sadri rice). "
+          'It is planted in flooded fields in April and May and harvested from '
+          'mid-October, so it needs a summer stream or canal.',
+    ),
+  ],
+  _ => const [],
+};
+
 /// One crop grown around the farm (BACKEND.md 2.17, topic `crops_grown`).
 class GrownCrop {
   const GrownCrop(this.code, this.ha, this.irrigatedPct);

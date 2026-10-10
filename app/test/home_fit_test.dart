@@ -115,4 +115,27 @@ void main() {
     expect(plainCropName('other_vegetables'), 'Other vegetables');
     expect(plainCropName('spam_xyz'), 'Xyz');
   });
+
+  testWidgets(
+    'every farm in Akre district is told rice, even before the history',
+    (t) async {
+      await t.pumpWidget(app(const HomeFitCard(data: null, zoneSlug: 'akre')));
+      expect(find.text('Known in your district'), findsOneWidget);
+      expect(find.text('Rice'), findsOneWidget);
+      expect(find.textContaining('best-known rice area'), findsOneWidget);
+      await t.pumpWidget(app(const HomeFitCard(data: null, zoneSlug: 'erbil')));
+      expect(find.text('Known in your district'), findsNothing);
+    },
+  );
+
+  test('the server district reaches the farm and its saved copy', () {
+    final f = FarmSummary.fromJson(const {
+      'id': '9',
+      'name': 'x',
+      'area_dunam': 1.0,
+      'zone_slug': 'akre',
+    });
+    expect(f.zoneSlug, 'akre');
+    expect(FarmSummary.fromJson(f.toJson()).zoneSlug, 'akre');
+  });
 }
