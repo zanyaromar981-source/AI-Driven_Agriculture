@@ -8,7 +8,7 @@ Everything the speaker needs for pitch day, checked against the team's files on 
 
 ## Round 1 at the table: use this one (10 October)
 
-Rules from the organizers: 3 minutes to pitch, 2 minutes of questions, one judge group, ID asked on arrival. Time is recorded and breaks ties, so the target is **2 minutes 30 seconds**. One person speaks. Build and Demo and AI each count double, so they get most of the time.
+Rules from the organizers: 3 minutes to pitch, 2 minutes of questions, one judge group, ID asked on arrival. Time is recorded and breaks ties, so the target is **2 minutes 35 seconds**. One person speaks. Build and Demo and AI each count double, so they get most of the time.
 
 ### Before the judges arrive
 
@@ -26,14 +26,16 @@ From the organizers' message: doors open at 7:00, be at the table by 7:30, test 
 
 ### The script
 
-231 words in total, about 1 minute 50 seconds spoken, which leaves about 40 seconds for handling the phone. The organizers say: start as soon as the judges arrive and show what you built straight away, so the demo starts after one sentence. Slide 1 (the title) is on the screen before they arrive.
+253 words in total, about 1 minute 55 seconds spoken, which leaves about 40 seconds for handling the phone. The deck is the 7 slides chosen on 10 October. Slide 1 (the title) is on the screen before the judges arrive. There is no feasibility slide, so those points are spoken over the last slide.
 
 | Time | Criterion | Show | Say | Words |
 |---|---|---|---|---|
 | 0:00 to 0:10 | Problem and local impact | Slide 2 | "Kurdistan has tens of thousands of farmers, but access to extension advice is limited. Jutyar puts an adviser in every farmer's pocket. Let me show you." | 26 |
-| 0:10 to 1:15 | Build and Demo (double) | Slide 3, phone in your hand | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm. I walked its corners and marked my crops. The app cuts it into 10 metre squares, the size of one satellite pixel. Here is my 10-day plan from the live forecast. I asked a question with a photo, and this is the answer, in Sorani. And this is Alwa, the marketplace: my tomatoes are on sale, and other farmers see them on their phones." | 87 |
-| 1:15 to 1:50 | AI Integration and Use (double) | Slide 4 | "AI is the translator. The satellite, the forecast and the field's history are only numbers. An AI model turns them, with the farmer's photo, into advice in Sorani, and it says when it is unsure. Every night another AI agent writes the daily brief for the region. And we built all of this with AI: Claude, Codex and Pencil." | 59 |
-| 1:50 to 2:30 | Feasibility and scope, then close | Slide 5 | "Is it realistic? The data is free. The server is live, with about 2,000 tests. One AI answer costs half a cent. The Ministry gets its own website, with the farms, the alerts and the region on one map. We start with wheat farmers in Slemani. App, server and website, built in two days. This is Jutyar. Thank you." | 59 |
+| 0:10 to 1:05 | Build and Demo (double) | Slide 3, phone in your hand | "This is running now, on a real server. I sign in with my phone number and an SMS code. This is my farm. I walked its corners and marked my crops. The app cuts it into 10 metre squares, the size of one satellite pixel. Here is my 10-day plan from the live forecast. I asked a question with a photo, and this is the answer, in Sorani." | 68 |
+| 1:05 to 1:25 | Build and Demo, AI | Slide 4 | "What is new? We found no farm AI in Kurdish. Jutyar maps the field in satellite-sized squares, answers in Sorani in one message, and puts the farmer and the Ministry on the same data." | 34 |
+| 1:25 to 1:55 | AI Integration and Use (double) | Slide 5 | "AI is the translator. The satellite, the forecast and the field's history are only numbers. An AI model turns them, with the farmer's photo, into advice in Sorani, and it says when it is unsure. Every night another AI agent writes the daily brief for the region. And we built all of this with AI: Claude, Codex and Pencil." | 59 |
+| 1:55 to 2:10 | Build and Demo | Slide 6 | "And this is Alwa, the marketplace. My tomatoes are on sale, and other farmers see them on their phones." | 19 |
+| 2:10 to 2:35 | Feasibility and scope, then close | Slide 7 | "Is it realistic? The data is free, the server is live with about 2,000 tests, and one AI answer costs half a cent. The Ministry gets its own website. App, server and website, built in two days. Jutyar: from one farm to a smarter Kurdistan. Thank you." | 47 |
 
 If the phone or the network fails: say "the network is against us" once, stay on slide 3 (the five screens), point at them, and keep going. Do not debug in front of the judges.
 
@@ -93,25 +95,25 @@ To settle before the final:
 
 ## The Round 1 deck, slide by slide
 
-`design/pitch_deck_3min.pen` has 5 slides in the main row, cut down so the pitch fits in 3 minutes, and 3 backup slides below them for the questions. The same slides are in `design/Jutyar_Pitch_Round1.pptx`, with these lines as speaker notes.
+`design/Jutyar_Pitch_Round1.pptx` and its design `design/pitch_deck_3min.pen` have the 7 slides chosen on 10 October.
 
 | # | Slide | Criterion | What it shows |
 |---|---|---|---|
 | 1 | AI-Driven Agriculture | | Title and sun logo. On screen while the judges arrive |
 | 2 | Thousands of farmers. Too little advice. | Problem and local impact | "Help comes too late." and Slemani at 57% of normal rain |
 | 3 | Built in two days. | Build and Demo | Five app screens: sign in by SMS, map your field, see it in 10 m squares, ask in Sorani, sell in the Marketplace |
-| 4 | AI is the translator. | AI | The Sorani answer with its five parts, the nightly AI brief, built with Claude, Codex and Pencil AI |
-| 5 | Ready to grow. | Feasibility and scope | Free data, live server, half a cent per AI answer, the Ministry through our website. The pitch ends here |
-| Backup | Farmers and government, connected. | Questions | The website: Control Room and region dashboard |
-| Backup | Sell at a fair price. | Questions | Alwa, the Marketplace, in three screens |
-| Backup | From one farm to a smarter Kurdistan. | Questions | Vision picture |
+| 4 | New for Kurdistan. | Build, AI | 10 m squares, Sorani, one message, two sides |
+| 5 | AI is the translator. | AI | The Sorani answer with its five parts, the nightly AI brief, built with Claude, Codex and Pencil AI |
+| 6 | Sell at a fair price. | Build and Demo | Alwa, the marketplace, in three screens |
+| 7 | From one farm to a smarter Kurdistan. | Feasibility (spoken), close | Vision picture |
 
 Notes:
 
-- Slide 3 shows design screens. The real phone is the demo; the slide is the backdrop and the fallback.
-- The Sorani message on slide 4 was translated for the slide and still needs a native speaker's check.
-- "Partner" on slide 5 is the partner we would approach. Nobody has signed.
-- The pictures on slides 1 and 2 and on the vision backup slide are AI-made.
+- Feasibility is a judging criterion and has no slide in this deck. The speaker covers it in the last 25 seconds.
+- Slides 3 and 6 show design screens. The real phone is the demo.
+- The Sorani message on slide 5 was translated for the slide and still needs a native speaker's check.
+- The pictures on slides 1, 2 and 7 are AI-made.
+- The website, business model and trust slides are only in the Round 2 PowerPoint.
 
 ## What is real and what is not
 

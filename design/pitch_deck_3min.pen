@@ -168,7 +168,7 @@
       "id": "c6ptt",
       "x": 2040,
       "y": 0,
-      "name": "02 Problem",
+      "name": "02 Public value",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -233,7 +233,7 @@
           "y": 110,
           "name": "Brand",
           "fill": "$gold",
-          "content": "THE PROBLEM",
+          "content": "PUBLIC VALUE",
           "fontFamily": "$font-lat",
           "fontSize": 24,
           "fontWeight": "700",
@@ -245,7 +245,7 @@
           "x": 120,
           "y": 0,
           "name": "Title Block",
-          "width": 900,
+          "width": 1000,
           "height": 1080,
           "layout": "vertical",
           "gap": 28,
@@ -261,7 +261,7 @@
               "content": "Thousands of farmers.\nToo little advice.",
               "lineHeight": 1.02,
               "fontFamily": "$font-lat",
-              "fontSize": 108,
+              "fontSize": 84,
               "fontWeight": "800",
               "letterSpacing": -4
             },
@@ -321,7 +321,7 @@
       "id": "mNvdi",
       "x": 4080,
       "y": 0,
-      "name": "03 Build and demo",
+      "name": "03 Built and working",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -881,10 +881,303 @@
     },
     {
       "type": "frame",
-      "id": "QiOBy",
+      "id": "JAKFz",
       "x": 6120,
       "y": 0,
-      "name": "04 AI",
+      "name": "04 Innovation",
+      "clip": true,
+      "width": 1920,
+      "height": 1080,
+      "fill": "$deep",
+      "layout": "vertical",
+      "gap": 60,
+      "padding": [
+        110,
+        120
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "BaTER",
+          "layoutPosition": "absolute",
+          "x": 0,
+          "y": 0,
+          "name": "Topo Texture",
+          "opacity": 0.5,
+          "width": 1920,
+          "height": 1080,
+          "fill": {
+            "type": "image",
+            "enabled": true,
+            "url": "generated-6.png",
+            "mode": "cover"
+          }
+        },
+        {
+          "type": "text",
+          "id": "dTmEU",
+          "name": "Brand",
+          "fill": "$gold",
+          "content": "INNOVATION",
+          "fontFamily": "$font-lat",
+          "fontSize": 24,
+          "fontWeight": "700",
+          "letterSpacing": 3
+        },
+        {
+          "type": "frame",
+          "id": "W9JgWq",
+          "name": "Title Row",
+          "width": "fill_container",
+          "gap": 36,
+          "alignItems": "end",
+          "children": [
+            {
+              "type": "text",
+              "id": "o0uLEb",
+              "name": "Headline",
+              "fill": "#FFFFFF",
+              "content": "New for Kurdistan.",
+              "lineHeight": 1,
+              "fontFamily": "$font-lat",
+              "fontSize": 112,
+              "fontWeight": "800",
+              "letterSpacing": -3
+            },
+            {
+              "type": "text",
+              "id": "A5lxX",
+              "name": "Secondary",
+              "fill": "$gold",
+              "content": "We found no farm AI in Kurdish.",
+              "fontFamily": "$font-lat",
+              "fontSize": 42,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "psYRe",
+          "name": "Facts",
+          "width": "fill_container",
+          "height": "fill_container",
+          "gap": 28,
+          "children": [
+            {
+              "type": "frame",
+              "id": "L6EEp",
+              "name": "Fact Free",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "fOLUj",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "grid-3x3",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "A4qypi",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "10 m",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "fry9n",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "the field mapped in squares the size of one satellite pixel",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "T8qUkX",
+              "name": "Fact Live",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "bzaD5",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "languages",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "Iji2O",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "Sorani",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "mmxWA",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "advice in the farmer's own language",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vSNS4",
+              "name": "Fact ½ cent",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "kr5wJ",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "message-circle",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "m5ufXg",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "1 message",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 60,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "K0klrg",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "five parts, with what it cannot tell",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "yhhYf",
+              "name": "Fact Partner",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "#FFFFFF12",
+              "cornerRadius": 24,
+              "stroke": "#FFFFFF26",
+              "strokeWidth": 2,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 36,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ChD0j",
+                  "name": "Icon",
+                  "width": 64,
+                  "height": 64,
+                  "icon": "link",
+                  "library": "lucide",
+                  "fill": "$teal"
+                },
+                {
+                  "type": "text",
+                  "id": "wfTQP",
+                  "name": "Big",
+                  "fill": "$gold",
+                  "content": "2 sides",
+                  "fontFamily": "$font-lat",
+                  "fontSize": 84,
+                  "fontWeight": "800",
+                  "letterSpacing": -2
+                },
+                {
+                  "type": "text",
+                  "id": "ly2yw",
+                  "name": "Fact Label",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "the farmer and the Ministry on the same data",
+                  "lineHeight": 1.25,
+                  "fontFamily": "$font-lat",
+                  "fontSize": 30,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "QiOBy",
+      "x": 8160,
+      "y": 0,
+      "name": "05 AI",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -1950,659 +2243,10 @@
     },
     {
       "type": "frame",
-      "id": "B3ZcNO",
-      "x": 8160,
-      "y": 0,
-      "name": "05 Feasibility",
-      "clip": true,
-      "width": 1920,
-      "height": 1080,
-      "fill": "$deep",
-      "layout": "vertical",
-      "gap": 60,
-      "padding": [
-        110,
-        120
-      ],
-      "children": [
-        {
-          "type": "frame",
-          "id": "P6m5M",
-          "layoutPosition": "absolute",
-          "x": 0,
-          "y": 0,
-          "name": "Topo Texture",
-          "opacity": 0.5,
-          "width": 1920,
-          "height": 1080,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "generated-6.png",
-            "mode": "cover"
-          }
-        },
-        {
-          "type": "text",
-          "id": "O2onTq",
-          "name": "Brand",
-          "fill": "$gold",
-          "content": "FEASIBILITY",
-          "fontFamily": "$font-lat",
-          "fontSize": 24,
-          "fontWeight": "700",
-          "letterSpacing": 3
-        },
-        {
-          "type": "frame",
-          "id": "sgndk",
-          "name": "Title Row",
-          "width": "fill_container",
-          "gap": 36,
-          "alignItems": "end",
-          "children": [
-            {
-              "type": "text",
-              "id": "RKHiP",
-              "name": "Headline",
-              "fill": "#FFFFFF",
-              "content": "Ready to grow.",
-              "lineHeight": 1,
-              "fontFamily": "$font-lat",
-              "fontSize": 112,
-              "fontWeight": "800",
-              "letterSpacing": -3
-            },
-            {
-              "type": "text",
-              "id": "b0EX9",
-              "name": "Secondary",
-              "fill": "$gold",
-              "content": "Small cost. Clear partner.",
-              "fontFamily": "$font-lat",
-              "fontSize": 42,
-              "fontWeight": "500"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "kVAKi",
-          "name": "Facts",
-          "width": "fill_container",
-          "height": "fill_container",
-          "gap": 28,
-          "children": [
-            {
-              "type": "frame",
-              "id": "UMRCV",
-              "name": "Fact Free",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#FFFFFF12",
-              "cornerRadius": 24,
-              "stroke": "#FFFFFF26",
-              "strokeWidth": 2,
-              "layout": "vertical",
-              "gap": 18,
-              "padding": 36,
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "kDFuh",
-                  "name": "Icon",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "satellite",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "text",
-                  "id": "ij8DB",
-                  "name": "Big",
-                  "fill": "$gold",
-                  "content": "Free",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 84,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
-                },
-                {
-                  "type": "text",
-                  "id": "hNhq4",
-                  "name": "Fact Label",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "satellite and weather data",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 30,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "dBoRV",
-              "name": "Fact Live",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#FFFFFF12",
-              "cornerRadius": 24,
-              "stroke": "#FFFFFF26",
-              "strokeWidth": 2,
-              "layout": "vertical",
-              "gap": 18,
-              "padding": 36,
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "C3Y0s",
-                  "name": "Icon",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "server",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "text",
-                  "id": "O5pizO",
-                  "name": "Big",
-                  "fill": "$gold",
-                  "content": "Live",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 84,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
-                },
-                {
-                  "type": "text",
-                  "id": "u2F9i9",
-                  "name": "Fact Label",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "server hosted, about 2,000 tests",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 30,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "gJWPd",
-              "name": "Fact ½ cent",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#FFFFFF12",
-              "cornerRadius": 24,
-              "stroke": "#FFFFFF26",
-              "strokeWidth": 2,
-              "layout": "vertical",
-              "gap": 18,
-              "padding": 36,
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "j21DZl",
-                  "name": "Icon",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "coins",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "text",
-                  "id": "dLdqj",
-                  "name": "Big",
-                  "fill": "$gold",
-                  "content": "½ cent",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 84,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
-                },
-                {
-                  "type": "text",
-                  "id": "F5ahe",
-                  "name": "Fact Label",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "per AI answer",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 30,
-                  "fontWeight": "600"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "i66Mg",
-              "name": "Fact Partner",
-              "width": "fill_container",
-              "height": "fill_container",
-              "fill": "#FFFFFF12",
-              "cornerRadius": 24,
-              "stroke": "#FFFFFF26",
-              "strokeWidth": 2,
-              "layout": "vertical",
-              "gap": 18,
-              "padding": 36,
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "icon",
-                  "id": "VDHCz",
-                  "name": "Icon",
-                  "width": 64,
-                  "height": 64,
-                  "icon": "landmark",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "text",
-                  "id": "OUoDS",
-                  "name": "Big",
-                  "fill": "$gold",
-                  "content": "Partner",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 84,
-                  "fontWeight": "800",
-                  "letterSpacing": -2
-                },
-                {
-                  "type": "text",
-                  "id": "L7lXh",
-                  "name": "Fact Label",
-                  "fill": "#FFFFFF",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "the Ministry, through our website",
-                  "lineHeight": 1.25,
-                  "fontFamily": "$font-lat",
-                  "fontSize": 30,
-                  "fontWeight": "600"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "RU9ku",
-      "x": 0,
-      "y": 1300,
-      "name": "Backup for questions · Website",
-      "clip": true,
-      "width": 1920,
-      "height": 1080,
-      "fill": "$deep",
-      "layout": "none",
-      "children": [
-        {
-          "type": "frame",
-          "id": "q2ROnL",
-          "layoutPosition": "absolute",
-          "x": 0,
-          "y": 0,
-          "name": "Topo Texture",
-          "opacity": 0.5,
-          "width": 1920,
-          "height": 1080,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "generated-6.png",
-            "mode": "cover"
-          }
-        },
-        {
-          "type": "frame",
-          "id": "jM9Kk",
-          "x": 120,
-          "y": 90,
-          "name": "Header",
-          "width": 1680,
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "qwMGY",
-              "name": "Brand",
-              "gap": 14,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "aSuq9",
-                  "name": "Grain Sun",
-                  "width": 44,
-                  "height": 44,
-                  "layout": "none",
-                  "children": [
-                    {
-                      "type": "path",
-                      "id": "kzhBH",
-                      "x": 0,
-                      "y": 0,
-                      "name": "Rays",
-                      "geometry": "M50 30a30 30 0 0 1 0-23 30 30 0 0 1 0 23z m5.9 0.89a30 30 0 0 1 6.77-21.98 30 30 0 0 1-6.77 21.98z m5.37 2.59a30 30 0 0 1 12.95-19.01 30 30 0 0 1-12.95 19.01z m4.37 4.05a30 30 0 0 1 17.98-14.34 30 30 0 0 1-17.98 14.34z m2.98 5.16a30 30 0 0 1 21.41-8.4 30 30 0 0 1-21.41 8.4z m1.32 5.82a30 30 0 0 1 22.94-1.72 30 30 0 0 1-22.94 1.72z m-0.44 5.94a30 30 0 0 1 22.42 5.12 30 30 0 0 1-22.42-5.12z m-2.18 5.55a30 30 0 0 1 19.92 11.5 30 30 0 0 1-19.92-11.5z m-3.72 4.66a30 30 0 0 1 15.65 16.86 30 30 0 0 1-15.65-16.86z m-4.92 3.36a30 30 0 0 1 9.98 20.72 30 30 0 0 1-9.98-20.72z m-5.7 1.76a30 30 0 0 1 3.43 22.74 30 30 0 0 1-3.43-22.74z m-5.96 0a30 30 0 0 1-3.43 22.74 30 30 0 0 1 3.43-22.74z m-5.7-1.76a30 30 0 0 1-9.98 20.72 30 30 0 0 1 9.98-20.72z m-4.92-3.36a30 30 0 0 1-15.65 16.86 30 30 0 0 1 15.65-16.86z m-3.72-4.66a30 30 0 0 1-19.92 11.5 30 30 0 0 1 19.92-11.5z m-2.18-5.55a30 30 0 0 1-22.42 5.12 30 30 0 0 1 22.42-5.12z m-0.44-5.94a30 30 0 0 1-22.94-1.72 30 30 0 0 1 22.94 1.72z m1.32-5.82a30 30 0 0 1-21.41-8.4 30 30 0 0 1 21.41 8.4z m2.98-5.16a30 30 0 0 1-17.98-14.34 30 30 0 0 1 17.98 14.34z m4.37-4.05a30 30 0 0 1-12.95-19.01 30 30 0 0 1 12.95 19.01z m5.37-2.59a30 30 0 0 1-6.77-21.98 30 30 0 0 1 6.77 21.98z",
-                      "viewBox": [
-                        0,
-                        0,
-                        100,
-                        100
-                      ],
-                      "fill": "$gold",
-                      "width": 44,
-                      "height": 44
-                    },
-                    {
-                      "type": "ellipse",
-                      "id": "b3scCz",
-                      "x": 15.84,
-                      "y": 15.84,
-                      "name": "Core",
-                      "fill": "$gold",
-                      "width": 12.32,
-                      "height": 12.32
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "V3Eku5",
-                  "name": "Wordmark",
-                  "fill": "#FFFFFF",
-                  "content": "Jutyar",
-                  "fontFamily": "$font-lat",
-                  "fontSize": 24,
-                  "fontWeight": "800"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "xTYFX",
-          "x": 120,
-          "y": 0,
-          "name": "Left",
-          "width": 660,
-          "height": 1080,
-          "layout": "vertical",
-          "gap": 32,
-          "justifyContent": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "QLpiM",
-              "name": "Title",
-              "fill": "#FFFFFF",
-              "textGrowth": "fixed-width",
-              "width": "fill_container",
-              "content": "Farmers and government, connected.",
-              "lineHeight": 1.05,
-              "fontFamily": "$font-lat",
-              "fontSize": 84,
-              "fontWeight": "800",
-              "letterSpacing": -2.5
-            },
-            {
-              "type": "text",
-              "id": "pAFod",
-              "name": "Secondary",
-              "fill": "$gold",
-              "textGrowth": "fixed-width",
-              "width": "fill_container",
-              "content": "One website. One dashboard for the region.",
-              "lineHeight": 1.2,
-              "fontFamily": "$font-lat",
-              "fontSize": 40,
-              "fontWeight": "500"
-            },
-            {
-              "type": "frame",
-              "id": "cOCB5",
-              "name": "Link",
-              "gap": 22,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "g2jf0R",
-                  "name": "Farmers",
-                  "fill": "#FFFFFF14",
-                  "cornerRadius": 40,
-                  "stroke": "#FFFFFF33",
-                  "strokeWidth": 2,
-                  "gap": 14,
-                  "padding": [
-                    14,
-                    24,
-                    14,
-                    18
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "h717W",
-                      "name": "Icon",
-                      "width": 34,
-                      "height": 34,
-                      "icon": "smartphone",
-                      "library": "lucide",
-                      "fill": "$gold"
-                    },
-                    {
-                      "type": "text",
-                      "id": "U1TtS9",
-                      "name": "Who",
-                      "fill": "#FFFFFF",
-                      "content": "Farmers",
-                      "fontFamily": "$font-lat",
-                      "fontSize": 28,
-                      "fontWeight": "700"
-                    }
-                  ]
-                },
-                {
-                  "type": "icon",
-                  "id": "Y12rz",
-                  "name": "Both Ways",
-                  "width": 40,
-                  "height": 40,
-                  "icon": "arrow-left-right",
-                  "library": "lucide",
-                  "fill": "$teal"
-                },
-                {
-                  "type": "frame",
-                  "id": "Ldwa3",
-                  "name": "Government",
-                  "fill": "#FFFFFF14",
-                  "cornerRadius": 40,
-                  "stroke": "#FFFFFF33",
-                  "strokeWidth": 2,
-                  "gap": 14,
-                  "padding": [
-                    14,
-                    24,
-                    14,
-                    18
-                  ],
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "BuBS6",
-                      "name": "Icon",
-                      "width": 34,
-                      "height": 34,
-                      "icon": "landmark",
-                      "library": "lucide",
-                      "fill": "$gold"
-                    },
-                    {
-                      "type": "text",
-                      "id": "e4tdF",
-                      "name": "Who",
-                      "fill": "#FFFFFF",
-                      "content": "Government",
-                      "fontFamily": "$font-lat",
-                      "fontSize": 28,
-                      "fontWeight": "700"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "PtMJW",
-          "x": 880,
-          "y": 117,
-          "name": "Control Room",
-          "clip": true,
-          "width": 1080,
-          "height": 750,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "pitch_assets/control_room_overview.png",
-            "mode": "cover",
-            "transform": [
-              1,
-              0,
-              0,
-              1.475,
-              0,
-              0
-            ]
-          },
-          "cornerRadius": 18,
-          "stroke": "#FFFFFF40",
-          "strokeWidth": 2,
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "color": "#00000088",
-            "offset": {
-              "x": 0,
-              "y": 20
-            },
-            "blur": 60
-          }
-        },
-        {
-          "type": "frame",
-          "id": "f7fUQc",
-          "layoutPosition": "absolute",
-          "x": 820,
-          "y": 600,
-          "name": "Dashboard Map",
-          "clip": true,
-          "width": 600,
-          "height": 427,
-          "fill": {
-            "type": "image",
-            "enabled": true,
-            "url": "pitch_assets/dashboard_overview.png",
-            "mode": "cover"
-          },
-          "cornerRadius": 18,
-          "stroke": "#FFFFFF40",
-          "strokeWidth": 2,
-          "effect": {
-            "type": "shadow",
-            "shadowType": "outer",
-            "color": "#00000088",
-            "offset": {
-              "x": 0,
-              "y": 20
-            },
-            "blur": 60
-          }
-        },
-        {
-          "type": "frame",
-          "id": "baSl0",
-          "layoutPosition": "absolute",
-          "x": 1560,
-          "y": 90,
-          "name": "Tag Control Room",
-          "fill": "$gold",
-          "cornerRadius": 28,
-          "padding": [
-            10,
-            20
-          ],
-          "children": [
-            {
-              "type": "text",
-              "id": "ycaYC",
-              "name": "Tag Text",
-              "fill": "$soil",
-              "content": "Control Room",
-              "fontFamily": "$font-lat",
-              "fontSize": 24,
-              "fontWeight": "800"
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "UoJbl",
-          "layoutPosition": "absolute",
-          "x": 840,
-          "y": 570,
-          "name": "Tag Region dashboard",
-          "fill": "$gold",
-          "cornerRadius": 28,
-          "padding": [
-            10,
-            20
-          ],
-          "children": [
-            {
-              "type": "text",
-              "id": "T9595",
-              "name": "Tag Text",
-              "fill": "$soil",
-              "content": "Region dashboard",
-              "fontFamily": "$font-lat",
-              "fontSize": 24,
-              "fontWeight": "800"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "frame",
       "id": "HIPSy",
       "x": 2040,
-      "y": 1300,
-      "name": "Backup for questions · Marketplace",
+      "y": 1200,
+      "name": "07 Scalability · Alwa",
       "clip": true,
       "width": 1920,
       "height": 1080,
@@ -2957,9 +2601,9 @@
     {
       "type": "frame",
       "id": "XxvPB",
-      "x": 4080,
-      "y": 1300,
-      "name": "Backup · Vision",
+      "x": 8160,
+      "y": 1200,
+      "name": "10 Close",
       "clip": true,
       "width": 1920,
       "height": 1080,
