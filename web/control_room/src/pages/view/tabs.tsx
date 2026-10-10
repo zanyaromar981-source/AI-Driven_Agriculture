@@ -243,7 +243,7 @@ export function MarketTab() {
   const lv = useVersion(db.listings);
   const crops = useRows(db.crops);
   const prices = useMemo(() => marketPrices(), [lv]); // eslint-disable-line react-hooks/exhaustive-deps
-  const rows = useMemo(() => crops.filter(c => c.active).map(c => ({ c, p: prices.get(c.id) })).filter(x => x.p && (x.p.avgAsk || x.p.avgSold))
+  const rows = useMemo(() => crops.filter(c => c.active && (c.unit ?? 'kg') === 'kg').map(c => ({ c, p: prices.get(c.id) })).filter(x => x.p && (x.p.avgAsk || x.p.avgSold))
     .sort((x, z) => (z.p!.avgAsk ?? z.p!.avgSold ?? 0) - (x.p!.avgAsk ?? x.p!.avgSold ?? 0)), [crops, prices]);
   return (
     <>

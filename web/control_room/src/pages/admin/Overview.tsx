@@ -51,7 +51,7 @@ export default function Overview() {
     return { alarm, blocked };
   }, [farms, farmers]);
   const newMsgs = useMemo(() => messages.filter(m => m.state === 'new').length, [messages]);
-  const openListings = useMemo(() => { let n = 0, kg = 0; for (const l of listings) if (l.state === 'open') { n++; kg += l.kg; } return { n, kg }; }, [listings]);
+  const openListings = useMemo(() => { let n = 0, kg = 0; for (const l of listings) if (l.state === 'open') { n++; if ((l.unit ?? 'kg') === 'kg') kg += l.kg; } return { n, kg }; }, [listings]);
   const drafts = useMemo(() => alerts.filter(a => a.status === 'draft').length, [alerts]);
   const badJobs = useMemo(() => jobs.filter(j => j.state === 'late' || j.state === 'failed'), [jobs]);
   const lastSent = useMemo(() => alerts.filter(a => a.status === 'sent').sort((a, z) => (z.sent ?? '').localeCompare(a.sent ?? ''))[0], [alerts]);

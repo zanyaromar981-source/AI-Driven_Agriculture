@@ -2,7 +2,7 @@
 // Real place names come from places.json (the KRG borders in web/map_demo). Everything else is invented.
 import placesJson from './places.json';
 import type {
-  Farmer, Farm, Crop, Officer, Alert, Message, News, Listing, DistrictReading, Dam, Fire, Rule,
+  Farmer, Farm, Crop, Officer, Worker, Alert, Message, News, Listing, DistrictReading, Dam, Fire, Rule,
   DoctorQuestion, AnswerBankItem, AppText, Job, AppConfig, Settings, District, SubDistrict, Place, Bi,
 } from './types';
 
@@ -40,7 +40,27 @@ export const seedCrops = (): Crop[] => ([
   ['pomegranate', 'Pomegranate', 'هەنار', '#C2185B', 'fruit', 'perennial', 2500],
   ['olive', 'Olive', 'زەیتوون', '#7D8B3A', 'oil', 'perennial', 600],
   ['sunflower', 'Sunflower', 'گوڵەبەڕۆژە', '#F5C518', 'oil', 'summer', 250],
-] as const).map(([id, en, ku, color, category, season, y]) => ({ id, name: bi(en, ku), color, category, season, yieldKgPerDunam: y, active: true, notes: '' }));
+] as const).map<Crop>(([id, en, ku, color, category, season, y]) => ({ id, name: bi(en, ku), color, category, season, yieldKgPerDunam: y, active: true, notes: '', group: 'crops', unit: 'kg' })).concat(seedProducts());
+
+/** The marketplace products that are not crops: the codes, groups, units and names of the backend's GET /v1/products. */
+export function seedProducts(): Crop[] {
+  return ([
+    ['fish', 'Fish', 'ماسی', '#4A90C2', 'fish_meat_eggs', 'kg'],
+    ['chicken', 'Chicken', 'مریشک', '#E39A5B', 'fish_meat_eggs', 'kg'],
+    ['eggs', 'Eggs (tray of 30)', 'هێلکە (تەبەقەی ٣٠)', '#E8D3A2', 'fish_meat_eggs', 'tray_30'],
+    ['honey', 'Honey', 'هەنگوین', '#D99A1C', 'honey_dairy', 'kg'],
+    ['milk', 'Milk', 'شیر', '#9DB7C9', 'honey_dairy', 'litre'],
+    ['yogurt', 'Yogurt', 'ماست', '#B9C4CC', 'honey_dairy', 'kg'],
+    ['cheese', 'Cheese', 'پەنیر', '#E6C65C', 'honey_dairy', 'kg'],
+    ['sheep', 'Sheep', 'مەڕ', '#8D8478', 'animals', 'head'],
+    ['goat', 'Goat', 'بزن', '#6F6259', 'animals', 'head'],
+    ['cow', 'Cow', 'مانگا', '#5A4A42', 'animals', 'head'],
+    ['walnut', 'Walnuts', 'گوێز', '#8B5E3C', 'nuts_dried', 'kg'],
+    ['almond', 'Almonds', 'بادەم', '#C79A6B', 'nuts_dried', 'kg'],
+    ['raisin', 'Raisins', 'مێوژ', '#6B3F5B', 'nuts_dried', 'kg'],
+    ['dried_fig', 'Dried figs', 'هەنجیری وشک', '#9C6B4E', 'nuts_dried', 'kg'],
+  ] as const).map<Crop>(([id, en, ku, color, group, unit]) => ({ id, name: bi(en, ku), color, category: 'other', season: 'perennial', yieldKgPerDunam: 0, active: true, notes: '', group, unit }));
+}
 
 const CROP_IDS = ['wheat', 'barley', 'chickpea', 'lentil', 'tomato', 'cucumber', 'potato', 'onion', 'watermelon', 'grape', 'pomegranate', 'olive', 'sunflower'];
 const CROP_W = [45, 17, 4, 2, 7, 4, 5, 3, 3, 3, 1.5, 3, 1];
@@ -172,7 +192,7 @@ export const seedNews = (): News[] => ([
 
 export const seedListings = (): Listing[] => {
   const { farms } = generate();
-  return Array.from({ length: 186 }, (_, i) => {
+  return Array.from({ length: 186 }, (_, i): Listing => {
     const f = farms[Math.floor(rnd() * farms.length)], crop = f.crops[0].crop, avg = AVG_PRICE[crop] ?? 700;
     const state = pickW(['open', 'sold', 'expired', 'cancelled'] as const, [55, 32, 9, 4]);
     const price = Math.round(avg * (0.88 + rnd() * 0.3) / 25) * 25;
@@ -186,8 +206,39 @@ export const seedListings = (): Listing[] => {
       offers: state === 'open' ? Math.floor(rnd() * 6) : 1 + Math.floor(rnd() * 8), views: 10 + Math.floor(rnd() * 400), photos: Math.floor(rnd() * 5),
       description: '',
     };
-  });
+  }).concat(seedProductListings());
 };
+
+/** A few sample listings that are not crops, in the same shape (quantity in the product's unit, price per unit). Invented. */
+export function seedProductListings(): Listing[] {
+  const { farms } = generate();
+  return ([
+    ['eggs', 'tray_30', 12, 6500, 'open'], ['eggs', 'tray_30', 40, 6250, 'sold'], ['sheep', 'head', 3, 350000, 'open'], ['goat', 'head', 5, 220000, 'open'],
+    ['cow', 'head', 1, 2400000, 'open'], ['milk', 'litre', 40, 1250, 'open'], ['honey', 'kg', 25, 30000, 'open'], ['cheese', 'kg', 60, 9000, 'sold'],
+    ['fish', 'kg', 500, 6000, 'open'], ['chicken', 'kg', 300, 4500, 'open'], ['walnut', 'kg', 150, 9000, 'open'], ['raisin', 'kg', 200, 5500, 'expired'],
+  ] as const).map<Listing>(([crop, unit, kg, price, state], i) => {
+    const f = farms[(i * 37 + 5) % farms.length], posted = (i * 2 + 1) * DAY + i * 53 * MIN;
+    return {
+      id: String(701 + i), farmerId: f.farmerId, farmId: f.id, crop, unit, kg, price, soldPrice: state === 'sold' ? Math.round(price * 0.96 / 25) * 25 : null,
+      quality: 'B', gov: f.gov, dist: f.dist, posted: iso(posted), closes: new Date(NOW - posted + 14 * DAY).toISOString(), state,
+      offers: 0, views: 20 + i * 17, photos: i % 3, description: '',
+    };
+  });
+}
+
+/** Sample workers for hire, used only when no staff token is set. Invented. */
+export const seedWorkers = (): Worker[] => ([
+  ['Hemin Rasul', '+9647501230011', 25000, 'day', 'Harvest, sowing, loading', 'Chamchamal', true],
+  ['Sirwan Qadir', '+9647701230022', 30000, 'day', 'Tractor driver, ploughing', 'Erbil', true],
+  ['Aram Hama', '+9647501230033', 5000, 'hour', 'Pruning vines and fruit trees', 'Sulaymaniyah', true],
+  ['Nasrin Ali', '+9647711230044', 20000, 'day', 'Picking vegetables, sorting', 'Halabja', false],
+  ['Kawa Jalal', '+9647501230055', 35000, 'day', 'Drip irrigation fitting and repair', 'Duhok', true],
+  ['Bakhtiyar Omer', '+9647701230066', 4000, 'hour', 'Shepherd, milking', 'Koya', true],
+  ['Dilshad Karim', '+9647501230077', 28000, 'day', '', 'Kalar', false],
+  ['Goran Saeed', '+9647711230088', 40000, 'day', 'Combine harvester operator', 'Makhmur', true],
+] as const).map(([name, phone, cost, per, note, dist, available], i) => ({
+  id: 'w' + (i + 1), name, phone, cost, per, note, zone: dist.toLowerCase().replace(/\s+/g, '-'), available, updated: iso((i * 3 + 1) * DAY + i * 41 * MIN),
+}));
 
 export const seedReadings = (): DistrictReading[] => PLACES.districts.map((d, i) => {
   const base = 35 + ((i * 37) % 50), byYear: Record<string, number> = {};

@@ -4,7 +4,7 @@
 // Cost: every index or total is built in one pass over its collection (O(n)) and cached until that
 // collection changes (checked by version number), so a page that asks 100 times pays once.
 import { db, PLACES } from './db';
-import type { Farm, Farmer, Listing, Message, Officer, Id } from './types';
+import type { Crop, Farm, Farmer, Listing, Message, Officer, Id } from './types';
 
 // ---------- memo by collection versions ----------
 function memo<T>(deps: () => number[], build: () => T): () => T {
@@ -134,6 +134,8 @@ export function checkOfficer(o: Officer): Problems {
 export function saveOfficer(o: Officer) { return db.officers.put({ ...o, email: o.email.trim().toLowerCase(), phone: o.phone ? normPhone(o.phone) : '' }); }
 
 /** Crops in use cannot be deleted, only switched off. */
+/** A crop (can be painted on a farm), not another marketplace product such as eggs or sheep. */
+export const isCrop = (c: Crop) => (c.group ?? 'crops') === 'crops';
 export const cropInUse = (code: string) => db.farms.all().some(f => f.crops.some(c => c.crop === code));
 
 // ---------- reference numbers for letters ----------
