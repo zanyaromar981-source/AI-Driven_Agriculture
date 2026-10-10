@@ -22,6 +22,7 @@ Checked 2026-10-09 16:20 against `FRONTEND.md` v4 with its section 14 (commit 13
 | 8 | Profile: `GET`/`PUT /v1/me` | built | Nothing. The Settings screen is next. |
 | 9 | Alwa market, farmer routes (FRONTEND.md 5) | built, with offers, grade, pickup, market and hidden phones | **Simpler Alwa (user decision 2026-10-09): see 2.14.** GPS point on each listing, phones shown, nearest first, mark as sold, markets with a point. |
 | 10 | **Marketplace (was Alwa): more than crops** (2.16, user decision 2026-10-09 18:29) | crops only, priced per kg | **New.** Fish, chicken, eggs, honey, dairy, live animals, nuts and dried fruit, each with its own unit (kg, tray of 30, litre, head). A `products` list with group and unit, and listings that carry `product`, `quantity` and a price per unit. |
+| 11 | **What is grown in this area** (2.17, user decision 2026-10-10) | not built | **New.** For each farm, the crops actually grown in its 10 km square and nearby, from MapSPAM 2020 (IFPRI), so Akre shows rice. A new insight topic `crops_grown`; new crop codes rice, fig, sumac, pistachio. |
 
 Needed next, because their screens are being built now:
 - `DELETE /v1/account` for Settings ("Delete my account and farms").
@@ -419,6 +420,27 @@ Units: `kg`, `tray_30` (a tray of 30 eggs), `litre`, `head` (one animal). The So
 **3. The price board** (`/v1/alwa/markets/{slug}/prices`) works per product and per unit: each row adds `product` and `unit`, and staff can type a price for any product, not only crops. `fair_price` compares like for like (same product, same unit).
 
 **4. What the app will do** (next, after this section is built): the tab and screens are renamed Marketplace; "For sale near you" gets group chips (Crops, Fish, meat and eggs, Honey and dairy, Animals, Nuts and dried fruit); Sell asks for the group, then the product, and shows the unit everywhere ("12 trays", "3 head", "40 litres", "IQD per head"). Until the backend has 1 and 2, the app keeps selling crops by the kg as today.
+
+### 2.17 What is grown in this area: crop advice from MapSPAM 2020 (user decision, 2026-10-10)
+
+**Why.** The app's "What fits this field" card today is a rule of thumb from the field's soil and rain (`app/lib/screens/history/crop_fit.dart`). It does not know local farming: Akre is known for rice (about 13,000 dunams a year, mostly the Sadri variety), and the card never says rice. The user wants the advice to come from data about what is really grown in each area.
+
+**Source: MapSPAM 2020** (IFPRI, "Global Spatially-Disaggregated Crop Production Statistics Data for 2020", Harvard Dataverse, DOI `10.7910/DVN/SWPENT`, version V2r2; check the licence on its page before showing it in the app). It gives, for every 5 arc-minute square (about 9 km by 9 km), the area of each of 46 crops, split into irrigated and rain-fed. It is data files, not a live API: download once, keep on the server.
+
+- File: `spam2020V2r2_global_physical_area.csv.zip` (109 MB; the harvested-area, production and yield files sit next to it). Physical area is better than harvested area here: it does not count a field twice when it gives two harvests.
+- **The download asks for a short guestbook form first** (name, email, use). Fill it in once in a browser, then put the file on the test server. The `Readme_SPAM2020V2r2.txt` next to it lists the column names and crop codes.
+- Keep only the rows of Iraq (`iso3` = `IRQ`), and only the Kurdistan Region squares if you like. That is a few hundred rows, small enough for a table.
+
+**What to build (a job, then one insight topic):**
+1. **Load once:** a table `crop_area_cells (cell_id, lon, lat, crop, tech, area_ha)` from the Iraq rows. `tech` is `all`, `irrigated` or `rainfed` (the A, I and R columns of the file).
+2. **For each farm** (in the existing `farm_analysis` job, when a farm is made or edited): take the square that holds the farm's centre and the squares within about 15 km. Add up each crop's area. Keep crops with at least 1% of the cropped area, biggest first.
+3. **Push an insight topic `crops_grown`** in the usual topic shape (`as_of`, `source`, `confidence`, `summary_en`, `summary_ku`, `measures`):
+   - `source`: `"MapSPAM 2020 (IFPRI), crop areas around 2019 to 2021"`. `confidence`: `likely` (it is modelled from statistics, not seen field by field).
+   - one measure per crop: `{"code": "rice_ha_15km", "value": 1240, "unit": "ha", "label_en": "Rice grown within 15 km", "label_ku": "..."}`, plus `{"code": "rice_irrigated_pct", "value": 100, "unit": "%"}` when the split is known.
+   - `summary_en` in plain words, for example "Around this farm the main crops are wheat, barley and rice; rice is all irrigated."
+4. **Crop codes:** MapSPAM uses its own four-letter codes (for example `whea`, `barl`, `rice`, `pota`; the full list is in the Readme). Map them to our crop codes; codes we do not have yet are added to the crops table: **`rice`, `fig`, `sumac`, `pistachio`** (Akre's known crops are rice, figs, sumac, olives, pistachios and tomatoes). MapSPAM groups some fruits and nuts (for example "other fruit", "other nuts"); show those under their group name, never as a guessed single crop.
+
+**What the app will do** (after the topic exists): the "What fits this field" card on the farm's Home leads with **"Grown in your area"** (the top crops from `crops_grown`, with their area and irrigated share), then **"Suits your field"** (today's soil and rain rule). Until the topic exists, the card shows only today's rule.
 
 ## 3. Offline rules (frontend side, so the backend knows what to expect)
 - The app collects points and painted cells with no internet and stores them locally. It POSTs the farm when online; `created_offline_at` carries the real time. Expect bursts of old farms.
