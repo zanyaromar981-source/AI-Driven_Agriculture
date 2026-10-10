@@ -11,6 +11,7 @@ import { useRows, useVersion } from '../../data/store';
 import { totals } from '../../data/api';
 import { Card, Kpi, Pill } from '../../components/ui';
 import { HBars } from '../../components/charts';
+import { SeasonOutlook } from '../../components/SeasonOutlook';
 import { CropTag, usePlaceNames } from '../../components/domain';
 import { DistrictMap, GREEN_RAMP, ramp } from '../../components/DistrictMap';
 import './overview.css';
@@ -50,7 +51,7 @@ export default function Overview() {
     return { alarm, blocked };
   }, [farms, farmers]);
   const newMsgs = useMemo(() => messages.filter(m => m.state === 'new').length, [messages]);
-  const openListings = useMemo(() => { let n = 0, kg = 0; for (const l of listings) if (l.state === 'open') { n++; kg += l.kg; } return { n, kg }; }, [listings]);
+  const openListings = useMemo(() => { let n = 0, kg = 0; for (const l of listings) if (l.state === 'open') { n++; if ((l.unit ?? 'kg') === 'kg') kg += l.kg; } return { n, kg }; }, [listings]);
   const drafts = useMemo(() => alerts.filter(a => a.status === 'draft').length, [alerts]);
   const badJobs = useMemo(() => jobs.filter(j => j.state === 'late' || j.state === 'failed'), [jobs]);
   const lastSent = useMemo(() => alerts.filter(a => a.status === 'sent').sort((a, z) => (z.sent ?? '').localeCompare(a.sent ?? ''))[0], [alerts]);
@@ -94,6 +95,8 @@ export default function Overview() {
         <Kpi label={t('overview.k_msgs')} value={num(newMsgs)} note={t('overview.k_msgs_n', { n: num(messages.length) })} tone={newMsgs ? 'danger' : ''} icon={<Inbox />} />
         <Kpi label={t('overview.k_listings')} value={num(openListings.n)} note={t('overview.k_listings_n', { n: num(openListings.kg / 1000, 1) })} icon={<Store />} />
       </div>
+
+      <SeasonOutlook className="mb" />
 
       <div className="grid g-main-l">
         <div className="stack">

@@ -3,10 +3,11 @@
 // Cost: one pass over the farms builds every total on this page; it reruns only when farms change.
 import { useMemo, useState } from 'react';
 import { Plus, FileText, Wheat, Map as MapIcon, Sprout, Scale, Trash2, Info } from 'lucide-react';
-import { db, PLACES } from '../../data/db';
+import { db, PLACES, ensureProducts } from '../../data/db';
 import { useRows, useVersion } from '../../data/store';
-import { cropInUse, downloadCsv } from '../../data/api';
-import type { Crop, CropCategory, CropSeason } from '../../data/types';
+import { cropInUse, downloadCsv, isCrop } from '../../data/api';
+import { GROUPS, UNITS, useProductSync } from '../../data/backend';
+import type { Crop, CropCategory, CropSeason, ProductGroup, ProductUnit } from '../../data/types';
 import { useI18n } from '../../i18n';
 import { PageHead, Card, Kpi, Pill, Note, Switch, Tabs, Field, Select, Modal, Confirm, useToast } from '../../components/ui';
 import { DataTable, type Col } from '../../components/DataTable';
@@ -16,6 +17,7 @@ import { CropTag, usePlaceNames, usePlaceOptions } from '../../components/domain
 
 const CATS: CropCategory[] = ['cereal', 'vegetable', 'fruit', 'legume', 'oil', 'fodder', 'other'];
 const SEASONS: CropSeason[] = ['winter', 'summer', 'perennial'];
+ensureProducts();
 
 interface CropStat { dunam: number; farms: number }
 /** One pass: per crop, per district per crop, per governorate per crop. */
@@ -91,7 +93,7 @@ function CropOverview() {
   return (
     <>
       <div className="grid g4 mb">
-        <Kpi label={t('crops.k_crops')} value={num(crops.filter(c => c.active).length)} note={t('crops.k_crops_n', { n: num(crops.length) })} icon={<Wheat />} />
+        <Kpi label={t('crops.k_crops')} value={num(crops.filter(c => c.active && isCrop(c)).length)} note={t('crops.k_crops_n', { n: num(crops.filter(isCrop).length) })} icon={<Wheat />} />
         <Kpi label={t('crops.k_area')} value={num(st.area)} note={t('common.dunam')} icon={<MapIcon />} />
         <Kpi label={t('crops.k_farms')} value={num(st.farms)} note={t('crops.k_farms_n')} icon={<Sprout />} />
         <Kpi label={t('crops.k_harvest')} value={num(totalHarvest)} note={t('crops.k_harvest_n')} tone="gold" icon={<Scale />} />
@@ -181,10 +183,13 @@ function CropList() {
   const crops = useRows(db.crops);
   const st = useCropStats();
   const [edit, setEdit] = useState<Crop | 'new' | null>(null);
+  const synced = useProductSync();
 
   const cols: Col<Crop>[] = [
     { key: 'name', label: t('crops.crop'), cell: c => <span className="row" style={{ flexWrap: 'nowrap' }}><span className="dotc" style={{ background: c.color }} /><b><bdi>{b(c.name)}</bdi></b></span>, sort: c => b(c.name) },
     { key: 'code', label: t('crops.code'), cell: c => <span className="mono ltr">{c.id}</span>, sort: c => c.id },
+    { key: 'group', label: t('crops.group'), cell: c => t('crops.group_' + (c.group ?? 'crops')), sort: c => c.group ?? 'crops' },
+    { key: 'unit', label: t('crops.unit'), cell: c => t('crops.unit_' + (c.unit ?? 'kg')), sort: c => c.unit ?? 'kg' },
     { key: 'cat', label: t('crops.category'), cell: c => t('crops.cat_' + c.category), sort: c => c.category },
     { key: 'season', label: t('crops.season'), cell: c => t('crops.season_' + c.season), sort: c => c.season },
     { key: 'yield', label: t('crops.kg_du'), num: true, cell: c => num(c.yieldKgPerDunam), sort: c => c.yieldKgPerDunam },
@@ -193,14 +198,15 @@ function CropList() {
     { key: 'ku', label: t('crops.ku_name'), optional: true, cell: c => c.name.ku ? <bdi className="ku-text">{c.name.ku}</bdi> : <Pill tone="warn">{t('common.ku_missing')}</Pill> },
     { key: 'active', label: t('common.status'), cell: c => c.active ? <Pill tone="good">{t('crops.in_app')}</Pill> : <Pill>{t('crops.off')}</Pill>, sort: c => (c.active ? 0 : 1) },
   ];
-  const exportCsv = () => downloadCsv('crops', ['code', 'name_en', 'name_ku', 'category', 'season', 'yield_kg_per_dunam', 'farms', 'dunam', 'active'],
-    crops.map(c => [c.id, c.name.en, c.name.ku, c.category, c.season, c.yieldKgPerDunam, st.byCrop.get(c.id)?.farms ?? 0, Math.round(st.byCrop.get(c.id)?.dunam ?? 0), c.active ? 'yes' : 'no']));
+  const exportCsv = () => downloadCsv('crops', ['code', 'name_en', 'name_ku', 'group', 'unit', 'category', 'season', 'yield_kg_per_dunam', 'farms', 'dunam', 'active'],
+    crops.map(c => [c.id, c.name.en, c.name.ku, c.group ?? 'crops', c.unit ?? 'kg', c.category, c.season, c.yieldKgPerDunam, st.byCrop.get(c.id)?.farms ?? 0, Math.round(st.byCrop.get(c.id)?.dunam ?? 0), c.active ? 'yes' : 'no']));
 
   return (
     <Card>
       <DataTable id="crops" rows={crops} cols={cols} onRow={c => setEdit(c)} defaultSort={['dunam', -1]}
         head={<><button className="btn primary sm" onClick={() => setEdit('new')}><Plus />{t('crops.add')}</button>
           <button className="btn sm" onClick={exportCsv}>{t('common.export_csv')}</button></>} />
+      {synced !== undefined && <p className="muted small">{synced ? t('crops.products_live', { n: num(synced) }) : t('crops.products_sample')}</p>}
       {edit && <CropForm crop={edit === 'new' ? null : edit} onClose={() => setEdit(null)} onSaved={msg => { toast(msg, 'good'); setEdit(null); }} />}
     </Card>
   );
@@ -208,7 +214,7 @@ function CropList() {
 
 function CropForm({ crop, onClose, onSaved }: { crop: Crop | null; onClose: () => void; onSaved: (msg: string) => void }) {
   const { t, b } = useI18n();
-  const [f, setF] = useState<Crop>(() => crop ?? { id: '', name: { en: '', ku: '' }, color: '#7FBC93', category: 'vegetable', season: 'summer', yieldKgPerDunam: 1000, active: true, notes: '' });
+  const [f, setF] = useState<Crop>(() => crop ?? { id: '', name: { en: '', ku: '' }, color: '#7FBC93', category: 'vegetable', season: 'summer', yieldKgPerDunam: 1000, active: true, notes: '', group: 'crops', unit: 'kg' });
   const [err, setErr] = useState<Record<string, string>>({});
   const [ask, setAsk] = useState<'delete' | 'off' | null>(null);
   const set = (p: Partial<Crop>) => setF(x => ({ ...x, ...p }));
@@ -220,7 +226,7 @@ function CropForm({ crop, onClose, onSaved }: { crop: Crop | null; onClose: () =
       else if (db.crops.has(f.id)) e.id = 'crops.v_code_taken';
     }
     if (!f.name.en.trim() && !f.name.ku.trim()) e.name = 'v.name_needed';
-    if (!(f.yieldKgPerDunam > 0)) e.yield = 'v.positive';
+    if (isCrop(f) && !(f.yieldKgPerDunam > 0)) e.yield = 'v.positive'; // only a crop has a yield per dunam
     setErr(e);
     if (Object.keys(e).length) return;
     db.crops.put({ ...f, name: { en: f.name.en.trim(), ku: f.name.ku.trim() } });
@@ -246,10 +252,12 @@ function CropForm({ crop, onClose, onSaved }: { crop: Crop | null; onClose: () =
         </Field>
         <Field label={t('crops.name_en')} error={err.name}><input type="text" dir="ltr" value={f.name.en} onChange={e => set({ name: { ...f.name, en: e.target.value } })} /></Field>
         <Field label={t('crops.ku_name')}><input type="text" dir="rtl" className="ku-text" value={f.name.ku} onChange={e => set({ name: { ...f.name, ku: e.target.value } })} /></Field>
+        <Field label={t('crops.group')} hint={t('crops.group_hint')}><Select value={f.group ?? 'crops'} onChange={v => set({ group: v as ProductGroup })} options={GROUPS.map(g => [g, t('crops.group_' + g)])} /></Field>
+        <Field label={t('crops.unit')} hint={t('crops.unit_hint')}><Select value={f.unit ?? 'kg'} onChange={v => set({ unit: v as ProductUnit })} options={UNITS.map(u => [u, t('crops.unit_' + u)])} /></Field>
         <Field label={t('crops.category')}><Select value={f.category} onChange={v => set({ category: v as CropCategory })} options={CATS.map(c => [c, t('crops.cat_' + c)])} /></Field>
         <Field label={t('crops.season')}><Select value={f.season} onChange={v => set({ season: v as CropSeason })} options={SEASONS.map(s => [s, t('crops.season_' + s)])} /></Field>
         <Field label={t('crops.yield')} hint={t('crops.yield_hint')} error={err.yield}>
-          <input type="number" min={1} value={f.yieldKgPerDunam} onChange={e => set({ yieldKgPerDunam: +e.target.value })} />
+          <input type="number" min={0} value={f.yieldKgPerDunam} onChange={e => set({ yieldKgPerDunam: +e.target.value })} />
         </Field>
         <Field label={t('crops.in_app_q')}>
           <div className="row" style={{ minHeight: 38 }}><Switch on={f.active} onChange={v => set({ active: v })} label={t('crops.in_app_q')} /><span className="small muted">{f.active ? t('crops.in_app') : t('crops.off')}</span></div>
@@ -277,7 +285,7 @@ function ReportModal({ onClose }: { onClose: () => void }) {
     </>}>
       <p className="muted" style={{ marginTop: 0 }}>{t('crops.report_sub')}</p>
       <div className="form-grid">
-        <Field label={t('crops.crop')} full><Select value={crop} onChange={setCrop} options={[['', t('common.all_crops')], ...crops.map(c => [c.id, b(c.name)] as [string, string])]} /></Field>
+        <Field label={t('crops.crop')} full><Select value={crop} onChange={setCrop} options={[['', t('common.all_crops')], ...crops.filter(isCrop).map(c => [c.id, b(c.name)] as [string, string])]} /></Field>
         <Field label={t('common.governorate')}><Select value={gov} onChange={v => { setGov(v); setDist(''); }} options={[['', t('common.all_govs')], ...o.govs]} /></Field>
         <Field label={t('common.district')}><Select value={dist} onChange={setDist} options={[['', t('common.all_dists')], ...o.dists]} /></Field>
       </div>

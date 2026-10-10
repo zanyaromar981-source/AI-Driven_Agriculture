@@ -214,6 +214,10 @@ class S {
     'olive' => t('زەیتوون', 'Olive'),
     'sunflower' => t('گوڵەبەڕۆژە', 'Sunflower'),
     'chickpea' => t('نۆک', 'Chickpea'),
+    'rice' => t('برنج', 'Rice'),
+    'fig' => t('هەنجیر', 'Fig'),
+    'sumac' => t('سماق', 'Sumac'),
+    'pistachio' => t('فستق', 'Pistachio'),
     'empty' => t('بەتاڵ', 'Empty'),
     null => '',
     _ => c,
@@ -299,6 +303,23 @@ class S {
 
   /// GET /farms/{id}/plan is not built on the server yet (404).
   String get planSoon => '10-day plan coming soon';
+  // Season outlook card (GET /outlooks). English in both languages until a
+  // native speaker writes the Sorani.
+  String seasonOutlookTitle(String season) =>
+      t('Season outlook $season', 'Season outlook $season');
+  String outlookHeadline(String outlook) => switch (outlook) {
+    'good' => t(
+      'Wet or normal winter expected',
+      'Wet or normal winter expected',
+    ),
+    'bad' => t('Dry winter likely', 'Dry winter likely'),
+    _ => t('Normal winter expected', 'Normal winter expected'),
+  };
+  String pctSure(int p) => t('$p% sure', '$p% sure');
+  String calledRight(int right, int tested) => t(
+    'Called right in $right of $tested past winters',
+    'Called right in $right of $tested past winters',
+  );
   String forecastSource(String src, String when) =>
       'Forecast: $src · issued $when';
   String get nothingToDo => 'Nothing to act on in the next 10 days';
@@ -343,6 +364,40 @@ class S {
   String get farmMenu => t('کێڵگە', 'Farm');
 
   String squares(int n) => t('$n خانە', n == 1 ? '1 square' : '$n squares');
+
+  // Marketplace: product groups and units (FRONTEND.md 5).
+  String get allGroups => t('هەموو', 'All');
+  String groupName(String group) => switch (group) {
+    'crops' => t('بەروبووم', 'Crops'),
+    'fish_meat_eggs' => t('ماسی و گۆشت و هێلکە', 'Fish, meat and eggs'),
+    'honey_dairy' => t('هەنگوین و شیرەمەنی', 'Honey and dairy'),
+    'animals' => t('ئاژەڵ', 'Animals'),
+    'nuts_dried' => t('چەرەزات و میوەی وشک', 'Nuts and dried fruit'),
+    _ => group,
+  };
+
+  /// The word for [unit]: "tray" for one, "trays" for [n] of them.
+  String unitWord(String unit, [num n = 2]) => switch (unit) {
+    'kg' => t('کگم', 'kg'),
+    'tray_30' => t('تەبەقە', n == 1 ? 'tray' : 'trays'),
+    'litre' => t('لیتر', n == 1 ? 'litre' : 'litres'),
+    'head' => t('سەر', 'head'),
+    _ => unit,
+  };
+
+  // Workers for hire (FRONTEND.md 5B).
+  String get findWorkers => t('کرێکار بدۆزەرەوە', 'Find workers');
+  String get offerMyWork => t('کارەکەم پێشکەش دەکەم', 'Offer my work');
+  String get workerName => t('ناو', 'Your name');
+  String get workerCost => t('کرێ', 'Your cost');
+  String get perDay => t('بۆ ڕۆژێک', 'per day');
+  String get perHour => t('بۆ کاتژمێرێک', 'per hour');
+  String costPer(String per) => per == 'hour' ? perHour : perDay;
+  String get workerNote => t('چ کارێک دەکەیت', 'What work you do');
+  String get workerAvailable => t('ئامادەم بۆ کار', 'Available for work');
+  String get call => t('پەیوەندی بکە', 'Call');
+  String get remove => t('لایببە', 'Remove');
+  String get noWorkers => t('هێشتا کرێکار نییە', 'No workers near you yet');
 
   // Each farm opens on its own screen (user, 2026-10-08); back to the list.
   String get backToFarms => 'My farms';

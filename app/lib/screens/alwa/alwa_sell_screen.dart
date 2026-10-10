@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../api/api.dart';
 import '../../app_scope.dart';
+import '../../l10n/strings.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import 'alwa_my_listings_screen.dart';
@@ -23,8 +24,19 @@ class AlwaSellScreen extends StatefulWidget {
 
 class _AlwaSellScreenState extends State<AlwaSellScreen>
     with WidgetsBindingObserver {
+  String _group = 'crops';
   String? _crop;
   bool _allCrops = false;
+
+  /// The unit of the picked product; kg until one is picked.
+  String get _unit => _crop == null ? 'kg' : alwaProduct(_crop!)?.unit ?? 'kg';
+
+  /// "trays" and "tray", for the labels.
+  String get _many => const S(false).unitWord(_unit);
+  String get _one => const S(false).unitWord(_unit, 1);
+
+  /// More than the server takes for this unit (FRONTEND.md 5).
+  bool get _tooMuch => (_num(_kg) ?? 0) > kUnitMax[_unit]!;
   final _kg = TextEditingController();
   final _price = TextEditingController();
   final _priceFocus = FocusNode();
@@ -50,6 +62,9 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
     WidgetsBinding.instance.addObserver(this);
     _locate(ask: true);
     _loadMine();
+    refreshProducts(AppScope.read(context).api).then((_) {
+      if (mounted) setState(() {});
+    });
     _priceFocus.addListener(() => setState(() {}));
     for (final c in [_kg, _price]) {
       c.addListener(() {
@@ -130,7 +145,11 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
     final kg = _num(_kg);
     final price = _num(_price);
     if (_crop == null || kg == null || price == null) {
-      showToast(context, 'Fill in the crop, the kg and your price.');
+      showToast(context, 'Fill in what you sell, how much and your price.');
+      return;
+    }
+    if (_tooMuch) {
+      showToast(context, 'At most ${fmtQty(kUnitMax[_unit]!, _unit)}.');
       return;
     }
     final fix = _fix;
@@ -147,9 +166,9 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
     try {
       final made = await AppScope.read(context).api.createAlwaListing(
         NewAlwaListing(
-          crop: _crop!,
-          quantityKg: kg,
-          priceIqdPerKg: price,
+          product: _crop!,
+          quantity: kg,
+          priceIqd: price,
           lat: fix.lat,
           lon: fix.lon,
           days: _days,
@@ -197,8 +216,26 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 8,
           children: [
-            const FieldLabel('Crop'),
+            const FieldLabel('What do you sell'),
+            GroupChips(
+              selected: _group,
+              onPick: (g) => setState(() {
+                if (g == null || g == _group) return;
+                _group = g;
+                _crop = null;
+                _key = null;
+              }),
+            ),
             _CropPicker(
+              // Crops keep the app's order; the other groups the server's.
+              items: [
+                if (_group == 'crops') ...kAlwaCrops,
+                for (final p in alwaProducts)
+                  if (p.group == _group &&
+                      !(_group == 'crops' &&
+                          kAlwaCrops.any((c) => c.code == p.code)))
+                    alwaCrop(p.code),
+              ],
               selected: crop,
               all:
                   _allCrops ||
@@ -209,7 +246,8 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
                 _key = null;
               }),
             ),
-            if (_tried && crop == null) const _Error('Pick a crop.'),
+            if (_tried && crop == null)
+              _Error(_group == 'crops' ? 'Pick a crop.' : 'Pick a product.'),
           ],
         ),
         // Quantity.
@@ -217,14 +255,16 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 8,
           children: [
-            const FieldLabel('How much, in kg'),
+            FieldLabel('How much, in $_many'),
             _NumberField(
               key: const ValueKey('alwa-kg'),
               controller: _kg,
-              unit: 'kg',
+              unit: _many,
             ),
             if (_tried && _num(_kg) == null)
-              const _Error('Type how many kg you sell.'),
+              _Error('Type how many $_many you sell.')
+            else if (_tooMuch)
+              _Error('At most ${fmtQty(kUnitMax[_unit]!, _unit)}.'),
           ],
         ),
         // Asking price.
@@ -232,19 +272,19 @@ class _AlwaSellScreenState extends State<AlwaSellScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 8,
           children: [
-            const FieldLabel('Asking price per kg'),
+            FieldLabel('Asking price per $_one'),
             _NumberField(
               key: const ValueKey('alwa-price'),
               controller: _price,
               focusNode: _priceFocus,
-              unit: 'IQD/kg',
+              unit: iqdPer(_unit),
             ),
             if (_tried && _num(_price) == null)
-              const _Error('Type your price per kg.'),
+              _Error('Type your price per $_one.'),
             if (today != null)
               HintLine(
                 'Alwa today: ${alwaCrop(crop!).en.toLowerCase()} '
-                '${fmtInt(today.priceIqdPerKg)} IQD/kg',
+                '${fmtInt(today.priceIqdPerKg)} ${iqdPer(_unit)}',
               ),
           ],
         ),
@@ -484,14 +524,17 @@ class _Error extends StatelessWidget {
   );
 }
 
-/// 6 crops a row; the first 11 and "All 16", or all of them.
+/// 6 products a row; when there are more than 12, the first 11 and
+/// "All 16", or all of them.
 class _CropPicker extends StatelessWidget {
   const _CropPicker({
+    required this.items,
     required this.selected,
     required this.all,
     required this.onAll,
     required this.onPick,
   });
+  final List<AlwaCrop> items;
   final String? selected;
   final bool all;
   final VoidCallback onAll;
@@ -499,8 +542,9 @@ class _CropPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final all = this.all || items.length <= 12;
     final chips = <Widget>[
-      for (final c in all ? kAlwaCrops : kAlwaCrops.take(11))
+      for (final c in all ? items : items.take(11))
         _CropChip(
           label: c.en,
           selected: c.code == selected,
@@ -509,7 +553,7 @@ class _CropPicker extends StatelessWidget {
         ),
       if (!all)
         _CropChip(
-          label: 'All ${kAlwaCrops.length}',
+          label: 'All ${items.length}',
           selected: false,
           onTap: onAll,
           child: const Icon(

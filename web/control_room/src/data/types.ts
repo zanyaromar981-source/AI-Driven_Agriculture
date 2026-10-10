@@ -51,6 +51,9 @@ export interface Farm {
 
 export type CropCategory = 'cereal' | 'vegetable' | 'fruit' | 'legume' | 'oil' | 'fodder' | 'other';
 export type CropSeason = 'winter' | 'summer' | 'perennial';
+/** Marketplace product groups and units, the same codes as the backend's GET /v1/products. */
+export type ProductGroup = 'crops' | 'fish_meat_eggs' | 'honey_dairy' | 'animals' | 'nuts_dried';
+export type ProductUnit = 'kg' | 'tray_30' | 'litre' | 'head';
 
 export interface Crop {
   id: Id;                   // the code, e.g. "wheat"
@@ -61,6 +64,21 @@ export interface Crop {
   yieldKgPerDunam: number;  // typical, used for the expected harvest in reports
   active: boolean;
   notes: string;
+  group?: ProductGroup;     // missing = 'crops'. Only crops can be painted on a farm
+  unit?: ProductUnit;       // missing = 'kg'
+}
+
+/** A person who offers farm work for hire (the backend's /v1/dashboard/workers). */
+export interface Worker {
+  id: Id;
+  name: string;
+  phone: string;
+  cost: number;             // IQD per day or per hour
+  per: 'day' | 'hour';
+  note: string;
+  zone: string;             // district slug, e.g. "chamchamal", or ''
+  available: boolean;
+  updated: string;
 }
 
 export interface Officer {
@@ -117,10 +135,11 @@ export interface Listing {
   id: Id;
   farmerId: Id;
   farmId: Id | null;
-  crop: string;
-  kg: number;
-  price: number;            // IQD per kg the farmer asks
-  soldPrice: number | null; // IQD per kg of the deal
+  crop: string;             // the product code (a crop, or fish, eggs, honey, sheep ...)
+  unit?: ProductUnit;       // missing = 'kg'
+  kg: number;               // the quantity, in the unit above (kg for crops)
+  price: number;            // IQD per unit (per kg for crops) the farmer asks
+  soldPrice: number | null; // IQD per unit of the deal
   quality: 'A' | 'B' | 'C';
   gov: string; dist: string;
   posted: string;

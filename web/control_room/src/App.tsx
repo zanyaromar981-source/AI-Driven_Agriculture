@@ -13,6 +13,7 @@ const View = lazy(() => import('./pages/view/ViewPage'));
 const Login = lazy(() => import('./pages/Login'));
 const Overview = lazy(() => import('./pages/admin/Overview'));
 const Farms = lazy(() => import('./pages/admin/Farms'));
+const Workers = lazy(() => import('./pages/admin/Workers'));
 const Officers = lazy(() => import('./pages/admin/Officers'));
 const Crops = lazy(() => import('./pages/admin/Crops'));
 const Region = lazy(() => import('./pages/admin/Region'));
@@ -43,6 +44,7 @@ export function App() {
                 <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
                   <Route index element={<Overview />} />
                   <Route path="farms" element={<Farms />} />
+                  <Route path="workers" element={<Workers />} />
                   <Route path="officers" element={<Officers />} />
                   <Route path="crops" element={<Crops />} />
                   <Route path="region" element={<Region />} />

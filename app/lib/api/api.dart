@@ -309,6 +309,11 @@ abstract class Api {
   /// GET /farms/{id}/plan: the next 10 days of weather turned into farm work.
   Future<FarmPlan> getPlan(String id);
 
+  /// GET /outlooks (no login): the winter outlook for the farm's zone, or the
+  /// first zone when [zoneSlug] is null or unknown (the signal is region-wide).
+  /// Null when no outlook has been issued (404).
+  Future<SeasonOutlook?> seasonOutlook({String? zoneSlug});
+
   /// GET /farms/{id}/insights: the 20+ year history of this field, as topics.
   Future<FarmInsights> getInsights(String id);
 
@@ -338,7 +343,39 @@ abstract class Api {
 
   /// GET /alwa/listings?status=open: crops on sale, nearest to ([lat], [lon])
   /// first when the server can sort by distance (BACKEND.md 2.14 #3).
-  Future<List<AlwaListing>> alwaListings({double? lat, double? lon});
+  /// [group] keeps one product group (`group=`).
+  Future<List<AlwaListing>> alwaListings({
+    double? lat,
+    double? lon,
+    String? group,
+  });
+
+  /// GET /products (no login): everything the Marketplace sells.
+  Future<List<Product>> products();
+
+  // ---- Workers for hire: FRONTEND.md 5B ----
+
+  /// GET /workers: cards of people who do farm work, nearest to
+  /// ([lat], [lon]) first when a point is given.
+  Future<List<Worker>> workers({double? lat, double? lon});
+
+  /// GET /workers/me: the caller's own card, null when there is none.
+  Future<Worker?> myWorkerCard();
+
+  /// PUT /workers/me: make or replace the caller's card. The phone is the
+  /// sign-in phone; it is never sent.
+  Future<Worker> saveWorkerCard({
+    required String name,
+    required int costIqd,
+    String costPer = 'day',
+    String? note,
+    double? lat,
+    double? lon,
+    bool available = true,
+  });
+
+  /// DELETE /workers/me.
+  Future<void> deleteWorkerCard();
 
   /// GET /alwa/listings/{id}: one listing.
   Future<AlwaListing> alwaListing(String id);
@@ -592,6 +629,52 @@ class FarmPlan {
     source: j['source'] as String? ?? '',
     issued: DateTime.parse(j['issued'] as String),
   );
+}
+
+/// One zone of `GET /outlooks`, with the answer's season and track record.
+class SeasonOutlook {
+  const SeasonOutlook({
+    required this.season,
+    required this.outlook,
+    this.confidencePct,
+    this.reasonEn,
+    this.reasonKu,
+    this.seasonsTested,
+    this.seasonsRight,
+  });
+  final String season;
+
+  /// `good`, `normal` or `bad`.
+  final String outlook;
+  final double? confidencePct;
+  final String? reasonEn;
+  final String? reasonKu;
+  final int? seasonsTested;
+  final int? seasonsRight;
+
+  /// [j] is the whole answer; null when it has no zones.
+  static SeasonOutlook? fromJson(Map<String, dynamic> j, {String? zoneSlug}) {
+    final zones = [
+      for (final z in j['zones'] as List? ?? const [])
+        if (z is Map<String, dynamic>) z,
+    ];
+    if (zones.isEmpty) return null;
+    final z = zones.firstWhere(
+      (z) => zoneSlug != null && z['zone_slug'] == zoneSlug,
+      orElse: () => zones.first,
+    );
+    final track = j['track_record'];
+    final t = track is Map<String, dynamic> ? track : const <String, dynamic>{};
+    return SeasonOutlook(
+      season: j['season'] as String? ?? '',
+      outlook: z['outlook'] as String? ?? '',
+      confidencePct: (z['confidence_pct'] as num?)?.toDouble(),
+      reasonEn: z['reason_en'] as String?,
+      reasonKu: z['reason_ku'] as String?,
+      seasonsTested: (t['seasons_tested'] as num?)?.toInt(),
+      seasonsRight: (t['seasons_right'] as num?)?.toInt(),
+    );
+  }
 }
 
 // ---- Field history: GET /farms/{id}/insights (topics from the Mac analysis) ----

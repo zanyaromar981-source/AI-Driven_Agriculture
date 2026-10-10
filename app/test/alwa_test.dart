@@ -8,6 +8,7 @@ import 'package:jutyar/screens/alwa/alwa_home_screen.dart';
 import 'package:jutyar/screens/alwa/alwa_my_listings_screen.dart';
 import 'package:jutyar/screens/alwa/alwa_sell_screen.dart';
 import 'package:jutyar/screens/alwa/alwa_widgets.dart';
+import 'package:jutyar/screens/alwa/workers_screen.dart';
 
 /// The phone stands in the centre of Sulaymaniyah, where the demo sellers are.
 const _here = GpsFix(35.5617, 45.4329, 8);
@@ -20,9 +21,13 @@ class _Market extends FakeApi {
   final bool tooMany;
 
   @override
-  Future<List<AlwaListing>> alwaListings({double? lat, double? lon}) async {
+  Future<List<AlwaListing>> alwaListings({
+    double? lat,
+    double? lon,
+    String? group,
+  }) async {
     if (fail != null) throw fail!;
-    return empty ? [] : super.alwaListings(lat: lat, lon: lon);
+    return empty ? [] : super.alwaListings(lat: lat, lon: lon, group: group);
   }
 
   @override
@@ -102,26 +107,72 @@ void main() {
     expect(find.text('2 km'), findsOneWidget);
     expect(rich('· 4,000 kg'), findsOneWidget);
     expect(find.text('Closes in 18 h'), findsOneWidget);
-    // 14 sellers: ten show, then "Show 4 more".
-    expect(find.text('Show 4 more'), findsOneWidget);
-    await t.ensureVisible(find.text('Show 4 more'));
+    // 19 sellers: ten show, then "Show 9 more".
+    expect(find.text('Show 9 more'), findsOneWidget);
+    await t.ensureVisible(find.text('Show 9 more'));
     await t.pump();
-    await t.tap(find.text('Show 4 more'));
+    await t.tap(find.text('Show 9 more'));
     await t.pump();
-    expect(find.text('Show 4 more'), findsNothing);
+    expect(find.text('Show 9 more'), findsNothing);
   });
 
-  testWidgets('a crop filter shows only that crop', (t) async {
+  testWidgets('a group filter shows only that group, in its own unit', (
+    t,
+  ) async {
     await signIn(t);
     await t.pumpWidget(app(const AlwaHomeScreen()));
     await settle(t);
-    final chip = find.text('Watermelon').first;
+    final chip = find.text('Fish, meat and eggs');
     await t.ensureVisible(chip);
     await t.pump();
     await t.tap(chip);
-    await t.pump();
-    expect(rich('· 8,000 kg'), findsOneWidget);
+    await settle(t);
+    // 12 trays of eggs: never "0 kg".
+    expect(rich('6,000 IQD/tray · 12 trays'), findsOneWidget);
     expect(rich('· 4,000 kg'), findsNothing);
+    expect(rich('0 kg'), findsNothing);
+
+    await t.ensureVisible(find.text('Animals'));
+    await t.pump();
+    await t.tap(find.text('Animals'));
+    await settle(t);
+    expect(rich('350,000 IQD/head · 8 head'), findsOneWidget);
+    expect(rich('trays'), findsNothing);
+  });
+
+  testWidgets('workers: the cards with a Call button, and my own card', (
+    t,
+  ) async {
+    await signIn(t);
+    await t.pumpWidget(app(const WorkersScreen()));
+    await settle(t);
+    expect(find.text('Karwan'), findsOneWidget);
+    expect(find.text('25,000 IQD per day'), findsOneWidget);
+    expect(find.text('5,000 IQD per hour'), findsOneWidget);
+    expect(find.text('3 km'), findsOneWidget);
+    expect(find.text('Call'), findsNWidgets(3));
+
+    await t.pumpWidget(app(const WorkerOfferScreen()));
+    await settle(t);
+    await t.tap(find.text('Save'));
+    await t.pump();
+    expect(find.text('Type your name.'), findsOneWidget);
+    await t.pump(const Duration(seconds: 3));
+    Finder box(String key) => find.descendant(
+      of: find.byKey(ValueKey(key)),
+      matching: find.byType(TextField),
+    );
+    await t.enterText(box('worker-name'), 'Aram');
+    await t.enterText(box('worker-cost'), '20000');
+    await t.tap(find.text('per hour'));
+    await t.tap(find.text('Save'));
+    await settle(t);
+    final card = (await t.runAsync(() => api.myWorkerCard()))!;
+    expect(card.name, 'Aram');
+    expect(card.costIqd, 20000);
+    expect(card.costPer, 'hour');
+    expect(card.lat, _here.lat);
+    expect(card.phone, '+9647501234567');
   });
 
   testWidgets('a listing shows crop, kg, price, phone, posted, closes', (

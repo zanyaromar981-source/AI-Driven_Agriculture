@@ -16,6 +16,7 @@ Newest first. Each line says what to change on your side. Details are in the sec
 
 | What is new | App team | Website team |
 |---|---|---|
+| **Season outlook from El Niño** (live now, `GET /v1/outlooks`) | Show a card on Home: `outlook` (`good`), `confidence_pct` (85), `reason_en`, and the track record from `run` ("right 14 of 14"). This winter: strong El Niño, so a wet or normal winter with no drought is expected. | The same on the region page; staff can edit it under `/v1/dashboard/outlooks`. |
 | **Workers for hire** (section 5B) | New screens: "Find workers" (`GET /v1/workers`, nearest first, tap to call) and "Offer my work" (`PUT /v1/workers/me` with name and cost; the phone is the signed-in one). | A staff list with remove: `GET /v1/dashboard/workers`, `DELETE /v1/dashboard/workers/{id}` (uses `farmers:read` and `farmers:delete`). |
 | **Simpler Alwa** (section 5) | Drop the workaround: stop fetching markets to pick one and stop sending `pickup: "farm"`; send only crop, kg, price, `lat`, `lon`, `closes_at`. Send the token on the listing reads to get `seller_phone`. Pass `lat` and `lon` to `GET /v1/alwa/listings` for nearest first and `distance_km`. Use `POST /v1/alwa/listings/{id}/sold`. | Listings may have `market`, `pickup` and `grade` null. Markets have `lat` and `lon` to edit. |
 | **Alerts and push** (section 4) | Alerts screen: `GET /v1/alerts`, `POST /v1/alerts/{id}/done`. Add Firebase messaging and call `POST /v1/devices` at every start. Settings: `DELETE /v1/account`. | Alerts of a farm: `GET /v1/dashboard/farms/{id}/alerts`. |
@@ -136,7 +137,7 @@ What to know:
 | `GET /v1/farms/{id}/brief` | the nightly brief for the farm's district | filled each night; `brief` is `null` for a district with none yet |
 | `POST /v1/farms/{id}/ask` | Ask the Doctor | section 6 |
 
-**Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
+**Insights.** `{"farm_id", "topics": [...]}`. A topic is one of `surface_water`, `groundwater`, `soil`, `rain`, `dryness`, `greenness`, `weather`, `crops_grown` (crops grown within 15 km, from MapSPAM 2020, measures `<crop>_ha_15km` and `<crop>_irrigated_pct`), with `as_of`, `source`, `confidence` (`sure`, `likely`, `unsure`), `summary_en`, `summary_ku` and `measures: [{"code", "value", "unit", "label_en", "label_ku"}]`. Only topics that have data are listed; an empty list means "nothing yet". Always show `source` and `as_of` next to a number.
 
 The topics `rain`, `weather`, `soil`, `greenness` and `dryness` carry the measure codes of the app's fixture (`app/test/fixtures/insights_farm2_measures.json`), with three differences: fires are `fire_detections_7d` (the server keeps 7 days of detections, so a long count would be wrong), and `summer_surface_c_normal` and `trend_peak_ndvi_per_decade` are not produced. Greenness is measured on a square of the farm's area at its centre, from Sentinel-2 (2016 on) and Landsat (1984 to 2015).
 
@@ -396,7 +397,8 @@ Be honest on screen about this.
 | Groundwater per farm | **live**, daily | section 4; the wider area, not a well |
 | Farmers and farms | the few test accounts people have made | the app |
 | Dams | **live**: 116 readings from 2008 to now, refreshed daily | lake area measured from Sentinel-2 and Landsat with the team's tested method. **`pct_full` is the lake's AREA as a share of its full area (Dukan 270 km2, Darbandikhan 113 km2), not stored volume**: a lake loses volume faster than area, so label it "lake area, % of full". `volume_bn_m3` and `farm_supply_bn_m3` are null: no trustworthy area-to-volume curve exists for these dams. |
-| Season outlook, water plan | **empty** (`404`) | no job; they can be typed in through the Admin part |
+| Season outlook | **live** for winter 2026-27, all 33 districts: `good`, 85% | El Niño and La Niña. In all 7 El Niño winters since 1991 the region had normal or above-normal rain and no drought; this year's index is +2.16, a strong El Niño. It is one region-wide signal, the same for every district. In a neutral year (21 of 35 winters) there is no call. |
+| Water plan | **empty** (`404`) | no job; it can be typed in through the Admin part |
 | Alwa prices | **empty** until staff type them in | by hand |
 | Rules | 15 seeded rules | section 9; changing them has no effect yet |
 | App settings | the starting values | section 4 |

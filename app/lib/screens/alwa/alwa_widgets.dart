@@ -671,6 +671,114 @@ Widget loadProblem(Object error, VoidCallback retry, {required String what}) {
 
 // ---- Numbers, days and phones ----
 
+/// "12 trays", "4,000 kg": an amount in the product's unit. English, like
+/// the rest of the Alwa screens ([alwaEnglish]).
+String fmtQty(num n, String unit) =>
+    '${fmtInt(n)} ${const S(false).unitWord(unit, n)}';
+
+/// "IQD/tray", "IQD/kg": what a price is for.
+String iqdPer(String unit) => 'IQD/${const S(false).unitWord(unit, 1)}';
+
+/// Reads the server's product list once it answers, so a product the app
+/// was not built with still gets its name. Quiet when it fails.
+Future<void> refreshProducts(Api api) async {
+  try {
+    final p = await api.products();
+    if (p.isNotEmpty) alwaProducts = p;
+  } on ApiException {
+    // The built-in list stays.
+  }
+}
+
+/// A round chip to filter or choose with (crop groups, per day or hour).
+class AlwaChip extends StatelessWidget {
+  const AlwaChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.emoji,
+  });
+  final String label;
+  final String? emoji;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(999),
+    child: Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: selected ? JColors.accentSoft : JColors.card,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: selected ? JColors.accent : JColors.line,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
+        children: [
+          if (emoji != null) Text(emoji!, style: const TextStyle(fontSize: 13)),
+          Text(
+            label,
+            style: latText(
+              size: 13,
+              weight: selected ? FontWeight.w700 : FontWeight.w600,
+              color: selected ? JColors.accent : JColors.ink,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// The five product groups as chips in one row that scrolls sideways;
+/// [all] adds "All" first (null).
+class GroupChips extends StatelessWidget {
+  const GroupChips({
+    super.key,
+    required this.selected,
+    required this.onPick,
+    this.all = false,
+  });
+  final String? selected;
+  final ValueChanged<String?> onPick;
+  final bool all;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppScope.of(context).s;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      clipBehavior: Clip.none,
+      child: Row(
+        spacing: 8,
+        children: [
+          if (all)
+            AlwaChip(
+              label: s.allGroups,
+              selected: selected == null,
+              onTap: () => onPick(null),
+            ),
+          for (final g in kProductGroups)
+            AlwaChip(
+              emoji: kGroupEmoji[g],
+              label: s.groupName(g),
+              selected: selected == g,
+              onTap: () => onPick(g),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// 4000 -> "4,000".
 String fmtInt(num n) {
   final s = n.round().abs().toString();

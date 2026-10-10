@@ -514,6 +514,25 @@ class FakeApi implements Api {
   }
 
   @override
+  Future<SeasonOutlook?> seasonOutlook({String? zoneSlug}) async =>
+      SeasonOutlook.fromJson(const {
+        'season': '2026-27',
+        'zones': [
+          {
+            'zone_slug': 'sulaymaniyah',
+            'outlook': 'good',
+            'confidence_pct': 85.0,
+            'reason_en':
+                'El Niño (ONI +2.16). All 7 El Niño winters since 1991 had '
+                'normal or above-normal rain here; none was a drought. A '
+                'region-wide signal, the same for every district.',
+            'reason_ku': null,
+          },
+        ],
+        'track_record': {'seasons_tested': 14, 'seasons_right': 14},
+      }, zoneSlug: zoneSlug);
+
+  @override
   Future<FarmPlan> getPlan(String id) async {
     await _online();
     await _load();
@@ -1104,6 +1123,12 @@ class FakeApi implements Api {
     ('barley', 410, 10000, 45.0, 220, 14, 0, '+9647500001122'),
     ('apple', 1100, 1500, 52.0, 280, 5, 9, '+9647711113344'),
     ('pomegranate', 1600, 800, 60.0, 20, 9, 5, '+9647502224466'),
+    // Not crops: the amount is in the product's unit, the price per unit.
+    ('eggs', 6000, 12, 6.0, 75, 6, 1, '+9647703335577'),
+    ('honey', 25000, 40, 12.0, 260, 10, 3, '+9647504446688'),
+    ('sheep', 350000, 8, 20.0, 180, 12, 2, '+9647715557799'),
+    ('milk', 1250, 200, 32.0, 100, 4, 1, '+9647506668800'),
+    ('walnut', 9000, 300, 48.0, 340, 13, 4, '+9647707779911'),
   ];
 
   List<Map<String, dynamic>>? _alwaMineJson;
@@ -1124,9 +1149,17 @@ class FakeApi implements Api {
     DateTime? sold,
   }) => {
     'id': id,
-    'crop': crop,
-    'quantity_kg': kg,
-    'asking_price_iqd_per_kg': price,
+    'product': crop,
+    'group': alwaProduct(crop)?.group ?? 'crops',
+    'unit': alwaProduct(crop)?.unit ?? 'kg',
+    'quantity': kg,
+    'asking_price_iqd': price,
+    // The old names stay filled for kg products only, like the server.
+    if ((alwaProduct(crop)?.unit ?? 'kg') == 'kg') ...{
+      'crop': crop,
+      'quantity_kg': kg,
+      'asking_price_iqd_per_kg': price,
+    },
     'status': status,
     'created_at': _alwaTime(created),
     'closes_at': _alwaTime(closes),
@@ -1230,14 +1263,21 @@ class FakeApi implements Api {
   }
 
   @override
-  Future<List<AlwaListing>> alwaListings({double? lat, double? lon}) async {
+  Future<List<AlwaListing>> alwaListings({
+    double? lat,
+    double? lon,
+    String? group,
+  }) async {
     await _online();
     await Future<void>.delayed(_latency);
     // The farmer's own new listings show to buyers too.
     final created = (_alwaMineJson ?? const <Map<String, dynamic>>[]).where(
       (l) => l['status'] == 'open' && int.parse(l['id'] as String) >= 900,
     );
-    final all = [...created, ..._alwaSellersJson()];
+    final all = [
+      for (final l in [...created, ..._alwaSellersJson()])
+        if (group == null || l['group'] == group) l,
+    ];
     if (lat != null && lon != null) {
       for (final l in all) {
         l['distance_km'] = alwaKm(
@@ -1275,8 +1315,11 @@ class FakeApi implements Api {
     final mine = _alwaMine();
     final again = idempotencyKey == null ? null : _alwaByKey[idempotencyKey];
     if (again != null) return AlwaListing.fromJson(again);
-    if (listing.quantityKg <= 0 ||
-        listing.priceIqdPerKg <= 0 ||
+    final unit = alwaProduct(listing.product)?.unit;
+    if (unit == null) throw ApiException(422, 'unknown_crop');
+    if (listing.quantity < 1 ||
+        listing.quantity > kUnitMax[unit]! ||
+        listing.priceIqd <= 0 ||
         listing.days < 1 ||
         listing.days > kAlwaMaxDays) {
       throw ApiException(422, 'invalid');
@@ -1287,9 +1330,9 @@ class FakeApi implements Api {
     final now = DateTime.now();
     final j = _alwaJson(
       id: '${_alwaNextId++}',
-      crop: listing.crop,
-      price: listing.priceIqdPerKg,
-      kg: listing.quantityKg,
+      crop: listing.product,
+      price: listing.priceIqd,
+      kg: listing.quantity,
       status: 'open',
       created: now,
       closes: now.add(Duration(days: listing.days)),
@@ -1331,6 +1374,115 @@ class FakeApi implements Api {
     l['status'] = 'sold';
     l['sold_at'] = _alwaTime(DateTime.now());
     return AlwaListing.fromJson(l);
+  }
+
+  @override
+  Future<List<Product>> products() async {
+    await Future<void>.delayed(_latency);
+    return kProducts;
+  }
+
+  // ---- Workers for hire (FRONTEND.md 5B): three sample cards ----
+
+  /// name, IQD, per, note, km away, bearing, phone.
+  static const _workerCards = [
+    ('Karwan', 25000, 'day', 'Harvest, weeding', 3.0, 30, '+9647701234001'),
+    ('Dilshad', 5000, 'hour', 'Tractor driver', 8.0, 150, '+9647501234002'),
+    ('Rebin', 30000, 'day', 'Pruning, spraying', 16.0, 270, '+9647711234003'),
+  ];
+
+  Map<String, dynamic>? _workerMine;
+
+  @override
+  Future<List<Worker>> workers({double? lat, double? lon}) async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    final now = isoUtc(DateTime.now());
+    final all = <Map<String, dynamic>>[
+      if (_workerMine != null && _workerMine!['available'] != false)
+        {..._workerMine!},
+      for (final (i, w) in _workerCards.indexed)
+        {
+          'id': '${i + 1}',
+          'name': w.$1,
+          'cost_iqd': w.$2,
+          'cost_per': w.$3,
+          'note': w.$4,
+          'lat': _alwaAt(w.$5, w.$6.toDouble()).lat,
+          'lon': _alwaAt(w.$5, w.$6.toDouble()).lon,
+          'phone': w.$7,
+          'created_at': now,
+          'updated_at': now,
+        },
+    ];
+    if (lat != null && lon != null) {
+      for (final w in all) {
+        final wLat = w['lat'] as double?, wLon = w['lon'] as double?;
+        if (wLat != null && wLon != null) {
+          w['distance_km'] = alwaKm(lat, lon, wLat, wLon);
+        }
+      }
+      all.sort(
+        (a, b) => ((a['distance_km'] as double?) ?? 1e9).compareTo(
+          (b['distance_km'] as double?) ?? 1e9,
+        ),
+      );
+    }
+    return [for (final w in all) Worker.fromJson(w)];
+  }
+
+  @override
+  Future<Worker?> myWorkerCard() async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    return _workerMine == null ? null : Worker.fromJson(_workerMine!);
+  }
+
+  @override
+  Future<Worker> saveWorkerCard({
+    required String name,
+    required int costIqd,
+    String costPer = 'day',
+    String? note,
+    double? lat,
+    double? lon,
+    bool available = true,
+  }) async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    if (_token == null) throw ApiException(401, 'unauthorized');
+    if (name.isEmpty ||
+        name.length > 80 ||
+        costIqd < 1000 ||
+        costIqd > 10000000 ||
+        (note ?? '').length > 200 ||
+        (costPer != 'day' && costPer != 'hour')) {
+      throw ApiException(422, 'invalid');
+    }
+    final now = isoUtc(DateTime.now());
+    _workerMine = {
+      'id': '900',
+      'name': name,
+      'phone': _phone,
+      'cost_iqd': costIqd,
+      'cost_per': costPer,
+      'note': note,
+      'lat': lat,
+      'lon': lon,
+      'available': available,
+      'created_at': _workerMine?['created_at'] ?? now,
+      'updated_at': now,
+    };
+    return Worker.fromJson(_workerMine!);
+  }
+
+  @override
+  Future<void> deleteWorkerCard() async {
+    await _online();
+    await Future<void>.delayed(_latency);
+    _workerMine = null;
   }
 
   static const _alwaMarkets = [
@@ -1674,6 +1826,51 @@ const _demoInsights = r'''
           "value": 1.25,
           "unit": "days per decade",
           "label_en": "Spring heat trend",
+          "label_ku": null
+        }
+      ]
+    },
+    {
+      "topic": "crops_grown",
+      "as_of": "2026-10-03",
+      "source": "MapSPAM 2020 (IFPRI), crop areas around 2019 to 2021",
+      "confidence": "likely",
+      "summary_en": "Around this farm the main crops are wheat, barley and rice; rice is all irrigated.",
+      "summary_ku": null,
+      "measures": [
+        {
+          "code": "wheat_ha_15km",
+          "value": 5200,
+          "unit": "ha",
+          "label_en": "Wheat grown within 15 km",
+          "label_ku": null
+        },
+        {
+          "code": "barley_ha_15km",
+          "value": 2100,
+          "unit": "ha",
+          "label_en": "Barley grown within 15 km",
+          "label_ku": null
+        },
+        {
+          "code": "rice_ha_15km",
+          "value": 1300,
+          "unit": "ha",
+          "label_en": "Rice grown within 15 km",
+          "label_ku": null
+        },
+        {
+          "code": "rice_irrigated_pct",
+          "value": 100,
+          "unit": "%",
+          "label_en": "Rice that is irrigated",
+          "label_ku": null
+        },
+        {
+          "code": "tomato_ha_15km",
+          "value": 300,
+          "unit": "ha",
+          "label_en": "Tomato grown within 15 km",
           "label_ku": null
         }
       ]

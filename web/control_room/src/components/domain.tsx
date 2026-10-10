@@ -2,14 +2,15 @@
 import { useMemo } from 'react';
 import { db, PLACES } from '../data/db';
 import { useRows } from '../data/store';
-import { distByName, govByName, subByKey } from '../data/api';
+import { distByName, govByName, isCrop, subByKey } from '../data/api';
 import type { FieldLevel } from '../data/types';
 import { useI18n } from '../i18n';
 import { Pill, type Tone } from './ui';
 
 export function useCrops() {
   const crops = useRows(db.crops);
-  return useMemo(() => ({ list: crops, byId: new Map(crops.map(c => [c.id, c])), active: crops.filter(c => c.active) }), [crops]);
+  // list and active hold crops only: the other marketplace products (eggs, sheep ...) cannot be grown on a farm
+  return useMemo(() => ({ list: crops.filter(isCrop), byId: new Map(crops.map(c => [c.id, c])), active: crops.filter(c => c.active && isCrop(c)) }), [crops]);
 }
 
 export function CropTag({ id }: { id: string }) {

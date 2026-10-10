@@ -219,6 +219,19 @@ class HttpApi implements Api {
   Future<FarmPlan> getPlan(String id) async =>
       FarmPlan.fromJson(await _call('GET', '${_farm(id)}/plan'));
 
+  @override
+  Future<SeasonOutlook?> seasonOutlook({String? zoneSlug}) async {
+    try {
+      return SeasonOutlook.fromJson(
+        await _call('GET', 'outlooks'),
+        zoneSlug: zoneSlug,
+      );
+    } on ApiException catch (e) {
+      if (e.status == 404) return null;
+      rethrow;
+    }
+  }
+
   /// Multipart by hand (no extra package): question, lang, cell, photos.
   /// The Doctor reads the field and the weather first, so it waits longer.
   @override
@@ -336,12 +349,15 @@ class HttpApi implements Api {
       'alwa/listings/${Uri.encodeComponent(id)}';
 
   @override
-  Future<List<AlwaListing>> alwaListings({double? lat, double? lon}) async {
-    // Server: not built yet (BACKEND.md 2.14): lat/lon are ignored today, so
-    // the list comes unsorted and without distance_km.
+  Future<List<AlwaListing>> alwaListings({
+    double? lat,
+    double? lon,
+    String? group,
+  }) async {
     final q = <String, String>{
       'status': 'open',
       'rows_per_page': '100',
+      'group': ?group,
       if (lat != null && lon != null) ...{'lat': '$lat', 'lon': '$lon'},
     };
     final j = await _call(
@@ -366,13 +382,8 @@ class HttpApi implements Api {
     String? idempotencyKey,
   }) async {
     final body = listing.toJson(DateTime.now());
-    // Server: not built yet (BACKEND.md 2.14): `market` and `pickup` are still
-    // required, so send the alwa the price board uses and "farm" (the crop
-    // is where the farmer stands). Drop both once 2.14 #1 is built.
-    final markets = await _alwaMarkets();
-    final market = AlwaMarket.pick(markets, listing.lat, listing.lon);
-    if (market != null) body['market'] = market.slug;
-    body['pickup'] = 'farm';
+    // `market` and `pickup` are optional now (FRONTEND.md 5): the server
+    // fills the nearest market from the point.
     // Server: not built yet (BACKEND.md 2.14 #3): no seller_phone, so the
     // phone goes in seller_name, which buyers already see. Drop when built.
     final phone = listing.sellerPhone;
@@ -431,5 +442,71 @@ class HttpApi implements Api {
       market,
       nearest: lat != null && market.lat != null,
     );
+  }
+
+  @override
+  Future<List<Product>> products() async {
+    final j = await _call('GET', 'products');
+    return [
+      for (final p in j['products'] as List? ?? const [])
+        Product.fromJson(p as Map<String, dynamic>),
+    ];
+  }
+
+  // ---- Workers for hire (FRONTEND.md 5B) ----
+
+  @override
+  Future<List<Worker>> workers({double? lat, double? lon}) async {
+    final q = <String, String>{
+      'rows_per_page': '100',
+      if (lat != null && lon != null) ...{'lat': '$lat', 'lon': '$lon'},
+    };
+    final j = await _call(
+      'GET',
+      Uri(path: 'workers', queryParameters: q).toString(),
+    );
+    return [
+      for (final w in j['workers'] as List? ?? const [])
+        Worker.fromJson(w as Map<String, dynamic>),
+    ];
+  }
+
+  @override
+  Future<Worker?> myWorkerCard() async {
+    final j = await _call('GET', 'workers/me');
+    final w = j['worker'];
+    return w is Map<String, dynamic> ? Worker.fromJson(w) : null;
+  }
+
+  @override
+  Future<Worker> saveWorkerCard({
+    required String name,
+    required int costIqd,
+    String costPer = 'day',
+    String? note,
+    double? lat,
+    double? lon,
+    bool available = true,
+  }) async {
+    // Never a phone: the card carries the sign-in phone, and the server
+    // refuses a `phone` field.
+    final j = await _call(
+      'PUT',
+      'workers/me',
+      body: {
+        'name': name,
+        'cost_iqd': costIqd,
+        'cost_per': costPer,
+        if (note != null && note.isNotEmpty) 'note': note,
+        if (lat != null && lon != null) ...{'lat': lat, 'lon': lon},
+        'available': available,
+      },
+    );
+    return Worker.fromJson(j['worker'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> deleteWorkerCard() async {
+    await _call('DELETE', 'workers/me');
   }
 }

@@ -35,3 +35,6 @@ farm_doctor/cases/
 web/_preview.html
 web/_dash_preview.html
 *.log
+
+# MapSPAM 2020 download and its Iraq rows (BACKEND.md 2.17), large data, not in git
+backend/jobs/data/
