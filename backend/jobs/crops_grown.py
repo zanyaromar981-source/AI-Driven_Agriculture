@@ -209,18 +209,14 @@ def load(path):
             "(DOI 10.7910/DVN/SWPENT, guestbook form first), put it in backend/jobs/data/ "
             "or set MAPSPAM_CSV to its path. No numbers are pushed without it."
         )
-    keep = {"header": None, "rows": []} if path.suffix.lower() == ".zip" else None
+    # No saved Iraq copy: the zip holds one CSV per technology (A, I, R), and
+    # rows written under one header were read back as A only, doubling the
+    # areas and losing the irrigated share (verifier, 2026-10-10). Reading
+    # the zip each run is slower but always right.
     log(f"reading {path}")
-    cells = read_cells(path, keep)
+    cells = read_cells(path, None)
     if not cells:
         sys.exit(f"{path} has no Iraq rows (iso3 IRQ) with x, y and crop columns; nothing pushed.")
-    saved = path.parent / DEFAULT_CSV.name
-    if keep and keep["rows"] and not saved.exists():
-        with open(saved, "w", newline="") as out:
-            writer = csv.writer(out)
-            writer.writerow(keep["header"])
-            writer.writerows(keep["rows"])
-        log(f"saved {len(keep['rows'])} Iraq rows to {saved}")
     log(f"{len(cells)} Iraq squares")
     return cells
 
@@ -229,9 +225,11 @@ def csv_path():
     chosen = os.environ.get("MAPSPAM_CSV")
     if chosen:
         return Path(chosen)
-    if DEFAULT_CSV.exists() or not GLOBAL_ZIP.exists():
-        return DEFAULT_CSV
-    return GLOBAL_ZIP
+    # The zip first: an Iraq CSV saved by the old version of this job holds
+    # mixed headers and must not be read.
+    if GLOBAL_ZIP.exists() or not DEFAULT_CSV.exists():
+        return GLOBAL_ZIP
+    return DEFAULT_CSV
 
 
 # ---------------------------------------------------------------- the topic
@@ -328,7 +326,12 @@ def main():
             skipped += 1
             log(f"farm {farm['id']}: no MapSPAM crop area within {RADIUS_KM:.0f} km, nothing pushed")
             continue
-        backend("PUT", f"/ingest/farms/{farm['id']}/insights/{TOPIC}", body)
+        try:
+            backend("PUT", f"/ingest/farms/{farm['id']}/insights/{TOPIC}", body)
+        except Exception as error:  # one farm failing must not stop the others
+            skipped += 1
+            log(f"farm {farm['id']}: push failed: {error}")
+            continue
         pushed += 1
     log(f"{TOPIC}: pushed {pushed}, skipped {skipped}, of {len(farms)} farms")
 
